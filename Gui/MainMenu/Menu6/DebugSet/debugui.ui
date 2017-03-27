@@ -18,8 +18,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>589</width>
-     <height>214</height>
+     <width>604</width>
+     <height>245</height>
     </rect>
    </property>
    <property name="tabPosition">
@@ -164,15 +164,15 @@
     </attribute>
     <layout class="QGridLayout" name="gridLayout_4">
      <item row="0" column="0">
-      <layout class="QHBoxLayout" name="horizontalLayout_2">
-       <item>
+      <layout class="QGridLayout" name="gridLayout_3">
+       <item row="0" column="0">
         <widget class="QLabel" name="label_3">
          <property name="text">
           <string>幅值显示变化门槛</string>
          </property>
         </widget>
        </item>
-       <item>
+       <item row="0" column="1">
         <widget class="QDoubleSpinBox" name="spinBox_AAStep">
          <property name="decimals">
           <number>1</number>
@@ -190,6 +190,16 @@
           <double>2.000000000000000</double>
          </property>
         </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_5">
+         <property name="text">
+          <string>偏置值</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QLineEdit" name="lineEdit_AA_offset"/>
        </item>
       </layout>
      </item>

@@ -400,6 +400,8 @@ void AAUltrasonic2::fresh(bool f)
 
     max_val = sql_para->aaultra_sql.gain * fabs(((double)20) * log10(max_val));      //对数运算,再加上增益
 
+    max_val = max_val - sql_para->aa_offset;    //减去偏置值
+
 
 //    d2 = (int)data->recv_para.ldata0_max - (int)data->recv_para.ldata0_min;
 //    max_val2 = (double)((d2 / 2) * 5000) / pow(2, 17);

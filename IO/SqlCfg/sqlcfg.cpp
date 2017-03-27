@@ -142,6 +142,8 @@ SQL_PARA *SqlCfg::default_config(void)
 
     sql_para.aa_step = 2;
 
+    sql_para.aa_offset = 0;
+
     return &sql_para;
 }
 

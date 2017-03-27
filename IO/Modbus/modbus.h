@@ -3,6 +3,8 @@
 
 #include <QThread>
 #include <QDebug>
+#include "IO/Data/fifodata.h"
+#include "IO/SqlCfg/sqlcfg.h"
 
 
 #define UART_PORT				"/dev/ttyPS0"
@@ -29,7 +31,12 @@
 class Modbus : public QThread
 {
 public:
-    Modbus();
+    Modbus(G_PARA *g_data);
+
+signals:
+
+
+public slots:
 
 
 
@@ -69,7 +76,7 @@ private:
     } modbus_dev_t;
 
     unsigned short modbus_crc (unsigned char * buf, unsigned char length);
-    int init_modbus_dev (modbus_dev_t * dev);
+    int init_modbus_dev (modbus_dev_t * ndp);
     int close_modbus_dev (modbus_dev_t * ndp);
     int modbus_com_clr_to (modbus_dev_t * ndp);
     int modbus_com_recv (modbus_dev_t * ndp, unsigned char * buf, int len);
@@ -82,24 +89,16 @@ private:
     int show_msg(char *prompt, char buf[], int len);
 
     modbus_dev_t pd_dev;
+    G_PARA *data;
+    SQL_PARA *sql_para;
 
-//    int uart_set (int fd, int speed, int flow_ctrl, int databits, int stopbits, int parity);
-//    int uart_open (char * port, int speed, int flow_ctrl, int databits, int stopbits, int parity);
-//    void uart_close (int fd);
-//    int uart_recv (int fd, unsigned char * recv_buf, int data_len);
-//    int uart_send (int fd, unsigned char * send_buf, int data_len);
+    void transData();   //将data转换为标准数组
+    unsigned short *data_stand;
 
-//    unsigned short modbus_crc (unsigned char * buf, unsigned char length);
-//    int init_modbus_dev (modbus_dev_t * dev);
-//    int modbus_com_clr_to (modbus_dev_t * ndp);
-//    int modbus_com_recv (modbus_dev_t * ndp, unsigned char * buf, int len);
-//    int modbus_com_recv_to (modbus_dev_t * ndp);
-//    int modbus_deal_msg (modbus_dev_t * ndp);
-//    int modbus_deal_read_reg(modbus_dev_t *ndp);
-//    int modbus_deal_write_a_reg (modbus_dev_t * ndp);
-////    int modbus_deal_write_reg(modbus_dev_t *ndp);
-//    int modbus_send_msg(modbus_dev_t *ndp);
-//    int show_msg(char *prompt, char buf[], int len);
+    unsigned short state, tevAmplitude, tevPluse, aaAmplitude;
+
+
+
 };
 
 #endif // MODBUS_H

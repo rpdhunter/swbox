@@ -68,10 +68,10 @@ void print_centor(void)
     printf("\t\tQT PROJ : swbox\n");
     printf("\t     QT version : %d.%d.%d\n", QT_VERSION >> 16,
            0xf & (QT_VERSION >> 8), 0xf & QT_VERSION);
-    printf("\t QT GUI version : Developping...\n");
+    printf("\t QT GUI version : 1.1\n");
     printf("\t    QT platform : %s\n", str);
-    printf("      QT GUI Copyrights : * * *\n");
-    printf("\t  QT GUI Author : LPC\n");
+    printf("      QT GUI Copyrights : zdit\n");
+    printf("\t  QT GUI Author : RPD\n");
     printf("\tQT GUI Compiled : %s | %s\n", __TIME__, __DATE__);
     printf("=================================================\n\n");
     printf("  QT GUI for swbox starting ...\n\n\n");

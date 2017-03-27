@@ -10,6 +10,7 @@
 #include "IO/Key/keydetect.h"
 #include "MainMenu/mainmenu.h"
 #include "IO/Data/fifodata.h"
+#include "IO/Modbus/modbus.h"
 
 class MainWindow : public QFrame
 {
@@ -21,6 +22,8 @@ private:
     KeyDetect *keydetect;
     MainMenu *mainmenu;
     FifoData *fifodata;
+    Modbus *modbus;
+
     G_PARA *g_data;
     QTimer *rebootTimer;    //系统关机时间
 

@@ -229,10 +229,6 @@ void Amplitude::fresh_plot(void)
     a = AD_VAL(data->recv_para.hdata0.ad.ad_max, (0x8000+sql_para->tev_offset1*10) );
     b = AD_VAL(data->recv_para.hdata0.ad.ad_min, (0x8000+sql_para->tev_offset2*10) );
 
-//    offset1 = (int)(a/10);
-//    offset2 = (int)(b/10);
-
-
 
     t = ((double)MAX(a, b) * 1000) / 32768;
 

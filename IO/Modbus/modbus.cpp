@@ -15,9 +15,12 @@
 #include "uart_oper.c"
 
 
-Modbus::Modbus()
-{
 
+Modbus::Modbus(G_PARA *g_data)
+{
+    data = g_data;
+    sql_para = new SQL_PARA;
+    data_stand = new unsigned short[4];
 }
 
 void Modbus::run()
@@ -125,7 +128,7 @@ int Modbus::modbus_com_recv(Modbus::modbus_dev_t *ndp, unsigned char *buf, int l
     modbus_com_clr_to (ndp);
 
     for (i = 0; i < len; i++) {
-        ndp->recv_buf [ndp->recv_len++] = buf [i];
+        ndp->recv_buf [ndp->recv_len++] = buf [i];  //缓冲区数据装配成结构体
         if (ndp->recv_len == 1) {
             /* 装置地址为报文头 */
             if ((ndp->recv_buf [0] != ndp->dev_addr) &&
@@ -242,7 +245,7 @@ int Modbus::modbus_deal_read_reg(Modbus::modbus_dev_t *ndp)
     //crc校验
     unsigned short crc_recv, crc_calc;
     unsigned short start_add, reg_count, reg_val;
-    int i;
+//    int i;
 
     if (ndp->recv_len != 8) {   //报文长度必须为8
         return -1;
@@ -274,10 +277,15 @@ int Modbus::modbus_deal_read_reg(Modbus::modbus_dev_t *ndp)
     ndp->send_buf[1] = MODBUS_FC_READ_REG;
     ndp->send_buf[2] = (reg_count << 1);
 
-    for (i = 0; i < reg_count; i++) {
-        reg_val = 0x1122;	// test
-        ndp->send_buf [3 + (i << 1)] = reg_val >> 8;
-        ndp->send_buf [4 + (i << 1)] = reg_val & 0xff;
+//    for (i = 0; i < reg_count; i++) {
+//        reg_val = 0x1122;	// test
+
+//        ndp->send_buf [3 + (i << 1)] = reg_val >> 8;        //高位
+//        ndp->send_buf [4 + (i << 1)] = reg_val & 0xff;      //低位
+//    }
+    for(unsigned short i=start_add; i<reg_count; i++){
+        ndp->send_buf [3 + (i << 1)] = data_stand[i] >> 8;        //高位
+        ndp->send_buf [4 + (i << 1)] = data_stand[i] & 0xff;      //低位
     }
 
     //装配CRC校验码
@@ -357,5 +365,34 @@ int Modbus::show_msg(char *prompt, char buf[], int len)
 
     return 0;
 }
+
+void Modbus::transData()
+{
+    data_stand[0] = 0;
+
+    sql_para = sqlcfg->get_para();
+
+    double a,b,t,s;
+    a = AD_VAL(data->recv_para.hdata0.ad.ad_max, (0x8000+sql_para->tev_offset1*10) );
+    b = AD_VAL(data->recv_para.hdata0.ad.ad_min, (0x8000+sql_para->tev_offset2*10) );
+    t = ((double)MAX(a, b) * 1000) / 32768;
+    s = ((double)20) * log10(t);      //对数运算，来自工具链的函数
+    s = sql_para->tev_gain * s;     //设置增益系数
+    data_stand[1] = (unsigned short)s * 100;    //系数为100，保留2位有效数字
+
+    data_stand[2] = (unsigned short)data->recv_para.hpulse1_totol;
+
+    double d, max_val;
+    d = (int)data->recv_para.ldata1_max - (int)data->recv_para.ldata1_min;      //最大值-最小值=幅值？
+    max_val = (double)((d / 2) * 5000) / pow(2, 17);    //最大值
+    max_val = sql_para->aaultra_sql.gain * fabs(((double)20) * log10(max_val));      //对数运算,再加上增益
+    max_val = max_val - sql_para->aa_offset;
+    data_stand[3] = (unsigned short)max_val *100;   //系数为100，保留2位有效数字
+
+ }
+
+
+
+
 
 

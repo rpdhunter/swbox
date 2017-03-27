@@ -75,6 +75,8 @@ typedef struct SQL_PARA {
     double tev_gain;               //TEV增益
 
     double aa_step;         //显示幅值变化门槛
+    int aa_offset;       //aa超声偏置值
+
 } SQL_PARA;
 
 class SqlCfg

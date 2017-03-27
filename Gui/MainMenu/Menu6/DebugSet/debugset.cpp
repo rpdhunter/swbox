@@ -17,7 +17,6 @@ DebugSet::DebugSet(QWidget *parent,G_PARA *g_data) : QFrame(parent),ui(new Ui::D
 
     time_c = 3;
 
-
     this->resize(455, 185);
     this->move(2, 31);
 //    this->setStyleSheet("DebugSet {background-color:lightGray;}");
@@ -151,6 +150,8 @@ void DebugSet::iniUi()
     ui->spinBox_Tev_offset2->setValue(this->sql_para->tev_offset2);
 
     ui->spinBox_AAStep->setValue(this->sql_para->aa_step);
+
+    ui->lineEdit_AA_offset->setText(QString("%1").arg(sql_para->aa_offset));
 }
 
 void DebugSet::resetPassword()
@@ -198,7 +199,7 @@ void DebugSet::trans_key(quint8 key_code)
     case KEY_OK:
         if(pass){
             if(key_val->grade.val4 == 0 && key_val->grade.val3 == 0){   //初始状态
-                key_val->grade.val3 = 1;
+//                key_val->grade.val3 = 1;
                 iniUi();
                 fresh();
                 break;
@@ -294,7 +295,13 @@ void DebugSet::trans_key(quint8 key_code)
 //                    fresh();
                     break;
                 case 2:
-                    ui->spinBox_AAStep->stepUp();
+//                    ui->spinBox_AAStep->stepUp();
+                    if(key_val->grade.val4 >1 ){
+                        key_val->grade.val4 --;
+                    }
+                    else{
+                        key_val->grade.val4 = 2;
+                    }
                     break;
                 case 3:
 
@@ -337,7 +344,13 @@ void DebugSet::trans_key(quint8 key_code)
 //                    fresh();
                     break;
                 case 2:
-                    ui->spinBox_AAStep->stepDown();
+//                    ui->spinBox_AAStep->stepDown();
+                    if(key_val->grade.val4 <2){
+                        key_val->grade.val4 ++;
+                    }
+                    else{
+                        key_val->grade.val4 = 1;
+                    }
                     break;
                 case 3:
                     if(key_val->grade.val4 < 2){
@@ -383,7 +396,12 @@ void DebugSet::trans_key(quint8 key_code)
 //                    fresh();
                     break;
                 case 2:
-
+                    if(key_val->grade.val4 == 1){
+                        ui->spinBox_AAStep->stepDown();
+                    }
+                    else if(key_val->grade.val4 == 2){
+                        sql_para->aa_offset--;
+                    }
                     break;
                 case 3:
                     if(key_val->grade.val4 < 2){
@@ -431,7 +449,12 @@ void DebugSet::trans_key(quint8 key_code)
 //                    fresh();
                     break;
                 case 2:
-
+                    if(key_val->grade.val4 == 1){
+                        ui->spinBox_AAStep->stepUp();
+                    }
+                    else if(key_val->grade.val4 == 2){
+                        sql_para->aa_offset++;
+                    }
                     break;
                 case 3:
                     if(key_val->grade.val4 < 2){
@@ -531,11 +554,20 @@ void DebugSet::fresh()
         case 2:
             if(key_val->grade.val4 == 0){
                 ui->spinBox_AAStep->setStyleSheet("QDoubleSpinBox { background: lightGray }");
+                ui->lineEdit_AA_offset->setStyleSheet("QLineEdit { background: lightGray }");
+                ui->lineEdit_AA_offset->deselect();
             }
             else if(key_val->grade.val4 == 1){
                 ui->spinBox_AAStep->setStyleSheet("QDoubleSpinBox { background: gray }");
+                ui->lineEdit_AA_offset->setStyleSheet("QLineEdit { background: lightGray }");
+                ui->lineEdit_AA_offset->deselect();
             }
-
+            else if(key_val->grade.val4 == 2){
+                ui->spinBox_AAStep->setStyleSheet("QDoubleSpinBox { background: lightGray }");
+                ui->lineEdit_AA_offset->setStyleSheet("QLineEdit { background: gray }");
+                ui->lineEdit_AA_offset->selectAll();
+            }
+            ui->lineEdit_AA_offset->setText(QString("%1").arg(sql_para->aa_offset));
             break;
         case 3:
             ui->comboBox->setCurrentIndex(key_val->grade.val4 - 1);

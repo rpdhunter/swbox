@@ -28,6 +28,8 @@ MainWindow::MainWindow(QWidget *parent)
     //开启键盘监测线程，持续监听键盘输入
     keydetect = new KeyDetect(this);
 
+    modbus = new Modbus(g_data);
+
 
     connect(keydetect, &KeyDetect::sendkey, mainmenu, &MainMenu::trans_key);    //trans key value
 #endif
