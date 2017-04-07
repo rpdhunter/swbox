@@ -30,7 +30,7 @@ signals:
 
 public slots:
     void trans_key(quint8);
-    void showWaveData(quint32 *buf, int len, int mod);
+    void showWaveData(qint32 *buf, int len, int mod);
 
     void set_offset_suggest(int a,int b);
 

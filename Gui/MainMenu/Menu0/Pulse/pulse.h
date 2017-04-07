@@ -1,7 +1,7 @@
 #ifndef PULSE_H
 #define PULSE_H
 
-#include "IO/Data/fifodata.h"
+#include "IO/Data/data.h"
 #include "IO/Key/key.h"
 #include "IO/SqlCfg/sqlcfg.h"
 #include <math.h>

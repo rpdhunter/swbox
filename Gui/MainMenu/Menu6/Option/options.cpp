@@ -93,7 +93,7 @@ void Options::saveOptions()
 
 void Options::saveFreq()
 {
-    data->send_para.freq.rval = (FREQ_REG << 16) | ((_freq == 50) ? 0 : 1);
+    data->send_para.freq.rval = (_freq == 50) ? 0 : 1;
     data->send_para.freq.flag = 1;
     sql_para->freq_val = _freq;
     sqlcfg->sql_save(sql_para);
@@ -123,7 +123,7 @@ void Options::setBacklight()
     sql_para->backlight = _backlight;
     sqlcfg->sql_save(sql_para);
 
-    data->send_para.blacklight.rval = (BLACKLIGHT_REG << 16) | _backlight;
+    data->send_para.blacklight.rval = _backlight;
     data->send_para.blacklight.flag = 1;        //背景设置是生效的,但是不保存的话还会复位
 }
 
@@ -387,7 +387,7 @@ void Options::refresh()
     ui->dateTimeEdit->setDateTime(_datetime);
     updateCheckBox();
 
-    data->send_para.blacklight.rval = (BLACKLIGHT_REG << 16) | (ui->slider_backlight->value()-1);
+    data->send_para.blacklight.rval = ui->slider_backlight->value()-1;
     data->send_para.blacklight.flag = 1;        //背景设置是生效的,但是不保存的话还会复位
 
     switch (key_val->grade.val3) {

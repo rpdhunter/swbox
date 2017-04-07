@@ -11,41 +11,119 @@
 #include <errno.h>
 #include <string.h>
 
+#include <QSerialPortInfo>
+#include <QSerialPort>
+
 #include "gpio_oper.c"
 #include "uart_oper.c"
 
 
 
-Modbus::Modbus(G_PARA *g_data)
+Modbus::Modbus(QObject *parent, G_PARA *g_data) : QThread(parent)
 {
     data = g_data;
     sql_para = new SQL_PARA;
     data_stand = new unsigned short[4];
+
+    serial = new QSerialPort;
+    //设置端口
+    serial->setPort(QSerialPortInfo::availablePorts().first());
+    //打开串口
+    bool flag = serial->open(QIODevice::ReadWrite);
+    //设置波特率
+    serial->setBaudRate(9600);
+    //设置数据位数
+    serial->setDataBits(QSerialPort::Data8);
+    //设置奇偶校验
+    serial->setParity(QSerialPort::NoParity);
+    //设置停止位
+    serial->setStopBits(QSerialPort::OneStop);
+    //设置流控制
+    serial->setFlowControl(QSerialPort::NoFlowControl);
+
+    connect(serial, SIGNAL(readyRead()), this, SLOT(readData()));
+
+//    writeData();
+
+
+//    printf("[1]modbus start!");
+    if(flag)
+        qDebug()<<"serial open success!";
+    else
+        qDebug()<<"serial open failed!";
+
+//    this->start();
+}
+
+Modbus::~Modbus()
+{
+    serial->clear();
+    serial->close();
+    serial->deleteLater();
 }
 
 void Modbus::run()
 {
-    int len;
-    unsigned char recv_buf [300];
+//    int len;
+//    unsigned char recv_buf [300];
 
-    if (init_modbus_dev (&pd_dev) != 0) {
-        printf ("failed to init modbus device\n");
-//        return -1;
+//    if (init_modbus_dev (&pd_dev) != 0) {
+//        printf ("failed to init modbus device\n");
+////        return -1;
+//    }
+
+
+
+
+
+//    writeData();
+
+    while(1){
+        qDebug()<<"[2]modbus start!";
+
+        serial->write("12345678");
+        sleep(2);
     }
+//    serial->clear();
+//    serial->close();
+//    serial->deleteLater();
 
-    while (1) {
-        len = uart_recv (pd_dev.com_fd, recv_buf, sizeof (recv_buf));
-        if (len > 0) {
-            show_msg ("recv msg", (char *)recv_buf, len);
-            modbus_com_recv (&pd_dev, recv_buf, len);
-        }
-        else {
-            modbus_com_recv_to (&pd_dev);
-        }
+//    while (1) {
+//        len = uart_recv (pd_dev.com_fd, recv_buf, sizeof (recv_buf));
+//        if (len > 0) {
+//            show_msg ("recv msg", (char *)recv_buf, len);
+//            modbus_com_recv (&pd_dev, recv_buf, len);
+//        }
+//        else {
+//            modbus_com_recv_to (&pd_dev);
+//        }
+//        qDebug()<<"[2]modbus start!";
+//        sleep(1);
+//    }
+
+//    close_modbus_dev (&pd_dev);
+
+}
+
+void Modbus::readData()
+{
+    QByteArray buf;
+    buf = serial->readAll();
+    if(buf!=NULL)
+    {
+        qDebug()<<"receive serial data:"<<buf;
+//        QString str =
     }
+    else{
+        qDebug()<<"receive serial data failed";
+    }
+}
 
-    close_modbus_dev (&pd_dev);
-
+void Modbus::writeData()
+{
+    QByteArray str;
+    str = "abc";
+    serial->write(str);
 }
 
 unsigned short Modbus::modbus_crc(unsigned char *buf, unsigned char length)

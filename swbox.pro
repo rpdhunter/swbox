@@ -6,6 +6,8 @@
 
 QT       += core gui widgets network
 
+QT += serialport
+
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = swbox
@@ -62,7 +64,8 @@ SOURCES += \
     Gui/MainMenu/Menu6/Option/options.cpp \
     Gui/MainMenu/Menu6/FactoryReset/factoryreset.cpp \
     IO/Modbus/gpio_oper.c \
-    IO/Modbus/uart_oper.c
+    IO/Modbus/uart_oper.c \
+    IO/Data/filetools.cpp
 
 
 HEADERS  += \
@@ -106,7 +109,9 @@ HEADERS  += \
     Gui/MainMenu/Menu6/Option/options.h \
     Gui/MainMenu/Menu6/FactoryReset/factoryreset.h \
     IO/Modbus/gpio_oper.h \
-    IO/Modbus/uart_oper.h
+    IO/Modbus/uart_oper.h \
+    IO/Data/data.h \
+    IO/Data/filetools.h
 
 
 RESOURCES += \

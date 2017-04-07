@@ -283,7 +283,7 @@ void MainMenu::trans_key(quint8 key_code)
     emit send_key(key_code);                                                    //not current grade key
 }
 
-void MainMenu::showWaveData(quint32 *buf, int len, int mod)
+void MainMenu::showWaveData(qint32 *buf, int len, int mod)
 {
     menu6->showWaveData(buf,len,mod);
 }
@@ -305,10 +305,12 @@ void MainMenu::showReminTime(int s,QString str)
 
 void MainMenu::sysReset()
 {
-    data->send_para.freq.rval = (FREQ_REG << 16) | ((sqlcfg->get_para()->freq_val == 50) ? 0 : 1);
+//    data->send_para.freq.rval = (FREQ_REG << 16) | ((sqlcfg->get_para()->freq_val == 50) ? 0 : 1);
+    data->send_para.freq.rval = (sqlcfg->get_para()->freq_val == 50) ? 0 : 1;
     data->send_para.freq.flag = 1;
     freqLab->setText(tr("%1Hz").arg(sqlcfg->get_para()->freq_val));
-    data->send_para.blacklight.rval = (BLACKLIGHT_REG << 16) | sqlcfg->get_para()->backlight;
+//    data->send_para.blacklight.rval = (BLACKLIGHT_REG << 16) | sqlcfg->get_para()->backlight;
+    data->send_para.blacklight.rval = sqlcfg->get_para()->backlight;
     data->send_para.blacklight.flag = 1;
     menu0->sysReset();
     menu1->sysReset();

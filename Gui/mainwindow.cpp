@@ -1,4 +1,5 @@
 #include "mainwindow.h"
+#include <QBuffer>
 
 MainWindow::MainWindow(QWidget *parent)
     : QFrame(parent)
@@ -28,7 +29,10 @@ MainWindow::MainWindow(QWidget *parent)
     //开启键盘监测线程，持续监听键盘输入
     keydetect = new KeyDetect(this);
 
-    modbus = new Modbus(g_data);
+//    printf("[0]modbus start!");
+
+
+    modbus = new Modbus(this,g_data);
 
 
     connect(keydetect, &KeyDetect::sendkey, mainmenu, &MainMenu::trans_key);    //trans key value
@@ -37,7 +41,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     //录波信号
     connect(mainmenu,SIGNAL(startRecWv(int)),fifodata,SLOT(startRecWave(int)));
-    connect(fifodata,SIGNAL(waveData(quint32*,int,int)),mainmenu,SLOT(showWaveData(quint32*,int,int)));
+    connect(fifodata,SIGNAL(waveData(qint32*,int,int)),mainmenu,SLOT(showWaveData(qint32*,int,int)));
 
     //系统重启
     rebootTimer = new QTimer;
@@ -52,6 +56,8 @@ MainWindow::MainWindow(QWidget *parent)
     showTimer->start(1000);
     connect(showTimer,SIGNAL(timeout()),this,SLOT(showTime()));
 
+//    connect(showTimer,SIGNAL(timeout()),this,SLOT(printSc()));  //截屏
+
 }
 
 void MainWindow::showTime()
@@ -63,6 +69,17 @@ void MainWindow::showTime()
     else{
         mainmenu->showMaxResetTime();   //借机显示最大值重置时间
     }
+}
+
+void MainWindow::printSc()
+{
+    QPixmap fullScreenPixmap = this->grab(this->rect());
+//    bool flag = fullScreenPixmap.save(QString("./ScreenShots/%1.png").arg(QTime::currentTime().toString("-hh-mm-ss")),"PNG");
+    bool flag = fullScreenPixmap.save(QString("./ScreenShots/ScreenShots-%1.png").arg(QTime::currentTime().toString("hh-mm-ss")),"PNG");
+    if(flag)
+        qDebug()<<"fullScreen saved!";
+    else
+        qDebug()<<"fullScreen failed!";
 }
 
 void MainWindow::system_reboot()

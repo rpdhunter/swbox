@@ -1,7 +1,7 @@
 #ifndef AAULTRASONIC2_H
 #define AAULTRASONIC2_H
 
-#include "IO/Data/fifodata.h"
+#include "IO/Data/data.h"
 #include "IO/Key/key.h"
 #include "IO/SqlCfg/sqlcfg.h"
 #include <math.h>

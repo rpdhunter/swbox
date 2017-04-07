@@ -3,8 +3,9 @@
 
 #include <QThread>
 #include <QDebug>
-#include "IO/Data/fifodata.h"
+#include "IO/Data/data.h"
 #include "IO/SqlCfg/sqlcfg.h"
+#include <QSerialPort>
 
 
 #define UART_PORT				"/dev/ttyPS0"
@@ -30,20 +31,27 @@
 //modbus类，用于实现modbus协议通信
 class Modbus : public QThread
 {
+    Q_OBJECT
 public:
-    Modbus(G_PARA *g_data);
+    Modbus(QObject *parent = NULL,G_PARA *g_data = NULL);
+
+    ~Modbus();
 
 signals:
 
 
 public slots:
-
+    void readData();
+    void writeData();
 
 
 protected:
     void run(void);
 
 private:
+//    unsigned char recv_buf [BUFF_SIZE];
+
+
     enum {
         md_rd_reg_dev_st = 0x0000,
         md_rd_reg_tev_mag,
@@ -96,6 +104,9 @@ private:
     unsigned short *data_stand;
 
     unsigned short state, tevAmplitude, tevPluse, aaAmplitude;
+
+    QSerialPort *serial;
+
 
 
 

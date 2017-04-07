@@ -15,8 +15,6 @@ DebugSet::DebugSet(QWidget *parent,G_PARA *g_data) : QFrame(parent),ui(new Ui::D
 
     sql_para = sqlcfg->get_para();
 
-    time_c = 3;
-
     this->resize(455, 185);
     this->move(2, 31);
 //    this->setStyleSheet("DebugSet {background-color:lightGray;}");
@@ -54,82 +52,46 @@ DebugSet::DebugSet(QWidget *parent,G_PARA *g_data) : QFrame(parent),ui(new Ui::D
     resetPassword();
 
 
-//    ui->tabWidget->setStyleSheet("QTabWidget::pane{ border-left: 1px solid #eeeeee;}");
-
-//    lab1 = new QLabel(this);
-//    lab1->resize(150, 21);
-//    lab1->move(15, 15);
-//    lab1->setAttribute(Qt::WA_TranslucentBackground, true);
-//    lab1->setStyleSheet("QLabel {color:white;}");
-//    lab1->setAlignment(Qt::AlignLeft);
-//    lab1->setText(tr("按↑↓键选择录波通道"));
-
-//    lab2 = new QLabel(this);
-//    lab2->resize(120, 21);
-//    lab2->move(15, 35);
-//    lab2->setAttribute(Qt::WA_TranslucentBackground, true);
-//    lab2->setStyleSheet("QLabel {color:white;}");
-//    lab2->setAlignment(Qt::AlignLeft);
-//    lab2->setText(tr("按→键开始录波"));
-
-//    com = new QComboBox(this);
-//    com->resize(150,21);
-//    com->move(15,55);
-//    com->setAttribute(Qt::WA_TranslucentBackground, true);
-////    com->setEnabled(true);
-////    com->show();
-//    QList<QString> list;
-//    list << tr("地电波") << tr("AA超声") << tr("AE超声")
-//            << tr("特高频") << tr("---") << tr("----");
-////    com->clear();
-//    com->addItems(list);
-//    com_index = 0;
-//    com->setCurrentIndex(com_index);
-
-//    timer = new QTimer();
-//    timer->setInterval(1000);   //1秒1跳
-
-//    connect(timer,SIGNAL(timeout()),this,SLOT(plotPrapare()));
-
-
-//    plot = new QwtPlot(this);
-//    plot->resize(225, 100);
-//    plot->move(50, 40);
+//    plot = new QwtPlot(ui->scrollArea);
+    plot = new QwtPlot;
+    ui->scrollArea->setWidget(plot);
+    plot->resize(80, 9);
 //    plot->setStyleSheet("background:transparent;color:gray;font-family:Moonracer;font-size:10px;");
 
 //    plot->setAxisScale(QwtPlot::xBottom, 0, 360, 90);
 
-//    plot->setAxisMaxMinor( QwtPlot::xBottom, 0);
+    plot->setAxisMaxMinor( QwtPlot::xBottom, 1);
 
-//    /* remove gap */
-//    plot->axisWidget(QwtPlot::xBottom)->setMargin(0);
-//    plot->axisScaleDraw(QwtPlot::xBottom)->enableComponent(QwtAbstractScaleDraw::Backbone, true);
+    /* remove gap */
+    plot->axisWidget(QwtPlot::xBottom)->setMargin(0);
+    plot->axisScaleDraw(QwtPlot::xBottom)->enableComponent(QwtAbstractScaleDraw::Backbone, true);
 
 
 //    plot->setAxisScale(QwtPlot::yLeft, 0, 20, 5);
-//    plot->setAxisMaxMinor(QwtPlot::yLeft, 0);
+    plot->setAxisMaxMinor(QwtPlot::yLeft, 1);
 //    plot->axisScaleDraw(QwtPlot::yLeft)->enableComponent(QwtAbstractScaleDraw::Labels, false);
+    plot->axisScaleDraw(QwtPlot::yLeft)->enableComponent(QwtAbstractScaleDraw::Labels, true);
 
-//    /* remove gap */
-//    plot->axisWidget(QwtPlot::yLeft)->setMargin(0);
+    /* remove gap */
+    plot->axisWidget(QwtPlot::yLeft)->setMargin(0);
 
 
-//    plot->plotLayout()->setAlignCanvasToScales(true);
+    plot->plotLayout()->setAlignCanvasToScales(true);
 
-//    /* display */
-//    curve = new QwtPlotCurve();
-//    curve->setPen(QPen(Qt::yellow, 0, Qt::SolidLine, Qt::RoundCap));
-//    curve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
-//    curve->attach(plot);
+    /* display */
+    curve = new QwtPlotCurve();
+    curve->setPen(QPen(Qt::yellow, 0, Qt::SolidLine, Qt::RoundCap));
+    curve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
+    curve->attach(plot);
 
-//    /* insert wave data */
-//    wave.clear();
-//    for (int i = 0; i < 360; i++) {
-//        wave.push_back(QPointF(i, 10 + 10 * qSin(i * 8 * M_PI / 360)));
-//    }
-//    curve->setSamples(wave);
+    /* insert wave data */
+    wave.clear();
+    for (int i = 0; i < 360; i++) {
+        wave.push_back(QPointF(i, 10 + 10 * qSin(i * 8 * M_PI / 360)));
+    }
+    curve->setSamples(wave);
 
-//    plot->hide();
+    plot->hide();
 
 
 
@@ -152,6 +114,9 @@ void DebugSet::iniUi()
     ui->spinBox_AAStep->setValue(this->sql_para->aa_step);
 
     ui->lineEdit_AA_offset->setText(QString("%1").arg(sql_para->aa_offset));
+
+    ui->tabWidget->setCurrentIndex(0);
+
 }
 
 void DebugSet::resetPassword()
@@ -163,9 +128,8 @@ void DebugSet::resetPassword()
     this->widget->show();
     ui->tabWidget->hide();
 
-    qDebug()<<"password dlg reset!";
+//    qDebug()<<"password dlg reset!";
 }
-
 
 void DebugSet::working(CURRENT_KEY_VALUE *val)
 {
@@ -183,10 +147,6 @@ void DebugSet::trans_key(quint8 key_code)
     if (key_val == NULL) {
         return;
     }
-//    printf("\nkey_val->grade.val1 is : %d",key_val->grade.val1);
-//    printf("\tkey_val->grade.val2 is : %d",key_val->grade.val2);
-//    printf("\tkey_val->grade.val3 is : %d",key_val->grade.val3);
-//    printf("\tkey_val->grade.val4 is : %d",key_val->grade.val4);
 
     if (key_val->grade.val1 != 2) {
         return;
@@ -199,17 +159,14 @@ void DebugSet::trans_key(quint8 key_code)
     case KEY_OK:
         if(pass){
             if(key_val->grade.val4 == 0 && key_val->grade.val3 == 0){   //初始状态
-//                key_val->grade.val3 = 1;
+                key_val->grade.val3 = 2;
                 iniUi();
-                fresh();
-                break;
+                qDebug()<<"tabWidget reset!";
             }
             else if(key_val->grade.val3 == 3 && key_val->grade.val4 != 0 ){   //录波
-                emit startRecWv(key_val->grade.val4);
-                fresh();
-                break;
+                emit startRecWv(key_val->grade.val4-1);
             }
-            else{
+            else{                                                   //保存
                 qDebug()<<"debug para saved!";
                 sql_para->tev_gain = ui->spinBox_Tev_Gain->value();
                 sql_para->tev_offset1 = ui->spinBox_Tev_offset1->value();
@@ -235,7 +192,6 @@ void DebugSet::trans_key(quint8 key_code)
                 pass = true;
 
                 iniUi();
-                fresh();
 //                lab2->setText("password accepted!");
             }
             else{
@@ -247,10 +203,8 @@ void DebugSet::trans_key(quint8 key_code)
                     lab2->setText("password error!");
                     qDebug()<<"password error!";
                 }
-
             }
         }
-
 
         break;
     case KEY_CANCEL:
@@ -265,8 +219,6 @@ void DebugSet::trans_key(quint8 key_code)
         else{
             key_val->grade.val4 = 0;    //退出三级菜单
         }
-        fresh();
-
 
         break;
     case KEY_UP:
@@ -278,7 +230,6 @@ void DebugSet::trans_key(quint8 key_code)
                 else{
                     key_val->grade.val3 = 3;
                 }
-//                fresh();
             }
             else{                           //判断在三级菜单
                 switch (key_val->grade.val3) {
@@ -292,10 +243,8 @@ void DebugSet::trans_key(quint8 key_code)
                     else{
                         key_val->grade.val4 = 3;
                     }
-//                    fresh();
                     break;
                 case 2:
-//                    ui->spinBox_AAStep->stepUp();
                     if(key_val->grade.val4 >1 ){
                         key_val->grade.val4 --;
                     }
@@ -304,6 +253,12 @@ void DebugSet::trans_key(quint8 key_code)
                     }
                     break;
                 case 3:
+                    if(key_val->grade.val4 < 2){
+                        key_val->grade.val4 ++;
+                    }
+                    else{
+                        key_val->grade.val4 = 1;
+                    }
 
                     break;
                 default:
@@ -315,8 +270,6 @@ void DebugSet::trans_key(quint8 key_code)
             password.append("U");
             passwordEdit->setText(passwordEdit->text()+"*");
         }
-
-        fresh();
         break;
     case KEY_DOWN:
         if(pass){
@@ -327,7 +280,6 @@ void DebugSet::trans_key(quint8 key_code)
                 else{
                     key_val->grade.val3 = 1;
                 }
-//                fresh();
             }
             else{                           //判断在三级菜单
                 switch (key_val->grade.val3) {
@@ -341,10 +293,8 @@ void DebugSet::trans_key(quint8 key_code)
                     else{
                         key_val->grade.val4 = 1;
                     }
-//                    fresh();
                     break;
                 case 2:
-//                    ui->spinBox_AAStep->stepDown();
                     if(key_val->grade.val4 <2){
                         key_val->grade.val4 ++;
                     }
@@ -359,8 +309,6 @@ void DebugSet::trans_key(quint8 key_code)
                     else{
                         key_val->grade.val4 = 1;
                     }
-//                    fresh();
-
                     break;
                 default:
                     break;
@@ -371,8 +319,6 @@ void DebugSet::trans_key(quint8 key_code)
             password.append("D");
             passwordEdit->setText(passwordEdit->text()+"*");
         }
-
-        fresh();
         break;
     case KEY_LEFT:
         if(pass){
@@ -393,7 +339,6 @@ void DebugSet::trans_key(quint8 key_code)
                     else if(key_val->grade.val4 == 3){
                         ui->spinBox_Tev_offset2->stepDown();
                     }
-//                    fresh();
                     break;
                 case 2:
                     if(key_val->grade.val4 == 1){
@@ -404,13 +349,12 @@ void DebugSet::trans_key(quint8 key_code)
                     }
                     break;
                 case 3:
-                    if(key_val->grade.val4 < 2){
-                        key_val->grade.val4 ++;
-                    }
-                    else{
-                        key_val->grade.val4 = 1;
-                    }
-//                    fresh();
+//                    if(key_val->grade.val4 < 2){
+//                        key_val->grade.val4 ++;
+//                    }
+//                    else{
+//                        key_val->grade.val4 = 1;
+//                    }
 
                     break;
                 default:
@@ -423,13 +367,11 @@ void DebugSet::trans_key(quint8 key_code)
             passwordEdit->setText(passwordEdit->text()+"*");
         }
 
-        fresh();
         break;
     case KEY_RIGHT:
         if(pass){
-            if(key_val->grade.val4 == 0){
+            if(key_val->grade.val4 == 0 && key_val->grade.val3 != 0){   //必须第三层处于工作状态
                 key_val->grade.val4 =1;
-                fresh();
             }
             else{
                 switch (key_val->grade.val3) {
@@ -446,7 +388,6 @@ void DebugSet::trans_key(quint8 key_code)
                     else if(key_val->grade.val4 == 3){
                         ui->spinBox_Tev_offset2->stepUp();
                     }
-//                    fresh();
                     break;
                 case 2:
                     if(key_val->grade.val4 == 1){
@@ -457,13 +398,12 @@ void DebugSet::trans_key(quint8 key_code)
                     }
                     break;
                 case 3:
-                    if(key_val->grade.val4 < 2){
-                        key_val->grade.val4 ++;
-                    }
-                    else{
-                        key_val->grade.val4 = 1;
-                    }
-//                    fresh();
+//                    if(key_val->grade.val4 < 2){
+//                        key_val->grade.val4 ++;
+//                    }
+//                    else{
+//                        key_val->grade.val4 = 1;
+//                    }
 
                     break;
                 default:
@@ -476,51 +416,51 @@ void DebugSet::trans_key(quint8 key_code)
             passwordEdit->setText(passwordEdit->text()+"*");
         }
 
-        fresh();
         break;
     default:
         break;
     }
+    fresh();
 }
 
 //处理显示录波信号
-void DebugSet::showWaveData(quint32 *wv, int len, int n)
+void DebugSet::showWaveData(qint32 *wv, int len, int mod)
 {
-//    lab1->setText(tr("接到录波信号,通道%1").arg(n));
+    switch (mod) {
+    case 0:     //TEV
+        ui->lab_recWv->setText(tr("接到录波信号,通道%1").arg("TEV"));
+        break;
+    case 1:     //AA超声
+        ui->lab_recWv->setText(tr("接到录波信号,通道%1").arg("AAUltrasonic"));
+        break;
+    case 2:
 
-//    timer->start();
+        break;
+    case 3:
 
-//    wave.clear();
-//    for(int i=0;i<len;i++){
-//        wave.append(QPoint(i,wv[i]));
-//    }
+        break;
+    default:
+        break;
+    }
+
+    wave.clear();
+    for(int i=0;i<len;i++){
+        wave.append(QPoint(i,wv[i]));
+    }
+
+    curve->setSamples(wave);
+    plot->show();
 
 }
 
-void DebugSet::plotPrapare()
-{
-//    time_c--;
-//    lab2->setText(tr("倒计时%1秒").arg(time_c));
-//    if(time_c == 0){
-//        time_c=3;
-//        timer->stop();
-//        plotShow();
-//    }
-
-}
-
-void DebugSet::plotShow()
-{
-//    lab1->hide();
-//    lab2->hide();
-//    com->hide();
-
-//    curve->setSamples(wave);
-    //    plot->show();
-}
 
 void DebugSet::fresh()
 {
+//    printf("\nkey_val->grade.val1 is : %d",key_val->grade.val1);
+//    printf("\tkey_val->grade.val2 is : %d",key_val->grade.val2);
+//    printf("\tkey_val->grade.val3 is : %d",key_val->grade.val3);
+//    printf("\tkey_val->grade.val4 is : %d",key_val->grade.val4);
+
     if(pass){
         if(key_val->grade.val3){
             ui->tabWidget->setCurrentIndex(key_val->grade.val3-1);

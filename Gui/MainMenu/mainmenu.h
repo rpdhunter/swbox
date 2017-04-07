@@ -15,7 +15,7 @@
 #include "Menu5/menu5.h"
 #include "Menu6/menu6.h"
 #include "IO/Key/key.h"
-#include "IO/Data/fifodata.h"
+#include "IO/Data/data.h"
 
 enum MENU_LIST {
     MENU0 = 0,
@@ -44,7 +44,7 @@ public slots:
     void fresh_menu(void);
     void fresh_title(CURRENT_KEY_VALUE);
     void trans_key(quint8);
-    void showWaveData(quint32 *buf, int len, int mod);
+    void showWaveData(qint32 *buf, int len, int mod);
     void fresg_freq(int fre);   //刷新频率
 
     void showReminTime(int s, QString str); //状态栏显示剩余时间

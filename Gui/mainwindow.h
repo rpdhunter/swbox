@@ -9,8 +9,10 @@
 #include <QTimer>
 #include "IO/Key/keydetect.h"
 #include "MainMenu/mainmenu.h"
+//#include "IO/Data/data.h"
 #include "IO/Data/fifodata.h"
 #include "IO/Modbus/modbus.h"
+#include <QPixmap>
 
 class MainWindow : public QFrame
 {
@@ -29,6 +31,8 @@ private:
 
     QTimer *showTimer;
 
+//    QPixmap *fullScreenPixmap;
+
 
 
 signals:
@@ -38,6 +42,8 @@ public slots:
     void system_reboot();
     void setCloseTime(int m);
     void showTime();
+
+    void printSc(); //截屏
 
 protected:
     void keyPressEvent(QKeyEvent *event);

@@ -9,7 +9,7 @@
 #include <QTimer>
 #include <QVector>
 #include "IO/Key/key.h"
-#include "IO/Data/fifodata.h"
+#include "IO/Data/data.h"
 #include "IO/SqlCfg/sqlcfg.h"
 #include <QProxyStyle>
 #include <QPainter>
@@ -96,8 +96,7 @@ public:
 public slots:
     void working(CURRENT_KEY_VALUE *val);
     void trans_key(quint8 key_code);
-    void showWaveData(quint32 *wv, int, int n);
-    void plotPrapare();     //准备绘图,完成倒计时功能
+    void showWaveData(qint32 *wv, int, int n);
 
 signals:
     void fresh_parent(void);
@@ -105,16 +104,17 @@ signals:
     void fregChanged(int);      //频率设置变化
 
 private:
-    void plotShow();    //绘图
-
     void fresh();       //刷新界面
 
     void iniUi();
 
     void resetPassword();
-    CURRENT_KEY_VALUE *key_val;
 
+
+    CURRENT_KEY_VALUE *key_val;
+    G_PARA *data;
     SQL_PARA *sql_para;
+
 
     QWidget *widget;        //密码窗口
     QLabel *lab1, *lab2;
@@ -123,13 +123,13 @@ private:
     QString password;   //密码
     QString password_set;   //密码设定值
 
-    G_PARA *data;
 
-    int time_c; //内置的计时器,数值为0时,开始绘图
 
     QwtPlot *plot;
     QVector<QPointF> wave;
     QwtPlotCurve *curve;
+
+    QTimer *timer;      //备用
 
     Ui::DebugUi *ui;
 

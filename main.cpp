@@ -36,12 +36,11 @@ int main(int argc, char *argv[])
     QFont font(myfont,10);
     QApplication::setFont(font);
 
-    qDebug()<<"fontid = "<<fontid;
-    qDebug()<<QFontDatabase::applicationFontFamilies(fontid);
+//    qDebug()<<QFontDatabase::applicationFontFamilies(fontid);
 
     //语言切换模块
 
-    qDebug("language = %s", sqlcfg->get_para()->language == EN ? "EN" : "CN");
+//    qDebug("language = %s", sqlcfg->get_para()->language == EN ? "EN" : "CN");
 
     if(sqlcfg->get_para()->language == LANGUAGE::EN){
         QTranslator *translator = new QTranslator(qApp);

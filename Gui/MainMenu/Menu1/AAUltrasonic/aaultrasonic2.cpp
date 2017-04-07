@@ -17,7 +17,7 @@ AAUltrasonic2::AAUltrasonic2(QWidget *parent, G_PARA *g_data) : QFrame(parent)
     //开机设置一下音量
     data->send_para.aa_vol.flag = true;
     data->send_para.aa_vol.rval = sql_para->aaultra_sql.vol;
-    qDebug()<<"data->send_para.aa_vol.rval:"<<data->send_para.aa_vol.rval;
+//    qDebug()<<"data->send_para.aa_vol.rval:"<<data->send_para.aa_vol.rval;
 
     this->resize(455, 185);
     this->move(2, 31);
@@ -398,9 +398,9 @@ void AAUltrasonic2::fresh(bool f)
     max_val = (double)((d / 2) * 5000) / qPow(2, 17);    //最大值
 //    qDebug()<<"d = \t"<<d<<"max_val ="<<max_val;
 
-    max_val = sql_para->aaultra_sql.gain * fabs(((double)20) * log10(max_val));      //对数运算,再加上增益
+    max_val = sql_para->aaultra_sql.gain * (((double)20) * log10(max_val) - sql_para->aa_offset);      //对数运算,再加上增益
 
-    max_val = max_val - sql_para->aa_offset;    //减去偏置值
+//    max_val = max_val - sql_para->aa_offset;    //减去偏置值
 
 
 //    d2 = (int)data->recv_para.ldata0_max - (int)data->recv_para.ldata0_min;

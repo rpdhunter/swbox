@@ -2,7 +2,7 @@
 #define AMPLITUDE_H
 
 #include "barchart.h"
-#include "IO/Data/fifodata.h"
+#include "IO/Data/data.h"
 #include "IO/Key/key.h"
 #include "IO/SqlCfg/sqlcfg.h"
 #include <QTimer>
