@@ -250,7 +250,7 @@ void Amplitude::fresh_plot(void)
     //脉冲计数和严重度
 
 //    signal_pulse_cnt = data->recv_para.pulse1.edge.neg + data->recv_para.pulse1.edge.pos;
-    pulse_cnt = data->recv_para.hpulse1_totol;
+    pulse_cnt = data->recv_para.hpulse0_totol;
     degree = s * (double)pulse_cnt / 1000;
 
     pulse_cnt_lab->setText(tr("脉冲数: ") + QString::number(pulse_cnt));

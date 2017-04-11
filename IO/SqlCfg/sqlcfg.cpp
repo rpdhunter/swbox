@@ -67,7 +67,7 @@ SqlCfg::SqlCfg()
             goto exit;
         }
     } else {
-        qDebug("Table device_config is exist! [LINE:%d] [FILE:%s]", __LINE__, __FILE__);
+//        qDebug("Table device_config is exist! [LINE:%d] [FILE:%s]", __LINE__, __FILE__);
         while (sqlite3_step(stmt) == SQLITE_ROW) {
             dev = (SQL_PARA *)(sqlite3_column_blob(stmt, 1));
             memcpy(&sql_para, dev, sizeof(SQL_PARA));

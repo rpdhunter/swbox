@@ -5,6 +5,8 @@ AAUltrasonic2::AAUltrasonic2(QWidget *parent, G_PARA *g_data) : QFrame(parent)
 {
     data = g_data;
 
+    groupNum = -1;
+
     temp_db = 0;
 
     /* get sql para */
@@ -46,6 +48,12 @@ AAUltrasonic2::AAUltrasonic2(QWidget *parent, G_PARA *g_data) : QFrame(parent)
     plot->axisScaleDraw(QwtPlot::xBottom)->enableComponent(QwtAbstractScaleDraw::Labels, false);
 
     plot->plotLayout()->setAlignCanvasToScales(true);
+
+    /* display */
+    curve = new QwtPlotCurve();
+    curve->setPen(QPen(Qt::yellow, 0, Qt::SolidLine, Qt::RoundCap));
+    curve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
+    curve->attach(plot);
 
 
     aaVal_lab = new QLabel(this);
@@ -184,14 +192,14 @@ AAUltrasonic2::AAUltrasonic2(QWidget *parent, G_PARA *g_data) : QFrame(parent)
     if (sql_para->aaultra_sql.mode == series) {
         timer1->start();
     }
-    connect(timer1, SIGNAL(timeout()), this, SLOT(fresh_2()));   //每0.1秒刷新一次数据状态
+    connect(timer1, SIGNAL(timeout()), this, SLOT(fresh_2()));   //每0.1秒刷新一次数据状态，明显的变化需要快速显示
 
     timer2 = new QTimer(this);
     timer2->setInterval(1000);
     if (sql_para->aaultra_sql.mode == series) {
         timer2->start();
     }
-    connect(timer2, SIGNAL(timeout()), this, SLOT(fresh_1()));   //每0.1秒刷新一次数据状态
+    connect(timer2, SIGNAL(timeout()), this, SLOT(fresh_1()));   //每1秒刷新一次数据状态
 }
 
 void AAUltrasonic2::sysReset()
@@ -470,9 +478,26 @@ void AAUltrasonic2::fresh_1()
     fresh(true);
 }
 
-void AAUltrasonic2::fresh_2()
+void AAUltrasonic2::fresh_2()       //0.1秒刷新一次
 {
     fresh(false);
+    fresh_PRPD();
+}
+
+void AAUltrasonic2::fresh_PRPD()
+{
+    if(groupNum != data->recv_para.recData[0]){     //有效数据
+        groupNum = data->recv_para.recData[0];
+        //处理数据
+        for(quint32 i=0;i<data->recv_para.recData[1];i++){
+            X.append(data->recv_para.recData[i+2]);
+            Y.append(data->recv_para.recData[i+3]);
+        }
+        qDebug()<<"read " <<data->recv_para.recData[1] <<  " PRPD data !";
+        curve->setSamples(X,Y);
+        plot->replot();
+
+    }
 }
 
 void AAUltrasonic2::fresh_setting()

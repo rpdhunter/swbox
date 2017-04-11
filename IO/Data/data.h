@@ -2,6 +2,8 @@
 #define DATA_H
 
 #include <QtGlobal>
+#include <QMetaType>
+#include <QVector>
 
 //定义一些全局数据类型，和一些全局宏
 
@@ -72,6 +74,11 @@ enum MODE{
     AE_Ultrasonic,
     Disable
 };
+
+
+typedef QVector<qint32> VectorList;
+//qRegisterMetaType<VectorList>("VectorList");
+
 
 
 #endif // DATA_H

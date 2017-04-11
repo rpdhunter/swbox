@@ -18,8 +18,9 @@ FifoData::FifoData(G_PARA *g_data)
         return;
     }
     tdata = g_data;     //与外部交互的数据指针
-    mode = 0;
-    mode_fpga = -1;
+    mode = Disable;
+
+    groupNum = -1;
 
 
     //这是xilinx的函数，【可能】用于打开存储设备
@@ -37,6 +38,7 @@ FifoData::FifoData(G_PARA *g_data)
             MAP_SHARED,
             fd,
             AXI_STREAM_BASE0);
+
     if (vbase0 == NULL) {
         printf("Mmap AXI_STREAM_BASE0 failed!\n");
         close(fd);
@@ -57,6 +59,7 @@ FifoData::FifoData(G_PARA *g_data)
         close(fd);
         return;
     }
+
 
     write_axi_reg(vbase1 + TDFR, XLLF_TDFR_RESET_MASK);							//reset tx
     write_axi_reg(vbase1 + ISR, XLLF_INT_ALL_MASK);								//clear all interrupt
@@ -86,10 +89,16 @@ FifoData::FifoData(G_PARA *g_data)
     tdata->send_para.recstart.flag = true;
     tdata->send_para.recstart.rval = 0;
     tdata->send_para.groupNum.flag = false;
-    tdata->send_para.groupNum.rval = GROUP_NUM_FLAG;
+    tdata->send_para.groupNum.rval = 0;
 
-    filetools = new FileTools;
-    connect(this,SIGNAL(waveData(qint32*,int,int)),filetools,SLOT(saveWaveToFile(qint32*,int,int)));
+    tevData = new RecWave(g_data, MODE::TEV);
+    AAData = new RecWave(g_data, MODE::AA_Ultrasonic);
+
+    qRegisterMetaType<VectorList>("VectorList");
+    qRegisterMetaType<MODE>("MODE");
+
+    connect(tevData,SIGNAL(waveData(VectorList,MODE)),this,SIGNAL(waveData(VectorList,MODE)));
+    connect(AAData,SIGNAL(waveData(VectorList,MODE)),this,SIGNAL(waveData(VectorList,MODE)));
 
     /* Start qthread */
     this->start();
@@ -110,15 +119,33 @@ void FifoData::startRecWave(int mode)
 
     qDebug()<<"receive startRecWave signal! ... "<<mode;
 
-    recTaskManager();
+    if(mode == TEV){
+        tevData->recStart();
+    }
+    else if(mode == AA_Ultrasonic){
+        AAData->recStart();
+    }
+    else{
+        //to be
+    }
+    sendpara();
 }
+
+
 
 void FifoData::run(void)
 {
     int ret = 0;
+//    int tmp = 0;
 
     while (true) {
+//        read_fpga();
+//        tmp++;
+//        qDebug()<< tmp;
+//        continue;
+
         ret = recvdata();       //接收数据
+
         if (ret) {            
 #if 0
             for (int i = 0; i < ret; i++) {
@@ -128,21 +155,37 @@ void FifoData::run(void)
 #endif
             memcpy((void *)&(tdata->recv_para), buf, sizeof(int) * ret);    //数据从缓冲区拷贝到接口的数据接收
 
+//            qDebug()<<"ret = "<<ret;                                            //打印收到信息长度
+//            qDebug()<<"recv recComplete = "<<tdata->recv_para.recComplete;      //打印收到的录播完成标志位
+
             if( tdata->recv_para.recComplete >0 && tdata->recv_para.recComplete <=15){       //录波完成可能值为0-15
+//                qDebug()<<"send groupNum = "<<tdata->send_para.groupNum.rval;              //打印当前发送组号
                 recvRecData();  //开始接收数据(暂时禁用)
             }
-//            qDebug()<<"ret = "<<ret;                                            //打印收到信息长度
-//            qDebug()<<"send groupNum = "<<send_para.groupNum.rval;              //打印当前发送组号
-//            qDebug()<<"recv recComplete = "<<tdata->recv_para.recComplete;      //打印收到的录播完成标志位
+            else if(tdata->recv_para.recComplete = 0){
+                recvPRPD();     //接收PRPD图数据
+            }
+
+
         }
+
         sendpara();
         read_fpga();
 
-        if(tdata->recv_para.recComplete >0 && tdata->recv_para.recComplete <=15){
-            usleep(1);          //上传录波数据时，休眠时间较短
+        if(tdata->recv_para.recComplete >0 && tdata->recv_para.recComplete <=16){
+            if(tdata->recv_para.recComplete == 1){
+                usleep(1);          //上传录波数据时，休眠时间较短
+            }
+            else if(tdata->recv_para.recComplete == 4){
+                usleep(1);          //上传录波数据时，休眠时间较短
+            }
+            else if(tdata->recv_para.recComplete == 16){
+                usleep(1);          //上传录波数据时，休眠时间较短
+            }
+
         }
         else{
-            msleep(100);        //空闲时，休眠时间较长
+            msleep(200);        //空闲时，休眠时间较长
         }
     }
     exit(0);        //跳出循环，理论上永远不会执行此句？
@@ -159,6 +202,7 @@ void FifoData::sendpara(void)
         quint32 temp = (BACKLIGHT_REG<<16) | tdata->send_para.blacklight.rval;
         write_axi_reg(vbase1 + TDFD, temp);
         qDebug("blacklight = 0x%08x", temp);
+        while (sizeof(int) > read_axi_reg(vbase1 + TDFV));
         write_axi_reg(vbase1 + TLR, sizeof(int));       //设定传输长度
     }
 
@@ -170,6 +214,7 @@ void FifoData::sendpara(void)
         quint32 temp = (FREQ_REG<<16) | tdata->send_para.freq.rval;
         write_axi_reg(vbase1 + TDFD, temp);
         qDebug("gridfreq = 0x%08x", temp);
+        while (sizeof(int) > read_axi_reg(vbase1 + TDFV));
         write_axi_reg(vbase1 + TLR, sizeof(int));
     }
 
@@ -179,7 +224,8 @@ void FifoData::sendpara(void)
         while (sizeof(int) > read_axi_reg(vbase1 + TDFV));
         quint32 temp = (GROUP_NUM<<16) | tdata->send_para.groupNum.rval;
         write_axi_reg(vbase1 + TDFD, temp);
-        qDebug("groupNum = 0x%08x", temp);
+//        qDebug("groupNum = 0x%08x", temp);
+        while (sizeof(int) > read_axi_reg(vbase1 + TDFV));
         write_axi_reg(vbase1 + TLR, sizeof(int));
     }
 
@@ -188,21 +234,10 @@ void FifoData::sendpara(void)
         tdata->send_para.recstart.flag = false;
         while (sizeof(int) > read_axi_reg(vbase1 + TDFV));
         quint32 temp;
-        switch (mode) {
-        case 0:     //地电波
-            temp = (AD_1<<16) | tdata->send_para.recstart.rval;
-            break;
-        case 1:     //AA超声
-            temp = (AD_3<<16) | tdata->send_para.recstart.rval;
-            break;
-        case 2:     //
-
-            break;
-        default:
-            break;
-        }
+        temp = (AD_1<<16) | tdata->send_para.recstart.rval;
         write_axi_reg(vbase1 + TDFD, temp);
         qDebug("recstart = 0x%08x", temp);
+        while (sizeof(int) > read_axi_reg(vbase1 + TDFV));
         write_axi_reg(vbase1 + TLR, sizeof(int));
     }
 
@@ -213,16 +248,18 @@ void FifoData::sendpara(void)
         quint32 temp = (AA_VOL<<16) | tdata->send_para.aa_vol.rval;
         write_axi_reg(vbase1 + TDFD, temp);
         qDebug("aa_vol = 0x%08x", temp);
+        while (sizeof(int) > read_axi_reg(vbase1 + TDFV));
         write_axi_reg(vbase1 + TLR, sizeof(int));
     }
 
     //送
     if (tdata->send_para.read_fpga.flag) {
         tdata->send_para.read_fpga.flag = false;
-        while (sizeof(int) > read_axi_reg(vbase1 + TDFV));  //看寄存器是否空闲
+        while (sizeof(int) > read_axi_reg(vbase1 + TDFV));
         quint32 temp = (READ_FPGA<<16) | tdata->send_para.read_fpga.rval;
         write_axi_reg(vbase1 + TDFD, temp);
 //        qDebug("read_fpga = 0x%08x", temp);
+        while (sizeof(int) > read_axi_reg(vbase1 + TDFV));
         write_axi_reg(vbase1 + TLR, sizeof(int));       //设定传输长度
     }
 
@@ -273,90 +310,56 @@ void FifoData::recvRecData()
     //多路同时录波，约定首先传送AD编号较小的通道数据
     //
     //下面算法基于以上生成
-    if(tdata->send_para.groupNum.rval == GROUP_NUM_FLAG){
-        int x = tdata->recv_para.recComplete;
-        if(x>15 || x<=0){
-            mode_fpga = -1;
-        }
-        else if( (x&1) == 1){
-            mode_fpga = 0;   //TEV
-        }
-        else if( (x&2) == 2){
-            mode_fpga = 2;   //AD2暂时不用
-        }
-        else if( (x&4) == 4){
-            mode_fpga = 1;   //AA超声
-        }
-        else{           //AD4暂时不用
-            mode_fpga = 8;
-        }
-
+    int x = tdata->recv_para.recComplete;
+    if(x>15 || x<=0){
+        mode = Disable;
+    }
+    else if( (x&1) == 1){
+        mode = TEV;   //TEV
+    }
+    else if( (x&2) == 2){
+        mode = Disable;   //AD2暂时不用
+    }
+    else if( (x&4) == 4){
+        mode = AA_Ultrasonic;   //AA超声
+    }
+    else{           //AD4暂时不用
+        mode = Disable;
     }
 
-    if(tdata->send_para.recstart.rval != 2){
-        if(tdata->send_para.groupNum.rval == GROUP_NUM_FLAG)
-            mode = mode_fpga;
-        tdata->send_para.recstart.rval = 2;     //数据上传开始
-        tdata->send_para.recstart.flag = true;
-    }
+    switch (mode) {
+    case TEV:
+        if(tevData->status == RecWave::Free){
+            tevData->status = RecWave::Working;
+            tevData->startWork();
+        }
+        else{
+            tevData->work();
+        }
+        break;
 
-    int offset = 0; //组号补偿，为了方便，无实际意义
-    switch (mode_fpga) {
-    case 0:         //TEV
-        offset = 0;
-        break;
-    case 1:         //AA
-        offset = 0x100 * 2 ;
-        break;
-    case 2:
+    case AA_Ultrasonic:
+        if(tevData->status == RecWave::Working){        //TEV通道正在使用，AA先暂停
+            AAData->status = RecWave::Pending;
+        }
+        else if(AAData->status == RecWave::Free){
+            AAData->status = RecWave::Working;
+            AAData->startWork();
+        }
+        else if(AAData->status == RecWave::Pending){
+            AAData->status = RecWave::Working;
+            AAData->work();
+        }
+        else{
+            AAData->work();
+        }
 
         break;
     default:
         break;
     }
-
-    int send_groupNum_offset = tdata->send_para.groupNum.rval-offset;
-
-    if(tdata->send_para.groupNum.rval < GROUP_NUM_FLAG){
-        if(tdata->recv_para.groupNum == send_groupNum_offset ){      //收发相匹配，拷贝数据
-            for(int i=0;i<256;i++){
-                recWaveData[send_groupNum_offset*256 + i] = (qint32)tdata->recv_para.recData [ i + 1 ] - 0x8000;
-//                qDebug("%08X",tdata->recv_para.recData [ i ]);
-            }
-
-            printf("receive recWaveData! send_groupNum=%d\n",tdata->send_para.groupNum.rval);
-
-            tdata->send_para.groupNum.rval++;
-            tdata->send_para.groupNum.flag = true;
-        }
-        else{                                                               //不匹配，再发一次
-            printf("receive recWaveData failed! send groupNum=%d\n",tdata->send_para.groupNum.rval);
-            printf("recv groupNum=%d\n",tdata->recv_para.groupNum);
-            tdata->send_para.groupNum.flag = true;
-        }
-    }
-
-    if((tdata->send_para.groupNum.rval - offset) == GROUP_NUM_MAX){
-        tdata->send_para.groupNum.rval = GROUP_NUM_FLAG;
-//        tdata->send_para.groupNum.flag = true;
-
-
-        mode = mode_fpga;   //组装完毕
-        tdata->send_para.recstart.rval=0;
-        tdata->send_para.recstart.flag = true;
-        sendpara();
-
-         //接收组装数据完毕
-        qDebug()<<QString("rec wave cost time: %1 ms").arg( - QTime::currentTime().msecsTo(time));
-        qDebug()<<"receive recWaveData complete!";
-        emit waveData(recWaveData, BUF_SIZE ,mode_fpga);        //录波完成，发送数据，通知GUI和文件保存
-    }
-    else if(tdata->send_para.groupNum.rval == GROUP_NUM_FLAG && tdata->send_para.recstart.rval == 2){       //从初始状态,开始启动数据碎片读取
-        time = QTime::currentTime();
-        tdata->send_para.groupNum.rval = offset + 0 ;
-        tdata->send_para.groupNum.flag = true;
-    }
 }
+
 
 void FifoData::read_fpga()
 {
@@ -371,17 +374,25 @@ void FifoData::read_fpga()
 
 }
 
-void FifoData::recTaskManager()
+void FifoData::recvPRPD()
 {
-    if(mode = TEV){
-        tdata->send_para.recstart.rval = 1;
-        tdata->send_para.recstart.flag = true;
-    }
-    else{
-        //to be
-    }
-    sendpara();
+//    if(groupNum != tdata->recv_para.recData[0]){     //有效数据
+//        groupNum = tdata->recv_para.recData[0];
+//        //处理数据
+//        int n = tdata->recv_para.recData[1];
+
+
+//    }
 }
+
+
+
+
+
+
+
+
+
 
 
 

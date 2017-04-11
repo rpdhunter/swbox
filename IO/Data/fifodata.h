@@ -4,10 +4,9 @@
 #include "zynq.h"
 #include <QThread>
 #include <QDebug>
-#include <QList>
+#include <QVector>
 #include "data.h"
-#include "filetools.h"
-#include <QTime>
+#include "recwave.h"
 
 
 #define GROUP_NUM_FLAG          0x1000          //组号标志（实际是复位值，表示传输数据未开始或已完成状态）
@@ -38,33 +37,38 @@ public:
 public slots:
     void startRecWave(int mode);       //启动录波，需要主函数建立连接
 
+
 signals:
     void waveData(qint32 *wave,int len,int mod);  //录波完成信号，并发送录波数据
+    void waveData(VectorList,MODE);
+
+private slots:
+
 
 private:
+
     quint32 recvdata(void);
     void sendpara(void);
 
     void write_axi_reg(volatile quint32 *reg, quint32 val);
     quint32 read_axi_reg(volatile quint32 *reg);
-    FileTools *filetools;
 
     volatile quint32 *vbase0, *vbase1;
     G_PARA *tdata;
 
     int *buf;
 
-    int mode;    //录波通道
-    int mode_fpga;
+    MODE mode;      //工作模式
 
-    qint32 recWaveData[BUF_SIZE]; //录波数据
+    RecWave *tevData, *AAData;
 
     void recvRecData();     //接收录波数据
 
     void read_fpga();
 
-    QTime time;
+    void recvPRPD();
 
+    int groupNum;   //用于判别PRPD图数据有效性的组号(0-15变化)
 
 
 protected:

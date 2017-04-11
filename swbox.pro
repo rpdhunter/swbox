@@ -65,7 +65,8 @@ SOURCES += \
     Gui/MainMenu/Menu6/FactoryReset/factoryreset.cpp \
     IO/Modbus/gpio_oper.c \
     IO/Modbus/uart_oper.c \
-    IO/Data/filetools.cpp
+    IO/Data/recwave.cpp \
+    Gui/MainMenu/StatusBar/battery.cpp
 
 
 HEADERS  += \
@@ -111,7 +112,8 @@ HEADERS  += \
     IO/Modbus/gpio_oper.h \
     IO/Modbus/uart_oper.h \
     IO/Data/data.h \
-    IO/Data/filetools.h
+    IO/Data/recwave.h \
+    Gui/MainMenu/StatusBar/battery.h
 
 
 RESOURCES += \

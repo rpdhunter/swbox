@@ -15,8 +15,6 @@
 #define RDFD					0x08
 #define RLR						0x09
 
-#define REC_WV_START            0x10
-#define REC_WV_DATA             0x11
 
 /* Register masks. The following constants define bit locations of various
  * control bits in the registers. Constants are not defined for those registers

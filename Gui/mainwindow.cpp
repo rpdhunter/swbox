@@ -32,7 +32,7 @@ MainWindow::MainWindow(QWidget *parent)
 //    printf("[0]modbus start!");
 
 
-    modbus = new Modbus(this,g_data);
+//    modbus = new Modbus(this,g_data);
 
 
     connect(keydetect, &KeyDetect::sendkey, mainmenu, &MainMenu::trans_key);    //trans key value

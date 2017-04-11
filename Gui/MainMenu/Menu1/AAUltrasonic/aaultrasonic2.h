@@ -26,6 +26,7 @@
 #include <qwt_series_store.h>
 #include <qwt_series_data.h>
 #include <qwt_samples.h>
+#include <qwt_plot_curve.h>
 
 class AAUltrasonic2 : public QFrame
 {
@@ -40,6 +41,7 @@ public slots:
     void fresh(bool f); //刷新数据核
     void fresh_1();
     void fresh_2();
+    void fresh_PRPD();  //处理PRPD图
 
 private:
     void fresh_setting(void);
@@ -48,7 +50,7 @@ private:
     SQL_PARA *sql_para;
     AAULTRA_SQL *aaultra_sql;
 
-    QwtPlot *plot;
+
 
     double max_db;  //最大值
     double temp_db; //显示值缓冲区，用于减缓刷新
@@ -74,6 +76,13 @@ private:
     QTimer *timer1 , *timer2;
 
     G_PARA *data;
+
+    QwtPlot *plot;
+    QwtPlotCurve *curve;
+
+    int groupNum;
+
+    QVector<double> X,Y;
 };
 
 #endif // AAULTRASONIC2_H

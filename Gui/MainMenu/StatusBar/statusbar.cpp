@@ -4,6 +4,8 @@ StatusBar::StatusBar(QWidget *parent) : QFrame(parent)
 {
     batt_val = 10;                                                              //batt is full
 
+    battery = new Battery;
+
     this->resize(480, 24);
 //    this->move(10, 248);
     this->move(10, 0);
@@ -19,15 +21,19 @@ StatusBar::StatusBar(QWidget *parent) : QFrame(parent)
     batt->resize(25, 9);
     batt->move(this->width() - 27 - batt->width(), 10);
 
-    timer = new QTimer();
-    timer->setInterval(1000);   //1秒1跳
-    timer->start();
+    timer_time = new QTimer();
+    timer_time->setInterval(1000);   //1秒1跳
+    timer_time->start();
+
+    timer_batt = new QTimer();
+    timer_batt->setInterval(10000);   //10秒1跳
+    timer_batt->start();
 
     /* refresh time */
-    connect(timer, &QTimer::timeout, this, &StatusBar::fresh_time);
+    connect(timer_time, &QTimer::timeout, this, &StatusBar::fresh_time);
 
     /* refresh batt */
-    connect(timer, &QTimer::timeout, this, &StatusBar::fresh_batt);
+    connect(timer_batt, &QTimer::timeout, this, &StatusBar::fresh_batt);
 }
 
 //刷新时间
@@ -42,7 +48,9 @@ void StatusBar::fresh_time(void)
 //永远为9，原来是显示的假电源
 void StatusBar::fresh_batt(void)
 {
-    batt_val = 9;
+//    batt_val = 9;
+    batt_val = battery->battValue() / 10;
+    qDebug()<<"curr battery value:"<<batt_val;
     switch (batt_val) {
     case 0:
         batt->setStyleSheet("QLabel {border-image: url(:/widgetphoto/pwr/pwr0.png);}");
@@ -80,8 +88,8 @@ void StatusBar::fresh_batt(void)
     default:
         break;
     }
-    batt_val--;
-    if (batt_val < 0) {
-        batt_val = 10;
-    }
+//    batt_val--;
+//    if (batt_val < 0) {
+//        batt_val = 10;
+//    }
 }
