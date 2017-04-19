@@ -1,11 +1,16 @@
 #include "aaultrasonic2.h"
+#include <qwt_plot_grid.h>
+//#include <qwt_plot_curve.h>
+#include <qwt_scale_engine.h>
+
+#define VALUE_MAX 100            //RPPD最大值
 
 
 AAUltrasonic2::AAUltrasonic2(QWidget *parent, G_PARA *g_data) : QFrame(parent)
 {
     data = g_data;
 
-    groupNum = -1;
+    groupNum = 100;     //初始值
 
     temp_db = 0;
 
@@ -28,12 +33,12 @@ AAUltrasonic2::AAUltrasonic2(QWidget *parent, G_PARA *g_data) : QFrame(parent)
 
     /* view barchart */
     plot = new QwtPlot(this);
-    plot->resize(170, 130);
-    plot->move(30, 30);
+    plot->resize(200, 140);
+    plot->move(10, 30);
     plot->setStyleSheet("background:transparent;color:gray;");
 
-    plot->setAxisScale(QwtPlot::xBottom, 0, 13);
-    plot->setAxisScale(QwtPlot::yLeft, 0, 60, 20);
+    plot->setAxisScale(QwtPlot::xBottom, 0, 360, 180);
+    plot->setAxisScale(QwtPlot::yLeft, -VALUE_MAX*1.1, VALUE_MAX*1.1, VALUE_MAX);
 
     plot->axisScaleDraw(QwtPlot::yLeft)->enableComponent(QwtAbstractScaleDraw::Backbone, true);
     plot->axisScaleDraw(QwtPlot::yLeft)->enableComponent(QwtAbstractScaleDraw::Ticks, false);
@@ -43,17 +48,52 @@ AAUltrasonic2::AAUltrasonic2(QWidget *parent, G_PARA *g_data) : QFrame(parent)
     plot->axisWidget(QwtPlot::xBottom)->setMargin(0);
     plot->axisWidget(QwtPlot::yLeft)->setMargin(0);
 
+//    plot->setAxisScaleEngine( QwtPlot::yLeft, new QwtLogScaleEngine );  //对数坐标
+
     plot->axisScaleDraw(QwtPlot::xBottom)->enableComponent(QwtAbstractScaleDraw::Backbone, true);
     plot->axisScaleDraw(QwtPlot::xBottom)->enableComponent(QwtAbstractScaleDraw::Ticks, false);
-    plot->axisScaleDraw(QwtPlot::xBottom)->enableComponent(QwtAbstractScaleDraw::Labels, false);
+//    plot->axisScaleDraw(QwtPlot::xBottom)->enableComponent(QwtAbstractScaleDraw::Labels, false);
 
     plot->plotLayout()->setAlignCanvasToScales(true);
 
     /* display */
-    curve = new QwtPlotCurve();
-    curve->setPen(QPen(Qt::yellow, 0, Qt::SolidLine, Qt::RoundCap));
-    curve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
-    curve->attach(plot);
+    curve_green = new QwtPlotCurve();
+    curve_green->setPen(QPen(Qt::green, 0, Qt::SolidLine, Qt::RoundCap));
+    curve_green->setRenderHint(QwtPlotItem::RenderAntialiased, true);
+    curve_green->setStyle(QwtPlotCurve::CurveStyle::Dots );
+    curve_green->attach(plot);
+
+    curve_yellow = new QwtPlotCurve();
+    curve_yellow->setPen(QPen(Qt::yellow, 0, Qt::SolidLine, Qt::RoundCap));
+    curve_yellow->setRenderHint(QwtPlotItem::RenderAntialiased, true);
+    curve_yellow->setStyle(QwtPlotCurve::CurveStyle::Dots );
+    curve_yellow->attach(plot);
+
+    curve_red = new QwtPlotCurve();
+    curve_red->setPen(QPen(Qt::red, 0, Qt::SolidLine, Qt::RoundCap));
+    curve_red->setRenderHint(QwtPlotItem::RenderAntialiased, true);
+    curve_red->setStyle(QwtPlotCurve::CurveStyle::Dots );
+    curve_red->attach(plot);
+
+    curve_grid = new QwtPlotCurve();
+    curve_grid->setPen(QPen(Qt::gray, 0, Qt::SolidLine, Qt::RoundCap));
+    curve_grid->setRenderHint(QwtPlotItem::RenderAntialiased, true);
+    curve_grid->attach(plot);
+
+    QwtPlotGrid *grid = new QwtPlotGrid();
+    grid->setPen( Qt::gray, 0.0, Qt::DotLine );
+    grid->enableX( true );
+    grid->enableXMin( false );
+    grid->enableY( true );
+    grid->enableYMin( false );
+    grid->attach(plot);
+
+    QVector<double> X,Y;
+    for(int i=0;i<360;i++){
+        X.append(i);
+        Y.append(VALUE_MAX*qSin(2*3.1416*i/360));
+    }
+    curve_grid->setSamples(X,Y);
 
 
     aaVal_lab = new QLabel(this);
@@ -375,8 +415,6 @@ void AAUltrasonic2::trans_key(quint8 key_code)
     }
 }
 
-
-
 void AAUltrasonic2::fresh(bool f)
 {
     int d,d2;
@@ -486,19 +524,75 @@ void AAUltrasonic2::fresh_2()       //0.1秒刷新一次
 
 void AAUltrasonic2::fresh_PRPD()
 {
+    int x,y,len;
     if(groupNum != data->recv_para.recData[0]){     //有效数据
         groupNum = data->recv_para.recData[0];
         //处理数据
-        for(quint32 i=0;i<data->recv_para.recData[1];i++){
-            X.append(data->recv_para.recData[i+2]);
-            Y.append(data->recv_para.recData[i+3]);
-        }
-        qDebug()<<"read " <<data->recv_para.recData[1] <<  " PRPD data !";
-        curve->setSamples(X,Y);
-        plot->replot();
+        len = data->recv_para.recData[1];
+        if(len == 0){       //无脉冲时，只读2数据
+//            x = (int)data->recv_para.recData[4];
+//            y = (int)data->recv_para.recData[5];
+//            transData(x,y);
+//            x = (int)data->recv_para.recData[6];
+//            y = (int)data->recv_para.recData[7];
+//            transData(x,y);
 
+        }
+        else{               //有脉冲时，不读底噪
+            for(int i=0;i<len;i++){
+                x = (int)data->recv_para.recData[2*i+4];
+                y = (int)data->recv_para.recData[2*i+5];
+                transData(x,y);
+            }
+        }
+
+        if(len != 0)
+            qDebug()<<"read " << len <<  " PRPD data !";
+    }
+
+    curve_green->setSamples(X_green,Y_green);
+    curve_yellow->setSamples(X_yellow,Y_yellow);
+    curve_red->setSamples(X_red,Y_red);
+
+    //数据清零
+    if((X_green.length()+X_yellow.length()+X_red.length())>10000){
+        X_green.clear();
+        Y_green.clear();
+        X_yellow.clear();
+        Y_yellow.clear();
+        X_red.clear();
+        Y_red.clear();
+    }
+
+    plot->replot();
+}
+
+void AAUltrasonic2::transData(int x, int y)
+{
+//    qDebug()<<"[1]x="<<x<<"\ty="<<y;
+
+    y = y - 0x8000;
+    y = (int)(((double)y * 1000) / 32768);
+
+    x = x *360 /3000000;
+//    x = x *360 /2000000;
+//    qDebug()<<"[2]x="<<x<<"\ty="<<y;
+    if(x>240)
+        qDebug()<<"[3]x=                    "<<x;
+    if(qAbs(y)<=VALUE_MAX/3){
+        X_green.append(x);
+        Y_green.append(y);
+    }
+    else if(qAbs(y)<=VALUE_MAX*2/3){
+        X_yellow.append(x);
+        Y_yellow.append(y);
+    }
+    else{
+        X_red.append(x);
+        Y_red.append(y);
     }
 }
+
 
 void AAUltrasonic2::fresh_setting()
 {
@@ -600,3 +694,4 @@ void AAUltrasonic2::fresh_setting_text()
     child2_val_lab->setText("[" + QString::number(aaultra_sql->vol) + "]");
     child3_val_lab->setText("[" + QString::number(aaultra_sql->time) + "]s");
 }
+

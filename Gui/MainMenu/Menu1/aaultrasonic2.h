@@ -78,11 +78,14 @@ private:
     G_PARA *data;
 
     QwtPlot *plot;
-    QwtPlotCurve *curve;
 
-    int groupNum;
+    QwtPlotCurve *curve_green, *curve_yellow, *curve_red, *curve_grid;
 
-    QVector<double> X,Y;
+    quint32 groupNum;   //用于判别PRPD图数据有效性的组号(0-3变化)
+
+    QVector<double> X_green,Y_green,X_yellow,Y_yellow,X_red,Y_red;
+
+    void transData(int x, int y);
 };
 
 #endif // AAULTRASONIC2_H
