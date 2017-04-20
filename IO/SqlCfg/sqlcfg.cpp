@@ -98,6 +98,7 @@ SQL_PARA *SqlCfg::default_config(void)
 
     /* amplitude mode */
     sql_para.amp_sql.mode = series;                                             //default series
+    sql_para.amp_sql.mode_chart = PRPS;
     sql_para.amp_sql.high = 40;                                                 //default high
     sql_para.amp_sql.low = 20;                                                  //default low
 
@@ -143,6 +144,8 @@ SQL_PARA *SqlCfg::default_config(void)
     sql_para.aa_step = 2;
 
     sql_para.aa_offset = 0;
+
+    sql_para.tev_auto_rec = false;       //自动录波默认关闭
 
     return &sql_para;
 }

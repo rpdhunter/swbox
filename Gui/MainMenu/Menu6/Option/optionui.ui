@@ -338,7 +338,7 @@
       <number>2</number>
      </property>
      <property name="text">
-      <string>最值重置时间</string>
+      <string>自 动 录 波</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignCenter</set>
@@ -364,41 +364,19 @@
       </spacer>
      </item>
      <item>
-      <widget class="QLineEdit" name="lineEdit_TimeReset">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>60</width>
-         <height>16777215</height>
-        </size>
-       </property>
-       <property name="font">
-        <font>
-         <pointsize>11</pointsize>
-        </font>
-       </property>
+      <widget class="QRadioButton" name="rbt_rec_open">
        <property name="text">
-        <string>0</string>
+        <string>开启</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QLabel" name="lab_min">
-       <property name="font">
-        <font>
-         <pointsize>11</pointsize>
-        </font>
-       </property>
+      <widget class="QRadioButton" name="rbt_rec_close">
        <property name="text">
-        <string>分钟 (0为不设最值重置时间)</string>
+        <string>关闭</string>
        </property>
-       <property name="alignment">
-        <set>Qt::AlignCenter</set>
+       <property name="checked">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
@@ -624,22 +602,6 @@
     <hint type="destinationlabel">
      <x>372</x>
      <y>70</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>lineEdit_TimeReset</sender>
-   <signal>textChanged(QString)</signal>
-   <receiver>lineEdit_TimeReset</receiver>
-   <slot>selectAll()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>257</x>
-     <y>126</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>257</x>
-     <y>126</y>
     </hint>
    </hints>
   </connection>

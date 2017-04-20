@@ -23,8 +23,15 @@ enum AMP_MODE {
     series = 1,
 };
 
+enum AMP_CHART_MODE {
+    PRPS = 0,
+    PRPD = 1,
+    Histogram = 2,
+};
+
 typedef struct AMP_SQL {
     bool mode;
+    AMP_CHART_MODE mode_chart;
     int high;
     int low;
 } AMP_SQL;
@@ -76,6 +83,7 @@ typedef struct SQL_PARA {
 
     double aa_step;         //显示幅值变化门槛
     int aa_offset;       //aa超声偏置值
+    bool tev_auto_rec;      //自动录波
 
 } SQL_PARA;
 

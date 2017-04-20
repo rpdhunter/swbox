@@ -25,10 +25,7 @@ if(contains(DEFINES,ARM)) {
 }
 
 SOURCES += \
-    Gui/MainMenu/Menu0/Amplitude/amplitude.cpp \
-    Gui/MainMenu/Menu0/Pulse/pulse.cpp \
     Gui/MainMenu/Menu0/menu0.cpp \
-    Gui/MainMenu/Menu1/AAUltrasonic/aaultrasonic.cpp \
     Gui/MainMenu/Menu1/menu1.cpp \
     Gui/MainMenu/Menu2/PhaseSpectra/phasespectra.cpp \
     Gui/MainMenu/Menu2/PulseSpectra/pulsespectra.cpp \
@@ -49,12 +46,10 @@ SOURCES += \
     Gui/MainMenu/Menu5/TestPos/testpos.cpp \
     Gui/MainMenu/Menu4/HFCAmplitude/hfcamplitude.cpp \
     Gui/MainMenu/Menu4/HFCAtlas/hfcatlas.cpp \
-    Gui/MainMenu/Menu0/Amplitude/barchart.cpp \
     Gui/MainMenu/Menu3/HFAmplitude/hfbarchart.cpp \
     Gui/MainMenu/Menu4/HFCAmplitude/hfcbarchart.cpp \
     Gui/MainMenu/Menu6/SystemInfo/systeminfo.cpp \
     Gui/MainMenu/Menu6/DebugSet/debugset.cpp \
-    Gui/MainMenu/Menu1/AAUltrasonic/aaultrasonic2.cpp \
     IO/Data/fifodata.cpp \
     IO/Key/keydetect.cpp \
     IO/Modbus/modbus.cpp \
@@ -66,14 +61,14 @@ SOURCES += \
     IO/Modbus/gpio_oper.c \
     IO/Modbus/uart_oper.c \
     IO/Data/recwave.cpp \
-    Gui/MainMenu/StatusBar/battery.cpp
+    Gui/MainMenu/StatusBar/battery.cpp \
+    Gui/MainMenu/Menu0/tevwidget.cpp \
+    Gui/MainMenu/Menu0/barchart.cpp \
+    Gui/MainMenu/Menu1/aaultrasonic2.cpp
 
 
 HEADERS  += \
-    Gui/MainMenu/Menu0/Amplitude/amplitude.h \
-    Gui/MainMenu/Menu0/Pulse/pulse.h \
     Gui/MainMenu/Menu0/menu0.h \
-    Gui/MainMenu/Menu1/AAUltrasonic/aaultrasonic.h \
     Gui/MainMenu/Menu1/menu1.h \
     Gui/MainMenu/Menu2/PhaseSpectra/phasespectra.h \
     Gui/MainMenu/Menu2/PulseSpectra/pulsespectra.h \
@@ -94,12 +89,10 @@ HEADERS  += \
     Gui/MainMenu/Menu5/TestPos/testpos.h \
     Gui/MainMenu/Menu4/HFCAmplitude/hfcamplitude.h \
     Gui/MainMenu/Menu4/HFCAtlas/hfcatlas.h \
-    Gui/MainMenu/Menu0/Amplitude/barchart.h \
     Gui/MainMenu/Menu3/HFAmplitude/hfbarchart.h \
     Gui/MainMenu/Menu4/HFCAmplitude/hfcbarchart.h \
     Gui/MainMenu/Menu6/SystemInfo/systeminfo.h \
     Gui/MainMenu/Menu6/DebugSet/debugset.h \
-    Gui/MainMenu/Menu1/AAUltrasonic/aaultrasonic2.h \
     IO/Data/fifodata.h \
     IO/Data/zynq.h \
     IO/Key/key.h \
@@ -113,7 +106,10 @@ HEADERS  += \
     IO/Modbus/uart_oper.h \
     IO/Data/data.h \
     IO/Data/recwave.h \
-    Gui/MainMenu/StatusBar/battery.h
+    Gui/MainMenu/StatusBar/battery.h \
+    Gui/MainMenu/Menu0/tevwidget.h \
+    Gui/MainMenu/Menu0/barchart.h \
+    Gui/MainMenu/Menu1/aaultrasonic2.h
 
 
 RESOURCES += \
@@ -141,4 +137,5 @@ DISTFILES +=
 FORMS += \
     Gui/MainMenu/Menu6/Option/optionui.ui \
     Gui/MainMenu/Menu6/SystemInfo/systeminfo.ui \
-    Gui/MainMenu/Menu6/DebugSet/debugui.ui
+    Gui/MainMenu/Menu6/DebugSet/debugui.ui \
+    Gui/MainMenu/Menu0/amplitude1.ui

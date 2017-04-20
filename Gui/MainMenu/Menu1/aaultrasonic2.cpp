@@ -546,8 +546,8 @@ void AAUltrasonic2::fresh_PRPD()
             }
         }
 
-        if(len != 0)
-            qDebug()<<"read " << len <<  " PRPD data !";
+//        if(len != 0)
+//            qDebug()<<"read " << len <<  " PRPD data !";
     }
 
     curve_green->setSamples(X_green,Y_green);
@@ -578,7 +578,7 @@ void AAUltrasonic2::transData(int x, int y)
 //    x = x *360 /2000000;
 //    qDebug()<<"[2]x="<<x<<"\ty="<<y;
     if(x>240)
-        qDebug()<<"[3]x=                    "<<x;
+//        qDebug()<<"[3]x=                    "<<x;
     if(qAbs(y)<=VALUE_MAX/3){
         X_green.append(x);
         Y_green.append(y);

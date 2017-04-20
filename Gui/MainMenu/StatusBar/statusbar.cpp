@@ -34,6 +34,8 @@ StatusBar::StatusBar(QWidget *parent) : QFrame(parent)
 
     /* refresh batt */
     connect(timer_batt, &QTimer::timeout, this, &StatusBar::fresh_batt);
+
+    fresh_batt();       //立刻刷新一次
 }
 
 //刷新时间
@@ -50,7 +52,7 @@ void StatusBar::fresh_batt(void)
 {
 //    batt_val = 9;
     batt_val = battery->battValue() / 10;
-    qDebug()<<"curr battery value:"<<batt_val;
+//    qDebug()<<"curr battery value:"<<batt_val;
     switch (batt_val) {
     case 0:
         batt->setStyleSheet("QLabel {border-image: url(:/widgetphoto/pwr/pwr0.png);}");

@@ -2,7 +2,8 @@
 #define ZYNQ_H
 
 #define AXI_STREAM_BASE0		0x43c00000
-#define AXI_STREAM_BASE1		0x83c00000
+//#define AXI_STREAM_BASE1		0x83c00000
+#define AXI_STREAM_BASE1		0x43c10000
 #define AXI_STREAM_SIZE			0x1000
 #define ISR						0x00
 #define IER						0x01

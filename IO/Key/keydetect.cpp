@@ -59,7 +59,14 @@ KeyDetect::KeyDetect(QObject *parent) : QThread(parent)
 //一旦按下某键，便发送对应信号
 void KeyDetect::run(void)
 {
-
+//    quint64 i=0;
+//    while(1){
+//        gpio_read_pin(PIN_OK);
+//        i++;
+//        if(i%1000000==0){
+//            qDebug()<<i/1000000;
+//        }
+//    }
     while (true) {
         if (!gpio_read_pin(PIN_POWER)) {
             usleep(KEY_MS_DLY);

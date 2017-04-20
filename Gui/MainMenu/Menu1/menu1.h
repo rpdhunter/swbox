@@ -3,8 +3,7 @@
 
 #include <QFrame>
 #include <QLabel>
-#include "AAUltrasonic/aaultrasonic.h"
-#include "AAUltrasonic/aaultrasonic2.h"
+#include "aaultrasonic2.h"
 #include "IO/Key/key.h"
 
 class Menu1 : public QFrame

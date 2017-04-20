@@ -37,17 +37,16 @@ Menu0::Menu0(QWidget *parent, G_PARA *g_data) : QFrame(parent)
     main_title6->resize(main_title0->width(), main_title0->height());
     main_title6->move(main_title5->x() + 45, main_title0->y());
 
-//    /* two work mode: amplitude and pulse */
-    amplitude = new Amplitude(this, g_data);
-//    pulse = new Pulse(this, g_data);
+//    amplitude = new Amplitude(this, g_data);
+//    amplitude->hide();
 
-    connect(this, &Menu0::send_key, amplitude, &Amplitude::trans_key);
+//    connect(this, &Menu0::send_key, amplitude, &Amplitude::trans_key);
+//    connect(amplitude,SIGNAL(offset_suggest(int,int)),this,SIGNAL(offset_suggest(int,int)));
 
-    connect(amplitude,SIGNAL(offset_suggest(int,int)),this,SIGNAL(offset_suggest(int,int)));
-//    connect(this, &Menu0::send_key, pulse, &Pulse::trans_key);
+    tevWidget = new TEVWidget(g_data,this);
+    connect(this, &Menu0::send_key, tevWidget, &TEVWidget::trans_key);
+    connect(tevWidget,SIGNAL(offset_suggest(int,int)),this,SIGNAL(offset_suggest(int,int)));
 
-//    connect(amplitude, &Amplitude::fresh_parent, this, &Menu0::fresh_grade1);
-//    connect(pulse, &Pulse::fresh_parent, this, &Menu0::fresh_grade1);
 }
 
 void Menu0::working(CURRENT_KEY_VALUE *val)
@@ -56,23 +55,20 @@ void Menu0::working(CURRENT_KEY_VALUE *val)
         return;
     }
     key_val = val;
-//    if (!key_val->grade.val1) {
-//        amplitude->hide();
-//        pulse->hide();
-//    }
-    amplitude->working(key_val);
+//    amplitude->working(key_val);
+    tevWidget->working(key_val);
     fresh_table();  //改变顶层图标显示
     this->show();
 }
 
 void Menu0::sysReset()
 {
-    amplitude->sysReset();
+    tevWidget->sysReset();
 }
 
 void Menu0::maxReset()
 {
-    amplitude->maxReset();
+    tevWidget->maxReset();
 }
 
 void Menu0::trans_key(quint8 key_code)

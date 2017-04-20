@@ -23,6 +23,11 @@
 #define AA_VOL                  0x0008
 #define BACKLIGHT_REG           0x0009
 #define READ_FPGA               0x000a        //读数据标志位
+#define TEV_AUTO_REC            0x000b        //自动录波标志位
+
+//读写寄存器
+#define write_axi_reg(reg, val) *(volatile unsigned int *)(reg) = val
+#define read_axi_reg(reg) *(volatile unsigned int *)(reg)
 
 
 //用于从FPGA读取数据
@@ -50,9 +55,6 @@ private:
     quint32 recvdata(void);
     void sendpara(void);
 
-    void write_axi_reg(volatile quint32 *reg, quint32 val);
-    quint32 read_axi_reg(volatile quint32 *reg);
-
     volatile quint32 *vbase0, *vbase1;
     G_PARA *tdata;
 
@@ -66,9 +68,6 @@ private:
 
     void read_fpga();
 
-    void recvPRPD();
-
-    int groupNum;   //用于判别PRPD图数据有效性的组号(0-15变化)
 
 
 protected:

@@ -8,6 +8,7 @@
 #include <QDataStream>
 #include <QDir>
 #include <QFileSystemWatcher>
+#include "IO/SqlCfg/sqlcfg.h"
 
 
 //建立数据连接，完成线程的初始化工作
@@ -19,8 +20,6 @@ FifoData::FifoData(G_PARA *g_data)
     }
     tdata = g_data;     //与外部交互的数据指针
     mode = Disable;
-
-    groupNum = -1;
 
 
     //这是xilinx的函数，【可能】用于打开存储设备
@@ -90,6 +89,8 @@ FifoData::FifoData(G_PARA *g_data)
     tdata->send_para.recstart.rval = 0;
     tdata->send_para.groupNum.flag = false;
     tdata->send_para.groupNum.rval = 0;
+    tdata->send_para.tev_auto_rec.flag = true;
+    tdata->send_para.tev_auto_rec.rval = sqlcfg->get_para()->tev_auto_rec;
 
     tevData = new RecWave(g_data, MODE::TEV);
     AAData = new RecWave(g_data, MODE::AA_Ultrasonic);
@@ -158,14 +159,10 @@ void FifoData::run(void)
 //            qDebug()<<"ret = "<<ret;                                            //打印收到信息长度
 //            qDebug()<<"recv recComplete = "<<tdata->recv_para.recComplete;      //打印收到的录播完成标志位
 
-            if( tdata->recv_para.recComplete >0 && tdata->recv_para.recComplete <=15){       //录波完成可能值为0-15
+//            if( tdata->recv_para.recComplete >0 && tdata->recv_para.recComplete <=15){       //录波完成可能值为0-15
 //                qDebug()<<"send groupNum = "<<tdata->send_para.groupNum.rval;              //打印当前发送组号
-                recvRecData();  //开始接收数据(暂时禁用)
-            }
-            else if(tdata->recv_para.recComplete = 0){
-                recvPRPD();     //接收PRPD图数据
-            }
-
+//                recvRecData();  //开始接收数据(暂时禁用)
+//            }
 
         }
 
@@ -210,6 +207,7 @@ void FifoData::sendpara(void)
     //送频率
     if (tdata->send_para.freq.flag) {
         tdata->send_para.freq.flag = false;
+        qDebug()<< "AAAAAAAAAAAAAAAA:"<< tdata->send_para.freq.rval;
         while (sizeof(int) > read_axi_reg(vbase1 + TDFV));
         quint32 temp = (FREQ_REG<<16) | tdata->send_para.freq.rval;
         write_axi_reg(vbase1 + TDFD, temp);
@@ -252,7 +250,7 @@ void FifoData::sendpara(void)
         write_axi_reg(vbase1 + TLR, sizeof(int));
     }
 
-    //送
+    //送读取信号
     if (tdata->send_para.read_fpga.flag) {
         tdata->send_para.read_fpga.flag = false;
         while (sizeof(int) > read_axi_reg(vbase1 + TDFV));
@@ -263,6 +261,16 @@ void FifoData::sendpara(void)
         write_axi_reg(vbase1 + TLR, sizeof(int));       //设定传输长度
     }
 
+//    //送自动录波标志
+//    if (tdata->send_para.tev_auto_rec.flag) {
+//        tdata->send_para.tev_auto_rec.flag = false;
+//        while (sizeof(int) > read_axi_reg(vbase1 + TDFV));
+//        quint32 temp = (TEV_AUTO_REC<<16) | tdata->send_para.tev_auto_rec.rval;
+//        write_axi_reg(vbase1 + TDFD, temp);
+//        qDebug("TEV_AUTO_REC = 0x%08x", temp);
+//        while (sizeof(int) > read_axi_reg(vbase1 + TDFV));
+//        write_axi_reg(vbase1 + TLR, sizeof(int));       //设定传输长度
+//    }
 
 }
 
@@ -292,17 +300,6 @@ quint32 FifoData::recvdata(void)
     return len;
 }
 
-//写寄存器
-void FifoData::write_axi_reg(volatile quint32 *reg, quint32 val)
-{
-    *reg = val;
-}
-
-//读
-quint32 FifoData::read_axi_reg(volatile quint32 *reg)
-{
-    return *reg;
-}
 
 void FifoData::recvRecData()
 {
@@ -374,16 +371,6 @@ void FifoData::read_fpga()
 
 }
 
-void FifoData::recvPRPD()
-{
-//    if(groupNum != tdata->recv_para.recData[0]){     //有效数据
-//        groupNum = tdata->recv_para.recData[0];
-//        //处理数据
-//        int n = tdata->recv_para.recData[1];
-
-
-//    }
-}
 
 
 

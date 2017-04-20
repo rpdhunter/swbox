@@ -53,6 +53,7 @@ private:
     void saveFreq();
     void saveDatetime();
     void setBacklight();
+    void saveAutoRec();
 
 
 };

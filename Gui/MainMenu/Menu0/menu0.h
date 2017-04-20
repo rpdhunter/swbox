@@ -1,8 +1,7 @@
 #ifndef MENU0_H
 #define MENU0_H
 
-#include "Amplitude/amplitude.h"
-#include "Pulse/pulse.h"
+#include "tevwidget.h"
 #include "IO/Key/key.h"
 #include <QFrame>
 #include <QDebug>
@@ -28,7 +27,9 @@ public slots:
 
 private:
     CURRENT_KEY_VALUE *key_val;
-    Amplitude *amplitude;
+//    Amplitude *amplitude;
+    TEVWidget *tevWidget;
+
 //    Pulse *pulse;
 
     QLabel *main_title0, *main_title1, *main_title2, *main_title3,

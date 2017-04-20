@@ -15,9 +15,13 @@ Options::Options(QWidget *parent, G_PARA *g_data) : QFrame(parent),ui(new Ui::Op
 
 
     ui->setupUi(this);
-    QButtonGroup *group = new QButtonGroup();       //必须新建一个组,才使得两组不互斥
-    group->addButton(ui->rbt_CN);
-    group->addButton(ui->rbt_EN);
+    QButtonGroup *group1 = new QButtonGroup();       //必须新建一个组,才使得两组不互斥
+    group1->addButton(ui->rbt_CN);
+    group1->addButton(ui->rbt_EN);
+
+    QButtonGroup *group2 = new QButtonGroup();       //必须新建一个组,才使得两组不互斥
+    group2->addButton(ui->rbt_rec_close);
+    group2->addButton(ui->rbt_rec_open);
 
     optionIni();
 }
@@ -44,8 +48,10 @@ void Options::optionIni()
     _backlight = sql_para->backlight;
     ui->slider_backlight->setValue(_backlight + 1); //保存值为0-7,显示值为1-8
 
-    //峰值重置时间
-    ui->lineEdit_TimeReset->setText(QString("%1").arg(sql_para->reset_time));
+    //自动录波
+//    ui->lineEdit_TimeReset->setText(QString("%1").arg(sql_para->reset_time));
+    ui->rbt_rec_open->setChecked(sql_para->tev_auto_rec);
+    ui->rbt_rec_close->setChecked(!sql_para->tev_auto_rec);
 
     //自动关机时间
     ui->lineEdit_CloseTime->setText(QString("%1").arg(sql_para->close_time));
@@ -82,9 +88,15 @@ void Options::saveOptions()
     _backlight = ui->slider_backlight->value()-1;
     setBacklight();
 
+    //保存自动录波
+    saveAutoRec();
+
+
     //保存其他设置
-    sql_para->reset_time = ui->lineEdit_TimeReset->text().toInt();
-    emit maxResetTimeChanged(sql_para->reset_time);
+//    sql_para->reset_time = ui->lineEdit_TimeReset->text().toInt();
+
+
+//    emit maxResetTimeChanged(sql_para->reset_time);
     sql_para->close_time = ui->lineEdit_CloseTime->text().toInt();
     emit closeTimeChanged(sql_para->close_time );
     sqlcfg->sql_save(sql_para);
@@ -125,6 +137,12 @@ void Options::setBacklight()
 
     data->send_para.blacklight.rval = _backlight;
     data->send_para.blacklight.flag = 1;        //背景设置是生效的,但是不保存的话还会复位
+}
+
+void Options::saveAutoRec()
+{
+    data->send_para.tev_auto_rec.flag = true;
+    data->send_para.tev_auto_rec.rval = sql_para->tev_auto_rec;
 }
 
 
@@ -289,9 +307,10 @@ void Options::trans_key(quint8 key_code)
             refresh();
             break;
         case 4:
-            temp = ui->lineEdit_TimeReset->text().toInt();
-            if(temp > 0)
-                ui->lineEdit_TimeReset->setText(QString("%1").arg(temp - 1));
+            sql_para->tev_auto_rec = !sql_para->tev_auto_rec;
+            ui->rbt_rec_open->setChecked(sql_para->tev_auto_rec);
+            ui->rbt_rec_close->setChecked(!sql_para->tev_auto_rec);
+            saveAutoRec();
             break;
         case 5:
             temp = ui->lineEdit_CloseTime->text().toInt();
@@ -346,9 +365,10 @@ void Options::trans_key(quint8 key_code)
 
             break;
         case 4:
-            temp = ui->lineEdit_TimeReset->text().toInt();
-            if(temp < 30)
-                ui->lineEdit_TimeReset->setText(QString("%1").arg(temp + 1));
+            sql_para->tev_auto_rec = !sql_para->tev_auto_rec;
+            ui->rbt_rec_open->setChecked(sql_para->tev_auto_rec);
+            ui->rbt_rec_close->setChecked(!sql_para->tev_auto_rec);
+            saveAutoRec();
             break;
 
         case 5:
@@ -406,7 +426,7 @@ void Options::refresh()
         ui->lab_lang->setStyleSheet("QLabel {color:black;}");
 
         ui->lineEdit_CloseTime->deselect();
-        ui->lineEdit_TimeReset->deselect();
+//        ui->lineEdit_TimeReset->deselect();
         ui->dateTimeEdit->setSelectedSection(QDateTimeEdit::NoSection);
         break;
     case 1:
@@ -424,7 +444,7 @@ void Options::refresh()
         ui->lab_lang->setStyleSheet("QLabel {color:black;}");
 
         ui->lineEdit_CloseTime->deselect();
-        ui->lineEdit_TimeReset->deselect();
+//        ui->lineEdit_TimeReset->deselect();
         ui->dateTimeEdit->setSelectedSection(QDateTimeEdit::NoSection);
         break;
     case 2:
@@ -442,7 +462,7 @@ void Options::refresh()
         ui->lab_lang->setStyleSheet("QLabel {color:black;}");
 
         ui->lineEdit_CloseTime->deselect();
-        ui->lineEdit_TimeReset->deselect();
+//        ui->lineEdit_TimeReset->deselect();
         ui->dateTimeEdit->setSelectedSection(QDateTimeEdit::NoSection);
         break;
     case 3:
@@ -460,7 +480,7 @@ void Options::refresh()
         ui->lab_lang->setStyleSheet("QLabel {color:black;}");
 
         ui->lineEdit_CloseTime->deselect();
-        ui->lineEdit_TimeReset->deselect();
+//        ui->lineEdit_TimeReset->deselect();
         if(key_val->grade.val4 != 0)            //只有进入编辑状态,才有选中
             ui->dateTimeEdit->setSelectedSection(ui->dateTimeEdit->currentSection());
         else
@@ -481,7 +501,7 @@ void Options::refresh()
         ui->lab_lang->setStyleSheet("QLabel {color:black;}");
 
         ui->lineEdit_CloseTime->deselect();
-        ui->lineEdit_TimeReset->selectAll();
+//        ui->lineEdit_TimeReset->selectAll();
         ui->dateTimeEdit->setSelectedSection(QDateTimeEdit::NoSection);
         break;
     case 5:
@@ -499,7 +519,7 @@ void Options::refresh()
         ui->lab_lang->setStyleSheet("QLabel {color:black;}");
 
         ui->lineEdit_CloseTime->selectAll();
-        ui->lineEdit_TimeReset->deselect();
+//        ui->lineEdit_TimeReset->deselect();
         ui->dateTimeEdit->setSelectedSection(QDateTimeEdit::NoSection);
         break;
 
@@ -518,7 +538,7 @@ void Options::refresh()
         ui->lab_lang->setStyleSheet("QLabel {color:white;}");
 
         ui->lineEdit_CloseTime->deselect();
-        ui->lineEdit_TimeReset->deselect();
+//        ui->lineEdit_TimeReset->deselect();
         ui->dateTimeEdit->setSelectedSection(QDateTimeEdit::NoSection);
         break;
 

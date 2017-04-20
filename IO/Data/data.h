@@ -58,6 +58,7 @@ typedef struct G_SEND_PARA {
     RPARA groupNum;     //传输录波数据的组号
     RPARA aa_vol;       //AA超声音量调节
     RPARA read_fpga;    //
+    RPARA tev_auto_rec; //TEV自动录波
 } G_SEND_PARA;
 
 /* total data */
