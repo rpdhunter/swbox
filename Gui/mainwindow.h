@@ -9,7 +9,7 @@
 #include <QTimer>
 #include "IO/Key/keydetect.h"
 #include "MainMenu/mainmenu.h"
-//#include "IO/Data/data.h"
+#include "IO/Data/data.h"
 #include "IO/Data/fifodata.h"
 #include "IO/Modbus/modbus.h"
 #include <QPixmap>

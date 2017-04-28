@@ -146,16 +146,16 @@ void TEVWidget::PRPD_inti()
 //    d_curve->setPenWidth(2);
 
     QwtLinearColorMap *colorMap = new QwtLinearColorMap;
-//    colorMap->addColorStop(0,Qt::green);
-//    colorMap->addColorStop(1,Qt::red);
-    colorMap->setColorInterval(Qt::green,Qt::red);
+    colorMap->setColorInterval(Qt::blue,Qt::red);
+    colorMap->addColorStop(0.3,Qt::green);
+    colorMap->addColorStop(0.6,Qt::yellow);
     d_PRPD->setColorMap(colorMap);
-    d_PRPD->setColorRange(QwtInterval(1,7));
+    d_PRPD->setColorRange(QwtInterval(1,6));
     QwtScaleWidget *rightAxis = plot_PRPD->axisWidget( QwtPlot::yRight );
     rightAxis->setColorBarEnabled( true );
-    rightAxis->setColorMap(QwtInterval(1,7),colorMap);
+    rightAxis->setColorMap(QwtInterval(1,6),colorMap);
 
-    plot_PRPD->setAxisScale( QwtPlot::yRight, 1, 7 );
+    plot_PRPD->setAxisScale( QwtPlot::yRight, 1, 6 );
     plot_PRPD->enableAxis( QwtPlot::yRight );
 
 
@@ -475,7 +475,6 @@ void TEVWidget::transData(int x, int y)
         y = 0;
     }
 
-//    x = x *360 /3000000;
     x = x *360 /2000000;
 //    qDebug()<<"[2]x="<<x<<"\ty="<<y;
 //    if(x>240)

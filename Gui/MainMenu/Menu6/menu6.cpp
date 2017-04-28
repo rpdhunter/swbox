@@ -128,7 +128,7 @@ Menu6::Menu6(QWidget *parent, G_PARA *g_data) : QFrame(parent)
     connect(factoryreset, &FactoryReset::fresh_parent, this, &Menu6::fresh_grade1);
 
     //录波信号
-    connect(debugset,SIGNAL(startRecWv(int)),this,SIGNAL(startRecWv(int)));
+    connect(debugset,SIGNAL(startRecWv(int,int)),this,SIGNAL(startRecWv(int,int)));
 
     //频率变化
     connect(options,SIGNAL(fregChanged(int)),this,SIGNAL(fregChanged(int)) );
@@ -235,9 +235,9 @@ void Menu6::trans_key(quint8 key_code)
     emit send_key(key_code);
 }
 
-void Menu6::showWaveData(qint32 *buf, int len, int mod)
+void Menu6::showWaveData(VectorList buf,MODE mod)
 {
-    debugset->showWaveData(buf,len,mod);
+    debugset->showWaveData(buf,mod);
 }
 
 void Menu6::set_offset_suggest(int a, int b)
@@ -252,6 +252,7 @@ void Menu6::fresh_grade1(void)
 //    printf("\nkey_val->grade.val1 is : %d",key_val->grade.val1);
 //    printf("\tkey_val->grade.val2 is : %d",key_val->grade.val2);
 //    printf("\tkey_val->grade.val3 is : %d",key_val->grade.val3);
+
 
 
     options->hide();

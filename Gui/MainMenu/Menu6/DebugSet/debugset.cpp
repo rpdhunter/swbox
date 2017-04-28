@@ -144,6 +144,7 @@ void DebugSet::working(CURRENT_KEY_VALUE *val)
 
 void DebugSet::trans_key(quint8 key_code)
 {
+
     if (key_val == NULL) {
         return;
     }
@@ -164,7 +165,8 @@ void DebugSet::trans_key(quint8 key_code)
                 qDebug()<<"tabWidget reset!";
             }
             else if(key_val->grade.val3 == 3 && key_val->grade.val4 != 0 ){   //录波
-                emit startRecWv(key_val->grade.val4-1);
+                emit startRecWv(key_val->grade.val4-1,ui->lineEdit_time->text().toInt());
+                ui->lab_recWv->setText(tr("正在录波，请耐心等待"));
             }
             else{                                                   //保存
                 qDebug()<<"debug para saved!";
@@ -253,11 +255,13 @@ void DebugSet::trans_key(quint8 key_code)
                     }
                     break;
                 case 3:
-                    if(key_val->grade.val4 < 2){
-                        key_val->grade.val4 ++;
-                    }
-                    else{
-                        key_val->grade.val4 = 1;
+                    if(ui->comboBox->currentIndex()==1){
+                        if(key_val->grade.val4 < 2){
+                            key_val->grade.val4 ++;
+                        }
+                        else{
+                            key_val->grade.val4 = 1;
+                        }
                     }
 
                     break;
@@ -303,12 +307,15 @@ void DebugSet::trans_key(quint8 key_code)
                     }
                     break;
                 case 3:
-                    if(key_val->grade.val4 < 2){
-                        key_val->grade.val4 ++;
+                    if(ui->comboBox->currentIndex()==1){
+                        if(key_val->grade.val4 < 2){
+                            key_val->grade.val4 ++;
+                        }
+                        else{
+                            key_val->grade.val4 = 1;
+                        }
                     }
-                    else{
-                        key_val->grade.val4 = 1;
-                    }
+
                     break;
                 default:
                     break;
@@ -349,12 +356,21 @@ void DebugSet::trans_key(quint8 key_code)
                     }
                     break;
                 case 3:
-//                    if(key_val->grade.val4 < 2){
-//                        key_val->grade.val4 ++;
-//                    }
-//                    else{
-//                        key_val->grade.val4 = 1;
-//                    }
+                    if(key_val->grade.val4 == 1){
+                        int index = ui->comboBox->currentIndex();
+                        if(index>0){
+                            ui->comboBox->setCurrentIndex(index-1);
+                        }
+                        else{
+                            ui->comboBox->setCurrentIndex(1);
+                        }
+                    }
+                    else if(key_val->grade.val4 == 2){
+                        int v = ui->lineEdit_time->text().toInt();
+                        if(v>0){
+                            ui->lineEdit_time->setText(QString("%1").arg(v-1));
+                        }
+                    }
 
                     break;
                 default:
@@ -398,12 +414,22 @@ void DebugSet::trans_key(quint8 key_code)
                     }
                     break;
                 case 3:
-//                    if(key_val->grade.val4 < 2){
-//                        key_val->grade.val4 ++;
-//                    }
-//                    else{
-//                        key_val->grade.val4 = 1;
-//                    }
+                    if(key_val->grade.val4 == 1){
+                        int index = ui->comboBox->currentIndex();
+                        if(index<1){
+                            ui->comboBox->setCurrentIndex(index+1);
+                        }
+                        else{
+                            ui->comboBox->setCurrentIndex(0);
+                        }
+                    }
+                    else if(key_val->grade.val4 == 2){
+                        int v = ui->lineEdit_time->text().toInt();
+                        if(v<60){
+                            ui->lineEdit_time->setText(QString("%1").arg(v+1));
+                        }
+                    }
+
 
                     break;
                 default:
@@ -420,11 +446,12 @@ void DebugSet::trans_key(quint8 key_code)
     default:
         break;
     }
+
     fresh();
 }
 
 //处理显示录波信号
-void DebugSet::showWaveData(qint32 *wv, int len, int mod)
+void DebugSet::showWaveData(VectorList wv,MODE mod)
 {
     switch (mod) {
     case 0:     //TEV
@@ -444,8 +471,8 @@ void DebugSet::showWaveData(qint32 *wv, int len, int mod)
     }
 
     wave.clear();
-    for(int i=0;i<len;i++){
-        wave.append(QPoint(i,wv[i]));
+    for(int i=0;i<wv.length();i++){
+        wave.append(QPoint(i,wv.at(i)));
     }
 
     curve->setSamples(wave);
@@ -460,6 +487,7 @@ void DebugSet::fresh()
 //    printf("\tkey_val->grade.val2 is : %d",key_val->grade.val2);
 //    printf("\tkey_val->grade.val3 is : %d",key_val->grade.val3);
 //    printf("\tkey_val->grade.val4 is : %d",key_val->grade.val4);
+//    qDebug()<<"key_val->grade.val5 is :"<<key_val->grade.val5;
 
     if(pass){
         if(key_val->grade.val3){
@@ -474,6 +502,7 @@ void DebugSet::fresh()
                 ui->spinBox_Tev_Gain->setStyleSheet("QDoubleSpinBox { background: lightGray }");
                 ui->spinBox_Tev_offset1->setStyleSheet("QSpinBox { background: lightGray }");
                 ui->spinBox_Tev_offset2->setStyleSheet("QSpinBox { background: lightGray }");
+//                ui->spinBox_Tev_Gain->lineEdit()->deselect();
             }
             else if(key_val->grade.val4 == 1){
                 ui->spinBox_Tev_Gain->setStyleSheet("QDoubleSpinBox { background: gray }");
@@ -510,13 +539,19 @@ void DebugSet::fresh()
             ui->lineEdit_AA_offset->setText(QString("%1").arg(sql_para->aa_offset));
             break;
         case 3:
-            ui->comboBox->setCurrentIndex(key_val->grade.val4 - 1);
             if(key_val->grade.val4 == 0){
                 ui->comboBox->setStyleSheet("QComboBox { background: lightGray }");
+                ui->lineEdit_time->deselect();
             }
             else if(key_val->grade.val4 == 1){
                 ui->comboBox->setStyleSheet("QComboBox { background: gray }");
+                ui->lineEdit_time->deselect();
             }
+            else if(key_val->grade.val4 == 2){
+                ui->comboBox->setStyleSheet("QComboBox { background: lightGray }");
+                ui->lineEdit_time->selectAll();
+            }
+
             break;
         default:
             break;
@@ -530,19 +565,12 @@ void DebugSet::fresh()
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+void DebugSet::on_comboBox_currentIndexChanged(int index)
+{
+    if(index == 1) {        //超声录波，时长可调
+        ui->lineEdit_time->setEnabled(true);
+    }
+    else{
+        ui->lineEdit_time->setEnabled(false);
+    }
+}

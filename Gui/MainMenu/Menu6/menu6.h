@@ -22,7 +22,7 @@ signals:
     void send_title_val(CURRENT_KEY_VALUE val);
     void send_key(quint8);
 
-    void startRecWv(int);      //开始录播信号
+    void startRecWv(int,int);      //开始录播信号
     void fregChanged(int);
     void closeTimeChanged(int);
     void maxResetTimeChanged(int);
@@ -30,7 +30,7 @@ signals:
 
 public slots:
     void trans_key(quint8);
-    void showWaveData(qint32 *buf, int len, int mod);
+    void showWaveData(VectorList buf, MODE mod);
 
     void set_offset_suggest(int a,int b);
 

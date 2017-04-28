@@ -141,8 +141,8 @@ void Options::setBacklight()
 
 void Options::saveAutoRec()
 {
-    data->send_para.tev_auto_rec.flag = true;
-    data->send_para.tev_auto_rec.rval = sql_para->tev_auto_rec;
+//    data->send_para.tev_auto_rec.flag = true;
+//    data->send_para.tev_auto_rec.rval = sql_para->tev_auto_rec;
 }
 
 
@@ -314,7 +314,7 @@ void Options::trans_key(quint8 key_code)
             break;
         case 5:
             temp = ui->lineEdit_CloseTime->text().toInt();
-            if(temp > 1)
+            if(temp > 0)
                 ui->lineEdit_CloseTime->setText(QString("%1").arg(temp - 1));
             break;
         case 6:

@@ -77,7 +77,7 @@ MainMenu::MainMenu(QWidget *parent, G_PARA *g_data) : QFrame(parent)
     connect(menu5, &Menu5::send_title_val, this, &MainMenu::fresh_title);
     connect(menu6, &Menu6::send_title_val, this, &MainMenu::fresh_title);
 
-    connect(menu6,SIGNAL(startRecWv(int)),this,SIGNAL(startRecWv(int)));
+    connect(menu6,SIGNAL(startRecWv(int,int)),this,SIGNAL(startRecWv(int,int)));
     connect(menu6,SIGNAL(fregChanged(int)),this,SLOT(fresg_freq(int)));
     connect(menu6,SIGNAL(closeTimeChanged(int)),this,SIGNAL(closeTimeChanged(int)));
     connect(menu6,SIGNAL(maxResetTimeChanged(int)),this,SLOT(setMaxResetTime(int)));
@@ -283,9 +283,9 @@ void MainMenu::trans_key(quint8 key_code)
     emit send_key(key_code);                                                    //not current grade key
 }
 
-void MainMenu::showWaveData(qint32 *buf, int len, int mod)
+void MainMenu::showWaveData(VectorList buf,MODE mod)
 {
-    menu6->showWaveData(buf,len,mod);
+    menu6->showWaveData(buf,mod);
 }
 
 void MainMenu::fresg_freq(int fre)

@@ -29,10 +29,12 @@ MainWindow::MainWindow(QWidget *parent)
     //开启键盘监测线程，持续监听键盘输入
     keydetect = new KeyDetect(this);
 
-//    printf("[0]modbus start!");
-
 
 //    modbus = new Modbus(this,g_data);
+
+    //注册两个自定义类型
+    qRegisterMetaType<VectorList>("VectorList");
+    qRegisterMetaType<MODE>("MODE");
 
 
     connect(keydetect, &KeyDetect::sendkey, mainmenu, &MainMenu::trans_key);    //trans key value
@@ -40,15 +42,14 @@ MainWindow::MainWindow(QWidget *parent)
     connect(this, &MainWindow::sendkey, mainmenu, &MainMenu::trans_key);        //trans key value
 
     //录波信号
-    connect(mainmenu,SIGNAL(startRecWv(int)),fifodata,SLOT(startRecWave(int)));
-    connect(fifodata,SIGNAL(waveData(qint32*,int,int)),mainmenu,SLOT(showWaveData(qint32*,int,int)));
+    connect(mainmenu,SIGNAL(startRecWv(int,int)),fifodata,SLOT(startRecWave(int,int)));
+    connect(fifodata,SIGNAL(waveData(VectorList,MODE)),mainmenu,SLOT(showWaveData(VectorList,MODE)));
 
     //系统重启
     rebootTimer = new QTimer;
-    rebootTimer->setInterval(sqlcfg->get_para()->close_time *60 *1000 );
-    rebootTimer->start();   //永远开启
+    setCloseTime(sqlcfg->get_para()->close_time);
     connect(rebootTimer,SIGNAL(timeout()),this,SLOT(system_reboot()));
-    connect(keydetect,SIGNAL(sendkey(quint8)),rebootTimer,SLOT(start()));
+
     connect(mainmenu,SIGNAL(closeTimeChanged(int)),this,SLOT(setCloseTime(int)));
 
     //状态栏显示
@@ -63,7 +64,7 @@ MainWindow::MainWindow(QWidget *parent)
 void MainWindow::showTime()
 {
     int s = rebootTimer->remainingTime() / 1000;    //自动关机秒数
-    if(s<50){
+    if(rebootTimer->isActive() && s<50){
         mainmenu->showReminTime(rebootTimer->remainingTime() / 1000 , tr("自动关机"));
     }
     else{
@@ -89,9 +90,17 @@ void MainWindow::system_reboot()
 
 void MainWindow::setCloseTime(int m)
 {
-
-    rebootTimer->setInterval(m*60 *1000);
-    rebootTimer->start();   //永远开启
+    if(m!=0){
+        connect(keydetect,SIGNAL(sendkey(quint8)),rebootTimer,SLOT(start()));
+        rebootTimer->setInterval(m*60 *1000);
+        rebootTimer->start();   //永远开启
+        qDebug()<<"reboot timer started!  interval is :"<<m*60<<"sec";
+    }
+    else{
+        disconnect(keydetect,SIGNAL(sendkey(quint8)),rebootTimer,SLOT(start()));
+        rebootTimer->stop();
+        qDebug()<<"reboot timer stoped!";
+    }
 }
 
 

@@ -37,14 +37,14 @@ public:
 signals:
     void send_key(quint8);
 
-    void startRecWv(int);      //开始录播信号,参数范围0-5,0为地电波,1为AA超声...
+    void startRecWv(int,int);      //开始录播信号,参数范围0-5,0为地电波,1为AA超声...
     void closeTimeChanged(int);
 
 public slots:
     void fresh_menu(void);
     void fresh_title(CURRENT_KEY_VALUE);
     void trans_key(quint8);
-    void showWaveData(qint32 *buf, int len, int mod);
+    void showWaveData(VectorList buf, MODE mod);
     void fresg_freq(int fre);   //刷新频率
 
     void showReminTime(int s, QString str); //状态栏显示剩余时间

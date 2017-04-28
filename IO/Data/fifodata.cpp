@@ -3,11 +3,11 @@
 #include <sys/mman.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <QFile>
-#include <QDateTime>
-#include <QDataStream>
-#include <QDir>
-#include <QFileSystemWatcher>
+//#include <QFile>
+//#include <QDateTime>
+//#include <QDataStream>
+//#include <QDir>
+//#include <QFileSystemWatcher>
 #include "IO/SqlCfg/sqlcfg.h"
 
 
@@ -70,13 +70,13 @@ FifoData::FifoData(G_PARA *g_data)
     write_axi_reg(vbase1 + TDFD, 0x00070001);
     write_axi_reg(vbase1 + TLR, sizeof(int));
 
-    msleep(500);
+    msleep(200);
 
     while (sizeof(int) > read_axi_reg(vbase1 + TDFV));
     write_axi_reg(vbase1 + TDFD, 0x00070000);
     write_axi_reg(vbase1 + TLR, sizeof(int));
 
-    msleep(500);
+    msleep(200);
 
     while (sizeof(int) > read_axi_reg(vbase1 + TDFV));
     write_axi_reg(vbase1 + TDFD, 0x00070001);
@@ -89,24 +89,36 @@ FifoData::FifoData(G_PARA *g_data)
     tdata->send_para.recstart.rval = 0;
     tdata->send_para.groupNum.flag = false;
     tdata->send_para.groupNum.rval = 0;
-    tdata->send_para.tev_auto_rec.flag = true;
-    tdata->send_para.tev_auto_rec.rval = sqlcfg->get_para()->tev_auto_rec;
+//    tdata->send_para.tev_auto_rec.flag = true;
+//    tdata->send_para.tev_auto_rec.rval = true;
+//    tdata->send_para.tev_auto_rec.rval = sqlcfg->get_para()->tev_auto_rec;
 
     tevData = new RecWave(g_data, MODE::TEV);
     AAData = new RecWave(g_data, MODE::AA_Ultrasonic);
 
-    qRegisterMetaType<VectorList>("VectorList");
-    qRegisterMetaType<MODE>("MODE");
+//    qRegisterMetaType<VectorList>("VectorList");
+//    qRegisterMetaType<MODE>("MODE");
 
     connect(tevData,SIGNAL(waveData(VectorList,MODE)),this,SIGNAL(waveData(VectorList,MODE)));
     connect(AAData,SIGNAL(waveData(VectorList,MODE)),this,SIGNAL(waveData(VectorList,MODE)));
+
+    timer = new QTimer();
+    timer->setInterval(3000);
+    timer->setSingleShot(true);
+    timer->start();
+//    connect(timer,SIGNAL(timeout()),this,SLOT(test()));
+
+    filetools = new FileTools;      //开一个线程，为了不影响数据接口性能
+    connect(this,SIGNAL(waveData(VectorList,MODE)),filetools,SLOT(saveWaveToFile(VectorList,MODE)));
+//    connect(tevData,SIGNAL(waveData(VectorList,MODE)),filetools,SLOT(saveWaveToFile(VectorList,MODE)));
+//    connect(AAData,SIGNAL(waveData(VectorList,MODE)),filetools,SLOT(saveWaveToFile(VectorList,MODE)));
 
     /* Start qthread */
     this->start();
 }
 
 //开启录波,功能待开发
-void FifoData::startRecWave(int mode)
+void FifoData::startRecWave(int mode,int time)
 {
     if(mode == 0){
         this->mode = TEV;
@@ -124,7 +136,7 @@ void FifoData::startRecWave(int mode)
         tevData->recStart();
     }
     else if(mode == AA_Ultrasonic){
-        AAData->recStart();
+        AAData->recStart(time);
     }
     else{
         //to be
@@ -140,16 +152,12 @@ void FifoData::run(void)
 //    int tmp = 0;
 
     while (true) {
-//        read_fpga();
-//        tmp++;
-//        qDebug()<< tmp;
-//        continue;
 
         ret = recvdata();       //接收数据
 
         if (ret) {            
 #if 0
-            for (int i = 0; i < ret; i++) {
+            for (int i = 0; i < 15; i++) {
                 qDebug("0x%08x", *((unsigned int *)buf + i));
             }
             qDebug("\n");
@@ -159,10 +167,10 @@ void FifoData::run(void)
 //            qDebug()<<"ret = "<<ret;                                            //打印收到信息长度
 //            qDebug()<<"recv recComplete = "<<tdata->recv_para.recComplete;      //打印收到的录播完成标志位
 
-//            if( tdata->recv_para.recComplete >0 && tdata->recv_para.recComplete <=15){       //录波完成可能值为0-15
+            if( tdata->recv_para.recComplete >0 && tdata->recv_para.recComplete <=15){       //录波完成可能值为0-15
 //                qDebug()<<"send groupNum = "<<tdata->send_para.groupNum.rval;              //打印当前发送组号
-//                recvRecData();  //开始接收数据(暂时禁用)
-//            }
+                recvRecData();  //开始接收数据(暂时禁用)
+            }
 
         }
 
@@ -203,11 +211,9 @@ void FifoData::sendpara(void)
         write_axi_reg(vbase1 + TLR, sizeof(int));       //设定传输长度
     }
 
-
     //送频率
     if (tdata->send_para.freq.flag) {
         tdata->send_para.freq.flag = false;
-        qDebug()<< "AAAAAAAAAAAAAAAA:"<< tdata->send_para.freq.rval;
         while (sizeof(int) > read_axi_reg(vbase1 + TDFV));
         quint32 temp = (FREQ_REG<<16) | tdata->send_para.freq.rval;
         write_axi_reg(vbase1 + TDFD, temp);
@@ -215,6 +221,7 @@ void FifoData::sendpara(void)
         while (sizeof(int) > read_axi_reg(vbase1 + TDFV));
         write_axi_reg(vbase1 + TLR, sizeof(int));
     }
+
 
     //送组号
     if(tdata->send_para.groupNum.flag){
@@ -261,16 +268,18 @@ void FifoData::sendpara(void)
         write_axi_reg(vbase1 + TLR, sizeof(int));       //设定传输长度
     }
 
-//    //送自动录波标志
-//    if (tdata->send_para.tev_auto_rec.flag) {
-//        tdata->send_para.tev_auto_rec.flag = false;
-//        while (sizeof(int) > read_axi_reg(vbase1 + TDFV));
-//        quint32 temp = (TEV_AUTO_REC<<16) | tdata->send_para.tev_auto_rec.rval;
-//        write_axi_reg(vbase1 + TDFD, temp);
-//        qDebug("TEV_AUTO_REC = 0x%08x", temp);
-//        while (sizeof(int) > read_axi_reg(vbase1 + TDFV));
-//        write_axi_reg(vbase1 + TLR, sizeof(int));       //设定传输长度
-//    }
+    //送自动录波标志
+    if (tdata->send_para.tev_auto_rec.flag) {
+        tdata->send_para.tev_auto_rec.flag = false;
+        while (sizeof(int) > read_axi_reg(vbase1 + TDFV));
+        quint32 temp = (TEV_AUTO_REC<<16) | tdata->send_para.tev_auto_rec.rval;
+        write_axi_reg(vbase1 + TDFD, temp);
+        qDebug("TEV_AUTO_REC = 0x%08x", temp);
+        while (sizeof(int) > read_axi_reg(vbase1 + TDFV));
+        write_axi_reg(vbase1 + TLR, sizeof(int));       //设定传输长度
+    }
+
+
 
 }
 
@@ -291,6 +300,8 @@ quint32 FifoData::recvdata(void)
 
     len = read_axi_reg(vbase0 + RLR);
     len >>= 2;
+
+//    qDebug()<<"len = "<<len;
 
     if (len > 0) {
         for (i = 0; i < len; i++) {

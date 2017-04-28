@@ -1,4 +1,10 @@
 #include "statusbar.h"
+#include "battery.h"
+#include <QLabel>
+//#include <QDebug>
+#include <QDate>
+#include <QTime>
+#include <QTimer>
 
 StatusBar::StatusBar(QWidget *parent) : QFrame(parent)
 {
@@ -7,7 +13,6 @@ StatusBar::StatusBar(QWidget *parent) : QFrame(parent)
     battery = new Battery;
 
     this->resize(480, 24);
-//    this->move(10, 248);
     this->move(10, 0);
 
     /* view date */
@@ -50,7 +55,6 @@ void StatusBar::fresh_time(void)
 //永远为9，原来是显示的假电源
 void StatusBar::fresh_batt(void)
 {
-//    batt_val = 9;
     batt_val = battery->battValue() / 10;
 //    qDebug()<<"curr battery value:"<<batt_val;
     switch (batt_val) {
@@ -90,8 +94,4 @@ void StatusBar::fresh_batt(void)
     default:
         break;
     }
-//    batt_val--;
-//    if (batt_val < 0) {
-//        batt_val = 10;
-//    }
 }

@@ -8,6 +8,9 @@ Battery::Battery()
 int Battery::battValue()
 {
     check_battery_power (&battery_power);
+    if (battery_power.force_pwr_off) {
+        system ("reboot");
+    }
     return battery_power.power;
 }
 
@@ -30,7 +33,7 @@ int Battery::i2c_adm1191_init(unsigned char addr)
 
     fd = open (I2C_DEV_0, O_RDWR);
     if (fd < 0) {
-//        printf ("open i2c dev error\n");
+        //        printf ("open i2c dev error\n");
         return -1;
     }
     ioctl (fd, I2C_TIMEOUT, 100);
@@ -63,7 +66,7 @@ int Battery::i2c_adm1191_read(unsigned char addr, unsigned short *voltage, unsig
 
     fd = open (I2C_DEV_0, O_RDWR);
     if (fd < 0) {
-//        printf ("open i2c dev error\n");
+        //        printf ("open i2c dev error\n");
         return -1;
     }
     ioctl (fd, I2C_TIMEOUT, 100);
@@ -96,11 +99,11 @@ int Battery::i2c_adm1191_probe(Battery::battery_power_t *bp)
     int ret;
 
     if (adm1191_conv_init () != 0) {
-//        printf ("adm1191_conv_init failled\n");
+        //        printf ("adm1191_conv_init failled\n");
     }
 
     if (adm1191_conv_set (1) != 0) {
-//        printf ("adm1191_conv_set failed\n");
+        //        printf ("adm1191_conv_set failed\n");
     }
 
     for (addr = ADM1191_START_ADDR; addr <= ADM1191_END_ADDR; addr++) {
@@ -167,6 +170,13 @@ int Battery::calc_bat_pwr_percent(Battery::battery_power_t *bp)
         bp->pwr_loss_alarm = 0;
     }
 
+    if (battery_power.vol < SHUTDOWN_VOL) {
+        bp->force_pwr_off = 1;
+    }
+    else {
+        bp->force_pwr_off = 0;
+    }
+
     return 0;
 }
 
@@ -177,15 +187,16 @@ int Battery::init_battery_power(Battery::battery_power_t *bp)
     bp->power = 100;			/* 100% */
     bp->lo_pwr_alarm = 0;		/* 低电压告警 */
     bp->pwr_loss_alarm = 0;
+    bp->force_pwr_off = 0;
 
     if (i2c_adm1191_probe (bp) < 0) {
         bp->adm1191_addr = ADM1191_ADDR;
-//        printf ("failed to probe adm\n");
+        //        printf ("failed to probe adm\n");
 
         return -1;
     }
     else {
-//        printf ("adm1191 is probed at 0x%x\n", bp->adm1191_addr);
+        //        printf ("adm1191 is probed at 0x%x\n", bp->adm1191_addr);
 
         return 0;
     }
@@ -199,8 +210,8 @@ int Battery::check_battery_power(Battery::battery_power_t *bp)
         conv_vol (vol, &bp->vol, 1);
         conv_cur (cur, &bp->cur);
         calc_bat_pwr_percent (bp);
-        printf ("vol %1.2f; cur %3.2f; pwr %d; lo pwr %d; loss pwr %d\n",
-                bp->vol, bp->cur, bp->power, bp->lo_pwr_alarm, bp->pwr_loss_alarm);
+        //        printf ("vol %1.2f; cur %3.2f; pwr %d; lo pwr %d; loss pwr %d\n",
+        //                bp->vol, bp->cur, bp->power, bp->lo_pwr_alarm, bp->pwr_loss_alarm);
     }
 
     return 0;

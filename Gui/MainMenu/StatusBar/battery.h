@@ -48,28 +48,31 @@
 
 #define BAT_PWR_PER_NUM			10
 
+#define DELT_VOL				0.02			/* 电量调整电压 */
+#define SHUTDOWN_VOL			6.5				/* 强制关机电压 */
+
 /* 5%一个电压 */
 static float bat_pwr_percent [BAT_PWR_PER_NUM] = {
-    //4.12f * 2,		/* 95% */
-    4.08f * 2,		/* 90% */
-    //4.03f * 2,		/* 85% */
-    3.97f * 2,		/* 80% */
-    //3.93f * 2,		/* 75% */
-    3.90f * 2,		/* 70% */
-    //3.87f * 2,		/* 65% */
-    3.84f * 2,		/* 60% */
-    //3.81f * 2,		/* 55% */
-    3.79f * 2,		/* 50% */
-    //3.77f * 2,		/* 45% */
-    3.75f * 2,		/* 40% */
-    //3.74f * 2,		/* 35% */
-    3.73f * 2,		/* 30% */
-    //3.72f * 2,		/* 25% */
-    3.71f * 2,		/* 20% */
-    //3.69f * 2,		/* 15% */
-    3.65f * 2,		/* 10% */
-    //3.63f * 2,		/* 5% */
-    3.58f * 2,		/* 1% */
+    //4.12f * 2 - DELT_VOL,		/* 95% */
+    4.08f * 2 - DELT_VOL ,		/* 90% */
+    //4.03f * 2 - DELT_VOL,		/* 85% */
+    3.97f * 2 - DELT_VOL,		/* 80% */
+    //3.93f * 2 - DELT_VOL,		/* 75% */
+    3.90f * 2 - DELT_VOL,		/* 70% */
+    //3.87f * 2 - DELT_VOL,		/* 65% */
+    3.84f * 2 - DELT_VOL,		/* 60% */
+    //3.81f * 2 - DELT_VOL,		/* 55% */
+    3.79f * 2 - DELT_VOL,		/* 50% */
+    //3.77f * 2 - DELT_VOL,		/* 45% */
+    3.75f * 2 - DELT_VOL,		/* 40% */
+    //3.74f * 2 - DELT_VOL,		/* 35% */
+    3.73f * 2 - DELT_VOL,		/* 30% */
+    //3.72f * 2 - DELT_VOL,		/* 25% */
+    3.71f * 2 - DELT_VOL,		/* 20% */
+    //3.69f * 2 - DELT_VOL,		/* 15% */
+    3.65f * 2 - DELT_VOL,		/* 10% */
+    //3.63f * 2 - DELT_VOL,		/* 5% */
+    3.58f * 2 - DELT_VOL,		/* 1% */
 };
 
 //class Battery : public QObject
@@ -89,6 +92,7 @@ private:
         unsigned int power;				/* 0-100 */
         unsigned int lo_pwr_alarm;		/* 低电量告警 */
         unsigned int pwr_loss_alarm;	/* 失电告警 */
+        unsigned int force_pwr_off;		/* 强制关机信号 */
     } battery_power_t;
 
     battery_power_t battery_power;

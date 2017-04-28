@@ -96,12 +96,18 @@ public:
 public slots:
     void working(CURRENT_KEY_VALUE *val);
     void trans_key(quint8 key_code);
-    void showWaveData(qint32 *wv, int, int n);
+    void showWaveData(VectorList wv, MODE n);
 
 signals:
     void fresh_parent(void);
-    void startRecWv(int);      //开始录播信号
+    void startRecWv(int,int);      //开始录播信号,前一个参数是通道数，后一个参数是录播时常（仅对超声录波有用）
     void fregChanged(int);      //频率设置变化
+
+
+private slots:
+//    void
+
+    void on_comboBox_currentIndexChanged(int index);
 
 private:
     void fresh();       //刷新界面

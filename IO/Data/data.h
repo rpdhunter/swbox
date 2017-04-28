@@ -2,7 +2,7 @@
 #define DATA_H
 
 #include <QtGlobal>
-#include <QMetaType>
+//#include <QMetaType>
 #include <QVector>
 
 //定义一些全局数据类型，和一些全局宏
@@ -42,7 +42,7 @@ typedef struct G_RECV_PARA {
 
     quint32 recComplete;    //录播完成(1为完成)
     quint32 groupNum;       //组号(0-7)
-    quint32 recData[258];   //录播数据
+    quint32 recData[259];   //录播数据
 } G_RECV_PARA;
 
 typedef struct RPARA {
@@ -78,8 +78,6 @@ enum MODE{
 
 
 typedef QVector<qint32> VectorList;
-//qRegisterMetaType<VectorList>("VectorList");
-
 
 
 #endif // DATA_H

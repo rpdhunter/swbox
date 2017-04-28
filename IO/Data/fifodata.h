@@ -3,10 +3,9 @@
 
 #include "zynq.h"
 #include <QThread>
-#include <QDebug>
-#include <QVector>
 #include "data.h"
 #include "recwave.h"
+#include "filetools.h"
 
 
 #define GROUP_NUM_FLAG          0x1000          //组号标志（实际是复位值，表示传输数据未开始或已完成状态）
@@ -40,7 +39,10 @@ public:
     explicit FifoData(G_PARA *g_data);
 
 public slots:
-    void startRecWave(int mode);       //启动录波，需要主函数建立连接
+    void startRecWave(int mode , int time);       //启动录波，需要主函数建立连接
+    void test(){
+        this->startRecWave(1,10);
+    }
 
 
 signals:
@@ -63,11 +65,12 @@ private:
     MODE mode;      //工作模式
 
     RecWave *tevData, *AAData;
+    FileTools *filetools;   //文件工具，实现保存文件
 
     void recvRecData();     //接收录波数据
 
     void read_fpga();
-
+    QTimer *timer;
 
 
 protected:
