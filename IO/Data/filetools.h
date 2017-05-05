@@ -1,29 +1,18 @@
 #ifndef FILETOOLS_H
 #define FILETOOLS_H
 
-#include <QThread>
+#include <QRunnable>
 #include "data.h"
 
 
-class FileTools : public QThread
+class FileTools : public QRunnable
 {
-    Q_OBJECT
 public:
-    FileTools();
+    FileTools(VectorList data, MODE mode);
 
-public slots:
-    void saveWaveToFile(VectorList data, MODE mode);  //保存录波文件
+    ~FileTools();
 
-
-signals:
-//    void waveData(qint32 *wave,int len,int mod);  //录波完成信号，并发送录波数据
-//    void waveData(VectorList,MODE);
-
-private slots:
-
-protected:
-    void run(void);
-
+    void run();
 
 private:
     //wav文件头
@@ -49,12 +38,13 @@ private:
     WavFormatHeader *wfh1;
     QString filepath;
 
-    bool work;       //0为立刻执行
+//    bool work;       //0为立刻执行
 
     void saveDataFile();        //保存录波文件
     QString getFilePath();      //返回保存波形文件的目录
     void saveCfgFile();         //生成配置文件
     void saveWavFile();         //保存声音文件
+    void wavToMp3();
 };
 
 #endif // FILETOOLS_H

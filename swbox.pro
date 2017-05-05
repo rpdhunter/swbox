@@ -65,7 +65,8 @@ SOURCES += \
     Gui/MainMenu/Menu0/tevwidget.cpp \
     Gui/MainMenu/Menu0/barchart.cpp \
     Gui/MainMenu/Menu1/aaultrasonic2.cpp \
-    IO/Data/filetools.cpp
+    IO/Data/filetools.cpp \
+    Gui/MainMenu/Menu6/DebugSet/recwaveform.cpp
 
 
 HEADERS  += \
@@ -111,7 +112,8 @@ HEADERS  += \
     Gui/MainMenu/Menu0/tevwidget.h \
     Gui/MainMenu/Menu0/barchart.h \
     Gui/MainMenu/Menu1/aaultrasonic2.h \
-    IO/Data/filetools.h
+    IO/Data/filetools.h \
+    Gui/MainMenu/Menu6/DebugSet/recwaveform.h
 
 
 RESOURCES += \

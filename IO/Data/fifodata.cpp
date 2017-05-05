@@ -3,12 +3,9 @@
 #include <sys/mman.h>
 #include <unistd.h>
 #include <fcntl.h>
-//#include <QFile>
-//#include <QDateTime>
-//#include <QDataStream>
-//#include <QDir>
-//#include <QFileSystemWatcher>
 #include "IO/SqlCfg/sqlcfg.h"
+
+#include <QThreadPool>
 
 
 //建立数据连接，完成线程的初始化工作
@@ -89,29 +86,15 @@ FifoData::FifoData(G_PARA *g_data)
     tdata->send_para.recstart.rval = 0;
     tdata->send_para.groupNum.flag = false;
     tdata->send_para.groupNum.rval = 0;
-//    tdata->send_para.tev_auto_rec.flag = true;
+    tdata->send_para.tev_auto_rec.flag = true;
 //    tdata->send_para.tev_auto_rec.rval = true;
-//    tdata->send_para.tev_auto_rec.rval = sqlcfg->get_para()->tev_auto_rec;
+    tdata->send_para.tev_auto_rec.rval = sqlcfg->get_para()->tev_auto_rec;
 
     tevData = new RecWave(g_data, MODE::TEV);
     AAData = new RecWave(g_data, MODE::AA_Ultrasonic);
 
-//    qRegisterMetaType<VectorList>("VectorList");
-//    qRegisterMetaType<MODE>("MODE");
-
-    connect(tevData,SIGNAL(waveData(VectorList,MODE)),this,SIGNAL(waveData(VectorList,MODE)));
-    connect(AAData,SIGNAL(waveData(VectorList,MODE)),this,SIGNAL(waveData(VectorList,MODE)));
-
-    timer = new QTimer();
-    timer->setInterval(3000);
-    timer->setSingleShot(true);
-    timer->start();
-//    connect(timer,SIGNAL(timeout()),this,SLOT(test()));
-
-    filetools = new FileTools;      //开一个线程，为了不影响数据接口性能
-    connect(this,SIGNAL(waveData(VectorList,MODE)),filetools,SLOT(saveWaveToFile(VectorList,MODE)));
-//    connect(tevData,SIGNAL(waveData(VectorList,MODE)),filetools,SLOT(saveWaveToFile(VectorList,MODE)));
-//    connect(AAData,SIGNAL(waveData(VectorList,MODE)),filetools,SLOT(saveWaveToFile(VectorList,MODE)));
+    connect(tevData,SIGNAL(waveData(VectorList,MODE)),this,SLOT(recWaveComplete(VectorList,MODE)));
+    connect(AAData,SIGNAL(waveData(VectorList,MODE)),this,SLOT(recWaveComplete(VectorList,MODE)));
 
     /* Start qthread */
     this->start();
@@ -142,6 +125,16 @@ void FifoData::startRecWave(int mode,int time)
         //to be
     }
     sendpara();
+}
+
+//录播完成的处理
+//使用了一次性执行的多线程处理模式——QRunnable
+//经实际测试，线程能自动结束
+void FifoData::recWaveComplete(VectorList wave, MODE mode)
+{
+    emit waveData(wave,mode);
+    filetools = new FileTools(wave,mode);      //开一个线程，为了不影响数据接口性能
+    QThreadPool::globalInstance()->start(filetools);
 }
 
 

@@ -475,10 +475,19 @@ void TEVWidget::transData(int x, int y)
         y = 0;
     }
 
-    x = x *360 /2000000;
-//    qDebug()<<"[2]x="<<x<<"\ty="<<y;
-//    if(x>240)
-//        qDebug()<<"[3]x=                    "<<x;
+    if(sqlcfg->get_para()->freq_val == 50){
+        x = x *360 /2000000;
+    }
+    else if(sqlcfg->get_para()->freq_val == 60){
+        x = x *360 /1666667;
+    }
+
+    //    x = x * 360 * 50 / 1e8;
+    if(x>360){
+        qDebug()<<"x="<<x;
+    }
+
+
     if(x<360 && x>=0 && y<=60 &&y>=-60){
         QwtPoint3D p0(x,y,map[x][y+60]);
         map[x][y+60]++;

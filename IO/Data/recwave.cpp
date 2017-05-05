@@ -1,5 +1,6 @@
 #include "recwave.h"
 #include <QtDebug>
+#include "IO/SqlCfg/sqlcfg.h"
 
 
 RecWave::RecWave(G_PARA *gdata, MODE mode, QObject *parent) : QObject(parent)
@@ -32,6 +33,8 @@ void RecWave::recStart(int time)
         tdata->send_para.recstart.rval = 1;
     }
     else if(mode == AA_Ultrasonic){
+        tdata->send_para.tev_auto_rec.rval = 0;         //录超声时封掉自动录波
+        tdata->send_para.tev_auto_rec.flag = true;
         tdata->send_para.recstart.rval = 4;
         timer->setInterval(time * 1000);
         qDebug()<<QString("going to rec wave time : %1 s").arg(time);
@@ -97,7 +100,7 @@ void RecWave::work()
             tdata->send_para.groupNum.flag = false;
 
             qDebug()<<QString("rec wave cost time: %1 ms").arg( - QTime::currentTime().msecsTo(time_start));
-            qDebug()<<"receive recWaveData complete!";
+            qDebug()<<"receive recWaveData complete! MODE = TEV";
             // 录波完成，发送数据，通知GUI和文件保存
             emit waveData(_data,mode);
             status = Free;
@@ -148,8 +151,11 @@ void RecWave::AA_rec_end()
     tdata->send_para.recstart.rval = 0;
     tdata->send_para.recstart.flag = true;
 
-    qDebug()<<"receive recAAData complete! " << _data.length() << " points";
+    qDebug()<<"receive recAAData complete! MODE = AA Ultrasonic" << _data.length() << " points";
     //录波完成，发送数据，通知GUI和文件保存
     emit waveData(_data,mode);
+
+    tdata->send_para.tev_auto_rec.rval = sqlcfg->get_para()->tev_auto_rec;      //将自动录波替换为设置值
+    tdata->send_para.tev_auto_rec.flag = true;
     status = Free;
 }

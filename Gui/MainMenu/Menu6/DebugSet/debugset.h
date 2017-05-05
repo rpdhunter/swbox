@@ -13,6 +13,7 @@
 #include "IO/SqlCfg/sqlcfg.h"
 #include <QProxyStyle>
 #include <QPainter>
+#include "recwaveform.h"
 
 
 class QwtPlot;
@@ -32,7 +33,7 @@ public:
         if (type == QStyle::CT_TabBarTab) {
             s.transpose();
             s.rwidth() = 120; // 设置每个tabBar中item的大小
-            s.rheight() = 44;
+            s.rheight() = 40;
         }
         return s;
     }
@@ -72,6 +73,9 @@ public:
                 else if(tab->text == "2"){
                     str = tr("录波");
                 }
+                else if(tab->text == "3"){
+                    str = tr("录波数据查看");
+                }
                 painter->drawText(allRect, str, option);
 //                qDebug()<<"tab text is:"<<tab->text;
                 return;
@@ -102,6 +106,7 @@ signals:
     void fresh_parent(void);
     void startRecWv(int,int);      //开始录播信号,前一个参数是通道数，后一个参数是录播时常（仅对超声录波有用）
     void fregChanged(int);      //频率设置变化
+    void send_key(quint8);
 
 
 private slots:
@@ -129,7 +134,7 @@ private:
     QString password;   //密码
     QString password_set;   //密码设定值
 
-
+    RecWaveForm *recWaveForm;
 
     QwtPlot *plot;
     QVector<QPointF> wave;

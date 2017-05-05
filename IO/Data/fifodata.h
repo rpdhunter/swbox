@@ -40,9 +40,6 @@ public:
 
 public slots:
     void startRecWave(int mode , int time);       //启动录波，需要主函数建立连接
-    void test(){
-        this->startRecWave(1,10);
-    }
 
 
 signals:
@@ -50,7 +47,7 @@ signals:
     void waveData(VectorList,MODE);
 
 private slots:
-
+    void recWaveComplete(VectorList wave,MODE mode);
 
 private:
 

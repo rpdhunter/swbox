@@ -141,8 +141,8 @@ void Options::setBacklight()
 
 void Options::saveAutoRec()
 {
-//    data->send_para.tev_auto_rec.flag = true;
-//    data->send_para.tev_auto_rec.rval = sql_para->tev_auto_rec;
+    data->send_para.tev_auto_rec.flag = true;
+    data->send_para.tev_auto_rec.rval = sql_para->tev_auto_rec;
 }
 
 

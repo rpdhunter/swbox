@@ -5,6 +5,8 @@
 #include <qwt_plot_layout.h>
 //#include <QPoint>
 #include "ui_debugui.h"
+#include <QDir>
+
 
 
 DebugSet::DebugSet(QWidget *parent,G_PARA *g_data) : QFrame(parent),ui(new Ui::DebugUi)
@@ -17,8 +19,8 @@ DebugSet::DebugSet(QWidget *parent,G_PARA *g_data) : QFrame(parent),ui(new Ui::D
 
     this->resize(455, 185);
     this->move(2, 31);
-//    this->setStyleSheet("DebugSet {background-color:lightGray;}");
-//    this->setStyleSheet("DebugSet {border-image: url(:/widgetphoto/mainmenu/bk2.png);}");
+    //    this->setStyleSheet("DebugSet {background-color:lightGray;}");
+    //    this->setStyleSheet("DebugSet {border-image: url(:/widgetphoto/mainmenu/bk2.png);}");
     ui->setupUi(this);
     ui->tabWidget->setStyleSheet("QTabWidget {background-color:lightGray;}");
     ui->tabWidget->widget(0)->setStyleSheet("QWidget {background-color:lightGray;}");
@@ -37,9 +39,9 @@ DebugSet::DebugSet(QWidget *parent,G_PARA *g_data) : QFrame(parent),ui(new Ui::D
     lab1 = new QLabel(widget);
     lab1->setText(tr("请输入管理员密码，解锁调试模式"));
     lab2 = new QLabel(widget);
-//    lab2->move(20,70);
+    //    lab2->move(20,70);
     passwordEdit = new QLineEdit(widget);
-//    passwordEdit->move(20,40);
+    //    passwordEdit->move(20,40);
 
     QVBoxLayout *layout = new QVBoxLayout;
     layout->addWidget(lab1);
@@ -52,13 +54,13 @@ DebugSet::DebugSet(QWidget *parent,G_PARA *g_data) : QFrame(parent),ui(new Ui::D
     resetPassword();
 
 
-//    plot = new QwtPlot(ui->scrollArea);
+    //    plot = new QwtPlot(ui->scrollArea);
     plot = new QwtPlot;
     ui->scrollArea->setWidget(plot);
     plot->resize(80, 9);
-//    plot->setStyleSheet("background:transparent;color:gray;font-family:Moonracer;font-size:10px;");
+    //    plot->setStyleSheet("background:transparent;color:gray;font-family:Moonracer;font-size:10px;");
 
-//    plot->setAxisScale(QwtPlot::xBottom, 0, 360, 90);
+    //    plot->setAxisScale(QwtPlot::xBottom, 0, 360, 90);
 
     plot->setAxisMaxMinor( QwtPlot::xBottom, 1);
 
@@ -67,9 +69,9 @@ DebugSet::DebugSet(QWidget *parent,G_PARA *g_data) : QFrame(parent),ui(new Ui::D
     plot->axisScaleDraw(QwtPlot::xBottom)->enableComponent(QwtAbstractScaleDraw::Backbone, true);
 
 
-//    plot->setAxisScale(QwtPlot::yLeft, 0, 20, 5);
+    //    plot->setAxisScale(QwtPlot::yLeft, 0, 20, 5);
     plot->setAxisMaxMinor(QwtPlot::yLeft, 1);
-//    plot->axisScaleDraw(QwtPlot::yLeft)->enableComponent(QwtAbstractScaleDraw::Labels, false);
+    //    plot->axisScaleDraw(QwtPlot::yLeft)->enableComponent(QwtAbstractScaleDraw::Labels, false);
     plot->axisScaleDraw(QwtPlot::yLeft)->enableComponent(QwtAbstractScaleDraw::Labels, true);
 
     /* remove gap */
@@ -93,8 +95,11 @@ DebugSet::DebugSet(QWidget *parent,G_PARA *g_data) : QFrame(parent),ui(new Ui::D
 
     plot->hide();
 
+    ui->scrollArea->hide();
 
-
+    recWaveForm = new RecWaveForm(this);
+    recWaveForm->hide();
+    connect(this, SIGNAL(send_key(quint8)), recWaveForm, SLOT(trans_key(quint8)));
 
 }
 
@@ -117,6 +122,25 @@ void DebugSet::iniUi()
 
     ui->tabWidget->setCurrentIndex(0);
 
+    QDir dir = QDir(QDir::currentPath() + "/WaveForm");
+    int r = ui->listWidget->currentRow();
+    ui->listWidget->clear();
+
+    QStringList filters;
+    filters << "*.DAT" ;
+    dir.setNameFilters(filters);
+    QStringList list = dir.entryList(QDir::Files);
+//    QString string;
+    /*for (int index = 0; index < list.size(); index++)
+        {
+            string = list.at(index);
+            //QListWidgetItem *item = new QListWidgetItem(string);
+            //ui->listWidget->addItem(item);
+            ui->listWidget->addItem(string);
+        }*/
+    ui->listWidget->addItems(list);
+    ui->listWidget->setCurrentRow(r);       //保存选择状态
+
 }
 
 void DebugSet::resetPassword()
@@ -128,7 +152,7 @@ void DebugSet::resetPassword()
     this->widget->show();
     ui->tabWidget->hide();
 
-//    qDebug()<<"password dlg reset!";
+    //    qDebug()<<"password dlg reset!";
 }
 
 void DebugSet::working(CURRENT_KEY_VALUE *val)
@@ -139,7 +163,7 @@ void DebugSet::working(CURRENT_KEY_VALUE *val)
     key_val = val;
 
     this->show();
-    qDebug()<<"show debug ui!";
+
 }
 
 void DebugSet::trans_key(quint8 key_code)
@@ -155,18 +179,25 @@ void DebugSet::trans_key(quint8 key_code)
     if(key_val->grade.val2 != 1){
         return;
     }
+    if(key_val->grade.val5 != 0){
+        emit send_key(key_code);
+        return;
+    }
 
     switch (key_code) {
     case KEY_OK:
         if(pass){
-            if(key_val->grade.val4 == 0 && key_val->grade.val3 == 0){   //初始状态
-                key_val->grade.val3 = 2;
-                iniUi();
-                qDebug()<<"tabWidget reset!";
+            if(key_val->grade.val3 == 3 && key_val->grade.val4 != 0 ){   //录波
+                if(ui->lab_recWv->text() != tr("正在录波，请耐心等待")){
+                    emit startRecWv(ui->comboBox->currentIndex(),ui->lineEdit_time->text().toInt());
+                    ui->lab_recWv->setText(tr("正在录波，请耐心等待"));
+                }
+                iniUi();            //录播可能改变录播文件中的目录结构，需要重新刷新目录树
             }
-            else if(key_val->grade.val3 == 3 && key_val->grade.val4 != 0 ){   //录波
-                emit startRecWv(key_val->grade.val4-1,ui->lineEdit_time->text().toInt());
-                ui->lab_recWv->setText(tr("正在录波，请耐心等待"));
+            else if(key_val->grade.val3 == 4 && key_val->grade.val4 != 0){
+//                qDebug()<<"AAAA!" << ui->listWidget->currentRow();
+                key_val->grade.val5 = 1;
+                recWaveForm->working(key_val,ui->listWidget->currentItem()->text());
             }
             else{                                                   //保存
                 qDebug()<<"debug para saved!";
@@ -194,7 +225,7 @@ void DebugSet::trans_key(quint8 key_code)
                 pass = true;
 
                 iniUi();
-//                lab2->setText("password accepted!");
+                key_val->grade.val3 = 1;
             }
             else{
                 if(passwordEdit->text().isEmpty()){
@@ -220,6 +251,7 @@ void DebugSet::trans_key(quint8 key_code)
         }
         else{
             key_val->grade.val4 = 0;    //退出三级菜单
+            ui->listWidget->setCurrentRow(-1);
         }
 
         break;
@@ -230,8 +262,9 @@ void DebugSet::trans_key(quint8 key_code)
                     key_val->grade.val3 --;
                 }
                 else{
-                    key_val->grade.val3 = 3;
+                    key_val->grade.val3 = 4;
                 }
+                iniUi();        //刷新列表
             }
             else{                           //判断在三级菜单
                 switch (key_val->grade.val3) {
@@ -263,7 +296,14 @@ void DebugSet::trans_key(quint8 key_code)
                             key_val->grade.val4 = 1;
                         }
                     }
-
+                    break;
+                case 4:
+                    if(ui->listWidget->currentRow() != 0){
+                        ui->listWidget->setCurrentRow(ui->listWidget->currentRow()-1);
+                    }
+                    else{
+                        ui->listWidget->setCurrentRow(ui->listWidget->count()-1);
+                    }
                     break;
                 default:
                     break;
@@ -278,12 +318,14 @@ void DebugSet::trans_key(quint8 key_code)
     case KEY_DOWN:
         if(pass){
             if(key_val->grade.val4 == 0){   //判断在二级菜单
-                if(key_val->grade.val3<3){
+                if(key_val->grade.val3<4){
+
                     key_val->grade.val3 ++;
                 }
                 else{
                     key_val->grade.val3 = 1;
                 }
+                iniUi();
             }
             else{                           //判断在三级菜单
                 switch (key_val->grade.val3) {
@@ -315,7 +357,14 @@ void DebugSet::trans_key(quint8 key_code)
                             key_val->grade.val4 = 1;
                         }
                     }
-
+                    break;
+                case 4:
+                    if(ui->listWidget->currentRow()<ui->listWidget->count()-1){
+                        ui->listWidget->setCurrentRow(ui->listWidget->currentRow()+1);
+                    }
+                    else{
+                        ui->listWidget->setCurrentRow(0);
+                    }
                     break;
                 default:
                     break;
@@ -388,6 +437,9 @@ void DebugSet::trans_key(quint8 key_code)
         if(pass){
             if(key_val->grade.val4 == 0 && key_val->grade.val3 != 0){   //必须第三层处于工作状态
                 key_val->grade.val4 =1;
+                if(key_val->grade.val3 == 4){
+                    ui->listWidget->setCurrentRow(0);
+                }
             }
             else{
                 switch (key_val->grade.val3) {
@@ -429,9 +481,12 @@ void DebugSet::trans_key(quint8 key_code)
                             ui->lineEdit_time->setText(QString("%1").arg(v+1));
                         }
                     }
-
-
                     break;
+//                case 4:
+//                    if(ui->listWidget->currentIndex()<=ui->listWidget->count()){
+//                        ui->listWidget->setCurrentIndex(ui->listWidget->currentIndex()+1);
+//                    }
+//                    break;
                 default:
                     break;
                 }
@@ -448,6 +503,7 @@ void DebugSet::trans_key(quint8 key_code)
     }
 
     fresh();
+
 }
 
 //处理显示录波信号
@@ -483,11 +539,11 @@ void DebugSet::showWaveData(VectorList wv,MODE mod)
 
 void DebugSet::fresh()
 {
-//    printf("\nkey_val->grade.val1 is : %d",key_val->grade.val1);
-//    printf("\tkey_val->grade.val2 is : %d",key_val->grade.val2);
-//    printf("\tkey_val->grade.val3 is : %d",key_val->grade.val3);
-//    printf("\tkey_val->grade.val4 is : %d",key_val->grade.val4);
-//    qDebug()<<"key_val->grade.val5 is :"<<key_val->grade.val5;
+    //    printf("\nkey_val->grade.val1 is : %d",key_val->grade.val1);
+    //    printf("\tkey_val->grade.val2 is : %d",key_val->grade.val2);
+    //    printf("\tkey_val->grade.val3 is : %d",key_val->grade.val3);
+    //    printf("\tkey_val->grade.val4 is : %d",key_val->grade.val4);
+    //    qDebug()<<"key_val->grade.val5 is :"<<key_val->grade.val5;
 
     if(pass){
         if(key_val->grade.val3){
@@ -502,7 +558,7 @@ void DebugSet::fresh()
                 ui->spinBox_Tev_Gain->setStyleSheet("QDoubleSpinBox { background: lightGray }");
                 ui->spinBox_Tev_offset1->setStyleSheet("QSpinBox { background: lightGray }");
                 ui->spinBox_Tev_offset2->setStyleSheet("QSpinBox { background: lightGray }");
-//                ui->spinBox_Tev_Gain->lineEdit()->deselect();
+                //                ui->spinBox_Tev_Gain->lineEdit()->deselect();
             }
             else if(key_val->grade.val4 == 1){
                 ui->spinBox_Tev_Gain->setStyleSheet("QDoubleSpinBox { background: gray }");

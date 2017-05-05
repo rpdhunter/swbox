@@ -8,9 +8,11 @@ Battery::Battery()
 int Battery::battValue()
 {
     check_battery_power (&battery_power);
-    if (battery_power.force_pwr_off) {
-        system ("reboot");
-    }
+
+    //低电量自动关机
+//    if (battery_power.force_pwr_off) {
+//        system ("reboot");
+//    }
     return battery_power.power;
 }
 
