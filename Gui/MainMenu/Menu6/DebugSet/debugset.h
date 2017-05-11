@@ -95,7 +95,9 @@ class DebugSet : public QFrame
 public:
     DebugSet(QWidget *parent = NULL, G_PARA *g_data = NULL);
 
-    void set_offset_suggest(int a,int b);
+    void set_offset_suggest1(int a,int b);
+    void set_offset_suggest2(int a,int b);
+
 
 public slots:
     void working(CURRENT_KEY_VALUE *val);
@@ -120,6 +122,8 @@ private:
     void iniUi();
 
     void resetPassword();
+
+    void saveSql();
 
 
     CURRENT_KEY_VALUE *key_val;

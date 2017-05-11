@@ -18,18 +18,17 @@ AAUltrasonic2::AAUltrasonic2(QWidget *parent, G_PARA *g_data) : QFrame(parent)
     //读取配置信息
 
     sql_para = sqlcfg->get_para();
-    aaultra_sql = new AAULTRA_SQL;
-    memcpy(aaultra_sql, &sql_para->aaultra_sql, sizeof(AAULTRA_SQL));
+    aaultra_sql = &sql_para->aaultra_sql;
 
     //开机设置一下音量
+
     data->send_para.aa_vol.flag = true;
     data->send_para.aa_vol.rval = sql_para->aaultra_sql.vol;
-//    qDebug()<<"data->send_para.aa_vol.rval:"<<data->send_para.aa_vol.rval;
+
 
     this->resize(455, 185);
     this->move(2, 31);
     this->setStyleSheet("AAUltrasonic2 {border-image: url(:/widgetphoto/mainmenu/bk2.png);}");
-
 
     /* view barchart */
     plot = new QwtPlot(this);
@@ -281,7 +280,7 @@ void AAUltrasonic2::trans_key(quint8 key_code)
         return;
     }
 
-    if (key_val->grade.val0 != 1) {
+    if (key_val->grade.val0 != 3) {
         return;
     }
 

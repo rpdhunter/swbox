@@ -212,8 +212,8 @@ int Battery::check_battery_power(Battery::battery_power_t *bp)
         conv_vol (vol, &bp->vol, 1);
         conv_cur (cur, &bp->cur);
         calc_bat_pwr_percent (bp);
-        //        printf ("vol %1.2f; cur %3.2f; pwr %d; lo pwr %d; loss pwr %d\n",
-        //                bp->vol, bp->cur, bp->power, bp->lo_pwr_alarm, bp->pwr_loss_alarm);
+//        printf ("vol %1.2f; cur %3.2f; pwr %d; lo pwr %d; loss pwr %d\n",
+//                bp->vol, bp->cur, bp->power, bp->lo_pwr_alarm, bp->pwr_loss_alarm);
     }
 
     return 0;

@@ -3,7 +3,8 @@
 
 #include <QFrame>
 #include <QLabel>
-#include "aaultrasonic2.h"
+#include "../Menu0/tevwidget.h"
+#include "IO/Data/data.h"
 #include "IO/Key/key.h"
 
 class Menu1 : public QFrame
@@ -20,14 +21,14 @@ public:
 signals:
     void send_title_val(CURRENT_KEY_VALUE val);
     void send_key(quint8);
+    void offset_suggest(int,int);
 
 public slots:
     void trans_key(quint8);
 
 private:
     CURRENT_KEY_VALUE *key_val;
-//    AAUltrasonic *aaultrasonic;
-    AAUltrasonic2 *aaultrasonic;
+    TEVWidget *tevWidget;
 
     QLabel  *main_title0, *main_title1, *main_title2, *main_title3,
         *main_title4, *main_title5, *main_title6;

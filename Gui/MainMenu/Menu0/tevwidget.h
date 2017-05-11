@@ -22,9 +22,17 @@ class TEVWidget : public QFrame
     Q_OBJECT
 
 public:
-    explicit TEVWidget(G_PARA *data, QWidget *parent = 0);
+
+    enum Channel{
+        Left,
+        Right
+    };
+
+
+    explicit TEVWidget(G_PARA *data, Channel channel, QWidget *parent = 0);
     ~TEVWidget();
     void sysReset();
+
 
 public slots:
     void working(CURRENT_KEY_VALUE *val);
@@ -73,6 +81,7 @@ private:
     void PRPDReset();
 
     int temp;
+    Channel channel;
 };
 
 #endif // AMPLITUDE1_H

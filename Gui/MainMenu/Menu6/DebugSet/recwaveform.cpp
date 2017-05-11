@@ -113,7 +113,13 @@ void RecWaveForm::setData(QString str)
     }
 
     QFile file;
-    file.setFileName("/root/WaveForm/"+str);
+//    if(str.contains("(SDCard)")){
+//        file.setFileName("/mmc/sdcard/WaveForm/"+str.remove("(SDCard)")+".DAT");
+//    }
+//    else{
+    file.setFileName("/root/WaveForm/"+str+".DAT");
+//    }
+
     if (!file.open(QIODevice::ReadOnly)){
         qDebug()<<"file open failed!";
         return;

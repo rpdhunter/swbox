@@ -19,7 +19,7 @@ class BarChart : public QFrame, public QwtPlotBarChart
 {
     Q_OBJECT
 public:
-    BarChart(QwtPlot *parent = NULL, int *p = NULL, SQL_PARA *sql = NULL);
+    BarChart(QwtPlot *parent = NULL, int *p = NULL, int high = 20,int low=20);
 
 public slots:
     void fresh(void);
@@ -32,6 +32,8 @@ private:
     QVector<double> samples;
 
     BARCHART_DATA *barchart_data;
+
+    int high,low;
 
 protected:
     virtual QwtColumnSymbol *specialSymbol(int sampleIndex, const QPointF& ) const;

@@ -3,18 +3,19 @@
 
 #include <QFrame>
 #include <QLabel>
-#include "HFAmplitude/hfamplitude.h"
-#include "HFAtlas/hfatlas.h"
-#include "HFPrps/hfprps.h"
+#include "aaultrasonic2.h"
 #include "IO/Key/key.h"
 
 class Menu3 : public QFrame
 {
     Q_OBJECT
 public:
-    explicit Menu3(QWidget *parent = 0);
+    explicit Menu3(QWidget *parent = 0, G_PARA *g_data = NULL);
 
     void working(CURRENT_KEY_VALUE *val);
+
+    void sysReset();
+    void maxReset();
 
 signals:
     void send_title_val(CURRENT_KEY_VALUE val);
@@ -25,17 +26,11 @@ public slots:
 
 private:
     CURRENT_KEY_VALUE *key_val;
-    HFAmplitude *hfamplitude;
-    HFAtlas *hfatlas;
-    HFPrps *hfprps;
+    AAUltrasonic2 *aaultrasonic;
 
-    QLabel *main_title0, *main_title1, *main_title2, *main_title3,
+    QLabel  *main_title0, *main_title1, *main_title2, *main_title3,
         *main_title4, *main_title5, *main_title6;
 
-    QLabel *amplitude_lab, *atlas_lab, *prps_lab;
-    QLabel *amplitude_txt_lab, *atlas_txt_lab, *prps_txt_lab;
-
-    void fresh_grade1(void);
     void fresh_table(void);
 };
 

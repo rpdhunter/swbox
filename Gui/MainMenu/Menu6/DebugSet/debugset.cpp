@@ -103,26 +103,38 @@ DebugSet::DebugSet(QWidget *parent,G_PARA *g_data) : QFrame(parent),ui(new Ui::D
 
 }
 
-void DebugSet::set_offset_suggest(int a, int b)
+void DebugSet::set_offset_suggest1(int a, int b)
 {
     ui->lab_offset1->setText(QString("%1").arg(a));
     ui->lab_offset2->setText(QString("%1").arg(b));
 }
 
+void DebugSet::set_offset_suggest2(int a, int b)
+{
+    ui->lab_offset3->setText(QString("%1").arg(a));
+    ui->lab_offset4->setText(QString("%1").arg(b));
+}
+
 
 void DebugSet::iniUi()
 {
-    ui->spinBox_Tev_Gain->setValue(this->sql_para->tev_gain );
-    ui->spinBox_Tev_offset1->setValue(this->sql_para->tev_offset1);
-    ui->spinBox_Tev_offset2->setValue(this->sql_para->tev_offset2);
+    ui->lineEdit_Gain1->setText(QString("%1").arg(this->sql_para->amp_sql1.tev_gain) );
+    ui->lineEdit_Offset1_1->setText(QString("%1").arg(this->sql_para->amp_sql1.tev_offset1) );
+    ui->lineEdit_Offset1_2->setText(QString("%1").arg(this->sql_para->amp_sql1.tev_offset2) );
+
+    ui->lineEdit_Gain2->setText(QString("%1").arg(this->sql_para->amp_sql2.tev_gain) );
+    ui->lineEdit_Offset2_1->setText(QString("%1").arg(this->sql_para->amp_sql2.tev_offset1) );
+    ui->lineEdit_Offset2_2->setText(QString("%1").arg(this->sql_para->amp_sql2.tev_offset2) );
 
     ui->spinBox_AAStep->setValue(this->sql_para->aa_step);
 
     ui->lineEdit_AA_offset->setText(QString("%1").arg(sql_para->aa_offset));
 
+    ui->lineEdit_MaxRecNum->setText(QString("%1").arg(sql_para->max_rec_num));
+
     ui->tabWidget->setCurrentIndex(0);
 
-    QDir dir = QDir(QDir::currentPath() + "/WaveForm");
+    QDir dir = QDir("/root/WaveForm/");
     int r = ui->listWidget->currentRow();
     ui->listWidget->clear();
 
@@ -130,15 +142,15 @@ void DebugSet::iniUi()
     filters << "*.DAT" ;
     dir.setNameFilters(filters);
     QStringList list = dir.entryList(QDir::Files);
-//    QString string;
-    /*for (int index = 0; index < list.size(); index++)
-        {
-            string = list.at(index);
-            //QListWidgetItem *item = new QListWidgetItem(string);
-            //ui->listWidget->addItem(item);
-            ui->listWidget->addItem(string);
-        }*/
+    list.replaceInStrings(".DAT", "");
     ui->listWidget->addItems(list);
+
+//    dir.setPath("/mmc/sdcard/WaveForm/");
+//    list = dir.entryList(QDir::Files);
+
+//    list.replaceInStrings(".DAT", "(SDCard)");
+
+//    ui->listWidget->addItems(list);
     ui->listWidget->setCurrentRow(r);       //保存选择状态
 
 }
@@ -153,6 +165,22 @@ void DebugSet::resetPassword()
     ui->tabWidget->hide();
 
     //    qDebug()<<"password dlg reset!";
+}
+
+void DebugSet::saveSql()
+{
+    qDebug()<<"debug para saved!";
+    sql_para->amp_sql1.tev_gain = ui->lineEdit_Gain1->text().toDouble();
+    sql_para->amp_sql1.tev_offset1 = ui->lineEdit_Offset1_1->text().toInt();
+    sql_para->amp_sql1.tev_offset2 = ui->lineEdit_Offset1_2->text().toInt();
+
+    sql_para->amp_sql2.tev_gain = ui->lineEdit_Gain2->text().toDouble();
+    sql_para->amp_sql2.tev_offset1 = ui->lineEdit_Offset2_1->text().toInt();
+    sql_para->amp_sql2.tev_offset2 = ui->lineEdit_Offset2_2->text().toInt();
+
+    sql_para->aa_step = ui->spinBox_AAStep->value();
+    sql_para->max_rec_num = ui->lineEdit_MaxRecNum->text().toInt();
+    sqlcfg->sql_save(sql_para);
 }
 
 void DebugSet::working(CURRENT_KEY_VALUE *val)
@@ -192,7 +220,7 @@ void DebugSet::trans_key(quint8 key_code)
                     emit startRecWv(ui->comboBox->currentIndex(),ui->lineEdit_time->text().toInt());
                     ui->lab_recWv->setText(tr("正在录波，请耐心等待"));
                 }
-                iniUi();            //录播可能改变录播文件中的目录结构，需要重新刷新目录树
+                saveSql();
             }
             else if(key_val->grade.val3 == 4 && key_val->grade.val4 != 0){
 //                qDebug()<<"AAAA!" << ui->listWidget->currentRow();
@@ -200,12 +228,7 @@ void DebugSet::trans_key(quint8 key_code)
                 recWaveForm->working(key_val,ui->listWidget->currentItem()->text());
             }
             else{                                                   //保存
-                qDebug()<<"debug para saved!";
-                sql_para->tev_gain = ui->spinBox_Tev_Gain->value();
-                sql_para->tev_offset1 = ui->spinBox_Tev_offset1->value();
-                sql_para->tev_offset2 = ui->spinBox_Tev_offset2->value();
-                sql_para->aa_step = ui->spinBox_AAStep->value();
-                sqlcfg->sql_save(sql_para);
+                saveSql();
 
                 resetPassword();
 
@@ -276,7 +299,7 @@ void DebugSet::trans_key(quint8 key_code)
                         key_val->grade.val4 --;
                     }
                     else{
-                        key_val->grade.val4 = 3;
+                        key_val->grade.val4 = 6;
                     }
                     break;
                 case 2:
@@ -288,14 +311,13 @@ void DebugSet::trans_key(quint8 key_code)
                     }
                     break;
                 case 3:
-                    if(ui->comboBox->currentIndex()==1){
-                        if(key_val->grade.val4 < 2){
-                            key_val->grade.val4 ++;
-                        }
-                        else{
-                            key_val->grade.val4 = 1;
-                        }
+                    if(key_val->grade.val4 >1){
+                        key_val->grade.val4 --;
                     }
+                    else{
+                        key_val->grade.val4 = 3;
+                    }
+
                     break;
                 case 4:
                     if(ui->listWidget->currentRow() != 0){
@@ -333,7 +355,7 @@ void DebugSet::trans_key(quint8 key_code)
 
                     break;
                 case 1:
-                    if(key_val->grade.val4 <3){
+                    if(key_val->grade.val4 <6){
                         key_val->grade.val4 ++;
                     }
                     else{
@@ -349,13 +371,11 @@ void DebugSet::trans_key(quint8 key_code)
                     }
                     break;
                 case 3:
-                    if(ui->comboBox->currentIndex()==1){
-                        if(key_val->grade.val4 < 2){
-                            key_val->grade.val4 ++;
-                        }
-                        else{
-                            key_val->grade.val4 = 1;
-                        }
+                    if(key_val->grade.val4 < 3){
+                        key_val->grade.val4 ++;
+                    }
+                    else{
+                        key_val->grade.val4 = 1;
                     }
                     break;
                 case 4:
@@ -386,14 +406,29 @@ void DebugSet::trans_key(quint8 key_code)
 
                     break;
                 case 1:
-                    if(key_val->grade.val4 == 1){
-                        ui->spinBox_Tev_Gain->stepDown();
-                    }
-                    else if(key_val->grade.val4 == 2){
-                        ui->spinBox_Tev_offset1->stepDown();
-                    }
-                    else if(key_val->grade.val4 == 3){
-                        ui->spinBox_Tev_offset2->stepDown();
+                    switch (key_val->grade.val4) {
+                    case 0:
+                        break;
+                    case 1:
+                        ui->lineEdit_Gain1->setText(QString("%1").arg(ui->lineEdit_Gain1->text().toDouble() - 0.1));
+                        break;
+                    case 2:
+                        ui->lineEdit_Offset1_1->setText(QString("%1").arg(ui->lineEdit_Offset1_1->text().toDouble() - 1));
+                        break;
+                    case 3:
+                        ui->lineEdit_Offset1_2->setText(QString("%1").arg(ui->lineEdit_Offset1_2->text().toDouble() - 1));
+                        break;
+                    case 4:
+                        ui->lineEdit_Gain2->setText(QString("%1").arg(ui->lineEdit_Gain2->text().toDouble() - 0.1));
+                        break;
+                    case 5:
+                        ui->lineEdit_Offset2_1->setText(QString("%1").arg(ui->lineEdit_Offset2_1->text().toDouble() - 1));
+                        break;
+                    case 6:
+                        ui->lineEdit_Offset2_2->setText(QString("%1").arg(ui->lineEdit_Offset2_2->text().toDouble() - 1));
+                        break;
+                    default:
+                        break;
                     }
                     break;
                 case 2:
@@ -415,9 +450,17 @@ void DebugSet::trans_key(quint8 key_code)
                         }
                     }
                     else if(key_val->grade.val4 == 2){
-                        int v = ui->lineEdit_time->text().toInt();
-                        if(v>0){
-                            ui->lineEdit_time->setText(QString("%1").arg(v-1));
+                        if(ui->lineEdit_time->isEnabled()){
+                            int v = ui->lineEdit_time->text().toInt();
+                            if(v>1){
+                                ui->lineEdit_time->setText(QString("%1").arg(v-1));
+                            }
+                        }
+                    }
+                    else if(key_val->grade.val4 == 3){
+                        int v = ui->lineEdit_MaxRecNum->text().toInt();
+                        if(v>20){
+                            ui->lineEdit_MaxRecNum->setText(QString("%1").arg(v-10));
                         }
                     }
 
@@ -447,14 +490,29 @@ void DebugSet::trans_key(quint8 key_code)
 
                     break;
                 case 1:
-                    if(key_val->grade.val4 == 1){
-                        ui->spinBox_Tev_Gain->stepUp();
-                    }
-                    else if(key_val->grade.val4 == 2){
-                        ui->spinBox_Tev_offset1->stepUp();
-                    }
-                    else if(key_val->grade.val4 == 3){
-                        ui->spinBox_Tev_offset2->stepUp();
+                    switch (key_val->grade.val4) {
+                    case 0:
+                        break;
+                    case 1:
+                        ui->lineEdit_Gain1->setText(QString("%1").arg(ui->lineEdit_Gain1->text().toDouble() + 0.1));
+                        break;
+                    case 2:
+                        ui->lineEdit_Offset1_1->setText(QString("%1").arg(ui->lineEdit_Offset1_1->text().toDouble() + 1));
+                        break;
+                    case 3:
+                        ui->lineEdit_Offset1_2->setText(QString("%1").arg(ui->lineEdit_Offset1_2->text().toDouble() + 1));
+                        break;
+                    case 4:
+                        ui->lineEdit_Gain2->setText(QString("%1").arg(ui->lineEdit_Gain2->text().toDouble() + 0.1));
+                        break;
+                    case 5:
+                        ui->lineEdit_Offset2_1->setText(QString("%1").arg(ui->lineEdit_Offset2_1->text().toDouble() + 1));
+                        break;
+                    case 6:
+                        ui->lineEdit_Offset2_2->setText(QString("%1").arg(ui->lineEdit_Offset2_2->text().toDouble() + 1));
+                        break;
+                    default:
+                        break;
                     }
                     break;
                 case 2:
@@ -476,9 +534,17 @@ void DebugSet::trans_key(quint8 key_code)
                         }
                     }
                     else if(key_val->grade.val4 == 2){
-                        int v = ui->lineEdit_time->text().toInt();
-                        if(v<60){
-                            ui->lineEdit_time->setText(QString("%1").arg(v+1));
+                        if(ui->lineEdit_time->isEnabled()){
+                            int v = ui->lineEdit_time->text().toInt();
+                            if(v<60){
+                                ui->lineEdit_time->setText(QString("%1").arg(v+1));
+                            }
+                        }
+                    }
+                    else if(key_val->grade.val4 == 3){
+                        int v = ui->lineEdit_MaxRecNum->text().toInt();
+                        if(v<1000){
+                            ui->lineEdit_MaxRecNum->setText(QString("%1").arg(v+10));
                         }
                     }
                     break;
@@ -554,26 +620,65 @@ void DebugSet::fresh()
 
             break;
         case 1:
-            if(key_val->grade.val4 == 0){
-                ui->spinBox_Tev_Gain->setStyleSheet("QDoubleSpinBox { background: lightGray }");
-                ui->spinBox_Tev_offset1->setStyleSheet("QSpinBox { background: lightGray }");
-                ui->spinBox_Tev_offset2->setStyleSheet("QSpinBox { background: lightGray }");
-                //                ui->spinBox_Tev_Gain->lineEdit()->deselect();
-            }
-            else if(key_val->grade.val4 == 1){
-                ui->spinBox_Tev_Gain->setStyleSheet("QDoubleSpinBox { background: gray }");
-                ui->spinBox_Tev_offset1->setStyleSheet("QSpinBox { background: lightGray }");
-                ui->spinBox_Tev_offset2->setStyleSheet("QSpinBox { background: lightGray }");
-            }
-            else if(key_val->grade.val4 == 2){
-                ui->spinBox_Tev_Gain->setStyleSheet("QDoubleSpinBox { background: lightGray }");
-                ui->spinBox_Tev_offset1->setStyleSheet("QSpinBox { background: gray }");
-                ui->spinBox_Tev_offset2->setStyleSheet("QSpinBox { background: lightGray }");
-            }
-            else if(key_val->grade.val4 == 3){
-                ui->spinBox_Tev_Gain->setStyleSheet("QDoubleSpinBox { background: lightGray }");
-                ui->spinBox_Tev_offset1->setStyleSheet("QSpinBox { background: lightGray }");
-                ui->spinBox_Tev_offset2->setStyleSheet("QSpinBox { background: gray }");
+            switch (key_val->grade.val4) {
+            case 0:
+                ui->lineEdit_Gain1->deselect();
+                ui->lineEdit_Offset1_1->deselect();
+                ui->lineEdit_Offset1_2->deselect();
+                ui->lineEdit_Gain2->deselect();
+                ui->lineEdit_Offset2_1->deselect();
+                ui->lineEdit_Offset2_2->deselect();
+                break;
+            case 1:
+                ui->lineEdit_Gain1->selectAll();
+                ui->lineEdit_Offset1_1->deselect();
+                ui->lineEdit_Offset1_2->deselect();
+                ui->lineEdit_Gain2->deselect();
+                ui->lineEdit_Offset2_1->deselect();
+                ui->lineEdit_Offset2_2->deselect();
+                break;
+            case 2:
+                ui->lineEdit_Gain1->deselect();
+                ui->lineEdit_Offset1_1->selectAll();
+                ui->lineEdit_Offset1_2->deselect();
+                ui->lineEdit_Gain2->deselect();
+                ui->lineEdit_Offset2_1->deselect();
+                ui->lineEdit_Offset2_2->deselect();
+                break;
+            case 3:
+                ui->lineEdit_Gain1->deselect();
+                ui->lineEdit_Offset1_1->deselect();
+                ui->lineEdit_Offset1_2->selectAll();
+                ui->lineEdit_Gain2->deselect();
+                ui->lineEdit_Offset2_1->deselect();
+                ui->lineEdit_Offset2_2->deselect();
+                break;
+            case 4:
+                ui->lineEdit_Gain1->deselect();
+                ui->lineEdit_Offset1_1->deselect();
+                ui->lineEdit_Offset1_2->deselect();
+                ui->lineEdit_Gain2->selectAll();
+                ui->lineEdit_Offset2_1->deselect();
+                ui->lineEdit_Offset2_2->deselect();
+                break;
+            case 5:
+                ui->lineEdit_Gain1->deselect();
+                ui->lineEdit_Offset1_1->deselect();
+                ui->lineEdit_Offset1_2->deselect();
+                ui->lineEdit_Gain2->deselect();
+                ui->lineEdit_Offset2_1->selectAll();
+                ui->lineEdit_Offset2_2->deselect();
+                break;
+            case 6:
+                ui->lineEdit_Gain1->deselect();
+                ui->lineEdit_Offset1_1->deselect();
+                ui->lineEdit_Offset1_2->deselect();
+                ui->lineEdit_Gain2->deselect();
+                ui->lineEdit_Offset2_1->deselect();
+                ui->lineEdit_Offset2_2->selectAll();
+                break;
+            default:
+                break;
             }
             break;
         case 2:
@@ -598,16 +703,23 @@ void DebugSet::fresh()
             if(key_val->grade.val4 == 0){
                 ui->comboBox->setStyleSheet("QComboBox { background: lightGray }");
                 ui->lineEdit_time->deselect();
+                ui->lineEdit_MaxRecNum->deselect();
             }
             else if(key_val->grade.val4 == 1){
                 ui->comboBox->setStyleSheet("QComboBox { background: gray }");
                 ui->lineEdit_time->deselect();
+                ui->lineEdit_MaxRecNum->deselect();
             }
             else if(key_val->grade.val4 == 2){
                 ui->comboBox->setStyleSheet("QComboBox { background: lightGray }");
                 ui->lineEdit_time->selectAll();
+                ui->lineEdit_MaxRecNum->deselect();
             }
-
+            else if(key_val->grade.val4 == 3){
+                ui->comboBox->setStyleSheet("QComboBox { background: lightGray }");
+                ui->lineEdit_time->deselect();
+                ui->lineEdit_MaxRecNum->selectAll();
+            }
             break;
         default:
             break;

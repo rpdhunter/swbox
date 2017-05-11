@@ -451,11 +451,11 @@ void Modbus::transData()
     sql_para = sqlcfg->get_para();
 
     double a,b,t,s;
-    a = AD_VAL(data->recv_para.hdata0.ad.ad_max, (0x8000+sql_para->tev_offset1*10) );
-    b = AD_VAL(data->recv_para.hdata0.ad.ad_min, (0x8000+sql_para->tev_offset2*10) );
+    a = AD_VAL(data->recv_para.hdata0.ad.ad_max, (0x8000+sql_para->amp_sql1.tev_offset1*10) );
+    b = AD_VAL(data->recv_para.hdata0.ad.ad_min, (0x8000+sql_para->amp_sql1.tev_offset2*10) );
     t = ((double)MAX(a, b) * 1000) / 32768;
     s = ((double)20) * log10(t);      //对数运算，来自工具链的函数
-    s = sql_para->tev_gain * s;     //设置增益系数
+    s = sql_para->amp_sql1.tev_gain * s;     //设置增益系数
     data_stand[1] = (unsigned short)s * 100;    //系数为100，保留2位有效数字
 
     data_stand[2] = (unsigned short)data->recv_para.hpulse1_totol;

@@ -18,7 +18,7 @@
 #define VALUE_MAX  60           //RPPD最大值
 
 
-TEVWidget::TEVWidget(G_PARA *data, QWidget *parent) :
+TEVWidget::TEVWidget(G_PARA *data, Channel channel, QWidget *parent) :
     QFrame(parent),
     ui(new Ui::Amplitude1)
 {
@@ -30,7 +30,15 @@ TEVWidget::TEVWidget(G_PARA *data, QWidget *parent) :
     key_val = NULL;
     /* get sql para */
     sql_para = sqlcfg->get_para();
-    amp_sql = &sql_para->amp_sql;
+
+    this->channel = channel;
+    if(channel == Left){
+        amp_sql = &sql_para->amp_sql1;
+    }
+    else{
+        amp_sql = &sql_para->amp_sql2;
+    }
+
 
     this->data = data;
     db = 0;
@@ -55,7 +63,7 @@ TEVWidget::TEVWidget(G_PARA *data, QWidget *parent) :
     //每隔1秒，刷新
     timer1 = new QTimer(this);
     timer1->setInterval(1000);
-    if (sql_para->amp_sql.mode == series) {
+    if (amp_sql->mode == series) {
         timer1->start();
     }
     connect(timer1, SIGNAL(timeout()), this, SLOT(fresh_plot()));
@@ -97,7 +105,7 @@ void TEVWidget::PRPS_inti()
     plot_PRPS->axisScaleDraw(QwtPlot::xBottom)->enableComponent(QwtAbstractScaleDraw::Labels, false);
     plot_PRPS->plotLayout()->setAlignCanvasToScales(true);
 
-    d_PRPS = new BarChart(plot_PRPS, &db, sql_para);
+    d_PRPS = new BarChart(plot_PRPS, &db, amp_sql->high, amp_sql->low);
     connect(timer1, &QTimer::timeout, d_PRPS, &BarChart::fresh);
 }
 
@@ -218,13 +226,18 @@ void TEVWidget::trans_key(quint8 key_code)
         return;
     }
 
-    if (key_val->grade.val0 != 0) {
+    if(channel == Left && key_val->grade.val0 != 0){
         return;
     }
 
+    if(channel == Right && key_val->grade.val0 != 1){
+        return;
+    }
+
+
     switch (key_code) {
     case KEY_OK:
-        memcpy(&sql_para->amp_sql, amp_sql, sizeof(AMP_SQL));
+//        memcpy(&sql_para->amp_sql, amp_sql, sizeof(AMP_SQL));
         sqlcfg->sql_save(sql_para);
         timer1->start();                                                         //and timer no stop
         if(key_val->grade.val2 == 5){
@@ -336,22 +349,32 @@ void TEVWidget::fresh_plot()
     quint32 pulse_cnt;      //脉冲计数
 //    quint32 signal_pulse_cnt;
 
-    if (sql_para->amp_sql.mode == signal) {
+    if (amp_sql->mode == signal) {
         timer1->stop();      //如果单次模式，停止计时器
     }
 
     double a,b;
 
-    a = data->recv_para.hdata0.ad.ad_max - 0x8000;
-    b = data->recv_para.hdata0.ad.ad_min - 0x8000;
+    double d_max,d_min;
+    if(channel == Left){
+        d_max = data->recv_para.hdata0.ad.ad_max;
+        d_min = data->recv_para.hdata0.ad.ad_min;
+    }
+    else{
+        d_max = data->recv_para.hdata1.ad.ad_max;
+        d_min = data->recv_para.hdata1.ad.ad_min;
+    }
+
+    a = d_max - 0x8000;
+    b = d_min - 0x8000;
     emit offset_suggest((int)(a/10),(int)(b/10));
 //        qDebug()<<"[1]a = "<<a <<"\tb = "<<b;
 
-    a = AD_VAL(data->recv_para.hdata0.ad.ad_max, (0x8000+sql_para->tev_offset1*10) );
-    b = AD_VAL(data->recv_para.hdata0.ad.ad_min, (0x8000+sql_para->tev_offset2*10) );
+    a = AD_VAL(d_max, (0x8000+amp_sql->tev_offset1*10) );
+    b = AD_VAL(d_min, (0x8000+amp_sql->tev_offset2*10) );
 
     t = ((double)MAX(a, b) * 1000) / 32768;
-    s = sql_para->tev_gain*((double)20) * log10(t);      //对数运算，来自工具链的函数
+    s = amp_sql->tev_gain*((double)20) * log10(t);      //对数运算，来自工具链的函数
 
     //记录并显示最大值
     if (max_db < s) {
@@ -371,9 +394,9 @@ void TEVWidget::fresh_plot()
 
     db = (int)s;
 
-    if ( db > sql_para->amp_sql.high) {
+    if ( db > amp_sql->high) {
         ui->label_val->setStyleSheet("QLabel {font-family:WenQuanYi Micro Hei;font-size:60px;color:red}");
-    } else if (db >= sql_para->amp_sql.low) {
+    } else if (db >= amp_sql->low) {
         ui->label_val->setStyleSheet("QLabel {font-family:WenQuanYi Micro Hei;font-size:60px;color:yellow}");
     } else {
         ui->label_val->setStyleSheet("QLabel {font-family:WenQuanYi Micro Hei;font-size:60px;color:green}");
@@ -458,10 +481,10 @@ void TEVWidget::transData(int x, int y)
 
     y = y - 0x8000;
     if(y>0){
-        y = y - sqlcfg->get_para()->tev_offset1;
+        y = y - amp_sql->tev_offset1;
     }
     else{
-        y = y - sqlcfg->get_para()->tev_offset2;
+        y = y - amp_sql->tev_offset2;
     }
 
     y = (int)(((double)y * 1000) / 32768);
@@ -547,11 +570,22 @@ void TEVWidget::fresh_setting()
 
 
     ui->comboBox->setCurrentIndex(key_val->grade.val2-1);
-    if (key_val->grade.val2 && key_val->grade.val0 ==0) {
-        ui->comboBox->showPopup();
+
+    if(channel == Left){
+        if (key_val->grade.val2 && key_val->grade.val0 ==0) {
+            ui->comboBox->showPopup();
+        }
+        else{
+            ui->comboBox->hidePopup();
+        }
     }
-    else{
-        ui->comboBox->hidePopup();
+    else if(channel == Right){
+        if (key_val->grade.val2 && key_val->grade.val0 ==1) {
+            ui->comboBox->showPopup();
+        }
+        else{
+            ui->comboBox->hidePopup();
+        }
     }
     ui->comboBox->lineEdit()->setText(tr(" 参 数 设 置"));
 }

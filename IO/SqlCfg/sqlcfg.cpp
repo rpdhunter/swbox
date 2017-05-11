@@ -97,10 +97,21 @@ SQL_PARA *SqlCfg::default_config(void)
     char str[20];
 
     /* amplitude mode */
-    sql_para.amp_sql.mode = series;                                             //default series
-    sql_para.amp_sql.mode_chart = PRPS;
-    sql_para.amp_sql.high = 40;                                                 //default high
-    sql_para.amp_sql.low = 20;                                                  //default low
+    sql_para.amp_sql1.mode = series;                                             //default series
+    sql_para.amp_sql1.mode_chart = PRPS;
+    sql_para.amp_sql1.high = 40;                                                 //default high
+    sql_para.amp_sql1.low = 20;                                                  //default low
+    sql_para.amp_sql1.tev_offset1 = 0;             //TEV偏置1
+    sql_para.amp_sql1.tev_offset2 = 0;             //TEV偏置1
+    sql_para.amp_sql1.tev_gain = 1.0;               //TEV增益
+
+    sql_para.amp_sql2.mode = series;                                             //default series
+    sql_para.amp_sql2.mode_chart = PRPS;
+    sql_para.amp_sql2.high = 40;                                                 //default high
+    sql_para.amp_sql2.low = 20;                                                  //default low
+    sql_para.amp_sql2.tev_offset1 = 0;             //TEV偏置1
+    sql_para.amp_sql2.tev_offset2 = 0;             //TEV偏置1
+    sql_para.amp_sql2.tev_gain = 1.0;               //TEV增益
 
     /* pulse mode */
     sql_para.pulse_sql.mode = series;                                           //default series
@@ -136,16 +147,18 @@ SQL_PARA *SqlCfg::default_config(void)
             0xf & QT_VERSION);
     strcpy(sql_para.sys_info.qt_ver, str);
 
-    sql_para.tev_offset1 =0;
-    sql_para.tev_offset2 =0;
+//    sql_para.tev_offset1 =0;
+//    sql_para.tev_offset2 =0;
 
-    sql_para.tev_gain = 1;
+//    sql_para.tev_gain = 1;
 
     sql_para.aa_step = 2;
 
     sql_para.aa_offset = 0;
 
     sql_para.tev_auto_rec = false;       //自动录波默认关闭
+
+    sql_para.max_rec_num = 200;
 
     return &sql_para;
 }

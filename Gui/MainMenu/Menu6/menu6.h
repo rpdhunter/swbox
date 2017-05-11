@@ -32,7 +32,8 @@ public slots:
     void trans_key(quint8);
     void showWaveData(VectorList buf, MODE mod);
 
-    void set_offset_suggest(int a,int b);
+    void set_offset_suggest1(int a,int b);
+    void set_offset_suggest2(int a,int b);
 
 private:
     CURRENT_KEY_VALUE *key_val;

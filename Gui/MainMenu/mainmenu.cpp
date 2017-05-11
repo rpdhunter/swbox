@@ -41,10 +41,10 @@ MainMenu::MainMenu(QWidget *parent, G_PARA *g_data) : QFrame(parent)
     menu1 = new Menu1(this, g_data);
     menu1->hide();
 
-    menu2 = new Menu2(this);
+    menu2 = new Menu2(this, g_data);
     menu2->hide();
 
-    menu3 = new Menu3(this);
+    menu3 = new Menu3(this, g_data);
     menu3->hide();
 
     menu4 = new Menu4(this);
@@ -90,7 +90,8 @@ MainMenu::MainMenu(QWidget *parent, G_PARA *g_data) : QFrame(parent)
     setMaxResetTime(sqlcfg->get_para()->reset_time);
     connect(max_reset_timer, SIGNAL(timeout()),this,SLOT(maxValReset()));
 
-    connect(menu0,SIGNAL(offset_suggest(int,int)),menu6,SLOT(set_offset_suggest(int,int)));
+    connect(menu0,SIGNAL(offset_suggest(int,int)),menu6,SLOT(set_offset_suggest1(int,int)));
+    connect(menu1,SIGNAL(offset_suggest(int,int)),menu6,SLOT(set_offset_suggest2(int,int)));
 }
 
 //改变菜单栏选中状态
@@ -170,32 +171,16 @@ void MainMenu::fresh_title(CURRENT_KEY_VALUE val)
 {
     switch (val.grade.val0) {
     case MENU0:
-        menu_title_name->setText(tr("地电波检测(TEV)"));
+        menu_title_name->setText(tr("地电波检测(通道1)"));
         break;
     case MENU1:
-        menu_title_name->setText(tr("AA超声波检测"));
+        menu_title_name->setText(tr("地电波检测(通道2)"));
         break;
     case MENU2:
-        if (!val.grade.val1) {
-            menu_title_name->setText(tr("AE超声波"));
-        } else if (val.grade.val1 == 1){
-            menu_title_name->setText(tr("AE超声波-相位谱图检测"));
-        } else if (val.grade.val1 == 2) {
-            menu_title_name->setText(tr("AE超声波-脉冲谱图检测"));
-        } else if (val.grade.val1 == 3) {
-            menu_title_name->setText(tr("AE超声波-波形谱图检测"));
-        }
+        menu_title_name->setText(tr("地电波检测(双通道定位)"));
         break;
     case MENU3:
-        if (!val.grade.val1) {
-            menu_title_name->setText(tr("特高频检测"));
-        } else if (val.grade.val1 == 1){
-            menu_title_name->setText(tr("特高频检测-幅值检测模式"));
-        } else if (val.grade.val1 == 2) {
-            menu_title_name->setText(tr("特高频检测-周期谱图检测模式"));
-        } else if (val.grade.val1 == 3) {
-            menu_title_name->setText(tr("特高频检测-PRPS检测模式"));
-        }
+        menu_title_name->setText(tr("AA超声波检测"));
         break;
     case MENU4:
         if (!val.grade.val1) {
@@ -250,7 +235,7 @@ void MainMenu::trans_key(quint8 key_code)
                 key_val.grade.val0 = GRADE0_MENU_MAX_NUM;
             } else {
                 if(key_val.grade.val0 == 6){
-                    key_val.grade.val0 = 1;
+                    key_val.grade.val0 = 3;
                 }
                 else{
                     key_val.grade.val0--;
@@ -261,7 +246,7 @@ void MainMenu::trans_key(quint8 key_code)
             if (key_val.grade.val0 == GRADE0_MENU_MAX_NUM) {
                 key_val.grade.val0 = GRADE0_MENU_MIN_NUM;
             } else {
-                if(key_val.grade.val0 == 1){
+                if(key_val.grade.val0 == 3){
                     key_val.grade.val0 = 6;
                 }
                 else{

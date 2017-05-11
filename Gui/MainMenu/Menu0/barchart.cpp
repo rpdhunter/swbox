@@ -7,10 +7,12 @@
 #include <qwt_legend.h>
 #include <qwt_scale_draw.h>
 
-BarChart::BarChart(QwtPlot *parent, int *p, SQL_PARA *sql)
+BarChart::BarChart(QwtPlot *parent, int *p, int high, int low)
 {
     db = p;
-    sql_para = sql;
+//    sql_para = high;
+    this->high = high;
+    this->low = low;
 
     barchart_data = new BARCHART_DATA[CHART_NUM];
     attach(parent);
@@ -41,9 +43,9 @@ void BarChart::fresh(void)
     barchart_data[CHART_NUM - 1].height = *db;
 
     for (i = 1; i < CHART_NUM; i++) {
-        if (barchart_data[i].height < sql_para->amp_sql.low) {
+        if (barchart_data[i].height < low) {
             barchart_data[i].color = QColor(Qt::green);
-        } else if (barchart_data[i].height > sql_para->amp_sql.high) {
+        } else if (barchart_data[i].height > high) {
             barchart_data[i].color = QColor(Qt::red);
         } else {
             barchart_data[i].color = QColor(Qt::yellow);

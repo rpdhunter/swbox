@@ -37,13 +37,7 @@ Menu0::Menu0(QWidget *parent, G_PARA *g_data) : QFrame(parent)
     main_title6->resize(main_title0->width(), main_title0->height());
     main_title6->move(main_title5->x() + 45, main_title0->y());
 
-//    amplitude = new Amplitude(this, g_data);
-//    amplitude->hide();
-
-//    connect(this, &Menu0::send_key, amplitude, &Amplitude::trans_key);
-//    connect(amplitude,SIGNAL(offset_suggest(int,int)),this,SIGNAL(offset_suggest(int,int)));
-
-    tevWidget = new TEVWidget(g_data,this);
+    tevWidget = new TEVWidget(g_data,TEVWidget::Channel::Left,this);
     connect(this, &Menu0::send_key, tevWidget, &TEVWidget::trans_key);
     connect(tevWidget,SIGNAL(offset_suggest(int,int)),this,SIGNAL(offset_suggest(int,int)));
 
@@ -55,7 +49,6 @@ void Menu0::working(CURRENT_KEY_VALUE *val)
         return;
     }
     key_val = val;
-//    amplitude->working(key_val);
     tevWidget->working(key_val);
     fresh_table();  //改变顶层图标显示
     this->show();
@@ -160,12 +153,10 @@ void Menu0::fresh_table(void)
         //选择状态，代表选中地电波模式
         main_title0->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m11.png);}");
         main_title1->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m22.png);}");
-//        main_title2->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m32.png);}");
-//        main_title3->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m42.png);}");
+        main_title2->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m32.png);}");
+        main_title3->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m42.png);}");
 //        main_title4->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m52.png);}");
 //        main_title5->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m62.png);}");
-        main_title2->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m30.png);}");
-        main_title3->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m40.png);}");
         main_title4->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m50.png);}");
         main_title5->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m60.png);}");
         main_title6->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m72.png);}");

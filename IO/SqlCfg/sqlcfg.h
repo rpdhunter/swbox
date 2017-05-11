@@ -34,6 +34,9 @@ typedef struct AMP_SQL {
     AMP_CHART_MODE mode_chart;
     int high;
     int low;
+    int tev_offset1;             //TEV偏置1
+    int tev_offset2;             //TEV偏置1
+    double tev_gain;               //TEV增益
 } AMP_SQL;
 
 #define TIME_MAX            5
@@ -67,7 +70,7 @@ typedef struct SYS_INFO {
 /* Sql para */
 typedef struct SQL_PARA {
     bool language;          //语言设置
-    AMP_SQL amp_sql;        //地电波设置
+    AMP_SQL amp_sql1, amp_sql2;        //地电波设置(通道1和2)
     PULSE_SQL pulse_sql;
     AAULTRA_SQL aaultra_sql;    //aa超声设置
 
@@ -76,14 +79,10 @@ typedef struct SQL_PARA {
     int reset_time;         //峰值重置时间
     int close_time;         //自动关机时间
     SYS_INFO sys_info;      //系统信息(未使用)
-
-    int tev_offset1;             //TEV偏置1
-    int tev_offset2;             //TEV偏置1
-    double tev_gain;               //TEV增益
-
     double aa_step;         //显示幅值变化门槛
     int aa_offset;       //aa超声偏置值
     bool tev_auto_rec;      //自动录波
+    int max_rec_num;    //录波文件保存个数
 
 } SQL_PARA;
 

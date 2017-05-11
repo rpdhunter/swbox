@@ -27,26 +27,17 @@ if(contains(DEFINES,ARM)) {
 SOURCES += \
     Gui/MainMenu/Menu0/menu0.cpp \
     Gui/MainMenu/Menu1/menu1.cpp \
-    Gui/MainMenu/Menu2/PhaseSpectra/phasespectra.cpp \
-    Gui/MainMenu/Menu2/PulseSpectra/pulsespectra.cpp \
-    Gui/MainMenu/Menu2/WaveSpectra/wavespectra.cpp \
-    Gui/MainMenu/Menu2/menu2.cpp \
-    Gui/MainMenu/Menu3/menu3.cpp \
     Gui/MainMenu/Menu4/menu4.cpp \
     Gui/MainMenu/Menu5/menu5.cpp \
     Gui/MainMenu/Menu6/menu6.cpp \
     Gui/MainMenu/StatusBar/statusbar.cpp \
     Gui/MainMenu/mainmenu.cpp \
-    Gui/MainMenu/Menu3/HFAmplitude/hfamplitude.cpp \
-    Gui/MainMenu/Menu3/HFAtlas/hfatlas.cpp \
-    Gui/MainMenu/Menu3/HFPrps/hfprps.cpp \
     Gui/MainMenu/Menu5/BackRecd/backrecd.cpp \
     Gui/MainMenu/Menu5/EnvRecd/envrecd.cpp \
     Gui/MainMenu/Menu5/LoadData/loaddata.cpp \
     Gui/MainMenu/Menu5/TestPos/testpos.cpp \
     Gui/MainMenu/Menu4/HFCAmplitude/hfcamplitude.cpp \
     Gui/MainMenu/Menu4/HFCAtlas/hfcatlas.cpp \
-    Gui/MainMenu/Menu3/HFAmplitude/hfbarchart.cpp \
     Gui/MainMenu/Menu4/HFCAmplitude/hfcbarchart.cpp \
     Gui/MainMenu/Menu6/SystemInfo/systeminfo.cpp \
     Gui/MainMenu/Menu6/DebugSet/debugset.cpp \
@@ -64,34 +55,28 @@ SOURCES += \
     Gui/MainMenu/StatusBar/battery.cpp \
     Gui/MainMenu/Menu0/tevwidget.cpp \
     Gui/MainMenu/Menu0/barchart.cpp \
-    Gui/MainMenu/Menu1/aaultrasonic2.cpp \
     IO/Data/filetools.cpp \
-    Gui/MainMenu/Menu6/DebugSet/recwaveform.cpp
+    Gui/MainMenu/Menu6/DebugSet/recwaveform.cpp \
+    Gui/MainMenu/Menu2/menu2.cpp \
+    Gui/MainMenu/Menu3/aaultrasonic2.cpp \
+    Gui/MainMenu/Menu3/menu3.cpp \
+    Gui/MainMenu/Menu2/faultlocation.cpp
 
 
 HEADERS  += \
     Gui/MainMenu/Menu0/menu0.h \
     Gui/MainMenu/Menu1/menu1.h \
-    Gui/MainMenu/Menu2/PhaseSpectra/phasespectra.h \
-    Gui/MainMenu/Menu2/PulseSpectra/pulsespectra.h \
-    Gui/MainMenu/Menu2/WaveSpectra/wavespectra.h \
-    Gui/MainMenu/Menu2/menu2.h \
-    Gui/MainMenu/Menu3/menu3.h \
     Gui/MainMenu/Menu4/menu4.h \
     Gui/MainMenu/Menu5/menu5.h \
     Gui/MainMenu/Menu6/menu6.h \
     Gui/MainMenu/StatusBar/statusbar.h \
     Gui/MainMenu/mainmenu.h \
-    Gui/MainMenu/Menu3/HFAmplitude/hfamplitude.h \
-    Gui/MainMenu/Menu3/HFAtlas/hfatlas.h \
-    Gui/MainMenu/Menu3/HFPrps/hfprps.h \
     Gui/MainMenu/Menu5/BackRecd/backrecd.h \
     Gui/MainMenu/Menu5/EnvRecd/envrecd.h \
     Gui/MainMenu/Menu5/LoadData/loaddata.h \
     Gui/MainMenu/Menu5/TestPos/testpos.h \
     Gui/MainMenu/Menu4/HFCAmplitude/hfcamplitude.h \
     Gui/MainMenu/Menu4/HFCAtlas/hfcatlas.h \
-    Gui/MainMenu/Menu3/HFAmplitude/hfbarchart.h \
     Gui/MainMenu/Menu4/HFCAmplitude/hfcbarchart.h \
     Gui/MainMenu/Menu6/SystemInfo/systeminfo.h \
     Gui/MainMenu/Menu6/DebugSet/debugset.h \
@@ -111,9 +96,12 @@ HEADERS  += \
     Gui/MainMenu/StatusBar/battery.h \
     Gui/MainMenu/Menu0/tevwidget.h \
     Gui/MainMenu/Menu0/barchart.h \
-    Gui/MainMenu/Menu1/aaultrasonic2.h \
     IO/Data/filetools.h \
-    Gui/MainMenu/Menu6/DebugSet/recwaveform.h
+    Gui/MainMenu/Menu6/DebugSet/recwaveform.h \
+    Gui/MainMenu/Menu2/menu2.h \
+    Gui/MainMenu/Menu3/aaultrasonic2.h \
+    Gui/MainMenu/Menu3/menu3.h \
+    Gui/MainMenu/Menu2/faultlocation.h
 
 
 RESOURCES += \
@@ -142,4 +130,5 @@ FORMS += \
     Gui/MainMenu/Menu6/Option/optionui.ui \
     Gui/MainMenu/Menu6/SystemInfo/systeminfo.ui \
     Gui/MainMenu/Menu6/DebugSet/debugui.ui \
-    Gui/MainMenu/Menu0/amplitude1.ui
+    Gui/MainMenu/Menu0/amplitude1.ui \
+    Gui/MainMenu/Menu2/faultlocation.ui

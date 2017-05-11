@@ -37,6 +37,7 @@ private:
     MODE _mode;
     WavFormatHeader *wfh1;
     QString filepath;
+    QString filename;
 
 //    bool work;       //0为立刻执行
 
@@ -45,6 +46,8 @@ private:
     void saveCfgFile();         //生成配置文件
     void saveWavFile();         //保存声音文件
     void wavToMp3();
+
+    void spaceControl(QString str); //空间管理
 };
 
 #endif // FILETOOLS_H
