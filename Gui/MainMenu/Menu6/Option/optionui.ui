@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>497</width>
-    <height>201</height>
+    <width>457</width>
+    <height>185</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -21,19 +21,19 @@
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <property name="leftMargin">
-    <number>30</number>
-   </property>
-   <property name="topMargin">
-    <number>9</number>
-   </property>
-   <property name="rightMargin">
     <number>20</number>
    </property>
+   <property name="topMargin">
+    <number>2</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
    <property name="bottomMargin">
-    <number>9</number>
+    <number>2</number>
    </property>
    <property name="verticalSpacing">
-    <number>4</number>
+    <number>0</number>
    </property>
    <item row="0" column="0">
     <widget class="QLabel" name="lab_freq">
@@ -364,19 +364,36 @@
       </spacer>
      </item>
      <item>
-      <widget class="QRadioButton" name="rbt_rec_open">
+      <widget class="QCheckBox" name="checkBox_1">
+       <property name="styleSheet">
+        <string notr="true">border-color: rgb(46, 52, 54);
+</string>
+       </property>
        <property name="text">
-        <string>开启</string>
+        <string>通道1</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QRadioButton" name="rbt_rec_close">
-       <property name="text">
-        <string>关闭</string>
+      <spacer name="horizontalSpacer_13">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
        </property>
-       <property name="checked">
-        <bool>true</bool>
+       <property name="sizeType">
+        <enum>QSizePolicy::Fixed</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="checkBox_2">
+       <property name="text">
+        <string>通道2</string>
        </property>
       </widget>
      </item>

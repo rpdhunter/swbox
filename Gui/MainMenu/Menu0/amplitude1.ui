@@ -52,12 +52,22 @@
    </item>
    <item>
     <property name="text">
+     <string>增益系数     [×1.0]</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
      <string>黄色报警阈值[20]dB</string>
     </property>
    </item>
    <item>
     <property name="text">
      <string>红色报警阈值[40]dB</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>波形记录</string>
     </property>
    </item>
    <item>

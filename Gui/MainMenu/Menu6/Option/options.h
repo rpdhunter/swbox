@@ -32,7 +32,8 @@ signals:
     void fresh_parent(void);
     void fregChanged(int );
     void closeTimeChanged(int);
-    void maxResetTimeChanged(int);
+    void update_statusBar(QString);
+
 
 private:
     CURRENT_KEY_VALUE *key_val;

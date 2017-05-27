@@ -38,12 +38,13 @@ public:
     ~Modbus();
 
 signals:
-
+    void closeTimeChanged(int m);
 
 public slots:
     void readData();
     void writeData();
-
+    void tev_modbus_data(int val, int pluse);
+    void aa_modbus_data(int val);
 
 protected:
     void run(void);
@@ -53,13 +54,24 @@ private:
 
 
     enum {
+        /* read only */
         md_rd_reg_dev_st = 0x0000,
         md_rd_reg_tev_mag,
         md_rd_reg_tev_cnt,
+        md_rd_reg_tev_severity,
         md_rd_reg_aa_mag,
+        md_rd_reg_aa_severity,
+
+        /* read and write */
+        md_rw_reg_tev_gain = 0x0040,
+        md_rw_reg_tev_noise_bias,
+        md_rw_reg_tev_zero_bias,
+        md_rw_reg_aa_gain,
+        md_rw_reg_aa_bias,
 
         md_rd_reg_max,
 
+        /* write only */
         md_wr_reg_start = 0x0100,
         md_wr_reg_stop,
 
@@ -95,6 +107,8 @@ private:
     int modbus_deal_read_reg (modbus_dev_t *ndp);
     int modbus_deal_write_a_reg (modbus_dev_t *ndp);
     int show_msg(char *prompt, char buf[], int len);
+    int get_reg_value (unsigned short reg, unsigned short * val);
+    int set_reg_value (unsigned short reg, unsigned short val);
 
     modbus_dev_t pd_dev;
     G_PARA *data;

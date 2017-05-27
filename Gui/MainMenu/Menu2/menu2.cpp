@@ -120,6 +120,11 @@ void Menu2::trans_key(quint8 key_code)
     emit send_key(key_code);
 }
 
+void Menu2::get_origin_points(QVector<QPoint> p, int group)
+{
+    faultlocation->get_origin_points(p,group);
+}
+
 void Menu2::fresh_table(void)
 {
     if (key_val->grade.val0 == 2 && !key_val->grade.val1) {

@@ -39,6 +39,10 @@ signals:
 
     void startRecWv(int,int);      //开始录播信号,参数范围0-5,0为地电波,1为AA超声...
     void closeTimeChanged(int);
+    void tev_modbus_data(int,int);
+    void aa_modbus_data(int);
+    void play_voice(VectorList);        //发送播放声音的指令
+    void stop_play_voice();             //终止播放
 
 public slots:
     void fresh_menu(void);
@@ -49,9 +53,8 @@ public slots:
 
     void showReminTime(int s, QString str); //状态栏显示剩余时间
     void sysReset();        //把系统中各显示部位设成默认值
-    void maxValReset();     //重置各种模式中的数据最大值
-    void setMaxResetTime(int m);    //设置最大值清零时间
-    void showMaxResetTime();    //状态栏显示最大值重置剩余时间
+
+    void playVoiceProgress(int p, int all, bool f);      //控制播放器进度
 
 private:
     StatusBar *statusbar;
@@ -65,13 +68,12 @@ private:
     G_PARA *data;
 
     QLabel *freqLab, *menu_title_name;
-    //QFont *font;
+    QLabel *sys_info;
 
-//    int ch;
     int grade0_val;
     CURRENT_KEY_VALUE key_val;
 
-    QTimer *max_reset_timer;   //最大值清零计时器
+//    QTimer *max_reset_timer;   //最大值清零计时器
 
 };
 

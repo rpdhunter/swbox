@@ -2,6 +2,8 @@
 
 #include "ui_optionui.h"
 
+#include <QPalette>
+
 Options::Options(QWidget *parent, G_PARA *g_data) : QFrame(parent),ui(new Ui::OptionUi)
 {
     key_val = NULL;
@@ -11,17 +13,11 @@ Options::Options(QWidget *parent, G_PARA *g_data) : QFrame(parent),ui(new Ui::Op
     this->move(2, 31);
 //    this->setStyleSheet("SelfTest {border-image: url(:/widgetphoto/mainmenu/bk2.png);}");
     this->setStyleSheet("Options {background-color:lightGray;}");
-//    this->setStyleSheet("QFrame {color:yellow;}");
-
 
     ui->setupUi(this);
     QButtonGroup *group1 = new QButtonGroup();       //必须新建一个组,才使得两组不互斥
     group1->addButton(ui->rbt_CN);
     group1->addButton(ui->rbt_EN);
-
-    QButtonGroup *group2 = new QButtonGroup();       //必须新建一个组,才使得两组不互斥
-    group2->addButton(ui->rbt_rec_close);
-    group2->addButton(ui->rbt_rec_open);
 
     optionIni();
 }
@@ -49,9 +45,8 @@ void Options::optionIni()
     ui->slider_backlight->setValue(_backlight + 1); //保存值为0-7,显示值为1-8
 
     //自动录波
-//    ui->lineEdit_TimeReset->setText(QString("%1").arg(sql_para->reset_time));
-    ui->rbt_rec_open->setChecked(sql_para->tev_auto_rec);
-    ui->rbt_rec_close->setChecked(!sql_para->tev_auto_rec);
+    ui->checkBox_1->setChecked(sql_para->tev1_sql.auto_rec);
+    ui->checkBox_2->setChecked(sql_para->tev2_sql.auto_rec);
 
     //自动关机时间
     ui->lineEdit_CloseTime->setText(QString("%1").arg(sql_para->close_time));
@@ -91,12 +86,7 @@ void Options::saveOptions()
     //保存自动录波
     saveAutoRec();
 
-
     //保存其他设置
-//    sql_para->reset_time = ui->lineEdit_TimeReset->text().toInt();
-
-
-//    emit maxResetTimeChanged(sql_para->reset_time);
     sql_para->close_time = ui->lineEdit_CloseTime->text().toInt();
     emit closeTimeChanged(sql_para->close_time );
     sqlcfg->sql_save(sql_para);
@@ -135,14 +125,19 @@ void Options::setBacklight()
     sql_para->backlight = _backlight;
     sqlcfg->sql_save(sql_para);
 
-    data->send_para.blacklight.rval = _backlight;
-    data->send_para.blacklight.flag = 1;        //背景设置是生效的,但是不保存的话还会复位
+    data->send_para.backlight.rval = _backlight;
+    data->send_para.backlight.flag = 1;        //背景设置是生效的,但是不保存的话还会复位
 }
 
 void Options::saveAutoRec()
 {
+    //注意，这里保存了双通道的自动录波信号
+    //rec1=0 rec2=0 tev_auto_rec.rval=0
+    //rec1=1 rec2=0 tev_auto_rec.rval=1
+    //rec1=0 rec2=1 tev_auto_rec.rval=2
+    //rec1=1 rec2=1 tev_auto_rec.rval=3
     data->send_para.tev_auto_rec.flag = true;
-    data->send_para.tev_auto_rec.rval = sql_para->tev_auto_rec;
+    data->send_para.tev_auto_rec.rval = sql_para->tev1_sql.auto_rec + 2 * sql_para->tev2_sql.auto_rec;
 }
 
 
@@ -168,20 +163,22 @@ void Options::trans_key(quint8 key_code)
 
     int temp;
 
+
     switch (key_code) {
     case KEY_OK:
         if(key_val->grade.val3 != 0){   //保存退出状态
-            key_val->grade.val2 = 0;
-            key_val->grade.val3 = 0;
-            key_val->grade.val4 = 0;
+            if(key_val->grade.val3 == 4 && key_val->grade.val5 == 0){       //自动录波
+                sql_para->tev1_sql.auto_rec = !sql_para->tev1_sql.auto_rec;
+            }
+            else if(key_val->grade.val3 == 4 && key_val->grade.val5 == 1){
+                sql_para->tev2_sql.auto_rec = !sql_para->tev2_sql.auto_rec;
+            }
             saveOptions();
-            this->hide();
-            fresh_parent();
+            emit update_statusBar(tr("【参数设置】已保存！"));
         }
         else{                           //进入设置,做一些初始化工作
             optionIni();
         }
-        refresh();
         break;
     case KEY_CANCEL:
         if(key_val->grade.val4!=0){     //退出日期编辑模式
@@ -194,7 +191,6 @@ void Options::trans_key(quint8 key_code)
             setBacklight();
             fresh_parent();
         }
-        refresh();
         break;
     case KEY_UP:
         if(key_val->grade.val4 == 0){
@@ -231,10 +227,7 @@ void Options::trans_key(quint8 key_code)
             default:
                 break;
             }
-
         }
-
-        refresh();
         break;
     case KEY_DOWN:
         if(key_val->grade.val4 == 0){
@@ -274,8 +267,6 @@ void Options::trans_key(quint8 key_code)
             }
             ui->dateTimeEdit->setDateTime(_datetime);
         }
-
-        refresh();
         break;
     case KEY_LEFT:
         switch (key_val->grade.val3) {
@@ -289,28 +280,25 @@ void Options::trans_key(quint8 key_code)
             else{
                 _freq = 50;
             }
-            refresh();
             break;
         case 2:
             ui->slider_backlight->setValue(ui->slider_backlight->value() - 1);
-
-            refresh();
             break;
         case 3:
             if(key_val->grade.val4 != 0){
                 ui->dateTimeEdit->setCurrentSectionIndex(ui->dateTimeEdit->currentSectionIndex()-1);
-
             }
             else{
                 key_val->grade.val4 = 1;
             }
-            refresh();
             break;
         case 4:
-            sql_para->tev_auto_rec = !sql_para->tev_auto_rec;
-            ui->rbt_rec_open->setChecked(sql_para->tev_auto_rec);
-            ui->rbt_rec_close->setChecked(!sql_para->tev_auto_rec);
-            saveAutoRec();
+            if(key_val->grade.val5 == 0){
+                key_val->grade.val5 = 1;
+            }
+            else{
+                key_val->grade.val5 = 0;
+            }
             break;
         case 5:
             temp = ui->lineEdit_CloseTime->text().toInt();
@@ -346,29 +334,25 @@ void Options::trans_key(quint8 key_code)
             else{
                 _freq = 50;
             }
-            refresh();
             break;
         case 2:
             ui->slider_backlight->setValue(ui->slider_backlight->value() + 1);
-            refresh();
             break;
         case 3:
             if(key_val->grade.val4 != 0){
                 ui->dateTimeEdit->setCurrentSectionIndex(ui->dateTimeEdit->currentSectionIndex()+1);
-
             }
             else{
                 key_val->grade.val4 = 1;
             }
-            refresh();
-
-
             break;
         case 4:
-            sql_para->tev_auto_rec = !sql_para->tev_auto_rec;
-            ui->rbt_rec_open->setChecked(sql_para->tev_auto_rec);
-            ui->rbt_rec_close->setChecked(!sql_para->tev_auto_rec);
-            saveAutoRec();
+            if(key_val->grade.val5 == 0){
+                key_val->grade.val5 = 1;
+            }
+            else{
+                key_val->grade.val5 = 0;
+            }
             break;
 
         case 5:
@@ -386,7 +370,6 @@ void Options::trans_key(quint8 key_code)
                 sql_para->language = LANGUAGE::EN;
                 ui->rbt_EN->setChecked(true);
             }
-
             break;
 
         default:
@@ -396,6 +379,7 @@ void Options::trans_key(quint8 key_code)
     default:
         break;
     }
+    refresh();
 }
 
 void Options::refresh()
@@ -407,8 +391,8 @@ void Options::refresh()
     ui->dateTimeEdit->setDateTime(_datetime);
     updateCheckBox();
 
-    data->send_para.blacklight.rval = ui->slider_backlight->value()-1;
-    data->send_para.blacklight.flag = 1;        //背景设置是生效的,但是不保存的话还会复位
+    data->send_para.backlight.rval = ui->slider_backlight->value()-1;
+    data->send_para.backlight.flag = 1;        //背景设置是生效的,但是不保存的话还会复位
 
     switch (key_val->grade.val3) {
     case 0:
@@ -501,7 +485,6 @@ void Options::refresh()
         ui->lab_lang->setStyleSheet("QLabel {color:black;}");
 
         ui->lineEdit_CloseTime->deselect();
-//        ui->lineEdit_TimeReset->selectAll();
         ui->dateTimeEdit->setSelectedSection(QDateTimeEdit::NoSection);
         break;
     case 5:
@@ -519,7 +502,6 @@ void Options::refresh()
         ui->lab_lang->setStyleSheet("QLabel {color:black;}");
 
         ui->lineEdit_CloseTime->selectAll();
-//        ui->lineEdit_TimeReset->deselect();
         ui->dateTimeEdit->setSelectedSection(QDateTimeEdit::NoSection);
         break;
 
@@ -538,13 +520,30 @@ void Options::refresh()
         ui->lab_lang->setStyleSheet("QLabel {color:white;}");
 
         ui->lineEdit_CloseTime->deselect();
-//        ui->lineEdit_TimeReset->deselect();
         ui->dateTimeEdit->setSelectedSection(QDateTimeEdit::NoSection);
         break;
 
     default:
         break;
     }
+
+    if(key_val->grade.val3 == 4 ){
+        if(key_val->grade.val5 == 0){
+            ui->checkBox_1->setStyleSheet("QCheckBox{background-color: gray;}");
+            ui->checkBox_2->setStyleSheet("");
+        }
+        else{
+            ui->checkBox_1->setStyleSheet("");
+            ui->checkBox_2->setStyleSheet("QCheckBox{background-color: gray;}");
+        }
+    }
+    else{
+        ui->checkBox_1->setStyleSheet("");
+        ui->checkBox_2->setStyleSheet("");
+    }
+
+    ui->checkBox_1->setChecked(sql_para->tev1_sql.auto_rec);
+    ui->checkBox_2->setChecked(sql_para->tev2_sql.auto_rec);
 }
 
 

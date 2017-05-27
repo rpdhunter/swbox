@@ -72,21 +72,27 @@ void KeyDetect::run(void)
             usleep(KEY_MS_DLY);
             if (!gpio_read_pin(PIN_POWER)) {
                 emit sendkey(KEY_POWER);
-                while (!gpio_read_pin(PIN_POWER));
+                while (!gpio_read_pin(PIN_POWER)){
+                    usleep(KEY_MS_DLY);
+                }
             }
         }
         if (!gpio_read_pin(PIN_OK)) {
             usleep(KEY_MS_DLY);
             if (!gpio_read_pin(PIN_OK)) {
                 emit sendkey(KEY_OK);
-                while (!gpio_read_pin(PIN_OK));
+                while (!gpio_read_pin(PIN_OK)){
+                    usleep(KEY_MS_DLY);
+                }
             }
         }
         if (!gpio_read_pin(PIN_CANCEL)) {
             usleep(KEY_MS_DLY);
             if (!gpio_read_pin(PIN_CANCEL)) {
                 emit sendkey(KEY_CANCEL);
-                while (!gpio_read_pin(PIN_CANCEL));
+                while (!gpio_read_pin(PIN_CANCEL)){
+                    usleep(KEY_MS_DLY);
+                }
             }
         }
         if (!gpio_read_pin(PIN_UP)) {
@@ -149,6 +155,7 @@ void KeyDetect::run(void)
                 }
             }
         }
+        usleep(KEY_MS_DLY);
     }
     exit(0);
 }

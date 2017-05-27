@@ -15,13 +15,14 @@ public:
 
     void working(CURRENT_KEY_VALUE *val);
 
-    void sysReset();
-    void maxReset();
+    void showWaveData(VectorList buf, MODE mod);
 
 signals:
     void send_title_val(CURRENT_KEY_VALUE val);
     void send_key(quint8);
     void offset_suggest(int,int);
+    void origin_pluse_points(QVector<QPoint> p, int group);
+    void startRecWave(int, int);
 
 public slots:
     void trans_key(quint8);

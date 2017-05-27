@@ -20,6 +20,8 @@ public:
     explicit FaultLocation(G_PARA *data, QWidget *parent = 0);
     ~FaultLocation();
 
+    void get_origin_points(QVector<QPoint> p,int group);
+
 public slots:
     void working(CURRENT_KEY_VALUE *val);
     void trans_key(quint8 key_code);
@@ -29,7 +31,7 @@ signals:
 
 private slots:
     void setCompassValue();
-
+    void setCompassValue(int c);
     void setMiniCompassValue();
 
 private:
@@ -47,7 +49,10 @@ private:
     int speed;
     int process;
 
+    int groupNum_left,groupNum_right;
+    QVector<QPoint> points_left, points_right;
 
+    void compare();
     void fresh_setting();
 };
 

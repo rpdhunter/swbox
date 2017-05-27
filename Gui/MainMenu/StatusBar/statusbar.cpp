@@ -18,7 +18,7 @@ StatusBar::StatusBar(QWidget *parent) : QFrame(parent)
     /* view date */
     time = new QLabel(this);
     time->resize(200, 20);
-    time->move(0, 0);
+    time->move(5, 5);
     time->setAlignment(Qt::AlignVCenter);
     time->setStyleSheet("QLabel {color:white;}");
 
@@ -41,6 +41,8 @@ StatusBar::StatusBar(QWidget *parent) : QFrame(parent)
     connect(timer_batt, &QTimer::timeout, this, &StatusBar::fresh_batt);
 
     fresh_batt();       //立刻刷新一次
+
+
 }
 
 //刷新时间

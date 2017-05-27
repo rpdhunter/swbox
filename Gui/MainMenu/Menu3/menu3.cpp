@@ -1,4 +1,5 @@
 #include "menu3.h"
+#include "aawidget.h"
 
 Menu3::Menu3(QWidget *parent, G_PARA *g_data) : QFrame(parent)
 {
@@ -46,10 +47,13 @@ Menu3::Menu3(QWidget *parent, G_PARA *g_data) : QFrame(parent)
 
     /* content */
 
-    aaultrasonic = new AAUltrasonic2(this, g_data);
+//    aaultrasonic = new AAUltrasonic2(this, g_data);
+    aaultrasonic = new AAWidget(this,g_data);
 
     connect(this, SIGNAL(send_key(quint8)), aaultrasonic, SLOT(trans_key(quint8)));
-
+    connect(aaultrasonic,SIGNAL(aa_modbus_data(int)),this,SIGNAL(aa_modbus_data(int)));
+    connect(aaultrasonic,SIGNAL(startRecWave(int,int)),this,SIGNAL(startRecWave(int,int)));
+    connect(aaultrasonic,SIGNAL(offset_suggest(int)),this,SIGNAL(offset_suggest(int)));
 }
 
 void Menu3::working(CURRENT_KEY_VALUE *val)
@@ -63,14 +67,9 @@ void Menu3::working(CURRENT_KEY_VALUE *val)
     this->show();
 }
 
-void Menu3::sysReset()
+void Menu3::showWaveData(VectorList buf, MODE mod)
 {
-//    aaultrasonic->sysReset();
-}
-
-void Menu3::maxReset()
-{
-//    aaultrasonic->maxReset();
+    aaultrasonic->showWaveData(buf,mod);
 }
 
 void Menu3::trans_key(quint8 key_code)
@@ -122,6 +121,15 @@ void Menu3::trans_key(quint8 key_code)
 void Menu3::fresh_table(void)
 {
     if (key_val->grade.val0 == 3 && !key_val->grade.val1) {
+#ifdef SIMPLEMODE
+        main_title0->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m12.png);}");
+        main_title1->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m20.png);}");
+        main_title2->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m30.png);}");
+        main_title3->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m41.png);}");
+        main_title4->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m50.png);}");
+        main_title5->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m60.png);}");
+        main_title6->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m72.png);}");
+#else
         main_title0->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m12.png);}");
         main_title1->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m22.png);}");
         main_title2->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m32.png);}");
@@ -131,6 +139,7 @@ void Menu3::fresh_table(void)
         main_title4->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m50.png);}");
         main_title5->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m60.png);}");
         main_title6->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m72.png);}");
+#endif
     } else if (key_val->grade.val0 == 3 && key_val->grade.val1) {
         main_title0->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m10.png);}");
         main_title1->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m22.png);}");

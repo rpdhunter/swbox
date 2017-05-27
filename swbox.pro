@@ -15,6 +15,7 @@ TEMPLATE = app
 
 #DEFINES += QT_NO_DEBUG_OUTPUT
 DEFINES += ARM
+DEFINES += SIMPLEMODE
 
 TRANSLATIONS += trans/en.ts
 
@@ -58,9 +59,10 @@ SOURCES += \
     IO/Data/filetools.cpp \
     Gui/MainMenu/Menu6/DebugSet/recwaveform.cpp \
     Gui/MainMenu/Menu2/menu2.cpp \
-    Gui/MainMenu/Menu3/aaultrasonic2.cpp \
     Gui/MainMenu/Menu3/menu3.cpp \
-    Gui/MainMenu/Menu2/faultlocation.cpp
+    Gui/MainMenu/Menu2/faultlocation.cpp \
+    Gui/MainMenu/Menu3/aawidget.cpp \
+    Gui/MainMenu/Menu6/RecWaveManage/recwavemanage.cpp
 
 
 HEADERS  += \
@@ -99,9 +101,10 @@ HEADERS  += \
     IO/Data/filetools.h \
     Gui/MainMenu/Menu6/DebugSet/recwaveform.h \
     Gui/MainMenu/Menu2/menu2.h \
-    Gui/MainMenu/Menu3/aaultrasonic2.h \
     Gui/MainMenu/Menu3/menu3.h \
-    Gui/MainMenu/Menu2/faultlocation.h
+    Gui/MainMenu/Menu2/faultlocation.h \
+    Gui/MainMenu/Menu3/aawidget.h \
+    Gui/MainMenu/Menu6/RecWaveManage/recwavemanage.h
 
 
 RESOURCES += \
@@ -131,4 +134,6 @@ FORMS += \
     Gui/MainMenu/Menu6/SystemInfo/systeminfo.ui \
     Gui/MainMenu/Menu6/DebugSet/debugui.ui \
     Gui/MainMenu/Menu0/amplitude1.ui \
-    Gui/MainMenu/Menu2/faultlocation.ui
+    Gui/MainMenu/Menu2/faultlocation.ui \
+    Gui/MainMenu/Menu3/aawidget.ui \
+    Gui/MainMenu/Menu6/RecWaveManage/voiceplayer.ui

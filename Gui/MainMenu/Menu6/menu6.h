@@ -2,11 +2,12 @@
 #define MENU6_H
 
 #include "IO/Key/key.h"
-//#include "SelfTest/selftest.h"
 #include "Option/options.h"
 #include "SystemInfo/systeminfo.h"
 #include "DebugSet/debugset.h"
+#include "DebugSet/recwaveform.h"
 #include "FactoryReset/factoryreset.h"
+#include "RecWaveManage/recwavemanage.h"
 #include <QFrame>
 #include <QLabel>
 
@@ -17,6 +18,7 @@ public:
     explicit Menu6(QWidget *parent = 0, G_PARA *g_data = NULL);
 
     void working(CURRENT_KEY_VALUE *val);
+    void playVoiceProgress(int p, int all, bool f);      //控制播放器进度
 
 signals:
     void send_title_val(CURRENT_KEY_VALUE val);
@@ -25,8 +27,10 @@ signals:
     void startRecWv(int,int);      //开始录播信号
     void fregChanged(int);
     void closeTimeChanged(int);
-    void maxResetTimeChanged(int);
     void sysReset();
+    void update_statusBar(QString);
+    void play_voice(VectorList);        //发送播放声音的指令
+    void stop_play_voice();             //终止播放
 
 public slots:
     void trans_key(quint8);
@@ -34,6 +38,7 @@ public slots:
 
     void set_offset_suggest1(int a,int b);
     void set_offset_suggest2(int a,int b);
+    void set_AA_offset_suggest(int a);
 
 private:
     CURRENT_KEY_VALUE *key_val;
@@ -42,15 +47,15 @@ private:
     SystemInfo *systeminfo;
     DebugSet *debugset;     //new!
     FactoryReset *factoryreset;
-
+    RecWaveManage *recwavemanage;
 
     QLabel *main_title0, *main_title1, *main_title2, *main_title3,
         *main_title4, *main_title5, *main_title6;
 
     QLabel *bk_lab;
 
-    QLabel *options_lab, *debug_lab, *systeminfo_lab, *default_lab;
-    QLabel *options_txt_lab, *debug_txt_lab, *systeminfo_txt_lab, *default_txt_lab;
+    QLabel *options_lab, *debug_lab, *recwave_lab, *systeminfo_lab,  *default_lab;
+    QLabel *options_txt_lab, *debug_txt_lab, *recwave_txt_lab, *systeminfo_txt_lab, *default_txt_lab;
 
     void fresh_grade1(void);
     void fresh_table(void);

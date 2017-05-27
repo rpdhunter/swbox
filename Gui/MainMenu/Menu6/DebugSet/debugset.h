@@ -71,7 +71,7 @@ public:
                     str = tr("AA超声");
                 }
                 else if(tab->text == "2"){
-                    str = tr("录波");
+                    str = tr("高级");
                 }
                 else if(tab->text == "3"){
                     str = tr("录波数据查看");
@@ -97,7 +97,7 @@ public:
 
     void set_offset_suggest1(int a,int b);
     void set_offset_suggest2(int a,int b);
-
+    void set_AA_offset_suggest(int a);
 
 public slots:
     void working(CURRENT_KEY_VALUE *val);
@@ -109,11 +109,10 @@ signals:
     void startRecWv(int,int);      //开始录播信号,前一个参数是通道数，后一个参数是录播时常（仅对超声录波有用）
     void fregChanged(int);      //频率设置变化
     void send_key(quint8);
+    void update_statusBar(QString);
 
 
 private slots:
-//    void
-
     void on_comboBox_currentIndexChanged(int index);
 
 private:
@@ -124,6 +123,8 @@ private:
     void resetPassword();
 
     void saveSql();
+
+    void readSql(); //从SQL读取数据至UI
 
 
     CURRENT_KEY_VALUE *key_val;
@@ -139,10 +140,6 @@ private:
     QString password_set;   //密码设定值
 
     RecWaveForm *recWaveForm;
-
-    QwtPlot *plot;
-    QVector<QPointF> wave;
-    QwtPlotCurve *curve;
 
     QTimer *timer;      //备用
 

@@ -19,6 +19,7 @@ public:
 
 public slots:
     void working(CURRENT_KEY_VALUE *val,QString str);
+    void working(CURRENT_KEY_VALUE *val,VectorList buf, MODE mod);     //重载
     void trans_key(quint8 key_code);
 
 private:
@@ -29,6 +30,7 @@ private:
     QwtPlotCurve *curve;
 
     void setData(QString str);
+    void setData(VectorList buf, MODE mod);
 
     void setScroll(int value);      //根据数值不同，改变显示内容
 

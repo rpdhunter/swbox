@@ -16,7 +16,8 @@ MainMenu::MainMenu(QWidget *parent, G_PARA *g_data) : QFrame(parent)
     freqLab = new QLabel(this);
     freqLab->resize(60, 24);
 //    menu_title->move(7, 0);
-    freqLab->move(this->width()-freqLab->width()+14, 248);
+//    freqLab->move(this->width()-freqLab->width()+14, 248);
+    freqLab->move(310, 245);
     freqLab->setStyleSheet("color:white;");
     freqLab->setAlignment(Qt::AlignVCenter|Qt::AlignRight);
 //    menu_title->setText(tr("当前状态:"));
@@ -26,9 +27,16 @@ MainMenu::MainMenu(QWidget *parent, G_PARA *g_data) : QFrame(parent)
     menu_title_name = new QLabel(this);
     menu_title_name->resize(250, 24);
 //    menu_title_name->move(70, 0);
-    menu_title_name->move(7, 248);
+    menu_title_name->move(10, 245);
     menu_title_name->setStyleSheet("color:white;");
     menu_title_name->setAlignment(Qt::AlignVCenter);
+
+
+    sys_info = new QLabel(this);
+    sys_info->setPixmap(QPixmap(":/widgetphoto/ohv_gary.png"));
+    sys_info->resize(120,20);
+    sys_info->move(350,245);
+    sys_info->setScaledContents(true);
 
     /* status bar */
     statusbar = new StatusBar(this);
@@ -77,21 +85,34 @@ MainMenu::MainMenu(QWidget *parent, G_PARA *g_data) : QFrame(parent)
     connect(menu5, &Menu5::send_title_val, this, &MainMenu::fresh_title);
     connect(menu6, &Menu6::send_title_val, this, &MainMenu::fresh_title);
 
+    //录波
     connect(menu6,SIGNAL(startRecWv(int,int)),this,SIGNAL(startRecWv(int,int)));
+    connect(menu0,SIGNAL(startRecWave(int,int)),this,SIGNAL(startRecWv(int,int)));
+    connect(menu1,SIGNAL(startRecWave(int,int)),this,SIGNAL(startRecWv(int,int)));
+    connect(menu3,SIGNAL(startRecWave(int,int)),this,SIGNAL(startRecWv(int,int)));
+
+    //杂项状态即时显示
     connect(menu6,SIGNAL(fregChanged(int)),this,SLOT(fresg_freq(int)));
     connect(menu6,SIGNAL(closeTimeChanged(int)),this,SIGNAL(closeTimeChanged(int)));
-    connect(menu6,SIGNAL(maxResetTimeChanged(int)),this,SLOT(setMaxResetTime(int)));
     connect(menu6,SIGNAL(sysReset()),this,SLOT(sysReset()));
+    connect(menu6,SIGNAL(update_statusBar(QString)),menu_title_name,SLOT(setText(QString)));
 
-
-    max_reset_timer = new QTimer(this);
-//    max_reset_timer->setInterval(sqlcfg->get_para()->reset_time * 1000 *60);    //单位为分钟
-//    max_reset_timer->start();
-    setMaxResetTime(sqlcfg->get_para()->reset_time);
-    connect(max_reset_timer, SIGNAL(timeout()),this,SLOT(maxValReset()));
-
+    //偏置
     connect(menu0,SIGNAL(offset_suggest(int,int)),menu6,SLOT(set_offset_suggest1(int,int)));
     connect(menu1,SIGNAL(offset_suggest(int,int)),menu6,SLOT(set_offset_suggest2(int,int)));
+    connect(menu3,SIGNAL(offset_suggest(int)),menu6,SLOT(set_AA_offset_suggest(int)));
+
+    //modbus相关
+    connect(menu0,SIGNAL(tev_modbus_data(int,int)),this,SIGNAL(tev_modbus_data(int,int)));
+    connect(menu3,SIGNAL(aa_modbus_data(int)),this,SIGNAL(aa_modbus_data(int)));
+
+    //故障定位相关
+    connect(menu0,SIGNAL(origin_pluse_points(QVector<QPoint>,int)),menu2,SLOT(get_origin_points(QVector<QPoint>,int)));
+    connect(menu1,SIGNAL(origin_pluse_points(QVector<QPoint>,int)),menu2,SLOT(get_origin_points(QVector<QPoint>,int)));
+
+    //播放声音
+    connect(menu6,SIGNAL(play_voice(VectorList)),this,SIGNAL(play_voice(VectorList)));
+    connect(menu6,SIGNAL(stop_play_voice()),this,SIGNAL(stop_play_voice()));
 }
 
 //改变菜单栏选中状态
@@ -212,11 +233,11 @@ void MainMenu::fresh_title(CURRENT_KEY_VALUE val)
         } else if (val.grade.val1 == 2) {
             menu_title_name->setText(tr("系统设置-调试模式"));
         } else if (val.grade.val1 == 3){
-            menu_title_name->setText(tr("系统设置-系统信息"));
+            menu_title_name->setText(tr("系统设置-录波管理"));
         } else if (val.grade.val1 == 4) {
-            menu_title_name->setText(tr("系统设置-恢复出厂"));
+            menu_title_name->setText(tr("系统设置-系统信息"));
         } else if (val.grade.val1 == 5) {
-            menu_title_name->setText(tr("系统设置-"));
+            menu_title_name->setText(tr("系统设置-恢复出厂"));
         }
         break;
     default:
@@ -234,24 +255,32 @@ void MainMenu::trans_key(quint8 key_code)
             if (key_val.grade.val0 == GRADE0_MENU_MIN_NUM) {
                 key_val.grade.val0 = GRADE0_MENU_MAX_NUM;
             } else {
+#ifdef SIMPLEMODE
+                key_val.grade.val0 -= 3;
+#else
                 if(key_val.grade.val0 == 6){
                     key_val.grade.val0 = 3;
                 }
                 else{
                     key_val.grade.val0--;
                 }
+#endif
             }
             break;
         case KEY_RIGHT:
             if (key_val.grade.val0 == GRADE0_MENU_MAX_NUM) {
                 key_val.grade.val0 = GRADE0_MENU_MIN_NUM;
             } else {
+#ifdef SIMPLEMODE
+                key_val.grade.val0 += 3;
+#else
                 if(key_val.grade.val0 == 3){
                     key_val.grade.val0 = 6;
                 }
                 else{
                     key_val.grade.val0++;
                 }
+#endif
             }
             break;
         case KEY_OK:
@@ -270,7 +299,22 @@ void MainMenu::trans_key(quint8 key_code)
 
 void MainMenu::showWaveData(VectorList buf,MODE mod)
 {
-    menu6->showWaveData(buf,mod);
+    if(menu6->isVisible()){
+        menu6->showWaveData(buf,mod);
+        qDebug()<<"menu6 show wave data!";
+    }
+    if(menu0->isVisible()){
+        menu0->showWaveData(buf,mod);
+        qDebug()<<"menu0 show wave data!";
+    }
+    if(menu1->isVisible()){
+        menu1->showWaveData(buf,mod);
+        qDebug()<<"menu1 show wave data!";
+    }
+    if(menu3->isVisible()){
+        menu3->showWaveData(buf,mod);
+        qDebug()<<"menu3 show wave data!";
+    }
 }
 
 void MainMenu::fresg_freq(int fre)
@@ -290,43 +334,18 @@ void MainMenu::showReminTime(int s,QString str)
 
 void MainMenu::sysReset()
 {
-//    data->send_para.freq.rval = (FREQ_REG << 16) | ((sqlcfg->get_para()->freq_val == 50) ? 0 : 1);
     data->send_para.freq.rval = (sqlcfg->get_para()->freq_val == 50) ? 0 : 1;
     data->send_para.freq.flag = 1;
     freqLab->setText(tr("%1Hz").arg(sqlcfg->get_para()->freq_val));
-//    data->send_para.blacklight.rval = (BLACKLIGHT_REG << 16) | sqlcfg->get_para()->backlight;
-    data->send_para.blacklight.rval = sqlcfg->get_para()->backlight;
-    data->send_para.blacklight.flag = 1;
-    menu0->sysReset();
-    menu1->sysReset();
+
+    data->send_para.backlight.rval = sqlcfg->get_para()->backlight;
+    data->send_para.backlight.flag = 1;
 }
 
-void MainMenu::maxValReset()
+void MainMenu::playVoiceProgress(int p, int all,bool f)
 {
-    menu0->maxReset();
-    menu1->maxReset();
+    menu6->playVoiceProgress(p,all,f);
 }
 
-void MainMenu::setMaxResetTime(int m)
-{
-//    qDebug()<<"m = "<<sqlcfg->get_para()->reset_time;
 
-    if(m>0){
-        max_reset_timer->setInterval(m * 1000 *60);    //单位为分钟
-        max_reset_timer->start();
-    }
-    else{
-        max_reset_timer->stop();
-    }
-}
-
-void MainMenu::showMaxResetTime()
-{
-    if(max_reset_timer->isActive()){
-        showReminTime(max_reset_timer->remainingTime()/1000,tr("测量数据最大值将重置!"));
-        qDebug()<<"max_reset_timer is Active! interval="<<max_reset_timer->interval();
-    }
-
-
-}
 

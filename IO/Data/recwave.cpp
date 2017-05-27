@@ -14,7 +14,7 @@ RecWave::RecWave(G_PARA *gdata, MODE mode, QObject *parent) : QObject(parent)
     timer->setSingleShot(true);
     timer->setInterval(5000 );  //录5秒钟超声
 
-    if(mode == TEV){
+    if(mode == TEV1){
         this->groupNum = 0;
     }
     else if(mode == AA_Ultrasonic){
@@ -29,7 +29,7 @@ RecWave::RecWave(G_PARA *gdata, MODE mode, QObject *parent) : QObject(parent)
 //从GUI发起录波指令
 void RecWave::recStart(int time)
 {
-    if(mode == TEV){
+    if(mode == TEV1){
         tdata->send_para.recstart.rval = 1;
     }
     else if(mode == AA_Ultrasonic){
@@ -53,7 +53,7 @@ void RecWave::startWork()
 
 
 
-    if(mode == TEV){
+    if(mode == TEV1){
         tdata->send_para.recstart.rval = 0x10;     //数据上传开始
         tdata->send_para.recstart.flag = true;
         this->groupNum = 0;
@@ -74,7 +74,7 @@ void RecWave::startWork()
 //上传数据
 void RecWave::work()
 {
-    if(mode == TEV){
+    if(mode == TEV1){
         if(tdata->recv_para.groupNum == tdata->send_para.groupNum.rval ){      //收发相匹配，拷贝数据
             for(int i=0;i<256;i++){
                 _data.append((qint32)tdata->recv_para.recData [ i + 2 ] - 0x8000);
@@ -88,8 +88,8 @@ void RecWave::work()
             tdata->send_para.groupNum.flag = true;
         }
         else{                                                               //不匹配，再发一次
-            printf("receive recWaveData failed! send groupNum=%d\n",tdata->send_para.groupNum.rval);
-            printf("recv groupNum=%d\n",tdata->recv_para.groupNum);
+//            printf("receive recWaveData failed! send groupNum=%d\n",tdata->send_para.groupNum.rval);
+//            printf("recv groupNum=%d\n",tdata->recv_para.groupNum);
             tdata->send_para.groupNum.flag = true;
         }
 
@@ -110,12 +110,8 @@ void RecWave::work()
 
         if((tdata->recv_para.groupNum + 0x200) == tdata->send_para.groupNum.rval ){      //收发相匹配，拷贝数据
             for(int i=0;i<256;i++){
-//                _data.append((qint32)tdata->recv_para.recData [ i + 1 ] - 0x8000);
                 _data.append((qint32)tdata->recv_para.recData [ i + 2 ]);
-//                _data.append(0);
                 num++;
-
-                //                qDebug("%08X",tdata->recv_para.recData [ i ]);
             }
 
 
@@ -155,7 +151,7 @@ void RecWave::AA_rec_end()
     //录波完成，发送数据，通知GUI和文件保存
     emit waveData(_data,mode);
 
-    tdata->send_para.tev_auto_rec.rval = sqlcfg->get_para()->tev_auto_rec;      //将自动录波替换为设置值
+    tdata->send_para.tev_auto_rec.rval = sqlcfg->get_para()->tev1_sql.auto_rec;      //将自动录波替换为设置值
     tdata->send_para.tev_auto_rec.flag = true;
     status = Free;
 }

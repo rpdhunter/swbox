@@ -12,7 +12,7 @@ SystemInfo::SystemInfo(QWidget *parent) : QFrame(parent),ui(new Ui::SystemInfoUi
     ui->setupUi(this);
     this->setStyleSheet("SystemInfo {background-color:lightGray;}");
 
-    ui->lab_SysInfo->setStyleSheet("QLabel {font-family:WenQuanYi Micro Hei;font-size:20px;}");
+//    ui->lab_SysInfo->setStyleSheet("QLabel {font-family:WenQuanYi Micro Hei;font-size:20px;}");
 //    this->setStyleSheet("QFrame {color:white;}");
 
 }
@@ -33,7 +33,7 @@ void SystemInfo::trans_key(quint8 key_code)
         return;
     }
 
-    if (key_val->grade.val1 != 3) {
+    if (key_val->grade.val1 != 4) {
         return;
     }
 

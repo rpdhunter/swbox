@@ -47,10 +47,10 @@ FaultLocation::FaultLocation(G_PARA *data, QWidget *parent) :
     to = 360;
     speed = 50;
 
-    timer = new QTimer;
-    timer->setInterval(2000);
-    connect(timer,SIGNAL(timeout()),this,SLOT(setCompassValue()));
-    timer->start();
+//    timer = new QTimer;
+//    timer->setInterval(2000);
+//    connect(timer,SIGNAL(timeout()),this,SLOT(setCompassValue()));
+//    timer->start();
 
     timer1 = new QTimer;
     timer1->setInterval(2000/4/speed);
@@ -64,6 +64,23 @@ FaultLocation::FaultLocation(G_PARA *data, QWidget *parent) :
 FaultLocation::~FaultLocation()
 {
     delete ui;
+}
+
+void FaultLocation::get_origin_points(QVector<QPoint> p, int group)
+{
+
+    if(group <= 3 && group >=0){
+        groupNum_left = group;
+        points_left = p;
+//        qDebug()<<"FaultLocation get data! Left  " << groupNum_left <<"\t"<<  points_left.length();
+    }
+    else if(group >=4 && group <=7){
+        groupNum_right = group;
+        points_right = p;
+//        qDebug()<<"FaultLocation get data! Right  "<< groupNum_right <<"\t"<<  points_right.length();;
+    }
+    compare();
+
 }
 
 void FaultLocation::working(CURRENT_KEY_VALUE *val)
@@ -141,10 +158,19 @@ void FaultLocation::trans_key(quint8 key_code)
 void FaultLocation::setCompassValue()
 {
 
-    int a = qrand()%180 - 90;
+    int a = qrand()%180 - 90; //范围是-90~90
 //    qDebug()<<"a="<<a;
 
-    to = 360+a;
+    to = 360+a;              //范围是270~450
+
+    process = 1;
+}
+
+void FaultLocation::setCompassValue(int c)
+{
+    int a = c; //范围是-90~90
+
+    to = 360+a;              //范围是270~450
 
     process = 1;
 }
@@ -159,6 +185,32 @@ void FaultLocation::setMiniCompassValue()
     if(process == speed +1 ){
         from = to;
         process = 0;
+    }
+}
+
+void FaultLocation::compare()
+{
+    if(groupNum_left + 4 == groupNum_right && points_left.length()>0 && points_right.length()>0){
+        qDebug()<<"get valid data!\t"<<points_left.length()<<"\t"<<points_right.length();
+        int c1 = 0, c2 =0, n = 0;
+        foreach (QPoint p1, points_left) {
+            foreach (QPoint p2, points_right) {
+                if(qAbs(p1.x()-p2.x())<3 && p1.y()*p2.y()>0){
+                    qDebug()<<"found close point pair!   "<<p1<<p2 << "\t"<<p1.x()-p2.x();
+                    c1 += qAbs(p1.y() );
+                    c2 += qAbs(p2.y() );
+                    n++;        //计数器
+                }
+            }
+        }
+
+        if(n>0){
+
+            if( (points_left.length()-points_right.length() )* (c1 - c2) > 0 ){
+                qDebug()<< "c1=" << c1 * 1.0 / n <<"\tc2="<< c2 * 1.0 / n << "\tc1-c2="<< (c1 - c2)*1.0 / n;
+                setCompassValue(-10*(c1 - c2)/ n);
+            }
+        }
     }
 }
 

@@ -24,6 +24,8 @@ signals:
 
 public slots:
     void trans_key(quint8);
+    void get_origin_points(QVector<QPoint> p,int group);
+
 
 private:
     CURRENT_KEY_VALUE *key_val;

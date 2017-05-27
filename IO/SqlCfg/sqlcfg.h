@@ -18,71 +18,58 @@ enum LANGUAGE {
 };
 
 /* amplitude mode */
-enum AMP_MODE {
-    signal = 0,
+enum TRIGGER_MODE {
+    single = 0,
     series = 1,
 };
 
-enum AMP_CHART_MODE {
+enum TEV_CHART_MODE {
     PRPS = 0,
     PRPD = 1,
     Histogram = 2,
 };
 
-typedef struct AMP_SQL {
-    bool mode;
-    AMP_CHART_MODE mode_chart;
-    int high;
-    int low;
-    int tev_offset1;             //TEV偏置1
-    int tev_offset2;             //TEV偏置1
-    double tev_gain;               //TEV增益
-} AMP_SQL;
+typedef struct TEV_SQL {
+    bool mode;                      //脉冲触发模式
+    TEV_CHART_MODE mode_chart;      //图形显示模式
+    int high;                       //红色报警阈值
+    int low;                        //黄色报警阈值
+    int tev_offset1;                //TEV偏置1，目前用作噪声偏置
+    int tev_offset2;                //TEV偏置2，目前未使用，备用
+    double gain;                    //TEV增益
+    int fpga_zero;                  //TEV零点（需要FPGA同步）
+    uint fpga_threshold;            //TEV阈值（需要FPGA同步）
+    bool auto_rec;                  //自动录波（需要FPGA同步）
+} TEV_SQL;
 
-#define TIME_MAX            5
-#define TIME_MIN            1
-/* pulse mode */
-typedef struct PULSE_SQL {
-    bool mode;
-    int high;
-    int low;
-    int time;
-} PULSE_SQL;
+#define TIME_MAX                60
+#define TIME_MIN                1
+#define VOL_MAX                 15
+#define VOL_MIN                 0
 
 /* aaultrasonic mode */
 typedef struct AAULTRA_SQL {
-#define VOL_MAX                 15
-#define VOL_MIN                 0
-    bool mode;
-    int gain;
-    int vol;
-    int time;
+    bool mode;                      //脉冲触发模式
+    double gain;                    //AA超声增益
+    int vol;                        //AA超声音量（0-15）（需要FPGA同步）
+    int high;                       //红色报警阈值
+    int low;                        //黄色报警阈值
+    int time;                       //录波时长（1-60）
+    double aa_step;                 //显示幅值变化门槛
+    int aa_offset;                  //AA超声偏置值
 } AAULTRA_SQL;
 
-typedef struct SYS_INFO {
-    char hard_ver[20];
-    char soft_ver[20];
-    char fpga_ver[20];
-    char cpu_ver[20];
-    char qt_ver[20];
-} SYS_INFO;
 
 /* Sql para */
 typedef struct SQL_PARA {
-    bool language;          //语言设置
-    AMP_SQL amp_sql1, amp_sql2;        //地电波设置(通道1和2)
-    PULSE_SQL pulse_sql;
-    AAULTRA_SQL aaultra_sql;    //aa超声设置
+    TEV_SQL tev1_sql, tev2_sql;     //地电波设置(通道1和2)
+    AAULTRA_SQL aaultra_sql;        //AA超声设置
 
-    int freq_val;           //频率
-    int backlight;          //背光
-    int reset_time;         //峰值重置时间
-    int close_time;         //自动关机时间
-    SYS_INFO sys_info;      //系统信息(未使用)
-    double aa_step;         //显示幅值变化门槛
-    int aa_offset;       //aa超声偏置值
-    bool tev_auto_rec;      //自动录波
-    int max_rec_num;    //录波文件保存个数
+    bool language;                  //语言设置
+    int freq_val;                   //频率（需要FPGA同步）
+    int backlight;                  //背光（需要FPGA同步）
+    int close_time;                 //自动关机时间
+    int max_rec_num;                //录波文件保存个数
 
 } SQL_PARA;
 

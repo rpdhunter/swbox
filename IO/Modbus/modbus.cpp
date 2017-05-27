@@ -23,85 +23,85 @@ Modbus::Modbus(QObject *parent, G_PARA *g_data) : QThread(parent)
 {
     data = g_data;
     sql_para = new SQL_PARA;
-    data_stand = new unsigned short[4];
+    data_stand = new unsigned short[md_wr_reg_max];
 
-    serial = new QSerialPort;
-    //设置端口
-    serial->setPort(QSerialPortInfo::availablePorts().first());
-    //打开串口
-    bool flag = serial->open(QIODevice::ReadWrite);
-    //设置波特率
-    serial->setBaudRate(9600);
-    //设置数据位数
-    serial->setDataBits(QSerialPort::Data8);
-    //设置奇偶校验
-    serial->setParity(QSerialPort::NoParity);
-    //设置停止位
-    serial->setStopBits(QSerialPort::OneStop);
-    //设置流控制
-    serial->setFlowControl(QSerialPort::NoFlowControl);
+    for (int i = 0; i < md_wr_reg_max; ++i) {
+        data_stand[i] = 0;
+    }
 
-    connect(serial, SIGNAL(readyRead()), this, SLOT(readData()));
+    //    serial = new QSerialPort;
+    //    //设置端口
+    //    serial->setPort(QSerialPortInfo::availablePorts().first());
+    //    //打开串口
+    //    bool flag = serial->open(QIODevice::ReadWrite);
+    //    //设置波特率
+    //    serial->setBaudRate(9600);
+    //    //设置数据位数
+    //    serial->setDataBits(QSerialPort::Data8);
+    //    //设置奇偶校验
+    //    serial->setParity(QSerialPort::NoParity);
+    //    //设置停止位
+    //    serial->setStopBits(QSerialPort::OneStop);
+    //    //设置流控制
+    //    serial->setFlowControl(QSerialPort::NoFlowControl);
 
-//    writeData();
+    //    connect(serial, SIGNAL(readyRead()), this, SLOT(readData()));
+
+    //    writeData();
 
 
-//    printf("[1]modbus start!");
-    if(flag)
-        qDebug()<<"serial open success!";
-    else
-        qDebug()<<"serial open failed!";
+    //    printf("[1]modbus start!");
+    //    if(flag)
+    //        qDebug()<<"serial open success!";
+    //    else
+    //        qDebug()<<"serial open failed!";
 
-//    this->start();
+    this->start();
 }
 
 Modbus::~Modbus()
 {
-    serial->clear();
-    serial->close();
-    serial->deleteLater();
+    //    serial->clear();
+    //    serial->close();
+    //    serial->deleteLater();
 }
 
 void Modbus::run()
 {
-//    int len;
-//    unsigned char recv_buf [300];
 
-//    if (init_modbus_dev (&pd_dev) != 0) {
-//        printf ("failed to init modbus device\n");
-////        return -1;
-//    }
+    //    writeData();
 
+    //    while(1){
+    //        qDebug()<<"[2]modbus start!";
 
+    //        serial->write("12345678");
+    //        sleep(2);
+    //    }
+    //    serial->clear();
+    //    serial->close();
+    //    serial->deleteLater();
 
+    int len;
+    unsigned char recv_buf [300];
 
-
-//    writeData();
-
-    while(1){
-        qDebug()<<"[2]modbus start!";
-
-        serial->write("12345678");
-        sleep(2);
+    if (init_modbus_dev (&pd_dev) != 0) {
+        printf ("failed to init modbus device\n");
+        //        return -1;
     }
-//    serial->clear();
-//    serial->close();
-//    serial->deleteLater();
 
-//    while (1) {
-//        len = uart_recv (pd_dev.com_fd, recv_buf, sizeof (recv_buf));
-//        if (len > 0) {
-//            show_msg ("recv msg", (char *)recv_buf, len);
-//            modbus_com_recv (&pd_dev, recv_buf, len);
-//        }
-//        else {
-//            modbus_com_recv_to (&pd_dev);
-//        }
-//        qDebug()<<"[2]modbus start!";
-//        sleep(1);
-//    }
+    while (1) {
+        len = uart_recv (pd_dev.com_fd, recv_buf, sizeof (recv_buf));
+        if (len > 0) {
+            show_msg ("recv msg", (char *)recv_buf, len);
+            modbus_com_recv (&pd_dev, recv_buf, len);
+        }
+        else {
+            modbus_com_recv_to (&pd_dev);
+        }
+//        msleep(100);
+    }
 
-//    close_modbus_dev (&pd_dev);
+    close_modbus_dev (&pd_dev);
 
 }
 
@@ -112,7 +112,7 @@ void Modbus::readData()
     if(buf!=NULL)
     {
         qDebug()<<"receive serial data:"<<buf;
-//        QString str =
+        //        QString str =
     }
     else{
         qDebug()<<"receive serial data failed";
@@ -124,6 +124,19 @@ void Modbus::writeData()
     QByteArray str;
     str = "abc";
     serial->write(str);
+}
+
+void Modbus::tev_modbus_data(int val, int pluse)
+{
+    data_stand[md_rd_reg_tev_mag] = val;
+    data_stand[md_rd_reg_tev_cnt] = pluse;
+//    qDebug()<<"tev modbus data changed! \t " << val << "\t"<< pluse;
+}
+
+void Modbus::aa_modbus_data(int val)
+{
+    data_stand[md_rd_reg_aa_mag] = val;
+//    qDebug()<<"aa modbus data changed!  \t" << val;
 }
 
 unsigned short Modbus::modbus_crc(unsigned char *buf, unsigned char length)
@@ -206,11 +219,11 @@ int Modbus::modbus_com_recv(Modbus::modbus_dev_t *ndp, unsigned char *buf, int l
     modbus_com_clr_to (ndp);
 
     for (i = 0; i < len; i++) {
-        ndp->recv_buf [ndp->recv_len++] = buf [i];  //缓冲区数据装配成结构体
+        ndp->recv_buf [ndp->recv_len++] = buf [i];
         if (ndp->recv_len == 1) {
             /* 装置地址为报文头 */
             if ((ndp->recv_buf [0] != ndp->dev_addr) &&
-                (ndp->recv_buf [0] != MODBUS_BC_ADDR)) {
+                    (ndp->recv_buf [0] != MODBUS_BC_ADDR)) {
                 ndp->recv_len = 0;
             }
         }
@@ -277,7 +290,7 @@ int Modbus::modbus_deal_msg(Modbus::modbus_dev_t *ndp)
     int ret;
 
     if (ndp->recv_buf [0] != ndp->dev_addr &&
-        ndp->recv_buf [0] != MODBUS_BC_ADDR) {
+            ndp->recv_buf [0] != MODBUS_BC_ADDR) {
         /* 判地址 */
         ndp->recv_len = 0;
         return -1;
@@ -320,15 +333,15 @@ int Modbus::modbus_deal_msg(Modbus::modbus_dev_t *ndp)
 
 int Modbus::modbus_deal_read_reg(Modbus::modbus_dev_t *ndp)
 {
-    //crc校验
     unsigned short crc_recv, crc_calc;
     unsigned short start_add, reg_count, reg_val;
-//    int i;
+    int i;
 
     if (ndp->recv_len != 8) {   //报文长度必须为8
         return -1;
     }
 
+    //crc校验
     crc_recv = (ndp->recv_buf [6] << 8) + ndp->recv_buf [7];   //高位在前
     crc_calc = modbus_crc (ndp->recv_buf, 6);
     if (crc_calc != crc_recv) {
@@ -350,20 +363,22 @@ int Modbus::modbus_deal_read_reg(Modbus::modbus_dev_t *ndp)
     }
 
     //装配发送的报文
-    ndp->send_len = 5 + (reg_count << 1);
+    ndp->send_len = 5 + (reg_count << 1);       //长度为5+2N
     ndp->send_buf[0] = ndp->dev_addr;
     ndp->send_buf[1] = MODBUS_FC_READ_REG;
     ndp->send_buf[2] = (reg_count << 1);
 
-//    for (i = 0; i < reg_count; i++) {
-//        reg_val = 0x1122;	// test
+    transData();        //得到设备数据
 
-//        ndp->send_buf [3 + (i << 1)] = reg_val >> 8;        //高位
-//        ndp->send_buf [4 + (i << 1)] = reg_val & 0xff;      //低位
-//    }
-    for(unsigned short i=start_add; i<reg_count; i++){
-        ndp->send_buf [3 + (i << 1)] = data_stand[i] >> 8;        //高位
-        ndp->send_buf [4 + (i << 1)] = data_stand[i] & 0xff;      //低位
+    for (i = 0; i < reg_count; i++) {
+//        reg_val = 0x1122;	// test
+        reg_val = data_stand[start_add + i];
+//        if (get_reg_value (start_add + i, &reg_val) < 0) {
+//            printf ("failed to get reg %x value\n", start_add + i);
+//            reg_val = 0xeeee;	/* invalid value */
+//        }
+        ndp->send_buf [3 + (i << 1)] = reg_val >> 8;
+        ndp->send_buf [4 + (i << 1)] = reg_val & 0xff;
     }
 
     //装配CRC校验码
@@ -393,19 +408,11 @@ int Modbus::modbus_deal_write_a_reg(Modbus::modbus_dev_t *ndp)
     }
 
     reg_add = (ndp->recv_buf[2] << 8)+ndp->recv_buf[3]; //寄存器地址
-    val = (ndp->recv_buf[2] << 8)+ndp->recv_buf[3]; //待赋给寄存器的数值
+    val = (ndp->recv_buf[4] << 8)+ndp->recv_buf[5]; //待赋给寄存器的数值
 
-    //赋值操作
-    switch (reg_add) {
-    case md_wr_reg_start:
-        ret = 0;
-        break;
-    case md_wr_reg_stop:
-        ret = 0;
-        break;
-    default:
-        ret= -1;
-        break;
+    /* set reg */
+    if ((ret = set_reg_value (reg_add, val)) < 0) {
+        printf ("failed to set reg %x value %d\n", reg_add, val);
     }
 
     //装配发送的报文(收发相同，原封不动)
@@ -422,7 +429,7 @@ int Modbus::show_msg(char *prompt, char buf[], int len)
     int i;
 
     if (buf == NULL ||
-        len <= 0) {
+            len <= 0) {
         return -1;
     }
 
@@ -444,30 +451,122 @@ int Modbus::show_msg(char *prompt, char buf[], int len)
     return 0;
 }
 
-void Modbus::transData()
+//读装置数据
+int Modbus::get_reg_value(unsigned short reg, unsigned short *val)
 {
-    data_stand[0] = 0;
+    if (reg < md_rd_reg_dev_st || reg >= md_rd_reg_max) {
+        return -1;
+    }
+
+    transData();
+
+    switch (reg) {
+    case md_rd_reg_dev_st:
+    case md_rd_reg_tev_mag:
+    case md_rd_reg_tev_cnt:
+    case md_rd_reg_tev_severity:
+    case md_rd_reg_aa_mag:
+    case md_rd_reg_aa_severity:
+    case md_rw_reg_tev_gain:
+    case md_rw_reg_tev_noise_bias:
+    case md_rw_reg_tev_zero_bias:
+    case md_rw_reg_aa_gain:
+    case md_rw_reg_aa_bias:
+        * val = data_stand[reg];
+        qDebug()<<"modbus read successed! val = "<<data_stand[reg];
+        break;
+    default:
+        return -1;
+    }
+
+//    transData();
+
+//    * val = data_stand[reg];
+
+    return 0;
+}
+
+int Modbus::set_reg_value(unsigned short reg, unsigned short val)
+{
+    if (reg < md_rw_reg_tev_gain || reg >= md_wr_reg_max) {
+        return -1;
+    }
+
 
     sql_para = sqlcfg->get_para();
 
-    double a,b,t,s;
-    a = AD_VAL(data->recv_para.hdata0.ad.ad_max, (0x8000+sql_para->amp_sql1.tev_offset1*10) );
-    b = AD_VAL(data->recv_para.hdata0.ad.ad_min, (0x8000+sql_para->amp_sql1.tev_offset2*10) );
-    t = ((double)MAX(a, b) * 1000) / 32768;
-    s = ((double)20) * log10(t);      //对数运算，来自工具链的函数
-    s = sql_para->amp_sql1.tev_gain * s;     //设置增益系数
-    data_stand[1] = (unsigned short)s * 100;    //系数为100，保留2位有效数字
+    switch (reg) {
+    case md_rw_reg_tev_gain:
+//        val = ((float)val) / 10;
+        sql_para->tev1_sql.gain = val / 10.0;
+        qDebug()<<"tev_gain changed! val = "<<val / 10.0;
+        break;
+    case md_rw_reg_tev_noise_bias:
+        sql_para->tev1_sql.tev_offset1 = val;
+        qDebug()<<"tev1_noise changed! val = "<<val;
+        break;
+    case md_rw_reg_tev_zero_bias:
+        sql_para->tev1_sql.fpga_zero = - val;
+        qDebug()<<"tev1_zero changed! val = "<<-val;
+        break;
+    case md_rw_reg_aa_gain:
+//        val = ((float)val) / 10;
+        sql_para->aaultra_sql.gain = val / 10.0;
+        qDebug()<<"aa_gain changed! val = "<<val / 10.0;
+        break;
+    case md_rw_reg_aa_bias:
+        sql_para->aaultra_sql.aa_offset = val;
+        qDebug()<<"aa_offset changed! val = "<<val;
+        break;
+    case md_wr_reg_start:
+        sql_para->close_time = 0;
+        emit closeTimeChanged(0);
+        break;
+    case md_wr_reg_stop:
+        break;
+    default:
+        return -1;
+    }
 
-    data_stand[2] = (unsigned short)data->recv_para.hpulse1_totol;
+    sqlcfg->sql_save(sql_para);
 
-    double d, max_val;
-    d = (int)data->recv_para.ldata1_max - (int)data->recv_para.ldata1_min;      //最大值-最小值=幅值？
-    max_val = (double)((d / 2) * 5000) / pow(2, 17);    //最大值
-    max_val = sql_para->aaultra_sql.gain * fabs(((double)20) * log10(max_val));      //对数运算,再加上增益
-    max_val = max_val - sql_para->aa_offset;
-    data_stand[3] = (unsigned short)max_val *100;   //系数为100，保留2位有效数字
+    qDebug()<<"modbus write successed!";
 
- }
+
+    return 0;
+}
+
+void Modbus::transData()
+{
+    sql_para = sqlcfg->get_para();
+
+    unsigned short val = data_stand[md_rd_reg_tev_mag];
+    if(val < sql_para->tev1_sql.low){
+        data_stand[md_rd_reg_tev_severity] = 0;
+    }
+    else if(val < sql_para->tev1_sql.high){
+        data_stand[md_rd_reg_tev_severity] = 1;
+    }
+    else{
+        data_stand[md_rd_reg_tev_severity] = 2;
+    }
+
+    val = data_stand[md_rd_reg_aa_mag];
+    if(val < sql_para->aaultra_sql.low){
+        data_stand[md_rd_reg_aa_severity] = 0;
+    }
+    else if(val < sql_para->aaultra_sql.high){
+        data_stand[md_rd_reg_aa_severity] = 1;
+    }
+    else{
+        data_stand[md_rd_reg_aa_severity] = 2;
+    }
+
+    data_stand[md_rw_reg_tev_gain] = sql_para->tev1_sql.gain;
+    data_stand[md_rw_reg_tev_noise_bias] = sql_para->tev1_sql.tev_offset1;
+    data_stand[md_rw_reg_tev_zero_bias] = sql_para->tev1_sql.tev_offset2;
+
+}
 
 
 

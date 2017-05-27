@@ -23,6 +23,8 @@ int main(int argc, char *argv[])
 
     QApplication a(argc, argv);
 
+//    qDebug()<<"current thread ID: "<<a.thread()->currentThreadId();
+
 
 //定义字体
 #ifdef ARM

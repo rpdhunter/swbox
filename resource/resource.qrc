@@ -40,15 +40,14 @@
         <file>widgetphoto/mainmenu/tab6.png</file>
         <file>widgetphoto/mainmenu/tab7.png</file>
         <file>widgetphoto/mainmenu/bk2.png</file>
-        <file>widgetphoto/mainmenu/grade2_bk.png</file>
+        <file>widgetphoto/pwr/pwr0.png</file>
+        <file>../trans/en.qm</file>
+        <file>widgetphoto/ohv_low.png</file>
         <file>widgetphoto/mainmenu/para_child.png</file>
+        <file>widgetphoto/mainmenu/grade2_bk.png</file>
         <file>widgetphoto/mainmenu/para0.png</file>
         <file>widgetphoto/mainmenu/para1.png</file>
         <file>widgetphoto/mainmenu/para2.png</file>
-        <file>widgetphoto/pwr/pwr0.png</file>
-        <file>widgetphoto/mainmenu/curve.png</file>
-        <file>widgetphoto/mainmenu/check.png</file>
-        <file>widgetphoto/mainmenu/uncheck.png</file>
-        <file>../trans/en.qm</file>
+        <file>widgetphoto/ohv_gary.png</file>
     </qresource>
 </RCC>

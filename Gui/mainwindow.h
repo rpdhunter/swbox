@@ -20,6 +20,21 @@ class MainWindow : public QFrame
 public:
     MainWindow(QWidget *parent = NULL);
 
+signals:
+    void sendkey(quint8);
+
+public slots:
+    void system_reboot();
+    void setCloseTime(int m);
+    void resetTimerFromKey();
+    void showTime();
+
+    void printSc(); //截屏
+
+
+protected:
+    void keyPressEvent(QKeyEvent *event);
+
 private:
     KeyDetect *keydetect;
     MainMenu *mainmenu;
@@ -31,22 +46,9 @@ private:
 
     QTimer *showTimer;
 
+    bool rebootFlag;
+
 //    QPixmap *fullScreenPixmap;
-
-
-
-signals:
-    void sendkey(quint8);
-
-public slots:
-    void system_reboot();
-    void setCloseTime(int m);
-    void showTime();
-
-    void printSc(); //截屏
-
-protected:
-    void keyPressEvent(QKeyEvent *event);
 };
 
 #endif // MAINWINDOW_H

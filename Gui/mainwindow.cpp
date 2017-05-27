@@ -30,7 +30,7 @@ MainWindow::MainWindow(QWidget *parent)
     keydetect = new KeyDetect(this);
 
 
-//    modbus = new Modbus(this,g_data);
+    modbus = new Modbus(this,g_data);
 
     //注册两个自定义类型
     qRegisterMetaType<VectorList>("VectorList");
@@ -48,8 +48,7 @@ MainWindow::MainWindow(QWidget *parent)
     //系统重启
     rebootTimer = new QTimer;
     setCloseTime(sqlcfg->get_para()->close_time);
-    connect(rebootTimer,SIGNAL(timeout()),this,SLOT(system_reboot()));
-
+    connect(keydetect,SIGNAL(sendkey(quint8)),this,SLOT(resetTimerFromKey()));
     connect(mainmenu,SIGNAL(closeTimeChanged(int)),this,SLOT(setCloseTime(int)));
 
     //状态栏显示
@@ -59,16 +58,22 @@ MainWindow::MainWindow(QWidget *parent)
 
 //    connect(showTimer,SIGNAL(timeout()),this,SLOT(printSc()));  //截屏
 
+    //modbus相关
+    connect(mainmenu,SIGNAL(tev_modbus_data(int,int)),modbus,SLOT(tev_modbus_data(int,int)));
+    connect(mainmenu,SIGNAL(aa_modbus_data(int)),modbus,SLOT(aa_modbus_data(int)));
+    connect(modbus,SIGNAL(closeTimeChanged(int)),this,SLOT(setCloseTime(int)));
+
+    //声音播放
+    connect(mainmenu,SIGNAL(play_voice(VectorList)),fifodata,SLOT(playVoiceData(VectorList)));
+    connect(fifodata,SIGNAL(playVoiceProgress(int,int,bool)),mainmenu,SLOT(playVoiceProgress(int,int,bool)));
+    connect(mainmenu,SIGNAL(stop_play_voice()),fifodata,SLOT(stop_play_voice()));
 }
 
 void MainWindow::showTime()
 {
     int s = rebootTimer->remainingTime() / 1000;    //自动关机秒数
-    if(rebootTimer->isActive() && s<50){
+    if(rebootTimer->isActive() && s<60){
         mainmenu->showReminTime(rebootTimer->remainingTime() / 1000 , tr("自动关机"));
-    }
-    else{
-        mainmenu->showMaxResetTime();   //借机显示最大值重置时间
     }
 }
 
@@ -91,15 +96,25 @@ void MainWindow::system_reboot()
 void MainWindow::setCloseTime(int m)
 {
     if(m!=0){
-        connect(keydetect,SIGNAL(sendkey(quint8)),rebootTimer,SLOT(start()));
+        rebootFlag = true;
         rebootTimer->setInterval(m*60 *1000);
         rebootTimer->start();   //永远开启
         qDebug()<<"reboot timer started!  interval is :"<<m*60<<"sec";
     }
     else{
-        disconnect(keydetect,SIGNAL(sendkey(quint8)),rebootTimer,SLOT(start()));
+        rebootFlag = false;
         rebootTimer->stop();
         qDebug()<<"reboot timer stoped!";
+    }
+}
+
+void MainWindow::resetTimerFromKey()
+{
+    if(rebootFlag){
+        rebootTimer->start();
+    }
+    else{
+        rebootTimer->stop();
     }
 }
 

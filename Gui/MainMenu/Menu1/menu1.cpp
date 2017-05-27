@@ -49,7 +49,8 @@ Menu1::Menu1(QWidget *parent, G_PARA *g_data) : QFrame(parent)
     tevWidget = new TEVWidget(g_data,TEVWidget::Channel::Right,this);
     connect(this, &Menu1::send_key, tevWidget, &TEVWidget::trans_key);
     connect(tevWidget,SIGNAL(offset_suggest(int,int)),this,SIGNAL(offset_suggest(int,int)));
-
+    connect(tevWidget,SIGNAL(origin_pluse_points(QVector<QPoint>,int)),this,SIGNAL(origin_pluse_points(QVector<QPoint>,int)));
+    connect(tevWidget,SIGNAL(startRecWave(int,int)),this,SIGNAL(startRecWave(int,int)));
 }
 
 void Menu1::working(CURRENT_KEY_VALUE *val)
@@ -63,14 +64,9 @@ void Menu1::working(CURRENT_KEY_VALUE *val)
     this->show();
 }
 
-void Menu1::sysReset()
+void Menu1::showWaveData(VectorList buf, MODE mod)
 {
-    tevWidget->sysReset();
-}
-
-void Menu1::maxReset()
-{
-    tevWidget->maxReset();
+    tevWidget->showWaveData(buf,mod);
 }
 
 void Menu1::trans_key(quint8 key_code)

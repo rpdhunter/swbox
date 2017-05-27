@@ -14,13 +14,16 @@ public:
     explicit Menu0(QWidget *parent = NULL, G_PARA *g_data = NULL);
 
     void working(CURRENT_KEY_VALUE *val);
-    void sysReset();    //重置并显示默认值
     void maxReset();    //最大值清零
+    void showWaveData(VectorList buf, MODE mod);
 
 signals:
     void send_title_val(CURRENT_KEY_VALUE val);
     void send_key(quint8);
     void offset_suggest(int ,int);
+    void tev_modbus_data(int,int);
+    void origin_pluse_points(QVector<QPoint> p, int group);
+    void startRecWave(int, int);
 
 public slots:
     void trans_key(quint8);

@@ -57,7 +57,7 @@ void FactoryReset::trans_key(quint8 key_code)
         return;
     }
 
-    if (key_val->grade.val1 != 4) {
+    if (key_val->grade.val1 != 5) {
         return;
     }
 

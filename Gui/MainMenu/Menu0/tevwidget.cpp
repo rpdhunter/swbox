@@ -16,6 +16,8 @@
 
 
 #define VALUE_MAX  60           //RPPD最大值
+#define SETTING_NUM 8           //设置菜单条目数
+#define TEV_FACTOR  (1.8*1000/65536)
 
 
 TEVWidget::TEVWidget(G_PARA *data, Channel channel, QWidget *parent) :
@@ -33,10 +35,10 @@ TEVWidget::TEVWidget(G_PARA *data, Channel channel, QWidget *parent) :
 
     this->channel = channel;
     if(channel == Left){
-        amp_sql = &sql_para->amp_sql1;
+        tev_sql = &sql_para->tev1_sql;
     }
     else{
-        amp_sql = &sql_para->amp_sql2;
+        tev_sql = &sql_para->tev2_sql;
     }
 
 
@@ -44,7 +46,7 @@ TEVWidget::TEVWidget(G_PARA *data, Channel channel, QWidget *parent) :
     db = 0;
     max_db = 0;
 
-
+    pulse_cnt_last = 0;
 
 
     QLineEdit *lineEdit = new QLineEdit;
@@ -63,20 +65,33 @@ TEVWidget::TEVWidget(G_PARA *data, Channel channel, QWidget *parent) :
     //每隔1秒，刷新
     timer1 = new QTimer(this);
     timer1->setInterval(1000);
-    if (amp_sql->mode == series) {
+    if (tev_sql->mode == series) {
         timer1->start();
     }
     connect(timer1, SIGNAL(timeout()), this, SLOT(fresh_plot()));
     connect(timer1, SIGNAL(timeout()), this, SLOT(fresh_Histogram()));
 
     timer2 = new QTimer(this);
-    timer2->setInterval(100);
+    timer2->setInterval(45);
     connect(timer2, SIGNAL(timeout()), this, SLOT(fresh_PRPD()));
     timer2->start();
 
     PRPS_inti();
     PRPD_inti();
     histogram_init();
+
+//    if(channel == Left){
+//        timer3 = new QTimer;
+//        timer3->setInterval(45);
+//        connect(timer3,SIGNAL(timeout()),this,SLOT(change_channel()));
+
+//        timer3->start();
+//        channel_flag = true;
+//    }
+
+    recWaveForm = new RecWaveForm(this);
+    recWaveForm->hide();
+    connect(this, SIGNAL(send_key(quint8)), recWaveForm, SLOT(trans_key(quint8)));
 }
 
 TEVWidget::~TEVWidget()
@@ -84,6 +99,12 @@ TEVWidget::~TEVWidget()
     delete ui;
 }
 
+void TEVWidget::showWaveData(VectorList buf, MODE mod)
+{
+    key_val->grade.val1 = 1;        //为了锁住主界面，防止左右键切换通道
+    key_val->grade.val5 = 1;
+    recWaveForm->working(key_val,buf,mod);
+}
 
 void TEVWidget::PRPS_inti()
 {
@@ -105,7 +126,7 @@ void TEVWidget::PRPS_inti()
     plot_PRPS->axisScaleDraw(QwtPlot::xBottom)->enableComponent(QwtAbstractScaleDraw::Labels, false);
     plot_PRPS->plotLayout()->setAlignCanvasToScales(true);
 
-    d_PRPS = new BarChart(plot_PRPS, &db, amp_sql->high, amp_sql->low);
+    d_PRPS = new BarChart(plot_PRPS, &db, &tev_sql->high, &tev_sql->low);
     connect(timer1, &QTimer::timeout, d_PRPS, &BarChart::fresh);
 }
 
@@ -205,12 +226,6 @@ void TEVWidget::histogram_init()
 
 }
 
-
-void TEVWidget::sysReset()
-{
-    fresh_setting();
-}
-
 void TEVWidget::working(CURRENT_KEY_VALUE *val)
 {
     if (val == NULL) {
@@ -234,16 +249,23 @@ void TEVWidget::trans_key(quint8 key_code)
         return;
     }
 
+    if(key_val->grade.val5 != 0){
+        emit send_key(key_code);
+        return;
+    }
+
 
     switch (key_code) {
     case KEY_OK:
-//        memcpy(&sql_para->amp_sql, amp_sql, sizeof(AMP_SQL));
         sqlcfg->sql_save(sql_para);
         timer1->start();                                                         //and timer no stop
-        if(key_val->grade.val2 == 5){
-            this->maxReset();
-        }
         if(key_val->grade.val2 == 6){
+            rec_wave();     //开始录波
+        }
+        else if(key_val->grade.val2 == 7){
+            maxReset();
+        }
+        else if(key_val->grade.val2 == 8){
             PRPDReset();
         }
         key_val->grade.val1 = 0;
@@ -255,13 +277,13 @@ void TEVWidget::trans_key(quint8 key_code)
         break;
     case KEY_UP:
         if (key_val->grade.val2 < 2) {
-            key_val->grade.val2 = 6;
+            key_val->grade.val2 = SETTING_NUM;
         } else {
             key_val->grade.val2--;
         }
         break;
     case KEY_DOWN:
-        if (key_val->grade.val2 > 5) {
+        if (key_val->grade.val2 >= SETTING_NUM) {
             key_val->grade.val2 = 1;
         } else {
             key_val->grade.val2++;
@@ -270,32 +292,36 @@ void TEVWidget::trans_key(quint8 key_code)
     case KEY_LEFT:
         switch (key_val->grade.val2) {
         case 1:
-            if (amp_sql->mode == signal) {
-                amp_sql->mode = series;
+            if (tev_sql->mode == single) {
+                tev_sql->mode = series;
             } else {
-                amp_sql->mode = signal;
+                tev_sql->mode = single;
             }
             break;
         case 2:
-            if (amp_sql->mode_chart == PRPS) {
-                amp_sql->mode_chart = Histogram;
+            if (tev_sql->mode_chart == PRPS) {
+                tev_sql->mode_chart = Histogram;
                 break;
-            } else if(amp_sql->mode_chart == Histogram){
-                amp_sql->mode_chart = PRPD;
+            } else if(tev_sql->mode_chart == Histogram){
+                tev_sql->mode_chart = PRPD;
                 break;
-            } else if(amp_sql->mode_chart == PRPD){
-                amp_sql->mode_chart = PRPS;
+            } else if(tev_sql->mode_chart == PRPD){
+                tev_sql->mode_chart = PRPS;
                 break;
             }
-
         case 3:
-            if (amp_sql->high > amp_sql->low) {
-                amp_sql->high--;
+            if (tev_sql->gain > 0.15) {
+                tev_sql->gain -= 0.1;
             }
             break;
         case 4:
-            if (amp_sql->low > 0) {
-                amp_sql->low--;
+            if (tev_sql->low > 0) {
+                tev_sql->low--;
+            }
+            break;
+        case 5:
+            if (tev_sql->high > tev_sql->low) {
+                tev_sql->high--;
             }
             break;
         default:
@@ -306,31 +332,36 @@ void TEVWidget::trans_key(quint8 key_code)
     case KEY_RIGHT:
         switch (key_val->grade.val2) {
         case 1:
-            if (amp_sql->mode == signal) {
-                amp_sql->mode = series;
+            if (tev_sql->mode == single) {
+                tev_sql->mode = series;
             } else {
-                amp_sql->mode = signal;
+                tev_sql->mode = single;
             }
             break;
         case 2:
-            if (amp_sql->mode_chart == Histogram) {
-                amp_sql->mode_chart = PRPS;
+            if (tev_sql->mode_chart == Histogram) {
+                tev_sql->mode_chart = PRPS;
                 break;
-            } else if (amp_sql->mode_chart == PRPS) {
-                amp_sql->mode_chart = PRPD;
+            } else if (tev_sql->mode_chart == PRPS) {
+                tev_sql->mode_chart = PRPD;
                 break;
-            } else if(amp_sql->mode_chart == PRPD){
-                amp_sql->mode_chart = Histogram;
+            } else if(tev_sql->mode_chart == PRPD){
+                tev_sql->mode_chart = Histogram;
                 break;
             }
         case 3:
-            if (amp_sql->high < 60) {
-                amp_sql->high++;
+            if (tev_sql->gain < 1.95) {
+                tev_sql->gain += 0.1;
             }
             break;
         case 4:
-            if (amp_sql->low < amp_sql->high) {
-                amp_sql->low++;
+            if (tev_sql->low < tev_sql->high) {
+                tev_sql->low++;
+            }
+            break;
+        case 5:
+            if (tev_sql->high < 60) {
+                tev_sql->high++;
             }
             break;
         default:
@@ -346,16 +377,15 @@ void TEVWidget::trans_key(quint8 key_code)
 void TEVWidget::fresh_plot()
 {
     double t, s, degree;
-    quint32 pulse_cnt;      //脉冲计数
+    quint32 pulse_cnt,pulse_cnt_show;      //脉冲计数
 //    quint32 signal_pulse_cnt;
 
-    if (amp_sql->mode == signal) {
+    if (tev_sql->mode == single) {
         timer1->stop();      //如果单次模式，停止计时器
     }
 
-    double a,b;
 
-    double d_max,d_min;
+    int d_max,d_min;
     if(channel == Left){
         d_max = data->recv_para.hdata0.ad.ad_max;
         d_min = data->recv_para.hdata0.ad.ad_min;
@@ -365,16 +395,28 @@ void TEVWidget::fresh_plot()
         d_min = data->recv_para.hdata1.ad.ad_min;
     }
 
+#if 0
+    double a,b;
     a = d_max - 0x8000;
     b = d_min - 0x8000;
     emit offset_suggest((int)(a/10),(int)(b/10));
-//        qDebug()<<"[1]a = "<<a <<"\tb = "<<b;
+        qDebug()<<"[1]a = "<<a <<"\tb = "<<b << "a-b="<<d_max-d_min;
 
-    a = AD_VAL(d_max, (0x8000+amp_sql->tev_offset1*10) );
-    b = AD_VAL(d_min, (0x8000+amp_sql->tev_offset2*10) );
+    a = AD_VAL(d_max, (0x8000+tev_sql->tev_offset1*10) );
+    b = AD_VAL(d_min, (0x8000+tev_sql->tev_offset2*10) );
 
-    t = ((double)MAX(a, b) * 1000) / 32768;
-    s = amp_sql->tev_gain*((double)20) * log10(t);      //对数运算，来自工具链的函数
+    t = tev_sql->tev_gain*((double)MAX(a, b) * 1000) / 32768;
+    s = ((double)20) * log10(t);      //对数运算，来自工具链的函数
+#else
+    emit offset_suggest( (d_max+d_min)/2 - 0x8000, qAbs(d_max-d_min)/2/10 );
+
+    int a = d_max - 0x8000 - tev_sql->fpga_zero;        //减去中心偏置
+    int b = d_min - 0x8000 - tev_sql->fpga_zero;        //减去中心偏置
+
+    t = tev_sql->gain * ( MAX(qAbs(a),qAbs(b)) - tev_sql->tev_offset1*10 ) * TEV_FACTOR ;
+//    t = tev_sql->gain * ( (d_max-d_min) / 2.0 ) * TEV_FACTOR ;
+    s = ((double)20) * log10(t);      //对数运算，来自工具链的函数
+#endif
 
     //记录并显示最大值
     if (max_db < s) {
@@ -384,35 +426,46 @@ void TEVWidget::fresh_plot()
 
     //脉冲计数和严重度
 //    signal_pulse_cnt = data->recv_para.pulse1.edge.neg + data->recv_para.pulse1.edge.pos;
-    pulse_cnt = data->recv_para.hpulse0_totol;
-    degree = s * (double)pulse_cnt / 1000;
+    if(channel == Left){
+        pulse_cnt = data->recv_para.hpulse0_totol;
+    }
+    else{
+        pulse_cnt = data->recv_para.hpulse1_totol;
+    }
 
-    ui->label_pluse->setText(tr("脉冲数: ") + QString::number(pulse_cnt));
+    pulse_cnt_show = pulse_cnt_last + pulse_cnt;    //显示2秒的脉冲计数
+    pulse_cnt_last = pulse_cnt;
+
+    degree = pow(t,tev_sql->gain) * (double)pulse_cnt / sql_para->freq_val;     //严重度算法更改
+
+    ui->label_pluse->setText(tr("脉冲数: ") + QString::number(pulse_cnt_show));
     ui->label_degree->setText(tr("严重度: ") + QString::number(degree, 'f', 2));
 
     ui->label_val->setText(QString::number((qint16)s));
 
     db = (int)s;
 
-    if ( db > amp_sql->high) {
+    emit tev_modbus_data(db,pulse_cnt_show);
+
+    if ( db > tev_sql->high) {
         ui->label_val->setStyleSheet("QLabel {font-family:WenQuanYi Micro Hei;font-size:60px;color:red}");
-    } else if (db >= amp_sql->low) {
+    } else if (db >= tev_sql->low) {
         ui->label_val->setStyleSheet("QLabel {font-family:WenQuanYi Micro Hei;font-size:60px;color:yellow}");
     } else {
         ui->label_val->setStyleSheet("QLabel {font-family:WenQuanYi Micro Hei;font-size:60px;color:green}");
     }
 
-    if (amp_sql->mode_chart == PRPD) {
+    if (tev_sql->mode_chart == PRPD) {
         plot_PRPD->show();
         plot_PRPS->hide();
         plot_Histogram->hide();
         plot_PRPD->replot();
-    } else if(amp_sql->mode_chart == PRPS){
+    } else if(tev_sql->mode_chart == PRPS){
         plot_PRPD->hide();
         plot_PRPS->show();
         plot_Histogram->hide();
         plot_PRPS->replot();
-    } else if(amp_sql->mode_chart == Histogram){
+    } else if(tev_sql->mode_chart == Histogram){
         plot_PRPD->hide();
         plot_PRPS->hide();
         plot_Histogram->show();
@@ -423,35 +476,33 @@ void TEVWidget::fresh_plot()
 void TEVWidget::fresh_PRPD()
 {
     int x,y,len;
+//    qDebug()<<"data->recv_para.recData[0] = "<<data->recv_para.recData[0];
     if(groupNum != data->recv_para.recData[0] && data->recv_para.recComplete == 0){     //有效数据
-        groupNum = data->recv_para.recData[0];
-        //处理数据
-        len = data->recv_para.recData[1];
-        if(len == 0){       //无脉冲时，只读2数据
+        if( (channel == Left && data->recv_para.recData[0] < 4) || (channel == Right && data->recv_para.recData[0] >= 4) ){
+            groupNum = data->recv_para.recData[0];
+            //处理数据
 
-        }
-        else{               //有脉冲时，不读底噪
-            for(int i=0;i<len;i++){
-                x = (int)data->recv_para.recData[2*i+4];
-                y = (int)data->recv_para.recData[2*i+5];
+            points_origin.clear();
 
-                transData(x,y);
+            len = data->recv_para.recData[1];
+            if(len == 0){       //无脉冲时，只读2数据
+
             }
+            else{               //有脉冲时，不读底噪
+                for(int i=0;i<len;i++){
+                    x = (int)data->recv_para.recData[2*i+4];
+                    y = (int)data->recv_para.recData[2*i+5];
+
+                    transData(x,y);
+                }
+            }
+            d_PRPD->setSamples(points);
+
+            plot_PRPD->replot();
+
+            emit origin_pluse_points(points_origin, groupNum);
         }
-        d_PRPD->setSamples(points);
-
-    //    if(temp != points.length()){
-    //        temp = points.length();
-    //        qDebug()<<"points num : "<<points.length();
-    //    }
-
-        plot_PRPD->replot();
-
-//        if(len != 0)
-//            qDebug()<<"read " << len <<  " PRPD data !";
     }
-
-
 }
 
 void TEVWidget::fresh_Histogram()
@@ -475,19 +526,39 @@ void TEVWidget::fresh_Histogram()
     plot_Histogram->replot();
 }
 
+//void TEVWidget::change_channel()
+//{
+//    //每隔一段时间，改变组号，为了改变FPGA发送的脉冲数据通道
+//    if(data->recv_para.recComplete){
+//        if(channel_flag){
+//            data->send_para.groupNum.rval = 0x0100;
+//        }
+//        else{
+//            data->send_para.groupNum.rval = 0x0000;
+//        }
+
+
+//        channel_flag = !channel_flag;
+//        data->send_para.groupNum.flag = true;
+//    }
+
+//}
+
 void TEVWidget::transData(int x, int y)
 {
-//    qDebug()<<"[1]x="<<x<<"\ty="<<y;
+//    y = y - 0x8000;
+//    if(y>0){
+//        y = y - tev_sql->tev_offset1;
+//    }
+//    else{
+//        y = y - tev_sql->tev_offset2;
+//    }
 
-    y = y - 0x8000;
-    if(y>0){
-        y = y - amp_sql->tev_offset1;
-    }
-    else{
-        y = y - amp_sql->tev_offset2;
-    }
+    y = tev_sql->gain * TEV_FACTOR * (y - 0x8000 - tev_sql->fpga_zero) ; //注意，脉冲计算里，忽略了噪声偏置的影响
 
-    y = (int)(((double)y * 1000) / 32768);
+//    y = (int)(((double)y * 1000) / 32768);
+
+    //取DB值
     if(y>=1){
         y = ((double)20) * log10(y);
     }
@@ -497,6 +568,8 @@ void TEVWidget::transData(int x, int y)
     else{
         y = 0;
     }
+
+    points_origin.append(QPoint(x,y));
 
     if(sqlcfg->get_para()->freq_val == 50){
         x = x *360 /2000000;
@@ -536,6 +609,16 @@ void TEVWidget::PRPDReset()
     fresh_PRPD();
 }
 
+void TEVWidget::rec_wave()
+{
+    if(channel == Left){
+        emit startRecWave(0,0);
+    }
+    else{
+        emit startRecWave(1,0);
+    }
+}
+
 void TEVWidget::maxReset()
 {
     max_db = 0;
@@ -544,29 +627,30 @@ void TEVWidget::maxReset()
 
 void TEVWidget::fresh_setting()
 {
-    if (amp_sql->mode == signal) {
+    if (tev_sql->mode == single) {
         ui->comboBox->setItemText(0,tr("检测模式    [单次]"));
     } else {
         ui->comboBox->setItemText(0,tr("检测模式    [连续]"));
     }
-    if (amp_sql->mode_chart == PRPD) {
+    if (tev_sql->mode_chart == PRPD) {
         ui->comboBox->setItemText(1,tr("图形显示    [PRPD]"));
         plot_PRPD->show();
         plot_PRPS->hide();
         plot_Histogram->hide();
-    } else if(amp_sql->mode_chart == PRPS){
+    } else if(tev_sql->mode_chart == PRPS){
         ui->comboBox->setItemText(1,tr("图形显示    [PRPS]"));
         plot_PRPD->hide();
         plot_PRPS->show();
         plot_Histogram->hide();
-    } else if(amp_sql->mode_chart == Histogram){
+    } else if(tev_sql->mode_chart == Histogram){
         ui->comboBox->setItemText(1,tr("图形显示  [柱状图]"));
         plot_PRPD->hide();
         plot_PRPS->hide();
         plot_Histogram->show();
     }
-    ui->comboBox->setItemText(2,tr("黄色报警阈值[%1]dB").arg(QString::number(amp_sql->high)));
-    ui->comboBox->setItemText(3,tr("红色报警阈值[%1]dB").arg(QString::number(amp_sql->low)));
+    ui->comboBox->setItemText(2,tr("增益调节    [×%1]").arg(QString::number(tev_sql->gain, 'f', 1)));
+    ui->comboBox->setItemText(3,tr("黄色报警阈值[%1]dB").arg(QString::number(tev_sql->low)));
+    ui->comboBox->setItemText(4,tr("红色报警阈值[%1]dB").arg(QString::number(tev_sql->high)));
 
 
     ui->comboBox->setCurrentIndex(key_val->grade.val2-1);

@@ -40,7 +40,9 @@ Menu0::Menu0(QWidget *parent, G_PARA *g_data) : QFrame(parent)
     tevWidget = new TEVWidget(g_data,TEVWidget::Channel::Left,this);
     connect(this, &Menu0::send_key, tevWidget, &TEVWidget::trans_key);
     connect(tevWidget,SIGNAL(offset_suggest(int,int)),this,SIGNAL(offset_suggest(int,int)));
-
+    connect(tevWidget,SIGNAL(tev_modbus_data(int,int)),this,SIGNAL(tev_modbus_data(int,int)));
+    connect(tevWidget,SIGNAL(origin_pluse_points(QVector<QPoint>,int)),this,SIGNAL(origin_pluse_points(QVector<QPoint>,int)));
+    connect(tevWidget,SIGNAL(startRecWave(int,int)),this,SIGNAL(startRecWave(int,int)));
 }
 
 void Menu0::working(CURRENT_KEY_VALUE *val)
@@ -54,14 +56,9 @@ void Menu0::working(CURRENT_KEY_VALUE *val)
     this->show();
 }
 
-void Menu0::sysReset()
+void Menu0::showWaveData(VectorList buf, MODE mod)
 {
-    tevWidget->sysReset();
-}
-
-void Menu0::maxReset()
-{
-    tevWidget->maxReset();
+    tevWidget->showWaveData(buf,mod);
 }
 
 void Menu0::trans_key(quint8 key_code)
@@ -151,6 +148,15 @@ void Menu0::fresh_table(void)
 {
     if (!key_val->grade.val0 && !key_val->grade.val1) {
         //选择状态，代表选中地电波模式
+#ifdef SIMPLEMODE
+        main_title0->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m11.png);}");
+        main_title1->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m20.png);}");
+        main_title2->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m30.png);}");
+        main_title3->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m42.png);}");
+        main_title4->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m50.png);}");
+        main_title5->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m60.png);}");
+        main_title6->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m72.png);}");
+#else
         main_title0->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m11.png);}");
         main_title1->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m22.png);}");
         main_title2->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m32.png);}");
@@ -160,6 +166,7 @@ void Menu0::fresh_table(void)
         main_title4->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m50.png);}");
         main_title5->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m60.png);}");
         main_title6->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m72.png);}");
+#endif
     } else if (!key_val->grade.val0 && key_val->grade.val1) {
         //工作状态，代表处于地电波模式工作状态
         main_title0->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m12.png);}");

@@ -94,71 +94,56 @@ SQL_PARA *SqlCfg::get_para(void)
 
 SQL_PARA *SqlCfg::default_config(void)
 {
-    char str[20];
-
     /* amplitude mode */
-    sql_para.amp_sql1.mode = series;                                             //default series
-    sql_para.amp_sql1.mode_chart = PRPS;
-    sql_para.amp_sql1.high = 40;                                                 //default high
-    sql_para.amp_sql1.low = 20;                                                  //default low
-    sql_para.amp_sql1.tev_offset1 = 0;             //TEV偏置1
-    sql_para.amp_sql1.tev_offset2 = 0;             //TEV偏置1
-    sql_para.amp_sql1.tev_gain = 1.0;               //TEV增益
+    sql_para.tev1_sql.mode = series;                                             //default series
+    sql_para.tev1_sql.mode_chart = PRPS;
+    sql_para.tev1_sql.high = 40;                                                 //default high
+    sql_para.tev1_sql.low = 20;                                                  //default low
+    sql_para.tev1_sql.tev_offset1 = 0;             //TEV偏置1
+    sql_para.tev1_sql.tev_offset2 = 0;             //TEV偏置2
+    sql_para.tev1_sql.gain = 1.0;               //TEV增益
+    sql_para.tev1_sql.fpga_zero = 0;
+    sql_para.tev1_sql.fpga_threshold = 0x200;
+    sql_para.tev1_sql.auto_rec = false;       //自动录波默认关闭
 
-    sql_para.amp_sql2.mode = series;                                             //default series
-    sql_para.amp_sql2.mode_chart = PRPS;
-    sql_para.amp_sql2.high = 40;                                                 //default high
-    sql_para.amp_sql2.low = 20;                                                  //default low
-    sql_para.amp_sql2.tev_offset1 = 0;             //TEV偏置1
-    sql_para.amp_sql2.tev_offset2 = 0;             //TEV偏置1
-    sql_para.amp_sql2.tev_gain = 1.0;               //TEV增益
+    sql_para.tev2_sql.mode = series;                                             //default series
+    sql_para.tev2_sql.mode_chart = PRPS;
+    sql_para.tev2_sql.high = 40;                                                 //default high
+    sql_para.tev2_sql.low = 20;                                                  //default low
+    sql_para.tev2_sql.tev_offset1 = 0;             //TEV偏置1
+    sql_para.tev2_sql.tev_offset2 = 0;             //TEV偏置2
+    sql_para.tev2_sql.gain = 1.0;               //TEV增益
+    sql_para.tev2_sql.fpga_zero = 0;
+    sql_para.tev2_sql.fpga_threshold = 0x200;
+    sql_para.tev2_sql.auto_rec = false;       //自动录波默认关闭
 
-    /* pulse mode */
-    sql_para.pulse_sql.mode = series;                                           //default series
-    sql_para.pulse_sql.high = 40;                                               //default high
-    sql_para.pulse_sql.low = 20;                                                //default low
-    sql_para.pulse_sql.time = TIME_MIN;                                         //default time length
 
     /* aaultrasonic mode */
     sql_para.aaultra_sql.mode = series;
     sql_para.aaultra_sql.vol = 8;
     sql_para.aaultra_sql.gain = 1;
+    sql_para.aaultra_sql.high = 40;                                                 //default high
+    sql_para.aaultra_sql.low = 20;                                                  //default low
     sql_para.aaultra_sql.time = TIME_MIN;                                       //default time length
+    sql_para.aaultra_sql.aa_step = 2;
+    sql_para.aaultra_sql.aa_offset = 0;
 
     /* setting para */
     sql_para.freq_val = 50;                                                     //default 50Hz
 
     /* setting backlight */
-    sql_para.backlight = 7;                                                     /* backlight 0~7 */
-
-    sql_para.reset_time = 0;
+    sql_para.backlight = 4;                                                     /* backlight 0~7 */
 
     sql_para.close_time = 5;
 
     /* Local default */
     sql_para.language = CN;
-    strcpy(sql_para.sys_info.hard_ver, (char *)"Ver 0.1");
-    strcpy(sql_para.sys_info.soft_ver, (char *)"Ver 0.1");
-    strcpy(sql_para.sys_info.fpga_ver, (char *)"Ver 0.1");
-    strcpy(sql_para.sys_info.cpu_ver, (char *)"Cortex A9x2");
-    sprintf(str, "Qt-%d.%d.%d",
-            QT_VERSION >> 16,
-            0xf & (QT_VERSION >> 8),
-            0xf & QT_VERSION);
-    strcpy(sql_para.sys_info.qt_ver, str);
 
-//    sql_para.tev_offset1 =0;
-//    sql_para.tev_offset2 =0;
 
-//    sql_para.tev_gain = 1;
-
-    sql_para.aa_step = 2;
-
-    sql_para.aa_offset = 0;
-
-    sql_para.tev_auto_rec = false;       //自动录波默认关闭
 
     sql_para.max_rec_num = 200;
+
+
 
     return &sql_para;
 }

@@ -19,8 +19,6 @@ DebugSet::DebugSet(QWidget *parent,G_PARA *g_data) : QFrame(parent),ui(new Ui::D
 
     this->resize(455, 185);
     this->move(2, 31);
-    //    this->setStyleSheet("DebugSet {background-color:lightGray;}");
-    //    this->setStyleSheet("DebugSet {border-image: url(:/widgetphoto/mainmenu/bk2.png);}");
     ui->setupUi(this);
     ui->tabWidget->setStyleSheet("QTabWidget {background-color:lightGray;}");
     ui->tabWidget->widget(0)->setStyleSheet("QWidget {background-color:lightGray;}");
@@ -53,50 +51,6 @@ DebugSet::DebugSet(QWidget *parent,G_PARA *g_data) : QFrame(parent),ui(new Ui::D
 
     resetPassword();
 
-
-    //    plot = new QwtPlot(ui->scrollArea);
-    plot = new QwtPlot;
-    ui->scrollArea->setWidget(plot);
-    plot->resize(80, 9);
-    //    plot->setStyleSheet("background:transparent;color:gray;font-family:Moonracer;font-size:10px;");
-
-    //    plot->setAxisScale(QwtPlot::xBottom, 0, 360, 90);
-
-    plot->setAxisMaxMinor( QwtPlot::xBottom, 1);
-
-    /* remove gap */
-    plot->axisWidget(QwtPlot::xBottom)->setMargin(0);
-    plot->axisScaleDraw(QwtPlot::xBottom)->enableComponent(QwtAbstractScaleDraw::Backbone, true);
-
-
-    //    plot->setAxisScale(QwtPlot::yLeft, 0, 20, 5);
-    plot->setAxisMaxMinor(QwtPlot::yLeft, 1);
-    //    plot->axisScaleDraw(QwtPlot::yLeft)->enableComponent(QwtAbstractScaleDraw::Labels, false);
-    plot->axisScaleDraw(QwtPlot::yLeft)->enableComponent(QwtAbstractScaleDraw::Labels, true);
-
-    /* remove gap */
-    plot->axisWidget(QwtPlot::yLeft)->setMargin(0);
-
-
-    plot->plotLayout()->setAlignCanvasToScales(true);
-
-    /* display */
-    curve = new QwtPlotCurve();
-    curve->setPen(QPen(Qt::yellow, 0, Qt::SolidLine, Qt::RoundCap));
-    curve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
-    curve->attach(plot);
-
-    /* insert wave data */
-    wave.clear();
-    for (int i = 0; i < 360; i++) {
-        wave.push_back(QPointF(i, 10 + 10 * qSin(i * 8 * M_PI / 360)));
-    }
-    curve->setSamples(wave);
-
-    plot->hide();
-
-    ui->scrollArea->hide();
-
     recWaveForm = new RecWaveForm(this);
     recWaveForm->hide();
     connect(this, SIGNAL(send_key(quint8)), recWaveForm, SLOT(trans_key(quint8)));
@@ -115,25 +69,19 @@ void DebugSet::set_offset_suggest2(int a, int b)
     ui->lab_offset4->setText(QString("%1").arg(b));
 }
 
+void DebugSet::set_AA_offset_suggest(int a)
+{
+    ui->label_AA_offset->setText(QString("%1").arg(a));
+}
+
 
 void DebugSet::iniUi()
 {
-    ui->lineEdit_Gain1->setText(QString("%1").arg(this->sql_para->amp_sql1.tev_gain) );
-    ui->lineEdit_Offset1_1->setText(QString("%1").arg(this->sql_para->amp_sql1.tev_offset1) );
-    ui->lineEdit_Offset1_2->setText(QString("%1").arg(this->sql_para->amp_sql1.tev_offset2) );
-
-    ui->lineEdit_Gain2->setText(QString("%1").arg(this->sql_para->amp_sql2.tev_gain) );
-    ui->lineEdit_Offset2_1->setText(QString("%1").arg(this->sql_para->amp_sql2.tev_offset1) );
-    ui->lineEdit_Offset2_2->setText(QString("%1").arg(this->sql_para->amp_sql2.tev_offset2) );
-
-    ui->spinBox_AAStep->setValue(this->sql_para->aa_step);
-
-    ui->lineEdit_AA_offset->setText(QString("%1").arg(sql_para->aa_offset));
-
-    ui->lineEdit_MaxRecNum->setText(QString("%1").arg(sql_para->max_rec_num));
-
     ui->tabWidget->setCurrentIndex(0);
 
+    readSql();
+
+    //录波数据列表初始化
     QDir dir = QDir("/root/WaveForm/");
     int r = ui->listWidget->currentRow();
     ui->listWidget->clear();
@@ -163,24 +111,40 @@ void DebugSet::resetPassword()
     lab2->clear();
     this->widget->show();
     ui->tabWidget->hide();
-
-    //    qDebug()<<"password dlg reset!";
 }
 
 void DebugSet::saveSql()
 {
-    qDebug()<<"debug para saved!";
-    sql_para->amp_sql1.tev_gain = ui->lineEdit_Gain1->text().toDouble();
-    sql_para->amp_sql1.tev_offset1 = ui->lineEdit_Offset1_1->text().toInt();
-    sql_para->amp_sql1.tev_offset2 = ui->lineEdit_Offset1_2->text().toInt();
-
-    sql_para->amp_sql2.tev_gain = ui->lineEdit_Gain2->text().toDouble();
-    sql_para->amp_sql2.tev_offset1 = ui->lineEdit_Offset2_1->text().toInt();
-    sql_para->amp_sql2.tev_offset2 = ui->lineEdit_Offset2_2->text().toInt();
-
-    sql_para->aa_step = ui->spinBox_AAStep->value();
-    sql_para->max_rec_num = ui->lineEdit_MaxRecNum->text().toInt();
     sqlcfg->sql_save(sql_para);
+
+    //这些设置中，只有这两个量是需要写入FPGA才能生效的
+    data->send_para.tev1_zero.flag = true;
+    data->send_para.tev1_zero.rval = ( 0x8000 - sql_para->tev1_sql.fpga_zero );
+    data->send_para.tev1_threshold.flag = true;
+    data->send_para.tev1_threshold.rval = sql_para->tev1_sql.fpga_threshold;
+
+    qDebug()<<"debug para saved!";
+    emit update_statusBar(tr("【调试模式】设置已保存！"));
+}
+
+void DebugSet::readSql()
+{
+    //TEV
+    ui->lineEdit_TEV1_THRESHOLD->setText(QString("%1").arg(sql_para->tev1_sql.fpga_threshold) );
+    ui->lineEdit_TEV1_ZERO->setText(QString("%1").arg(sql_para->tev1_sql.fpga_zero) );
+    ui->lineEdit_TEV1_NOISE->setText(QString("%1").arg(sql_para->tev1_sql.tev_offset1) );
+
+    ui->lineEdit_TEV2_THRESHOLD->setText(QString("%1").arg(sql_para->tev2_sql.fpga_threshold) );
+    ui->lineEdit_TEV2_ZERO->setText(QString("%1").arg(sql_para->tev2_sql.fpga_zero) );
+    ui->lineEdit_TEV2_NOISE->setText(QString("%1").arg(sql_para->tev2_sql.tev_offset1) );
+
+    //AA
+    ui->lineEdit_AA_Step->setText(QString("%1").arg(sql_para->aaultra_sql.aa_step));
+    ui->lineEdit_AA_offset->setText(QString("%1").arg(sql_para->aaultra_sql.aa_offset));
+
+    //高级
+    ui->lineEdit_MaxRecNum->setText(QString("%1").arg(sql_para->max_rec_num));
+    ui->lineEdit_MaxRecNum->setText(QString("%1").arg(sql_para->aaultra_sql.time));
 }
 
 void DebugSet::working(CURRENT_KEY_VALUE *val)
@@ -215,28 +179,20 @@ void DebugSet::trans_key(quint8 key_code)
     switch (key_code) {
     case KEY_OK:
         if(pass){
-            if(key_val->grade.val3 == 3 && key_val->grade.val4 != 0 ){   //录波
+            if(key_val->grade.val3 == 3 && (key_val->grade.val4 == 1 || key_val->grade.val4 == 2) ){   //录波
                 if(ui->lab_recWv->text() != tr("正在录波，请耐心等待")){
                     emit startRecWv(ui->comboBox->currentIndex(),ui->lineEdit_time->text().toInt());
                     ui->lab_recWv->setText(tr("正在录波，请耐心等待"));
                 }
-                saveSql();
+//                saveSql();
             }
-            else if(key_val->grade.val3 == 4 && key_val->grade.val4 != 0){
+            else if(key_val->grade.val3 == 4 && key_val->grade.val4 != 0){  //查看波形
 //                qDebug()<<"AAAA!" << ui->listWidget->currentRow();
                 key_val->grade.val5 = 1;
                 recWaveForm->working(key_val,ui->listWidget->currentItem()->text());
             }
             else{                                                   //保存
-                saveSql();
-
-                resetPassword();
-
-                key_val->grade.val4 = 0;
-                key_val->grade.val3 = 0;
-                key_val->grade.val2 = 0;
-
-                fresh_parent();
+                saveSql();                
             }
         }
         else{
@@ -294,7 +250,7 @@ void DebugSet::trans_key(quint8 key_code)
                 case 0:
 
                     break;
-                case 1:
+                case 1:                 //TEV
                     if(key_val->grade.val4 >1 ){
                         key_val->grade.val4 --;
                     }
@@ -302,7 +258,7 @@ void DebugSet::trans_key(quint8 key_code)
                         key_val->grade.val4 = 6;
                     }
                     break;
-                case 2:
+                case 2:                 //AA
                     if(key_val->grade.val4 >1 ){
                         key_val->grade.val4 --;
                     }
@@ -310,7 +266,7 @@ void DebugSet::trans_key(quint8 key_code)
                         key_val->grade.val4 = 2;
                     }
                     break;
-                case 3:
+                case 3:                 //高级
                     if(key_val->grade.val4 >1){
                         key_val->grade.val4 --;
                     }
@@ -319,7 +275,7 @@ void DebugSet::trans_key(quint8 key_code)
                     }
 
                     break;
-                case 4:
+                case 4:                 //录波列表
                     if(ui->listWidget->currentRow() != 0){
                         ui->listWidget->setCurrentRow(ui->listWidget->currentRow()-1);
                     }
@@ -354,7 +310,7 @@ void DebugSet::trans_key(quint8 key_code)
                 case 0:
 
                     break;
-                case 1:
+                case 1:                     //TEV
                     if(key_val->grade.val4 <6){
                         key_val->grade.val4 ++;
                     }
@@ -362,7 +318,7 @@ void DebugSet::trans_key(quint8 key_code)
                         key_val->grade.val4 = 1;
                     }
                     break;
-                case 2:
+                case 2:                     //AA
                     if(key_val->grade.val4 <2){
                         key_val->grade.val4 ++;
                     }
@@ -370,7 +326,7 @@ void DebugSet::trans_key(quint8 key_code)
                         key_val->grade.val4 = 1;
                     }
                     break;
-                case 3:
+                case 3:                     //高级
                     if(key_val->grade.val4 < 3){
                         key_val->grade.val4 ++;
                     }
@@ -378,7 +334,7 @@ void DebugSet::trans_key(quint8 key_code)
                         key_val->grade.val4 = 1;
                     }
                     break;
-                case 4:
+                case 4:                     //列表
                     if(ui->listWidget->currentRow()<ui->listWidget->count()-1){
                         ui->listWidget->setCurrentRow(ui->listWidget->currentRow()+1);
                     }
@@ -405,48 +361,47 @@ void DebugSet::trans_key(quint8 key_code)
                 case 0:
 
                     break;
-                case 1:
+                case 1:         //TEV
                     switch (key_val->grade.val4) {
-                    case 0:
-                        break;
                     case 1:
-                        ui->lineEdit_Gain1->setText(QString("%1").arg(ui->lineEdit_Gain1->text().toDouble() - 0.1));
+                        sql_para->tev1_sql.fpga_threshold--;
                         break;
                     case 2:
-                        ui->lineEdit_Offset1_1->setText(QString("%1").arg(ui->lineEdit_Offset1_1->text().toDouble() - 1));
+                        sql_para->tev1_sql.fpga_zero--;
                         break;
                     case 3:
-                        ui->lineEdit_Offset1_2->setText(QString("%1").arg(ui->lineEdit_Offset1_2->text().toDouble() - 1));
+                        sql_para->tev1_sql.tev_offset1--;
                         break;
                     case 4:
-                        ui->lineEdit_Gain2->setText(QString("%1").arg(ui->lineEdit_Gain2->text().toDouble() - 0.1));
+                        sql_para->tev2_sql.fpga_threshold--;
                         break;
                     case 5:
-                        ui->lineEdit_Offset2_1->setText(QString("%1").arg(ui->lineEdit_Offset2_1->text().toDouble() - 1));
+                        sql_para->tev2_sql.fpga_zero--;
                         break;
                     case 6:
-                        ui->lineEdit_Offset2_2->setText(QString("%1").arg(ui->lineEdit_Offset2_2->text().toDouble() - 1));
+                        sql_para->tev2_sql.tev_offset1--;
                         break;
                     default:
                         break;
                     }
                     break;
-                case 2:
+                case 2:     //AA
                     if(key_val->grade.val4 == 1){
-                        ui->spinBox_AAStep->stepDown();
+                        if(sql_para->aaultra_sql.aa_step > 0.25)
+                            sql_para->aaultra_sql.aa_step -= 0.5;
                     }
                     else if(key_val->grade.val4 == 2){
-                        sql_para->aa_offset--;
+                        sql_para->aaultra_sql.aa_offset --;
                     }
                     break;
-                case 3:
+                case 3:     //高级
                     if(key_val->grade.val4 == 1){
                         int index = ui->comboBox->currentIndex();
                         if(index>0){
                             ui->comboBox->setCurrentIndex(index-1);
                         }
                         else{
-                            ui->comboBox->setCurrentIndex(1);
+                            ui->comboBox->setCurrentIndex(ui->comboBox->count()-1);
                         }
                     }
                     else if(key_val->grade.val4 == 2){
@@ -458,10 +413,8 @@ void DebugSet::trans_key(quint8 key_code)
                         }
                     }
                     else if(key_val->grade.val4 == 3){
-                        int v = ui->lineEdit_MaxRecNum->text().toInt();
-                        if(v>20){
-                            ui->lineEdit_MaxRecNum->setText(QString("%1").arg(v-10));
-                        }
+                        if(sql_para->max_rec_num >20)
+                            sql_para->max_rec_num -= 10;
                     }
 
                     break;
@@ -489,44 +442,42 @@ void DebugSet::trans_key(quint8 key_code)
                 case 0:
 
                     break;
-                case 1:
+                case 1:     //TEV
                     switch (key_val->grade.val4) {
-                    case 0:
-                        break;
                     case 1:
-                        ui->lineEdit_Gain1->setText(QString("%1").arg(ui->lineEdit_Gain1->text().toDouble() + 0.1));
+                        sql_para->tev1_sql.fpga_threshold++;
                         break;
                     case 2:
-                        ui->lineEdit_Offset1_1->setText(QString("%1").arg(ui->lineEdit_Offset1_1->text().toDouble() + 1));
+                        sql_para->tev1_sql.fpga_zero++;
                         break;
                     case 3:
-                        ui->lineEdit_Offset1_2->setText(QString("%1").arg(ui->lineEdit_Offset1_2->text().toDouble() + 1));
+                        sql_para->tev1_sql.tev_offset1++;
                         break;
                     case 4:
-                        ui->lineEdit_Gain2->setText(QString("%1").arg(ui->lineEdit_Gain2->text().toDouble() + 0.1));
+                        sql_para->tev2_sql.fpga_threshold++;
                         break;
                     case 5:
-                        ui->lineEdit_Offset2_1->setText(QString("%1").arg(ui->lineEdit_Offset2_1->text().toDouble() + 1));
+                        sql_para->tev2_sql.fpga_zero++;
                         break;
                     case 6:
-                        ui->lineEdit_Offset2_2->setText(QString("%1").arg(ui->lineEdit_Offset2_2->text().toDouble() + 1));
+                        sql_para->tev2_sql.tev_offset1++;
                         break;
                     default:
                         break;
                     }
                     break;
-                case 2:
+                case 2:     //AA
                     if(key_val->grade.val4 == 1){
-                        ui->spinBox_AAStep->stepUp();
+                        sql_para->aaultra_sql.aa_step += 0.5;
                     }
                     else if(key_val->grade.val4 == 2){
-                        sql_para->aa_offset++;
+                        sql_para->aaultra_sql.aa_offset ++;
                     }
                     break;
-                case 3:
+                case 3:     //高级
                     if(key_val->grade.val4 == 1){
                         int index = ui->comboBox->currentIndex();
-                        if(index<1){
+                        if(index<ui->comboBox->count()-1){
                             ui->comboBox->setCurrentIndex(index+1);
                         }
                         else{
@@ -542,17 +493,10 @@ void DebugSet::trans_key(quint8 key_code)
                         }
                     }
                     else if(key_val->grade.val4 == 3){
-                        int v = ui->lineEdit_MaxRecNum->text().toInt();
-                        if(v<1000){
-                            ui->lineEdit_MaxRecNum->setText(QString("%1").arg(v+10));
-                        }
+                        sql_para->max_rec_num += 10;
                     }
                     break;
-//                case 4:
-//                    if(ui->listWidget->currentIndex()<=ui->listWidget->count()){
-//                        ui->listWidget->setCurrentIndex(ui->listWidget->currentIndex()+1);
-//                    }
-//                    break;
+
                 default:
                     break;
                 }
@@ -592,114 +536,78 @@ void DebugSet::showWaveData(VectorList wv,MODE mod)
         break;
     }
 
-    wave.clear();
-    for(int i=0;i<wv.length();i++){
-        wave.append(QPoint(i,wv.at(i)));
-    }
+//    wave.clear();
+//    for(int i=0;i<wv.length();i++){
+//        wave.append(QPoint(i,wv.at(i)));
+//    }
 
-    curve->setSamples(wave);
-    plot->show();
+//    curve->setSamples(wave);
+//    plot->show();
 
 }
 
 
 void DebugSet::fresh()
 {
-    //    printf("\nkey_val->grade.val1 is : %d",key_val->grade.val1);
-    //    printf("\tkey_val->grade.val2 is : %d",key_val->grade.val2);
-    //    printf("\tkey_val->grade.val3 is : %d",key_val->grade.val3);
-    //    printf("\tkey_val->grade.val4 is : %d",key_val->grade.val4);
-    //    qDebug()<<"key_val->grade.val5 is :"<<key_val->grade.val5;
+//    printf("\nkey_val->grade.val2 is : %d",key_val->grade.val2);
+//    printf("\tkey_val->grade.val3 is : %d",key_val->grade.val3);
+//    printf("\tkey_val->grade.val3 is : %d \n",key_val->grade.val3);
 
     if(pass){
         if(key_val->grade.val3){
             ui->tabWidget->setCurrentIndex(key_val->grade.val3-1);
         }
-        switch (key_val->grade.val3) {
-        case 0:
 
-            break;
-        case 1:
+        //刷新数据
+        readSql();
+
+        //刷新组件状态
+        switch (key_val->grade.val3) {
+        case 1:         //TEV
+            ui->lineEdit_TEV1_THRESHOLD->deselect();
+            ui->lineEdit_TEV1_ZERO->deselect();
+            ui->lineEdit_TEV1_NOISE->deselect();
+            ui->lineEdit_TEV2_THRESHOLD->deselect();
+            ui->lineEdit_TEV2_ZERO->deselect();
+            ui->lineEdit_TEV2_NOISE->deselect();
             switch (key_val->grade.val4) {
-            case 0:
-                ui->lineEdit_Gain1->deselect();
-                ui->lineEdit_Offset1_1->deselect();
-                ui->lineEdit_Offset1_2->deselect();
-                ui->lineEdit_Gain2->deselect();
-                ui->lineEdit_Offset2_1->deselect();
-                ui->lineEdit_Offset2_2->deselect();
-                break;
             case 1:
-                ui->lineEdit_Gain1->selectAll();
-                ui->lineEdit_Offset1_1->deselect();
-                ui->lineEdit_Offset1_2->deselect();
-                ui->lineEdit_Gain2->deselect();
-                ui->lineEdit_Offset2_1->deselect();
-                ui->lineEdit_Offset2_2->deselect();
+                ui->lineEdit_TEV1_THRESHOLD->selectAll();
                 break;
             case 2:
-                ui->lineEdit_Gain1->deselect();
-                ui->lineEdit_Offset1_1->selectAll();
-                ui->lineEdit_Offset1_2->deselect();
-                ui->lineEdit_Gain2->deselect();
-                ui->lineEdit_Offset2_1->deselect();
-                ui->lineEdit_Offset2_2->deselect();
+                ui->lineEdit_TEV1_ZERO->selectAll();
                 break;
             case 3:
-                ui->lineEdit_Gain1->deselect();
-                ui->lineEdit_Offset1_1->deselect();
-                ui->lineEdit_Offset1_2->selectAll();
-                ui->lineEdit_Gain2->deselect();
-                ui->lineEdit_Offset2_1->deselect();
-                ui->lineEdit_Offset2_2->deselect();
+                ui->lineEdit_TEV1_NOISE->selectAll();
                 break;
             case 4:
-                ui->lineEdit_Gain1->deselect();
-                ui->lineEdit_Offset1_1->deselect();
-                ui->lineEdit_Offset1_2->deselect();
-                ui->lineEdit_Gain2->selectAll();
-                ui->lineEdit_Offset2_1->deselect();
-                ui->lineEdit_Offset2_2->deselect();
+                ui->lineEdit_TEV2_THRESHOLD->selectAll();
                 break;
             case 5:
-                ui->lineEdit_Gain1->deselect();
-                ui->lineEdit_Offset1_1->deselect();
-                ui->lineEdit_Offset1_2->deselect();
-                ui->lineEdit_Gain2->deselect();
-                ui->lineEdit_Offset2_1->selectAll();
-                ui->lineEdit_Offset2_2->deselect();
+                ui->lineEdit_TEV2_ZERO->selectAll();
                 break;
             case 6:
-                ui->lineEdit_Gain1->deselect();
-                ui->lineEdit_Offset1_1->deselect();
-                ui->lineEdit_Offset1_2->deselect();
-                ui->lineEdit_Gain2->deselect();
-                ui->lineEdit_Offset2_1->deselect();
-                ui->lineEdit_Offset2_2->selectAll();
+                ui->lineEdit_TEV2_NOISE->selectAll();
                 break;
             default:
                 break;
             }
             break;
-        case 2:
+        case 2:         //AA
             if(key_val->grade.val4 == 0){
-                ui->spinBox_AAStep->setStyleSheet("QDoubleSpinBox { background: lightGray }");
-                ui->lineEdit_AA_offset->setStyleSheet("QLineEdit { background: lightGray }");
+                ui->lineEdit_AA_Step->deselect();
                 ui->lineEdit_AA_offset->deselect();
             }
             else if(key_val->grade.val4 == 1){
-                ui->spinBox_AAStep->setStyleSheet("QDoubleSpinBox { background: gray }");
-                ui->lineEdit_AA_offset->setStyleSheet("QLineEdit { background: lightGray }");
+                ui->lineEdit_AA_Step->selectAll();
                 ui->lineEdit_AA_offset->deselect();
             }
             else if(key_val->grade.val4 == 2){
-                ui->spinBox_AAStep->setStyleSheet("QDoubleSpinBox { background: lightGray }");
-                ui->lineEdit_AA_offset->setStyleSheet("QLineEdit { background: gray }");
+                ui->lineEdit_AA_Step->deselect();
                 ui->lineEdit_AA_offset->selectAll();
             }
-            ui->lineEdit_AA_offset->setText(QString("%1").arg(sql_para->aa_offset));
             break;
-        case 3:
+        case 3:         //高级
             if(key_val->grade.val4 == 0){
                 ui->comboBox->setStyleSheet("QComboBox { background: lightGray }");
                 ui->lineEdit_time->deselect();
@@ -724,18 +632,16 @@ void DebugSet::fresh()
         default:
             break;
         }
-    }
-    else{
+
 
     }
-
 
 }
 
 
 void DebugSet::on_comboBox_currentIndexChanged(int index)
 {
-    if(index == 1) {        //超声录波，时长可调
+    if(index == 2) {        //超声录波，时长可调
         ui->lineEdit_time->setEnabled(true);
     }
     else{

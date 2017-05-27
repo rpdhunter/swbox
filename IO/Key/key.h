@@ -5,7 +5,7 @@
 #define PS_GPIO_SIZE        0x00001000
 
 #define KEY_NUM             7
-#define KEY_MS_DLY          30000
+#define KEY_MS_DLY          10000
 
 #define PIN_BASE            906
 #define PIN_START           54

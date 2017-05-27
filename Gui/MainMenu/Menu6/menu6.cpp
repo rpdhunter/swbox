@@ -1,9 +1,18 @@
 #include "menu6.h"
 
+#define TEXT_WIDTH    153
+#define TEXT_HEIGHT   21
+#define TEXT_SIAZE  153,21
+
+#define LAB_WIDTH    174
+#define LAB_HEIGHT   42
+#define LAB_SIZE    174,42
+
 Menu6::Menu6(QWidget *parent, G_PARA *g_data) : QFrame(parent)
 {
     key_val = NULL;
 
+    {
     this->resize(459, 219);
     this->move(10, 28);
     this->setStyleSheet("Menu6 {border-image: url(:/widgetphoto/mainmenu/tab7.png);}");
@@ -44,17 +53,18 @@ Menu6::Menu6(QWidget *parent, G_PARA *g_data) : QFrame(parent)
     main_title6->resize(main_title0->width(), main_title0->height());
     main_title6->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m71.png);}");
     main_title6->move(main_title5->x() + 45, main_title0->y());
+    }
 
     /* grade II menu image */
     //二级菜单的重绘
     options_lab = new QLabel(this);
-    options_lab->resize(174, 42);
+    options_lab->resize(LAB_SIZE);
     options_lab->move(150, 50);
     options_lab->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/grade2_bk.png);}");
 
     /* grade II menu text */
     options_txt_lab = new QLabel(options_lab);
-    options_txt_lab->resize(153, 21);
+    options_txt_lab->resize(TEXT_SIAZE);
     options_txt_lab->move(11, 7);
     options_txt_lab->setAttribute(Qt::WA_TranslucentBackground, true);
     options_txt_lab->setStyleSheet("QLabel {color:gray;}");
@@ -63,13 +73,13 @@ Menu6::Menu6(QWidget *parent, G_PARA *g_data) : QFrame(parent)
 
     /* grade II menu image */
     debug_lab = new QLabel(this);
-    debug_lab->resize(options_lab->width(), options_lab->height());
+    debug_lab->resize(LAB_SIZE);
     debug_lab->move(options_lab->x(), options_lab->y() + 27);
     debug_lab->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/grade2_bk.png);}");
 
     /* grade II menu text */
     debug_txt_lab = new QLabel(debug_lab);
-    debug_txt_lab->resize(153, 21);
+    debug_txt_lab->resize(TEXT_SIAZE);
     debug_txt_lab->move(11, 7);
     debug_txt_lab->setAttribute(Qt::WA_TranslucentBackground, true);
     debug_txt_lab->setStyleSheet("QLabel {color:gray;}");
@@ -77,14 +87,29 @@ Menu6::Menu6(QWidget *parent, G_PARA *g_data) : QFrame(parent)
     debug_txt_lab->setText(tr("调试模式"));
 
     /* grade II menu image */
+    recwave_lab = new QLabel(this);
+    recwave_lab->resize(LAB_SIZE);
+    recwave_lab->move(options_lab->x(), debug_lab->y() + 27);
+    recwave_lab->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/grade2_bk.png);}");
+
+    /* grade II menu text */
+    recwave_txt_lab = new QLabel(recwave_lab);
+    recwave_txt_lab->resize(TEXT_SIAZE);
+    recwave_txt_lab->move(11, 7);
+    recwave_txt_lab->setAttribute(Qt::WA_TranslucentBackground, true);
+    recwave_txt_lab->setStyleSheet("QLabel {color:gray;}");
+    recwave_txt_lab->setAlignment(Qt::AlignCenter);
+    recwave_txt_lab->setText(tr("录波管理"));
+
+    /* grade II menu image */
     systeminfo_lab = new QLabel(this);
-    systeminfo_lab->resize(options_lab->width(), options_lab->height());
-    systeminfo_lab->move(options_lab->x(), debug_lab->y() + 27);
+    systeminfo_lab->resize(LAB_SIZE);
+    systeminfo_lab->move(options_lab->x(), recwave_lab->y() + 27);
     systeminfo_lab->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/grade2_bk.png);}");
 
     /* grade II menu text */
     systeminfo_txt_lab = new QLabel(systeminfo_lab);
-    systeminfo_txt_lab->resize(153, 21);
+    systeminfo_txt_lab->resize(TEXT_SIAZE);
     systeminfo_txt_lab->move(11, 7);
     systeminfo_txt_lab->setAttribute(Qt::WA_TranslucentBackground, true);
     systeminfo_txt_lab->setStyleSheet("QLabel {color:gray;}");
@@ -93,13 +118,13 @@ Menu6::Menu6(QWidget *parent, G_PARA *g_data) : QFrame(parent)
 
     /* grade II menu image */
     default_lab = new QLabel(this);
-    default_lab->resize(options_lab->width(), options_lab->height());
+    default_lab->resize(LAB_SIZE);
     default_lab->move(options_lab->x(), systeminfo_lab->y() + 27);
     default_lab->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/grade2_bk.png);}");
 
     /* grade II menu text */
     default_txt_lab = new QLabel(default_lab);
-    default_txt_lab->resize(153, 21);
+    default_txt_lab->resize(TEXT_SIAZE);
     default_txt_lab->move(11, 7);
     default_txt_lab->setAttribute(Qt::WA_TranslucentBackground, true);
     default_txt_lab->setStyleSheet("QLabel {color:gray;}");
@@ -113,7 +138,7 @@ Menu6::Menu6(QWidget *parent, G_PARA *g_data) : QFrame(parent)
     debugset = new DebugSet(this,g_data);
     systeminfo = new SystemInfo(this);
     factoryreset = new FactoryReset(this);
-
+    recwavemanage = new RecWaveManage(this);
 
 
     /* create signal and slots */
@@ -121,11 +146,13 @@ Menu6::Menu6(QWidget *parent, G_PARA *g_data) : QFrame(parent)
     connect(this, &Menu6::send_key, debugset, &DebugSet::trans_key);
     connect(this, &Menu6::send_key, systeminfo, &SystemInfo::trans_key);
     connect(this, &Menu6::send_key, factoryreset, &FactoryReset::trans_key);
+    connect(this, &Menu6::send_key, recwavemanage, &RecWaveManage::trans_key);
 
     connect(options, &Options::fresh_parent, this, &Menu6::fresh_grade1);
     connect(debugset, &DebugSet::fresh_parent, this, &Menu6::fresh_grade1);
     connect(systeminfo, &SystemInfo::fresh_parent, this, &Menu6::fresh_grade1);
     connect(factoryreset, &FactoryReset::fresh_parent, this, &Menu6::fresh_grade1);
+    connect(recwavemanage, &RecWaveManage::fresh_parent, this, &Menu6::fresh_grade1);
 
     //录波信号
     connect(debugset,SIGNAL(startRecWv(int,int)),this,SIGNAL(startRecWv(int,int)));
@@ -133,8 +160,13 @@ Menu6::Menu6(QWidget *parent, G_PARA *g_data) : QFrame(parent)
     //频率变化
     connect(options,SIGNAL(fregChanged(int)),this,SIGNAL(fregChanged(int)) );
     connect(options,SIGNAL(closeTimeChanged(int)),this,SIGNAL(closeTimeChanged(int)) );
-    connect(options,SIGNAL(maxResetTimeChanged(int)),this,SIGNAL(maxResetTimeChanged(int)));
     connect(factoryreset,SIGNAL(sysReset()),this,SIGNAL(sysReset()));
+    connect(debugset,SIGNAL(update_statusBar(QString)),this,SIGNAL(update_statusBar(QString)));
+    connect(options,SIGNAL(update_statusBar(QString)),this,SIGNAL(update_statusBar(QString)));
+
+    //播放声音
+    connect(recwavemanage,SIGNAL(play_voice(VectorList)),this,SIGNAL(play_voice(VectorList)));
+    connect(recwavemanage,SIGNAL(stop_play_voice()),this,SIGNAL(stop_play_voice()));
 }
 
 void Menu6::working(CURRENT_KEY_VALUE *val)
@@ -148,10 +180,17 @@ void Menu6::working(CURRENT_KEY_VALUE *val)
         systeminfo->hide();
         debugset->hide();
         factoryreset->hide();
+        recwavemanage->hide();
     }
     fresh_table();
     this->show();
 }
+
+void Menu6::playVoiceProgress(int p, int all, bool f)
+{
+    recwavemanage->playVoiceProgress(p,all,f);
+}
+
 
 void Menu6::trans_key(quint8 key_code)
 {
@@ -173,24 +212,35 @@ void Menu6::trans_key(quint8 key_code)
             key_val->grade.val2 = 1;
             options->working(key_val);
             debugset->hide();
+            recwavemanage->hide();
             systeminfo->hide();
             factoryreset->hide();
         } else if (key_val->grade.val1 == 2) {
             key_val->grade.val2 = 1;
             options->hide();
             debugset->working(key_val);
+            recwavemanage->hide();
             systeminfo->hide();
             factoryreset->hide();
         } else if (key_val->grade.val1 == 3) {
             key_val->grade.val2 = 1;
             options->hide();
             debugset->hide();
-            systeminfo->working(key_val);
+            recwavemanage->working(key_val);
+            systeminfo->hide();
             factoryreset->hide();
         } else if (key_val->grade.val1 == 4) {
             key_val->grade.val2 = 1;
             options->hide();
             debugset->hide();
+            recwavemanage->hide();
+            systeminfo->working(key_val);
+            factoryreset->hide();
+        } else if (key_val->grade.val1 == 5) {
+            key_val->grade.val2 = 1;
+            options->hide();
+            debugset->hide();
+            recwavemanage->hide();
             systeminfo->hide();
             factoryreset->working(key_val);
         }
@@ -206,14 +256,14 @@ void Menu6::trans_key(quint8 key_code)
             if (key_val->grade.val1 > 1) {
                 key_val->grade.val1--;
             } else {
-                key_val->grade.val1 = 4;
+                key_val->grade.val1 = 5;
             }
             fresh_grade1();
         }
         break;
     case KEY_DOWN:
         if (!key_val->grade.val2) {
-            if (key_val->grade.val1 < 4) {
+            if (key_val->grade.val1 < 5) {
                 key_val->grade.val1++;
             } else {
                 key_val->grade.val1 = 1;
@@ -232,7 +282,14 @@ void Menu6::trans_key(quint8 key_code)
         break;
     }
     fresh_table();
-    emit send_key(key_code);
+
+//    printf("\nkey_val->grade.val1 is : %d",key_val->grade.val1);
+//    printf("\tkey_val->grade.val2 is : %d",key_val->grade.val2);
+//    printf("\tkey_val->grade.val3 is : %d\n",key_val->grade.val3);
+
+    if (key_val->grade.val2){
+        emit send_key(key_code);                //感觉这个机制漏洞很大
+    }
 }
 
 void Menu6::showWaveData(VectorList buf,MODE mod)
@@ -250,6 +307,11 @@ void Menu6::set_offset_suggest2(int a, int b)
     debugset->set_offset_suggest2(a,b);
 }
 
+void Menu6::set_AA_offset_suggest(int a)
+{
+    debugset->set_AA_offset_suggest(a);
+}
+
 
 //二级菜单选中状态
 void Menu6::fresh_grade1(void)
@@ -258,44 +320,34 @@ void Menu6::fresh_grade1(void)
 //    printf("\tkey_val->grade.val2 is : %d",key_val->grade.val2);
 //    printf("\tkey_val->grade.val3 is : %d",key_val->grade.val3);
 
-
-
     options->hide();
     systeminfo->hide();
     debugset->hide();
     factoryreset->hide();
+    recwavemanage->hide();
 
     this->show();                                                               //show current gui
 
+    options_txt_lab->setStyleSheet("QLabel {color:gray;}");
+    debug_txt_lab->setStyleSheet("QLabel {color:gray;}");
+    recwave_txt_lab->setStyleSheet("QLabel {color:gray;}");
+    systeminfo_txt_lab->setStyleSheet("QLabel {color:gray;}");
+    default_txt_lab->setStyleSheet("QLabel {color:gray;}");
+
     switch (key_val->grade.val1) {
-    case 0:
-        options_txt_lab->setStyleSheet("QLabel {color:gray;}");
-        debug_txt_lab->setStyleSheet("QLabel {color:gray;}");
-        systeminfo_txt_lab->setStyleSheet("QLabel {color:gray;}");
-        default_txt_lab->setStyleSheet("QLabel {color:gray;}");
-        break;
     case 1:
         options_txt_lab->setStyleSheet("QLabel {color:white;}");
-        debug_txt_lab->setStyleSheet("QLabel {color:gray;}");
-        systeminfo_txt_lab->setStyleSheet("QLabel {color:gray;}");
-        default_txt_lab->setStyleSheet("QLabel {color:gray;}");
         break;
     case 2:
-        options_txt_lab->setStyleSheet("QLabel {color:gray;}");
         debug_txt_lab->setStyleSheet("QLabel {color:white;}");
-        systeminfo_txt_lab->setStyleSheet("QLabel {color:gray;}");
-        default_txt_lab->setStyleSheet("QLabel {color:gray;}");
         break;
     case 3:
-        options_txt_lab->setStyleSheet("QLabel {color:gray;}");
-        debug_txt_lab->setStyleSheet("QLabel {color:gray;}");
-        systeminfo_txt_lab->setStyleSheet("QLabel {color:white;}");
-        default_txt_lab->setStyleSheet("QLabel {color:gray;}");
+        recwave_txt_lab->setStyleSheet("QLabel {color:white;}");
         break;
     case 4:
-        options_txt_lab->setStyleSheet("QLabel {color:gray;}");
-        debug_txt_lab->setStyleSheet("QLabel {color:gray;}");
-        systeminfo_txt_lab->setStyleSheet("QLabel {color:gray;}");
+        systeminfo_txt_lab->setStyleSheet("QLabel {color:white;}");
+        break;
+    case 5:
         default_txt_lab->setStyleSheet("QLabel {color:white;}");
         break;
     default:
@@ -308,6 +360,15 @@ void Menu6::fresh_grade1(void)
 void Menu6::fresh_table(void)
 {
     if (key_val->grade.val0 == 6 && !key_val->grade.val1) {
+#ifdef SIMPLEMODE
+        main_title0->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m12.png);}");
+        main_title1->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m20.png);}");
+        main_title2->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m30.png);}");
+        main_title3->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m42.png);}");
+        main_title4->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m50.png);}");
+        main_title5->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m60.png);}");
+        main_title6->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m71.png);}");
+#else
         main_title0->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m12.png);}");
         main_title1->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m22.png);}");
         main_title2->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m32.png);}");
@@ -317,6 +378,7 @@ void Menu6::fresh_table(void)
         main_title4->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m50.png);}");
         main_title5->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m60.png);}");
         main_title6->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m71.png);}");
+#endif
     } else if (key_val->grade.val0 == 6 && key_val->grade.val1) {
         main_title0->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m10.png);}");
         main_title1->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m20.png);}");

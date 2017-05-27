@@ -103,14 +103,14 @@ QString FileTools::getFilePath()
     filename = QString("%1").arg(QDateTime::currentDateTime().toString("yyyy-MM-dd-HH-mm-ss-zzz"));
 
     switch (_mode) {
-    case 0:     //地电波
-        filename.prepend("TEV_");
+    case TEV1:     //TEV1
+        filename.prepend("TEV1_");
         break;
-    case 1:     //AA超声
-        filename.prepend("AAUltrasonic_");
-        break;
-    case 2:     //
+    case TEV2:     //TEV2
 
+        break;
+    case AA_Ultrasonic:     //AA超声
+        filename.prepend("AAUltrasonic_");
         break;
     default:
         break;

@@ -10,13 +10,13 @@
 RecWaveForm::RecWaveForm(QWidget *parent) :
     QWidget(parent)
 {
-    this->resize(455, 185);
+    this->resize(455, 188);
     this->setStyleSheet("background:white;");
 
     plot = new QwtPlot(this);
 
 
-    plot->resize(455,185);
+    plot->resize(455,188);
 
 
     curve = new QwtPlotCurve();
@@ -43,13 +43,38 @@ void RecWaveForm::working(CURRENT_KEY_VALUE *val, QString str)
 
     key_val = val;
 
-    if(key_val->grade.val3 != 4 || key_val->grade.val4 == 0){                                             //not current menu
-        return;
+    if(key_val->grade.val0 == 6 && key_val->grade.val1 == 2){       //调试模式
+        if(key_val->grade.val3 != 4 || key_val->grade.val4 == 0){                                             //not current menu
+            return;
+        }
+    }
+
+    if(key_val->grade.val0 == 6 && key_val->grade.val1 == 3){       //录波管理
+        if(key_val->grade.val5 != 1){                                             //not current menu
+            return;
+        }
     }
 
     setData(str);
 
     this->show();
+}
+
+void RecWaveForm::working(CURRENT_KEY_VALUE *val,VectorList buf, MODE mod)
+{
+    if (val == NULL) {
+        return;
+    }
+
+    key_val = val;
+
+    if( (key_val->grade.val0 == 0 && mod == TEV1)
+            || (key_val->grade.val0 == 1 && mod == TEV2)
+            || (key_val->grade.val0 == 3 && mod == AA_Ultrasonic)){                                             //not current menu
+        setData(buf,mod);
+        this->show();
+    }
+
 }
 
 void RecWaveForm::trans_key(quint8 key_code)
@@ -59,7 +84,10 @@ void RecWaveForm::trans_key(quint8 key_code)
         return;
     }
 
-    if(key_val->grade.val5 == 0){
+    if(key_val->grade.val5 == 0 ){
+        return;
+    }
+    if(this->isHidden()){
         return;
     }
 
@@ -70,6 +98,9 @@ void RecWaveForm::trans_key(quint8 key_code)
     case KEY_CANCEL:
         this->hide();
         key_val->grade.val5 = 0;
+        if(key_val->grade.val0 != 6){
+            key_val->grade.val1 = 0;
+        }
         break;
     case KEY_UP:
         scale = scale * 1.2;
@@ -106,7 +137,7 @@ void RecWaveForm::trans_key(quint8 key_code)
 void RecWaveForm::setData(QString str)
 {
     if(str.contains("TEV")){
-        mode = TEV;
+        mode = TEV1;
     }
     else if(str.contains("AAUltrasonic")){
         mode = AA_Ultrasonic;
@@ -137,7 +168,7 @@ void RecWaveForm::setData(QString str)
     min=0;
     while (!in.atEnd()) {
         in >> t1 >> t2 >> v;
-        if(mode == TEV){
+        if(mode == TEV1){
             p = QPointF(i*0.01,v);
         }
         else if(mode == AA_Ultrasonic){
@@ -167,7 +198,7 @@ void RecWaveForm::setData(QString str)
     plot->axisWidget(QwtPlot::xBottom)->setMargin(0);
     plot->axisWidget(QwtPlot::yLeft)->setMargin(0);
     plot->axisWidget(QwtPlot::yLeft)->setSpacing(10);
-    if(mode == TEV){
+    if(mode == TEV1){
         plot->axisWidget(QwtPlot::xBottom)->setTitle("us");
         plot->axisWidget(QwtPlot::yLeft)->setTitle("V m");
     }
@@ -185,6 +216,57 @@ void RecWaveForm::setData(QString str)
 
     file.close();
 
+}
+
+void RecWaveForm::setData(VectorList buf, MODE mod)
+{
+    mode = mod;
+    QPointF p;
+    wave.clear();
+    max=0;
+    min=0;
+    for (int i = 0; i < buf.length(); ++i) {
+        if(mode == TEV1){
+            p = QPointF(i*0.01,buf.at(i));
+        }
+        else if(mode == AA_Ultrasonic){
+            p = QPointF(i/320.0,buf.at(i));
+        }
+
+        if(buf.at(i)>max){
+            max = buf.at(i);
+        }
+        else if(buf.at(i)<min){
+            min = buf.at(i);
+        }
+
+        wave.append(p);
+    }
+
+    if(min > -300){
+        min = -300;
+    }
+    if(max < 300){
+        max = 300;
+    }
+    plot->setAxisScale(QwtPlot::yLeft, min, max);
+    /* remove gap */
+    plot->axisWidget(QwtPlot::xBottom)->setMargin(0);
+    plot->axisWidget(QwtPlot::yLeft)->setMargin(0);
+    plot->axisWidget(QwtPlot::yLeft)->setSpacing(10);
+    if(mode == TEV1){
+        plot->axisWidget(QwtPlot::xBottom)->setTitle("us");
+        plot->axisWidget(QwtPlot::yLeft)->setTitle("V m");
+    }
+    else if(mode == AA_Ultrasonic){
+        plot->axisWidget(QwtPlot::xBottom)->setTitle("ms");
+        plot->axisWidget(QwtPlot::yLeft)->setTitle("V u");
+    }
+
+    x = 0;   //开始显示最左边数据
+    scale = 1.0;    //纵坐标拉伸因子为1
+
+    fresh();
 }
 
 
