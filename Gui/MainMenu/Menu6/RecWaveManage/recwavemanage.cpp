@@ -23,7 +23,7 @@ RecWaveManage::RecWaveManage(QWidget *parent) : QFrame(parent), ui(new Ui::Form)
     QStringList list;
     list << tr("查看波形") << tr("删除当前波形") << tr("删除全部波形") << tr("播放声音");
     contextMenu->addItems(list);
-    contextMenu->resize(100, 75);
+    contextMenu->resize(100, 90);
     contextMenu->move(300,10);
     contextMenu->setSpacing(2);
     contextMenu->hide();
@@ -188,6 +188,9 @@ void RecWaveManage::trans_key(quint8 key_code)
             else if(key_val->grade.val3 > 1){
                 key_val->grade.val3 --;
             }
+            else if(key_val->grade.val3 == 1){
+                key_val->grade.val3 = listWidget->count();
+            }
         }
         break;
     case KEY_DOWN:
@@ -203,6 +206,9 @@ void RecWaveManage::trans_key(quint8 key_code)
             }
             else if(key_val->grade.val3 < listWidget->count()){
                 key_val->grade.val3 ++;
+            }
+            else if(key_val->grade.val3 == listWidget->count()){
+                key_val->grade.val3 = 1;
             }
         }
         break;
@@ -253,12 +259,12 @@ void RecWaveManage::refresh()
         if(listWidget->currentItem()->text().contains(("AAUltrasonic"))){
             contextMenu->item(3)->setHidden(false);
             contextMenu_num = 4;
-            contextMenu->resize(100, 75);
+            contextMenu->resize(100 + 10, 75);
         }
         else{
             contextMenu->item(3)->setHidden(true);
             contextMenu_num = 3;
-            contextMenu->resize(100, 57);
+            contextMenu->resize(100 + 10, 57);
         }
     }
 

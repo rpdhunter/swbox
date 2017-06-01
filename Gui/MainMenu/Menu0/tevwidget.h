@@ -86,6 +86,7 @@ private:
     void transData(int x, int y);
     void PRPDReset();
     void rec_wave();
+	void calc_tev_value (double * tev_val, double * tev_db, int * sug_central_offset, int * sug_offset);
 
     int temp;
     Channel channel;

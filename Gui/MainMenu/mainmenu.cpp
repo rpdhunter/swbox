@@ -334,12 +334,9 @@ void MainMenu::showReminTime(int s,QString str)
 
 void MainMenu::sysReset()
 {
-    data->send_para.freq.rval = (sqlcfg->get_para()->freq_val == 50) ? 0 : 1;
-    data->send_para.freq.flag = 1;
+	data->set_send_para (sp_freq, (sqlcfg->get_para()->freq_val == 50) ? 0 : 1);
     freqLab->setText(tr("%1Hz").arg(sqlcfg->get_para()->freq_val));
-
-    data->send_para.backlight.rval = sqlcfg->get_para()->backlight;
-    data->send_para.backlight.flag = 1;
+	data->set_send_para (sp_backlight, sqlcfg->get_para()->backlight);
 }
 
 void MainMenu::playVoiceProgress(int p, int all,bool f)

@@ -65,7 +65,7 @@ TEVWidget::TEVWidget(G_PARA *data, Channel channel, QWidget *parent) :
     //每隔1秒，刷新
     timer1 = new QTimer(this);
     timer1->setInterval(1000);
-    if (tev_sql->mode == series) {
+    if (tev_sql->mode == continuous) {
         timer1->start();
     }
     connect(timer1, SIGNAL(timeout()), this, SLOT(fresh_plot()));
@@ -293,7 +293,7 @@ void TEVWidget::trans_key(quint8 key_code)
         switch (key_val->grade.val2) {
         case 1:
             if (tev_sql->mode == single) {
-                tev_sql->mode = series;
+                tev_sql->mode = continuous;
             } else {
                 tev_sql->mode = single;
             }
@@ -333,7 +333,7 @@ void TEVWidget::trans_key(quint8 key_code)
         switch (key_val->grade.val2) {
         case 1:
             if (tev_sql->mode == single) {
-                tev_sql->mode = series;
+                tev_sql->mode = continuous;
             } else {
                 tev_sql->mode = single;
             }
@@ -350,7 +350,7 @@ void TEVWidget::trans_key(quint8 key_code)
                 break;
             }
         case 3:
-            if (tev_sql->gain < 1.95) {
+            if (tev_sql->gain < 9.95) {
                 tev_sql->gain += 0.1;
             }
             break;
@@ -374,25 +374,52 @@ void TEVWidget::trans_key(quint8 key_code)
     fresh_setting();
 }
 
+void TEVWidget::calc_tev_value (double * tev_val, double * tev_db, int * sug_central_offset, int * sug_offset)
+{
+	int d_max, d_min, a, b;
+	double db;
+	
+	if (channel == Left) {
+		d_max = data->recv_para.hdata0.ad.ad_max;
+		d_min = data->recv_para.hdata0.ad.ad_min;
+    }
+	else{
+		d_max = data->recv_para.hdata1.ad.ad_max;
+		d_min = data->recv_para.hdata1.ad.ad_min;
+	}
+
+	* sug_central_offset = ((d_max + d_min) >> 1) - 0x8000;
+//	* sug_offset = ((d_max - d_min) >> 1) / 10;
+
+ 	a = d_max - 0x8000 - tev_sql->fpga_zero;        //减去中心偏置
+	b = d_min - 0x8000 - tev_sql->fpga_zero;        //减去中心偏置
+
+    * sug_offset = ( MAX (qAbs (a), qAbs (b)) - 1 / TEV_FACTOR / tev_sql->gain ) /10;
+
+	db = tev_sql->gain * (MAX (qAbs (a), qAbs (b)) - tev_sql->tev_offset1 * 10) * TEV_FACTOR;
+	* tev_val = db;
+
+    db = 20 * log10 (db);      //对数运算，来自工具链的函数
+
+    if(db < 0){
+        db = 0;
+    }
+	* tev_db = db;
+
+//    if( db > 50){
+//        qDebug()<<"tev_db = "<<db << "\td_max = "<<a<<"\td_min = "<<b;
+//    }
+}
+
 void TEVWidget::fresh_plot()
 {
     double t, s, degree;
     quint32 pulse_cnt,pulse_cnt_show;      //脉冲计数
+    int sug_central_offset, sug_offset;
 //    quint32 signal_pulse_cnt;
 
     if (tev_sql->mode == single) {
         timer1->stop();      //如果单次模式，停止计时器
-    }
-
-
-    int d_max,d_min;
-    if(channel == Left){
-        d_max = data->recv_para.hdata0.ad.ad_max;
-        d_min = data->recv_para.hdata0.ad.ad_min;
-    }
-    else{
-        d_max = data->recv_para.hdata1.ad.ad_max;
-        d_min = data->recv_para.hdata1.ad.ad_min;
     }
 
 #if 0
@@ -408,14 +435,8 @@ void TEVWidget::fresh_plot()
     t = tev_sql->tev_gain*((double)MAX(a, b) * 1000) / 32768;
     s = ((double)20) * log10(t);      //对数运算，来自工具链的函数
 #else
-    emit offset_suggest( (d_max+d_min)/2 - 0x8000, qAbs(d_max-d_min)/2/10 );
-
-    int a = d_max - 0x8000 - tev_sql->fpga_zero;        //减去中心偏置
-    int b = d_min - 0x8000 - tev_sql->fpga_zero;        //减去中心偏置
-
-    t = tev_sql->gain * ( MAX(qAbs(a),qAbs(b)) - tev_sql->tev_offset1*10 ) * TEV_FACTOR ;
-//    t = tev_sql->gain * ( (d_max-d_min) / 2.0 ) * TEV_FACTOR ;
-    s = ((double)20) * log10(t);      //对数运算，来自工具链的函数
+	calc_tev_value (&t, &s, &sug_central_offset, &sug_offset);
+    emit offset_suggest (sug_central_offset, sug_offset);
 #endif
 
     //记录并显示最大值

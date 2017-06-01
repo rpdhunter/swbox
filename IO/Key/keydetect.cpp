@@ -2,33 +2,27 @@
 
 
 //线程的初始化工作，建立设备连接
-KeyDetect::KeyDetect(QObject *parent) : QThread(parent)
+KeyDetect::KeyDetect (QObject *parent) : QThread(parent)
 {
-    int i;
-    int ret;
-    char *str = NULL;
-    const char *path = "/sys/class/gpio/gpio";
-    const char *pcmd = "/sys/class/gpio/export";
+    int fd, i, ret;
+    //char * str = NULL;
+    char str [0x100];
+    const char * path = GPIO_PATH;
+    const char * pcmd = GPIO_EXP_PATH;
 
-    int fd = open("/dev/mem", O_RDWR | O_SYNC);
+	fd = open ("/dev/mem", O_RDWR | O_SYNC);
     if (fd == -1) {
         printf("[ERROR] Open %s failed.\n", "/dev/mem");
+		exit (-1);
     }
 
     /* get virt_addr from phy_addr */
-    base_addr = (char *)mmap(NULL, PS_GPIO_SIZE, (PROT_READ | PROT_WRITE), \
+    base_addr = (char *)mmap (NULL, PS_GPIO_SIZE, (PROT_READ | PROT_WRITE), 
         MAP_SHARED, fd, PS_GPIO_BASE);
     if (base_addr == MAP_FAILED) {
         printf("[ERROR] Mmap virt_addr for phy_addr of 0x%08x faild!", \
             PS_GPIO_BASE);
-        return;
-    }
-
-    str = (char *)malloc(0x100);
-    if (str == NULL) {
-        printf("[ERROR] malloc failed!");
-        munmap(base_addr, PS_GPIO_SIZE);
-        return;
+        exit (-1);
     }
 
     for (i = 0; i < KEY_NUM; i++) {
@@ -51,8 +45,40 @@ KeyDetect::KeyDetect(QObject *parent) : QThread(parent)
     }
 
     /* start pthread */
-    this->start();
+    this->start ();
+}
 
+void KeyDetect::check_press_once (int pin, enum KEY_VALUE key)
+{
+	if (!gpio_read_pin (pin)) {
+        usleep (KEY_MS_DLY);
+        if (!gpio_read_pin (pin)) {
+            emit sendkey (key);
+            while (!gpio_read_pin (pin)) {
+                usleep (KEY_MS_DLY);
+            }
+        }
+    }
+}
+
+void KeyDetect::check_press_cont (int pin, enum KEY_VALUE key)
+{
+	int cnt;
+	
+	if (!gpio_read_pin (pin)) {
+        usleep (KEY_MS_DLY);
+        if (!gpio_read_pin (pin)) {
+            emit sendkey (key);
+            cnt = 0;
+            while (!gpio_read_pin (pin)) {
+                usleep (60000);
+                if (cnt++ > 5) {
+                    emit sendkey (key);
+                    cnt = 5;
+                }
+            }
+        }
+    }
 }
 
 //监测键盘事件
@@ -68,94 +94,16 @@ void KeyDetect::run(void)
 //        }
 //    }
     while (true) {
-        if (!gpio_read_pin(PIN_POWER)) {
-            usleep(KEY_MS_DLY);
-            if (!gpio_read_pin(PIN_POWER)) {
-                emit sendkey(KEY_POWER);
-                while (!gpio_read_pin(PIN_POWER)){
-                    usleep(KEY_MS_DLY);
-                }
-            }
-        }
-        if (!gpio_read_pin(PIN_OK)) {
-            usleep(KEY_MS_DLY);
-            if (!gpio_read_pin(PIN_OK)) {
-                emit sendkey(KEY_OK);
-                while (!gpio_read_pin(PIN_OK)){
-                    usleep(KEY_MS_DLY);
-                }
-            }
-        }
-        if (!gpio_read_pin(PIN_CANCEL)) {
-            usleep(KEY_MS_DLY);
-            if (!gpio_read_pin(PIN_CANCEL)) {
-                emit sendkey(KEY_CANCEL);
-                while (!gpio_read_pin(PIN_CANCEL)){
-                    usleep(KEY_MS_DLY);
-                }
-            }
-        }
-        if (!gpio_read_pin(PIN_UP)) {
-            usleep(KEY_MS_DLY);
-            if (!gpio_read_pin(PIN_UP)) {
-                emit sendkey(KEY_UP);
-                cnt = 0;
-                while (!gpio_read_pin(PIN_UP)) {
-                    usleep(100000);
-                    cnt++;
-                    if (cnt > 5) {
-                        emit sendkey(KEY_UP);
-                        cnt = 5;
-                    }
-                }
-            }
-        }
-        if (!gpio_read_pin(PIN_DOWN)) {
-            usleep(KEY_MS_DLY);
-            if (!gpio_read_pin(PIN_DOWN)) {
-                emit sendkey(KEY_DOWN);
-                cnt = 0;
-                while (!gpio_read_pin(PIN_DOWN)) {
-                    usleep(100000);
-                    cnt++;
-                    if (cnt > 5) {
-                        emit sendkey(KEY_DOWN);
-                        cnt = 5;
-                    }
-                }
-            }
-        }
-        if (!gpio_read_pin(PIN_LEFT)) {
-            usleep(KEY_MS_DLY);
-            if (!gpio_read_pin(PIN_LEFT)) {
-                emit sendkey(KEY_LEFT);
-                cnt = 0;
-                while (!gpio_read_pin(PIN_LEFT)) {
-                    usleep(100000);
-                    cnt++;
-                    if (cnt > 5) {
-                        emit sendkey(KEY_LEFT);
-                        cnt = 5;
-                    }
-                }
-            }
-        }
-        if (!gpio_read_pin(PIN_RIGHT)) {
-            usleep(KEY_MS_DLY);
-            if (!gpio_read_pin(PIN_RIGHT)) {
-                emit sendkey(KEY_RIGHT);
-                cnt = 0;
-                while (!gpio_read_pin(PIN_RIGHT)) {
-                    usleep(100000);
-                    cnt++;
-                    if (cnt > 5) {
-                        emit sendkey(KEY_RIGHT);
-                        cnt = 5;
-                    }
-                }
-            }
-        }
-        usleep(KEY_MS_DLY);
+		check_press_once (PIN_POWER, KEY_POWER);
+		check_press_once (PIN_OK, KEY_OK);
+		check_press_once (PIN_CANCEL, KEY_CANCEL);
+
+		check_press_cont (PIN_UP, KEY_UP);
+		check_press_cont (PIN_DOWN, KEY_DOWN);
+		check_press_cont (PIN_LEFT, KEY_LEFT);
+		check_press_cont (PIN_RIGHT, KEY_RIGHT);
+
+        usleep (KEY_MS_DLY);
     }
     exit(0);
 }
@@ -169,8 +117,7 @@ void KeyDetect::run(void)
 void KeyDetect::set_output_enable(int pin, int enable)
 {
     char *reg;
-    int bank;
-    int pin_num;
+    int bank, pin_num;
     unsigned int reg_val;
 
     /* Get bank from pin */
@@ -215,8 +162,7 @@ void KeyDetect::set_output_enable(int pin, int enable)
 void KeyDetect::set_dir_pin(int pin, int dir)
 {
     char *reg;
-    int bank;
-    int pin_num;
+    int bank, pin_num;
     unsigned int reg_val;
 
     /* Get bank from pin */
@@ -260,8 +206,7 @@ void KeyDetect::set_dir_pin(int pin, int dir)
 */
 bool KeyDetect::gpio_read_pin(int pin)
 {
-    int bank;
-    int pin_num;
+    int bank, pin_num;
     volatile unsigned int *reg;
 
     /* Get bank from pin */

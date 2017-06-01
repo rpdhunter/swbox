@@ -5,14 +5,17 @@ MainWindow::MainWindow(QWidget *parent)
     : QFrame(parent)
 {
     /* GUI */
-    this->setGeometry(0, 0, 480, 272);
+    this->setGeometry (0, 0, RESOLUTION_X, RESOLUTION_Y);
 
     /* get data from fpga fifo */
     g_data = new G_PARA;
-
-    //memset是一个c++函数，用于快速清零一块内存区域
-    memset(g_data, 0, sizeof(G_PARA));
-
+	if (g_data != NULL) {
+	    //memset是一个c++函数，用于快速清零一块内存区域
+		memset(g_data, 0, sizeof(G_PARA));
+	}
+	else {
+		exit (0);
+	}
 
 #ifdef ARM
     //开启新线程，持续监听FPGA的数据，
@@ -50,6 +53,7 @@ MainWindow::MainWindow(QWidget *parent)
     setCloseTime(sqlcfg->get_para()->close_time);
     connect(keydetect,SIGNAL(sendkey(quint8)),this,SLOT(resetTimerFromKey()));
     connect(mainmenu,SIGNAL(closeTimeChanged(int)),this,SLOT(setCloseTime(int)));
+    connect(rebootTimer,SIGNAL(timeout()),this,SLOT(system_reboot()));
 
     //状态栏显示
     showTimer = new QTimer;

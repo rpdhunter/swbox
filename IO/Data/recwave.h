@@ -8,22 +8,24 @@
 
 #define GROUP_NUM_MAX           16              //组号最大值
 
+
 class RecWave : public QObject
 {
     Q_OBJECT
 public:
-    explicit RecWave(G_PARA *gdata, MODE mode, QObject *parent = 0);
-
-    void recStart(int time = 10);   //time为录波时长
-
-    void startWork();   //开始接收数据
-    void work();        //接收数据
 
     enum Status{
         Working,
         Pending,
         Free
     } status;           //工作状态，只能由外部更改
+
+    explicit RecWave(G_PARA *gdata, MODE mode, QObject *parent = 0);
+
+    void recStart(int time = 10);   //time为录波时长
+
+    void startWork();   //开始接收数据
+    void work();        //接收数据
 
 signals:
     void waveData(VectorList,MODE);

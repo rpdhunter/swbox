@@ -118,10 +118,8 @@ void DebugSet::saveSql()
     sqlcfg->sql_save(sql_para);
 
     //这些设置中，只有这两个量是需要写入FPGA才能生效的
-    data->send_para.tev1_zero.flag = true;
-    data->send_para.tev1_zero.rval = ( 0x8000 - sql_para->tev1_sql.fpga_zero );
-    data->send_para.tev1_threshold.flag = true;
-    data->send_para.tev1_threshold.rval = sql_para->tev1_sql.fpga_threshold;
+	data->set_send_para (sp_tev1_zero, 0x8000 - sql_para->tev1_sql.fpga_zero);
+	data->set_send_para (sp_tev1_threshold, sql_para->tev1_sql.fpga_threshold);
 
     qDebug()<<"debug para saved!";
     emit update_statusBar(tr("【调试模式】设置已保存！"));
@@ -144,7 +142,7 @@ void DebugSet::readSql()
 
     //高级
     ui->lineEdit_MaxRecNum->setText(QString("%1").arg(sql_para->max_rec_num));
-    ui->lineEdit_MaxRecNum->setText(QString("%1").arg(sql_para->aaultra_sql.time));
+    ui->lineEdit_time->setText(QString("%1").arg(sql_para->aaultra_sql.time));
 }
 
 void DebugSet::working(CURRENT_KEY_VALUE *val)

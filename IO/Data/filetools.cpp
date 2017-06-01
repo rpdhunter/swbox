@@ -27,7 +27,6 @@ void FileTools::run()
 
     saveDataFile();     //保存数据文件
     saveCfgFile();      //生成对应的配置文件
-    system ("sync");
 
     if(_mode == AA_Ultrasonic){
         saveWavFile();      //生成声音文件
@@ -35,6 +34,7 @@ void FileTools::run()
         wavToMp3();
     }
 
+	system ("sync");
 
     //空间管理
     spaceControl("/root/WaveForm/");
@@ -174,10 +174,15 @@ void FileTools::saveCfgFile()
 //保存wav文件
 void FileTools::saveWavFile()
 {
-    wfh1=(WavFormatHeader*)malloc(sizeof(WavFormatHeader));
+	int i, size;
+	
+    wfh1=(WaveFormat*)malloc(sizeof(WaveFormat));
+	if (wfh1 == NULL) {
+		return;
+	}
     //    memset(wfh1,0,sizeof(wfh1));
 
-    int size = _data.length() * 2;
+    size = _data.length() * 2;
     //    char *Data1 = (char*)malloc(size);
     //    for(int i=0;i<size;i++){
     //        Data1[i] = (char)_data.at(i);
@@ -186,7 +191,7 @@ void FileTools::saveWavFile()
 
 
     strcpy(wfh1->RIFF,"RIFF");
-    wfh1->Filesize = size + sizeof(WavFormatHeader);
+    wfh1->Filesize = size + sizeof(WaveFormat);
     strcpy(wfh1->WavFlags,"WAVE");
     strcpy(wfh1->FMTFlags,"fmt ");
     wfh1->ByteFilter = 16;
@@ -226,11 +231,10 @@ void FileTools::saveWavFile()
 
     qDebug()<<"wfh1->Datasize :"<< wfh1->Datasize;
 
-    int i;
     //    char c;
     //    int t;
     for(i=0;i<_data.length();i++){
-        out << qint16(_data.at(i) * 32);
+        out << qint16(_data.at(i) /** 32*/ << 5);
         //        t = _data.at(i)>>2;
         //        c = char(t);
         //        out.writeRawData(&c,1);
@@ -238,6 +242,8 @@ void FileTools::saveWavFile()
     qDebug()<<"i="<<i;
 
     file.close();
+
+	free (wfh1);
 }
 
 void FileTools::wavToMp3()
@@ -270,6 +276,8 @@ void FileTools::spaceControl(QString str)
                 qDebug()<<"remove file "<<str + s<<" failed!";
             }
         }
+
+		system ("sync");
     }
 }
 

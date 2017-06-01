@@ -40,6 +40,7 @@ public slots:
 private:
     void fresh_setting(void);
     void maxReset();
+    void calc_aa_value (double * aa_val, double * aa_db, int * offset);
 
     SQL_PARA *sql_para;
 

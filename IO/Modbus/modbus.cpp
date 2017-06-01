@@ -21,12 +21,14 @@
 
 Modbus::Modbus(QObject *parent, G_PARA *g_data) : QThread(parent)
 {
+	int i;
+	
     data = g_data;
     sql_para = new SQL_PARA;
     data_stand = new unsigned short[md_wr_reg_max];
 
-    for (int i = 0; i < md_wr_reg_max; ++i) {
-        data_stand[i] = 0;
+    for (i = 0; i < md_wr_reg_max; ++i) {
+        data_stand [i] = 0;
     }
 
     //    serial = new QSerialPort;
@@ -68,19 +70,6 @@ Modbus::~Modbus()
 
 void Modbus::run()
 {
-
-    //    writeData();
-
-    //    while(1){
-    //        qDebug()<<"[2]modbus start!";
-
-    //        serial->write("12345678");
-    //        sleep(2);
-    //    }
-    //    serial->clear();
-    //    serial->close();
-    //    serial->deleteLater();
-
     int len;
     unsigned char recv_buf [300];
 
@@ -98,7 +87,6 @@ void Modbus::run()
         else {
             modbus_com_recv_to (&pd_dev);
         }
-//        msleep(100);
     }
 
     close_modbus_dev (&pd_dev);
@@ -254,7 +242,7 @@ int Modbus::modbus_com_recv_to(Modbus::modbus_dev_t *ndp)
 
 int Modbus::modbus_send_msg(Modbus::modbus_dev_t *ndp)
 {
-    int len;
+    uint len;
     int sleep_cnt;
 
     if (ndp->send_len > 0) {
@@ -454,7 +442,8 @@ int Modbus::show_msg(char *prompt, char buf[], int len)
 //读装置数据
 int Modbus::get_reg_value(unsigned short reg, unsigned short *val)
 {
-    if (reg < md_rd_reg_dev_st || reg >= md_rd_reg_max) {
+//    if (reg < md_rd_reg_dev_st || reg >= md_rd_reg_max) {
+    if (reg >= md_rd_reg_max) {
         return -1;
     }
 

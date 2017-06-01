@@ -18,12 +18,14 @@ int main(int argc, char *argv[])
     /* System print */
     print_centor();
 
+//    qDebug()<<"current thread ID: "<<a.thread()->currentThreadId();
+
     /* Sqlite3 init */
     sqlite3_init();
 
     QApplication a(argc, argv);
 
-//    qDebug()<<"current thread ID: "<<a.thread()->currentThreadId();
+
 
 
 //定义字体
@@ -42,7 +44,7 @@ int main(int argc, char *argv[])
 
     //语言切换模块
 
-//    qDebug("language = %s", sqlcfg->get_para()->language == EN ? "EN" : "CN");
+    qDebug("language = %s", sqlcfg->get_para()->language == EN ? "EN" : "CN");
 
     if(sqlcfg->get_para()->language == LANGUAGE::EN){
         QTranslator *translator = new QTranslator(qApp);

@@ -114,8 +114,8 @@ private:
     G_PARA *data;
     SQL_PARA *sql_para;
 
-    void transData();   //将data转换为标准数组
-    unsigned short *data_stand;
+    void transData ();   //将data转换为标准数组
+    unsigned short * data_stand;
 
     unsigned short state, tevAmplitude, tevPluse, aaAmplitude;
 

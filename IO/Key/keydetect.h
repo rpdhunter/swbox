@@ -13,6 +13,9 @@
 #include <unistd.h>
 #include <sys/mman.h>
 
+#define GPIO_PATH			"/sys/class/gpio/gpio"
+#define GPIO_EXP_PATH		"/sys/class/gpio/export"
+
 typedef struct KEY_SYS {
     int exportfd;
     int valuefd[KEY_NUM];
@@ -39,15 +42,14 @@ signals:
 public slots:
 
 private:
+    char * base_addr;
 
-    int cnt;
-
-    char *base_addr;
-
-    void set_dir_pin(int pin, int dir);
-    void get_bank(int pin, int *bank);
-    void set_output_enable(int pin, int enable);
-    bool gpio_read_pin(int pin);
+    void set_dir_pin (int pin, int dir);
+    void get_bank (int pin, int *bank);
+    void set_output_enable (int pin, int enable);
+    bool gpio_read_pin (int pin);
+	void check_press_once (int pin, enum KEY_VALUE key);
+	void check_press_cont (int pin, enum KEY_VALUE key);
 };
 
 #endif // KEYDETECT_H

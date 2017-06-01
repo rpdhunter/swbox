@@ -6,28 +6,30 @@
 #include "data.h"
 #include "recwave.h"
 #include "filetools.h"
+#include "IO/SqlCfg/sqlcfg.h"
 
+#define DEV_VMEM				"/dev/mem"
 
 #define GROUP_NUM_FLAG          0x1000          //组号标志（实际是复位值，表示传输数据未开始或已完成状态）
 #define GROUP_NUM_MAX           16              //组号最大值
 #define BUF_SIZE                (GROUP_NUM_MAX * 0x100)         //波形数据缓冲区大小
 
-#define FREQ_REG                0x0001          //频率
-#define REC_START               0x0002          //录波开始
+#define FREQ_REG				0x0001          //频率
+#define REC_START				0x0002          //录波开始
 //#define AD_2                    0x0003
 //#define AD_3                    0x0004
 //#define TEV_CHANNEL             0x0005          //脉冲数据通道号
-#define GROUP_NUM               0x0006          //组号
-#define RAM_RESET               0x0007          //初始化时使用
-#define AA_VOL                  0x0008          //超声音量
-#define BACKLIGHT_REG           0x0009          //背光
-#define READ_FPGA               0x000a          //读数据标志位
-#define TEV_AUTO_REC            0x000b          //自动录波标志位
-#define AA_RECORD_PLAY          0x000c          //播放声音标志(之后发送声音数据至FPGA)
-#define TEV1_ZERO                0x000d          //TEV参考零点(通道1)
-#define TEV1_THRESHOLD           0X000e          //TEV脉冲阈值(通道1)
-#define TEV2_ZERO                0x000f          //TEV参考零点(通道2)
-#define TEV2_THRESHOLD           0X0010          //TEV脉冲阈值(通道2)
+#define GROUP_NUM				0x0006          //组号
+#define RAM_RESET				0x0007          //初始化时使用
+#define AA_VOL					0x0008          //超声音量
+#define BACKLIGHT_REG			0x0009          //背光
+#define READ_FPGA				0x000a          //读数据标志位
+#define TEV_AUTO_REC			0x000b          //自动录波标志位
+#define AA_RECORD_PLAY			0x000c          //播放声音标志(之后发送声音数据至FPGA)
+#define TEV1_ZERO				0x000d          //TEV参考零点(通道1)
+#define TEV1_THRESHOLD			0x000e          //TEV脉冲阈值(通道1)
+#define TEV2_ZERO				0x000f          //TEV参考零点(通道2)
+#define TEV2_THRESHOLD			0x0010          //TEV脉冲阈值(通道2)
 
 
 //读写寄存器
@@ -60,19 +62,23 @@ private slots:
     void stop_play_voice();
 
 private:
+    volatile unsigned int * init_vbase (int vmem_fd, unsigned int base, unsigned int size);
+    void init_vbase_2 (volatile unsigned int * vbase);
+	void init_send_params (SqlCfg * psc);
 
-    quint32 recvdata(void);
-    quint32 recvdata1(int *buff);
-    void sendpara(void);
-    void playVoiceData();
+private:
+    void send_data (volatile unsigned int * vbase, unsigned int data [], unsigned int data_size);
+    unsigned int recv_data (volatile unsigned int * vbase, unsigned int * buff);
+	
+    void check_send_param (RPARA pp [], int index, unsigned int data_mask, volatile unsigned int *vbase);
+    void send_para (void);
+    void playVoiceData ();
 
     void sendAPackage(VectorList wave);
 
     volatile quint32 *vbase0, *vbase1;
     volatile quint32 *vbase2, *vbase3;
-    G_PARA *tdata;
-
-    int *buf;
+    G_PARA * tdata;
 
     MODE mode;      //工作模式
 

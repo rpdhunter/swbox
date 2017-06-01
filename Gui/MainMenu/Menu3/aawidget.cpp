@@ -35,9 +35,7 @@ AAWidget::AAWidget(QWidget *parent, G_PARA *g_data) :
 
     //开机设置一下音量
     this->data = g_data;
-
-    data->send_para.aa_vol.flag = true;
-    data->send_para.aa_vol.rval = sql_para->aaultra_sql.vol;
+	data->set_send_para (sp_aa_vol, sql_para->aaultra_sql.vol);
 
     QLineEdit *lineEdit = new QLineEdit;
     ui->comboBox->setStyleSheet("QComboBox {border-image: url(:/widgetphoto/mainmenu/para_child.png);color:gray; }");
@@ -68,14 +66,14 @@ AAWidget::AAWidget(QWidget *parent, G_PARA *g_data) :
 
     timer1 = new QTimer(this);
     timer1->setInterval(100);
-    if (sql_para->aaultra_sql.mode == series) {
+    if (sql_para->aaultra_sql.mode == continuous) {
         timer1->start();
     }
     connect(timer1, SIGNAL(timeout()), this, SLOT(fresh_2()));   //每0.1秒刷新一次数据状态，明显的变化需要快速显示
 
     timer2 = new QTimer(this);
     timer2->setInterval(1000);
-    if (sql_para->aaultra_sql.mode == series) {
+    if (sql_para->aaultra_sql.mode == continuous) {
         timer2->start();
     }
     connect(timer2, SIGNAL(timeout()), this, SLOT(fresh_1()));   //每1秒刷新一次数据状态
@@ -138,9 +136,8 @@ void AAWidget::trans_key(quint8 key_code)
 
         key_val->grade.val1 = 0;
         key_val->grade.val2 = 0;
-        if(sql_para->aaultra_sql.vol != sqlcfg->get_para()->aaultra_sql.vol){   //判断音量调节生效
-            data->send_para.aa_vol.flag = true;
-            data->send_para.aa_vol.rval = sql_para->aaultra_sql.vol;
+        if (sql_para->aaultra_sql.vol != sqlcfg->get_para()->aaultra_sql.vol){   //判断音量调节生效
+			data->set_send_para (sp_aa_vol, sql_para->aaultra_sql.vol);
             qDebug()<<"vol changed!";
         }
 
@@ -174,26 +171,27 @@ void AAWidget::trans_key(quint8 key_code)
         switch (key_val->grade.val2) {
         case 1:
             if (sql_para->aaultra_sql.mode == single) {
-                sql_para->aaultra_sql.mode = series;
+                sql_para->aaultra_sql.mode = continuous;
             } else {
                 sql_para->aaultra_sql.mode = single;
             }
             break;
         case 2:
-            if (sql_para->aaultra_sql.gain < 1) {
-                sql_para->aaultra_sql.gain = 1;
-            } else if (sql_para->aaultra_sql.gain > 10) {
-                sql_para->aaultra_sql.gain = 10;
-            } else {
+//            if (sql_para->aaultra_sql.gain < 1) {
+//                sql_para->aaultra_sql.gain = 1;
+//            } else if (sql_para->aaultra_sql.gain > 10) {
+//                sql_para->aaultra_sql.gain = 10;
+//            } else {
+//                sql_para->aaultra_sql.gain -= 0.1;
+//            }
+            if (sql_para->aaultra_sql.gain > 0.15) {
                 sql_para->aaultra_sql.gain -= 0.1;
             }
             break;
         case 3:
             if (sql_para->aaultra_sql.vol > VOL_MIN) {
                 sql_para->aaultra_sql.vol--;
-
-                data->send_para.aa_vol.flag = true;
-                data->send_para.aa_vol.rval = sql_para->aaultra_sql.vol;
+				data->set_send_para (sp_aa_vol, sql_para->aaultra_sql.vol);
                 qDebug()<<"vol changed!";
             }
             break;
@@ -220,17 +218,20 @@ void AAWidget::trans_key(quint8 key_code)
         switch (key_val->grade.val2) {
         case 1:
             if (sql_para->aaultra_sql.mode == single) {
-                sql_para->aaultra_sql.mode = series;
+                sql_para->aaultra_sql.mode = continuous;
             } else {
-                sql_para->aaultra_sql.mode = single;
+                sql_para->aaultra_sql.mode = continuous;
             }
             break;
         case 2:
-            if (sql_para->aaultra_sql.gain <1) {
-                sql_para->aaultra_sql.gain = 1;
-            } else if (sql_para->aaultra_sql.gain > 10) {
-                sql_para->aaultra_sql.gain = 10;
-            } else {
+//            if (sql_para->aaultra_sql.gain <1) {
+//                sql_para->aaultra_sql.gain = 1;
+//            } else if (sql_para->aaultra_sql.gain > 10) {
+//                sql_para->aaultra_sql.gain = 10;
+//            } else {
+//                sql_para->aaultra_sql.gain += 0.1;
+//            }
+            if (sql_para->aaultra_sql.gain < 9.95) {
                 sql_para->aaultra_sql.gain += 0.1;
             }
             break;
@@ -238,8 +239,7 @@ void AAWidget::trans_key(quint8 key_code)
             if (sql_para->aaultra_sql.vol < VOL_MAX) {
                 sql_para->aaultra_sql.vol++;
             }
-            data->send_para.aa_vol.flag = true;
-            data->send_para.aa_vol.rval = sql_para->aaultra_sql.vol;
+			data->set_send_para (sp_aa_vol, sql_para->aaultra_sql.vol);
             qDebug()<<"vol changed!";
             break;
         case 4:
@@ -267,9 +267,24 @@ void AAWidget::trans_key(quint8 key_code)
     fresh_setting();
 }
 
+void AAWidget::calc_aa_value (double * aa_val, double * aa_db, int * offset)
+{
+	int d;
+
+	d = (int)data->recv_para.ldata1_max - (int)data->recv_para.ldata1_min;      //最大值-最小值=幅值
+//	* offset = d / 100;
+    * offset = ( d - 1 / sql_para->aaultra_sql.gain / AA_FACTOR ) / 100;
+
+    * aa_val = (d - sql_para->aaultra_sql.aa_offset * 100) * sql_para->aaultra_sql.gain * AA_FACTOR;
+	* aa_db = 20 * log10 (* aa_val);
+    if(* aa_db < 0){
+        * aa_db = 0;
+    }
+}
+
 void AAWidget::fresh(bool f)
 {
-    int d;
+    int offset;
     double val,val_db;
 
     if (sql_para->aaultra_sql.mode == single) {
@@ -277,12 +292,8 @@ void AAWidget::fresh(bool f)
         timer2->stop();
     }
 
-    d = (int)data->recv_para.ldata1_max - (int)data->recv_para.ldata1_min;      //最大值-最小值=幅值
-    emit offset_suggest(d / 100);
-//    val = d * AA_FACTOR ;
-//    val_db = sql_para->aaultra_sql.gain * (((double)20) * log10(val) - sql_para->aaultra_sql.aa_offset);      //对数运算,再加上增益
-    val = (d - sql_para->aaultra_sql.aa_offset * 100 ) * sql_para->aaultra_sql.gain * AA_FACTOR;
-    val_db = 20 * log10(val);
+	calc_aa_value (&val, &val_db, &offset);
+    emit offset_suggest (offset);
 
     if(db < int(val_db)){
         db = int(val_db);      //每秒的最大值
@@ -367,7 +378,7 @@ void AAWidget::fresh_setting()
         ui->comboBox->setItemText(0,tr("检测模式    [连续]"));
     }
 
-    ui->comboBox->setItemText(1,tr("增益调节    [×%1]").arg(QString::number(sql_para->aaultra_sql.gain)));
+    ui->comboBox->setItemText(1,tr("增益调节    [×%1]").arg(QString::number(sql_para->aaultra_sql.gain, 'f', 1)) );
     ui->comboBox->setItemText(2,tr("音量调节    [×%1]").arg(QString::number(sql_para->aaultra_sql.vol)));
     ui->comboBox->setItemText(3,tr("黄色报警阈值[%1]dB").arg(QString::number(sql_para->aaultra_sql.low)));
     ui->comboBox->setItemText(4,tr("红色报警阈值[%1]dB").arg(QString::number(sql_para->aaultra_sql.high)));

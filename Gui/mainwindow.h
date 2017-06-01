@@ -14,6 +14,9 @@
 #include "IO/Modbus/modbus.h"
 #include <QPixmap>
 
+#define RESOLUTION_X		480
+#define RESOLUTION_Y		272
+
 class MainWindow : public QFrame
 {
     Q_OBJECT

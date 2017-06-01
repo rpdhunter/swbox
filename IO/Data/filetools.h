@@ -35,7 +35,7 @@ private:
 
     VectorList _data;
     MODE _mode;
-    WavFormatHeader *wfh1;
+    WaveFormat *wfh1;
     QString filepath;
     QString filename;
 

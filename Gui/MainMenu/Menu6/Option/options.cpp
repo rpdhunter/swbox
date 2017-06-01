@@ -95,8 +95,7 @@ void Options::saveOptions()
 
 void Options::saveFreq()
 {
-    data->send_para.freq.rval = (_freq == 50) ? 0 : 1;
-    data->send_para.freq.flag = 1;
+	data->set_send_para (sp_freq, (_freq == 50) ? 0 : 1);
     sql_para->freq_val = _freq;
     sqlcfg->sql_save(sql_para);
     emit fregChanged(_freq);
@@ -125,8 +124,7 @@ void Options::setBacklight()
     sql_para->backlight = _backlight;
     sqlcfg->sql_save(sql_para);
 
-    data->send_para.backlight.rval = _backlight;
-    data->send_para.backlight.flag = 1;        //背景设置是生效的,但是不保存的话还会复位
+	data->set_send_para (sp_backlight, _backlight);
 }
 
 void Options::saveAutoRec()
@@ -136,8 +134,7 @@ void Options::saveAutoRec()
     //rec1=1 rec2=0 tev_auto_rec.rval=1
     //rec1=0 rec2=1 tev_auto_rec.rval=2
     //rec1=1 rec2=1 tev_auto_rec.rval=3
-    data->send_para.tev_auto_rec.flag = true;
-    data->send_para.tev_auto_rec.rval = sql_para->tev1_sql.auto_rec + 2 * sql_para->tev2_sql.auto_rec;
+	data->set_send_para (sp_tev_auto_rec, sql_para->tev1_sql.auto_rec + 2 * sql_para->tev2_sql.auto_rec);
 }
 
 
@@ -283,6 +280,7 @@ void Options::trans_key(quint8 key_code)
             break;
         case 2:
             ui->slider_backlight->setValue(ui->slider_backlight->value() - 1);
+            data->set_send_para (sp_backlight, ui->slider_backlight->value () - 1);
             break;
         case 3:
             if(key_val->grade.val4 != 0){
@@ -337,6 +335,7 @@ void Options::trans_key(quint8 key_code)
             break;
         case 2:
             ui->slider_backlight->setValue(ui->slider_backlight->value() + 1);
+            data->set_send_para (sp_backlight, ui->slider_backlight->value () - 1);
             break;
         case 3:
             if(key_val->grade.val4 != 0){
@@ -390,139 +389,52 @@ void Options::refresh()
 
     ui->dateTimeEdit->setDateTime(_datetime);
     updateCheckBox();
-
-    data->send_para.backlight.rval = ui->slider_backlight->value()-1;
-    data->send_para.backlight.flag = 1;        //背景设置是生效的,但是不保存的话还会复位
-
+//	data->set_send_para (sp_backlight, ui->slider_backlight->value () - 1);
+	
+    ui->lab_freq->setFrameShadow(QFrame::Raised);
+    ui->lab_freq->setStyleSheet("QLabel {color:black;}");
+    ui->lab_backlight->setFrameShadow(QFrame::Raised);
+    ui->lab_backlight->setStyleSheet("QLabel {color:black;}");
+    ui->lab_datetime->setFrameShadow(QFrame::Raised);
+    ui->lab_datetime->setStyleSheet("QLabel {color:black;}");
+    ui->lab_auot_rec->setFrameShadow(QFrame::Raised);
+    ui->lab_auot_rec->setStyleSheet("QLabel {color:black;}");
+    ui->lab_closetime->setFrameShadow(QFrame::Raised);
+    ui->lab_closetime->setStyleSheet("QLabel {color:black;}");
+    ui->lab_lang->setFrameShadow(QFrame::Raised);
+    ui->lab_lang->setStyleSheet("QLabel {color:black;}");
+    ui->lineEdit_CloseTime->deselect();
+    ui->dateTimeEdit->setSelectedSection(QDateTimeEdit::NoSection);
     switch (key_val->grade.val3) {
-    case 0:
-        ui->lab_freq->setFrameShadow(QFrame::Raised);
-        ui->lab_freq->setStyleSheet("QLabel {color:black;}");
-        ui->lab_backlight->setFrameShadow(QFrame::Raised);
-        ui->lab_backlight->setStyleSheet("QLabel {color:black;}");
-        ui->lab_datetime->setFrameShadow(QFrame::Raised);
-        ui->lab_datetime->setStyleSheet("QLabel {color:black;}");
-        ui->lab_resettime->setFrameShadow(QFrame::Raised);
-        ui->lab_resettime->setStyleSheet("QLabel {color:black;}");
-        ui->lab_closetime->setFrameShadow(QFrame::Raised);
-        ui->lab_closetime->setStyleSheet("QLabel {color:black;}");
-        ui->lab_lang->setFrameShadow(QFrame::Raised);
-        ui->lab_lang->setStyleSheet("QLabel {color:black;}");
-
-        ui->lineEdit_CloseTime->deselect();
-//        ui->lineEdit_TimeReset->deselect();
-        ui->dateTimeEdit->setSelectedSection(QDateTimeEdit::NoSection);
-        break;
     case 1:
         ui->lab_freq->setFrameShadow(QFrame::Sunken);
         ui->lab_freq->setStyleSheet("QLabel {color:white;}");
-        ui->lab_backlight->setFrameShadow(QFrame::Raised);
-        ui->lab_backlight->setStyleSheet("QLabel {color:black;}");
-        ui->lab_datetime->setFrameShadow(QFrame::Raised);
-        ui->lab_datetime->setStyleSheet("QLabel {color:black;}");
-        ui->lab_resettime->setFrameShadow(QFrame::Raised);
-        ui->lab_resettime->setStyleSheet("QLabel {color:black;}");
-        ui->lab_closetime->setFrameShadow(QFrame::Raised);
-        ui->lab_closetime->setStyleSheet("QLabel {color:black;}");
-        ui->lab_lang->setFrameShadow(QFrame::Raised);
-        ui->lab_lang->setStyleSheet("QLabel {color:black;}");
-
-        ui->lineEdit_CloseTime->deselect();
-//        ui->lineEdit_TimeReset->deselect();
-        ui->dateTimeEdit->setSelectedSection(QDateTimeEdit::NoSection);
         break;
     case 2:
-        ui->lab_freq->setFrameShadow(QFrame::Raised);
-        ui->lab_freq->setStyleSheet("QLabel {color:black;}");
         ui->lab_backlight->setFrameShadow(QFrame::Sunken);
         ui->lab_backlight->setStyleSheet("QLabel {color:white;}");
-        ui->lab_datetime->setFrameShadow(QFrame::Raised);
-        ui->lab_datetime->setStyleSheet("QLabel {color:black;}");
-        ui->lab_resettime->setFrameShadow(QFrame::Raised);
-        ui->lab_resettime->setStyleSheet("QLabel {color:black;}");
-        ui->lab_closetime->setFrameShadow(QFrame::Raised);
-        ui->lab_closetime->setStyleSheet("QLabel {color:black;}");
-        ui->lab_lang->setFrameShadow(QFrame::Raised);
-        ui->lab_lang->setStyleSheet("QLabel {color:black;}");
-
-        ui->lineEdit_CloseTime->deselect();
-//        ui->lineEdit_TimeReset->deselect();
-        ui->dateTimeEdit->setSelectedSection(QDateTimeEdit::NoSection);
         break;
     case 3:
-        ui->lab_freq->setFrameShadow(QFrame::Raised);
-        ui->lab_freq->setStyleSheet("QLabel {color:black;}");
-        ui->lab_backlight->setFrameShadow(QFrame::Raised);
-        ui->lab_backlight->setStyleSheet("QLabel {color:black;}");
         ui->lab_datetime->setFrameShadow(QFrame::Sunken);
         ui->lab_datetime->setStyleSheet("QLabel {color:white;}");
-        ui->lab_resettime->setFrameShadow(QFrame::Raised);
-        ui->lab_resettime->setStyleSheet("QLabel {color:black;}");
-        ui->lab_closetime->setFrameShadow(QFrame::Raised);
-        ui->lab_closetime->setStyleSheet("QLabel {color:black;}");
-        ui->lab_lang->setFrameShadow(QFrame::Raised);
-        ui->lab_lang->setStyleSheet("QLabel {color:black;}");
-
-        ui->lineEdit_CloseTime->deselect();
-//        ui->lineEdit_TimeReset->deselect();
         if(key_val->grade.val4 != 0)            //只有进入编辑状态,才有选中
             ui->dateTimeEdit->setSelectedSection(ui->dateTimeEdit->currentSection());
         else
             ui->dateTimeEdit->setSelectedSection(QDateTimeEdit::NoSection);
         break;
     case 4:
-        ui->lab_freq->setFrameShadow(QFrame::Raised);
-        ui->lab_freq->setStyleSheet("QLabel {color:black;}");
-        ui->lab_backlight->setFrameShadow(QFrame::Raised);
-        ui->lab_backlight->setStyleSheet("QLabel {color:black;}");
-        ui->lab_datetime->setFrameShadow(QFrame::Raised);
-        ui->lab_datetime->setStyleSheet("QLabel {color:black;}");
-        ui->lab_resettime->setFrameShadow(QFrame::Sunken);
-        ui->lab_resettime->setStyleSheet("QLabel {color:white;}");
-        ui->lab_closetime->setFrameShadow(QFrame::Raised);
-        ui->lab_closetime->setStyleSheet("QLabel {color:black;}");
-        ui->lab_lang->setFrameShadow(QFrame::Raised);
-        ui->lab_lang->setStyleSheet("QLabel {color:black;}");
-
-        ui->lineEdit_CloseTime->deselect();
-        ui->dateTimeEdit->setSelectedSection(QDateTimeEdit::NoSection);
+        ui->lab_auot_rec->setFrameShadow(QFrame::Sunken);
+        ui->lab_auot_rec->setStyleSheet("QLabel {color:white;}");
         break;
     case 5:
-        ui->lab_freq->setFrameShadow(QFrame::Raised);
-        ui->lab_freq->setStyleSheet("QLabel {color:black;}");
-        ui->lab_backlight->setFrameShadow(QFrame::Raised);
-        ui->lab_backlight->setStyleSheet("QLabel {color:black;}");
-        ui->lab_datetime->setFrameShadow(QFrame::Raised);
-        ui->lab_datetime->setStyleSheet("QLabel {color:black;}");
-        ui->lab_resettime->setFrameShadow(QFrame::Raised);
-        ui->lab_resettime->setStyleSheet("QLabel {color:black;}");
         ui->lab_closetime->setFrameShadow(QFrame::Sunken);
         ui->lab_closetime->setStyleSheet("QLabel {color:white;}");
-        ui->lab_lang->setFrameShadow(QFrame::Raised);
-        ui->lab_lang->setStyleSheet("QLabel {color:black;}");
-
         ui->lineEdit_CloseTime->selectAll();
-        ui->dateTimeEdit->setSelectedSection(QDateTimeEdit::NoSection);
         break;
-
     case 6:
-        ui->lab_freq->setFrameShadow(QFrame::Raised);
-        ui->lab_freq->setStyleSheet("QLabel {color:black;}");
-        ui->lab_backlight->setFrameShadow(QFrame::Raised);
-        ui->lab_backlight->setStyleSheet("QLabel {color:black;}");
-        ui->lab_datetime->setFrameShadow(QFrame::Raised);
-        ui->lab_datetime->setStyleSheet("QLabel {color:black;}");
-        ui->lab_resettime->setFrameShadow(QFrame::Raised);
-        ui->lab_resettime->setStyleSheet("QLabel {color:black;}");
-        ui->lab_closetime->setFrameShadow(QFrame::Raised);
-        ui->lab_closetime->setStyleSheet("QLabel {color:black;}");
         ui->lab_lang->setFrameShadow(QFrame::Sunken);
         ui->lab_lang->setStyleSheet("QLabel {color:white;}");
-
-        ui->lineEdit_CloseTime->deselect();
-        ui->dateTimeEdit->setSelectedSection(QDateTimeEdit::NoSection);
         break;
-
     default:
         break;
     }

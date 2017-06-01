@@ -12,6 +12,21 @@
 #else
 #define SQL_PATH    "./sql.db"
 #endif
+
+#define TEV_HIGH			40
+#define TEV_LOW				20
+#define FPGA_THRESHOLD		0x200
+
+#define AA_VOL_DEFAULT				8
+#define AA_HIGH				40
+#define AA_LOW				20
+
+#define SYSTEM_FREQ			50
+#define BACK_LIGTH			4
+#define SHUT_DOWN_TIME		5
+#define LANGUAGE_DEF		CN
+#define MAX_REC_NUM			200
+
 enum LANGUAGE {
     CN = 0,
     EN = 1,
@@ -20,7 +35,7 @@ enum LANGUAGE {
 /* amplitude mode */
 enum TRIGGER_MODE {
     single = 0,
-    series = 1,
+    continuous = 1,
 };
 
 enum TEV_CHART_MODE {
@@ -85,9 +100,7 @@ private:
     SQL_PARA sql_para;
 };
 
-extern pthread_mutex_t sql_mutex;
-extern SqlCfg *sqlcfg;
-extern sqlite3 *pDB;
+extern SqlCfg * sqlcfg;
 
 void sqlite3_init(void);
 #endif // SQLCFG_H
