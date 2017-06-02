@@ -16,12 +16,12 @@ Menu2::Menu2(QWidget *parent, G_PARA *g_data) : QFrame(parent)
 
     main_title1 = new QLabel(this);
     main_title1->resize(main_title0->width(), main_title0->height());
-    main_title1->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m21.png);}");
+    main_title1->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m20.png);}");
     main_title1->move(main_title0->x() + 45, main_title0->y());
 
     main_title2 = new QLabel(this);
     main_title2->resize(main_title0->width(), main_title0->height());
-    main_title2->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m30.png);}");
+    main_title2->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m31.png);}");
     main_title2->move(main_title1->x() + 45, main_title0->y());
 
     main_title3 = new QLabel(this);
@@ -132,15 +132,13 @@ void Menu2::fresh_table(void)
         main_title1->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m22.png);}");
         main_title2->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m31.png);}");
         main_title3->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m42.png);}");
-//        main_title4->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m52.png);}");
-//        main_title5->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m62.png);}");
         main_title4->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m50.png);}");
         main_title5->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m60.png);}");
         main_title6->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m72.png);}");
     } else if (key_val->grade.val0 == 2 && key_val->grade.val1) {
         main_title0->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m10.png);}");
-        main_title1->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m22.png);}");
-        main_title2->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m30.png);}");
+        main_title1->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m20.png);}");
+        main_title2->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m32.png);}");
         main_title3->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m40.png);}");
         main_title4->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m50.png);}");
         main_title5->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m60.png);}");

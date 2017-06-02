@@ -142,14 +142,14 @@ SQL_PARA *SqlCfg::default_config(void)
 
 void sqlite3_init(void)
 {
-    SQL_PARA *dev_para;
+//    SQL_PARA *dev_para;
 
-    pthread_mutex_init(&sql_mutex, NULL);
+    pthread_mutex_init(&sql_mutex, NULL);       //互斥锁初始化
 
     sqlcfg = new SqlCfg();
 
     /* Load default para */
-    dev_para = sqlcfg->get_para();
+//    dev_para = sqlcfg->get_para();
 
 
 }

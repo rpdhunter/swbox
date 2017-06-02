@@ -11,8 +11,8 @@
 #ifndef _UART_OPER_H_
 #define _UART_OPER_H_
 
-int uart_set (int fd, int speed, int flow_ctrl, int databits, int stopbits, int parity);
-int uart_open (char * port, int speed, int flow_ctrl, int databits, int stopbits, int parity);
+int uart_set (int fd, int speed, int flow_ctrl, int databits, int stopbits, char parity);
+int uart_open (char * port, int speed, int flow_ctrl, int databits, int stopbits, char parity);
 void uart_close (int fd);
 int uart_recv (int fd, unsigned char * recv_buf, int data_len);
 int uart_send (int fd, unsigned char * send_buf, int data_len);

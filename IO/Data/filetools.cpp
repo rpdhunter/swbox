@@ -42,6 +42,8 @@ void FileTools::run()
 
 }
 
+
+
 void FileTools::saveDataFile()
 {
     QFile file;
@@ -248,7 +250,6 @@ void FileTools::saveWavFile()
 
 void FileTools::wavToMp3()
 {
-    //    QObject *parent;
     QString program = "/root/lame";
     QStringList arguments1,arguments2;
     arguments1 << "/tmp/out.wav" << filepath+".mp3";
@@ -256,10 +257,12 @@ void FileTools::wavToMp3()
 
     QProcess *myProcess1 = new QProcess;
     myProcess1->start(program, arguments1);
+    QObject::connect(myProcess1,SIGNAL(finished(int)),myProcess1,SLOT(deleteLater()));
 
     QProcess *myProcess2 = new QProcess;
     myProcess2->start(program, arguments2);
     qDebug()<<"mp3 file saved!";
+    QObject::connect(myProcess2,SIGNAL(finished(int)),myProcess2,SLOT(deleteLater()));
 }
 
 void FileTools::spaceControl(QString str)

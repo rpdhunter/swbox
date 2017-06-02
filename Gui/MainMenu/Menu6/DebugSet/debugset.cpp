@@ -518,13 +518,14 @@ void DebugSet::trans_key(quint8 key_code)
 void DebugSet::showWaveData(VectorList wv,MODE mod)
 {
     switch (mod) {
-    case 0:     //TEV
-        ui->lab_recWv->setText(tr("接到录波信号,通道%1").arg("TEV"));
+    case 0:     //TEV1
+        ui->lab_recWv->setText(tr("接到录波数据,通道%1，点数%2").arg("TEV1").arg(wv.length()));
         break;
-    case 1:     //AA超声
-        ui->lab_recWv->setText(tr("接到录波信号,通道%1").arg("AAUltrasonic"));
+    case 1:     //TEV2
+        ui->lab_recWv->setText(tr("接到录波数据,通道%1，点数%2").arg("TEV2").arg(wv.length()));
         break;
-    case 2:
+    case 2:     //AA超声
+        ui->lab_recWv->setText(tr("接到录波数据,通道%1").arg("AAUltrasonic"));
 
         break;
     case 3:

@@ -4,23 +4,26 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include "IO/SqlCfg/sqlcfg.h"
-
 #include <QThreadPool>
+//#include <time.h>
 
 // send parameters' register map
 static unsigned int spr_maps [sp_num] = {
-	FREQ_REG,			// sp_freq
-	BACKLIGHT_REG,		// sp_backlight
-	REC_START,			// sp_recstart
-	GROUP_NUM,			// sp_groupNum
-	AA_VOL,				// sp_aa_vol
-	READ_FPGA,			// sp_read_fpga
-	TEV_AUTO_REC,		// sp_tev_auto_rec
-	AA_RECORD_PLAY,		// sp_aa_record_play
-	TEV1_ZERO,			// sp_tev1_zero
-	TEV1_THRESHOLD,		// sp_tev1_threshold
-	TEV2_ZERO,			// sp_tev2_zero
-	TEV2_THRESHOLD,		// sp_tev2_threshold
+    FREQ_REG,			// sp_freq
+    BACKLIGHT_REG,		// sp_backlight
+    REC_START_AD1,			// sp_recstart
+    REC_START_AD2,			// sp_recstart
+    REC_START_AD3,			// sp_recstart
+    REC_START_AD4,			// sp_recstart
+    GROUP_NUM,			// sp_groupNum
+    AA_VOL,				// sp_aa_vol
+    READ_FPGA,			// sp_read_fpga
+    TEV_AUTO_REC,		// sp_tev_auto_rec
+    AA_RECORD_PLAY,		// sp_aa_record_play
+    TEV1_ZERO,			// sp_tev1_zero
+    TEV1_THRESHOLD,		// sp_tev1_threshold
+    TEV2_ZERO,			// sp_tev2_zero
+    TEV2_THRESHOLD,		// sp_tev2_threshold
 };
 
 //建立数据连接，完成线程的初始化工作
@@ -31,29 +34,67 @@ FifoData::FifoData(G_PARA *g_data)
         return;
     }
     tdata = g_data;     //与外部交互的数据指针
-    mode = Disable;
 
     regInit();      //寄存器初始化
 
-
-    tevData = new RecWave(g_data, MODE::TEV1);
+    //开启3个录波通道
+    tevData1 = new RecWave(g_data, MODE::TEV1);
+    tevData2 = new RecWave(g_data, MODE::TEV2);
     AAData = new RecWave(g_data, MODE::AA_Ultrasonic);
-
-    connect(tevData,SIGNAL(waveData(VectorList,MODE)),this,SLOT(recWaveComplete(VectorList,MODE)));
+    connect(tevData1,SIGNAL(waveData(VectorList,MODE)),this,SLOT(recWaveComplete(VectorList,MODE)));
+    connect(tevData2,SIGNAL(waveData(VectorList,MODE)),this,SLOT(recWaveComplete(VectorList,MODE)));
     connect(AAData,SIGNAL(waveData(VectorList,MODE)),this,SLOT(recWaveComplete(VectorList,MODE)));
 
+    //脉冲通道每隔45ms变化一次
     timer = new QTimer;
     timer->setInterval(45);
     connect(timer,SIGNAL(timeout()),this,SLOT(change_channel()));
-
     timer->start();
     channel_flag = true;
 
+    //声音播放
     playVoice = false;
 
 
     /* Start qthread */
     this->start();
+}
+
+void FifoData::regInit()
+{
+    //这是xilinx的函数，【可能】用于打开存储设备
+    int fd, res;
+
+    if ((fd = open (DEV_VMEM, O_RDWR | O_SYNC)) == -1) {
+        printf ("Open mem device failed!\n");
+        return;
+    }
+
+    res = -1;
+    do {
+        if ((vbase0 = init_vbase (fd, AXI_STREAM_BASE0, AXI_STREAM_SIZE)) == NULL) {
+            break;
+        }
+        if ((vbase1 = init_vbase (fd, AXI_STREAM_BASE1, AXI_STREAM_SIZE)) == NULL) {
+            break;
+        }
+        if ((vbase2 = init_vbase (fd, AXI_STREAM_BASE2, AXI_STREAM_SIZE)) == NULL) {
+            break;
+        }
+        if ((vbase3 = init_vbase (fd, AXI_STREAM_BASE3, AXI_STREAM_SIZE)) == NULL) {
+            break;
+        }
+        res = 0;
+    } while (0);
+
+    if (res < 0) {
+        close (fd);
+        return;
+    }
+
+    init_vbase_2 (vbase1);
+
+    init_send_params (sqlcfg);
 }
 
 volatile unsigned int *FifoData::init_vbase(int vmem_fd, unsigned int base, unsigned int size)
@@ -104,7 +145,10 @@ void FifoData::init_send_params (SqlCfg * psc)
 {
 	tdata->set_send_para (sp_freq, psc->get_para()->freq_val);
 	tdata->set_send_para (sp_backlight, psc->get_para()->backlight);
-	tdata->set_send_para (sp_recstart, 0);
+    tdata->set_send_para (sp_recstart_ad1, 0);
+    tdata->set_send_para (sp_recstart_ad2, 0);
+    tdata->set_send_para (sp_recstart_ad3, 0);
+    tdata->set_send_para (sp_recstart_ad4, 0);
 	tdata->set_send_para (sp_groupNum, 0);		//tdata->send_para.groupNum.flag = false;?????
 	tdata->set_send_para (sp_aa_vol, psc->get_para ()->aaultra_sql.vol);
 	tdata->set_send_para (sp_read_fpga, 0);
@@ -116,70 +160,26 @@ void FifoData::init_send_params (SqlCfg * psc)
 	tdata->set_send_para (sp_tev2_threshold, psc->get_para()->tev2_sql.fpga_threshold);
 }
 
-void FifoData::regInit()
-{
-    //这是xilinx的函数，【可能】用于打开存储设备
-    int fd, res;
-
-    if ((fd = open (DEV_VMEM, O_RDWR | O_SYNC)) == -1) {
-        printf ("Open mem device failed!\n");
-        return;
-    }
-
-	res = -1;
-	do {
-		if ((vbase0 = init_vbase (fd, AXI_STREAM_BASE0, AXI_STREAM_SIZE)) == NULL) {
-			break;
-		}
-		if ((vbase1 = init_vbase (fd, AXI_STREAM_BASE1, AXI_STREAM_SIZE)) == NULL) {
-			break;
-		}
-		if ((vbase2 = init_vbase (fd, AXI_STREAM_BASE2, AXI_STREAM_SIZE)) == NULL) {
-			break;
-		}
-		if ((vbase3 = init_vbase (fd, AXI_STREAM_BASE3, AXI_STREAM_SIZE)) == NULL) {
-			break;
-		}
-		res = 0;
-	} while (0);
-
-	if (res < 0) {
-		close (fd);
-        return;
-	}
-
-	init_vbase_2 (vbase1);
-
-	init_send_params (sqlcfg);
-}
-
 //开启录波,功能待开发
 void FifoData::startRecWave(int mode,int time)
 {
     if(mode == 0){
-        this->mode = TEV1;
+//        mode = TEV1;
+        tevData1->recStart();
     }
     else if(mode == 1){
-        this->mode = TEV2;
+//        mode = TEV2;
+        tevData2->recStart();
     }
     else if(mode == 2){
-        this->mode = AA_Ultrasonic;
-    }
-    else{
-        this->mode = Disable;
-    }
-
-    qDebug()<<"receive startRecWave signal! ... "<<mode;
-
-    if(mode == TEV1){
-        tevData->recStart();
-    }
-    else if(mode == AA_Ultrasonic){
+//        mode = AA_Ultrasonic;
         AAData->recStart(time);
     }
     else{
-        //to be
+//        mode = Disable;
     }
+
+    qDebug()<<"receive startRecWave signal! ... "<<mode;
     send_para ();
 }
 
@@ -198,7 +198,8 @@ void FifoData::change_channel()
 	unsigned int val;
 
     //每隔一段时间，改变组号，为了改变FPGA发送的脉冲数据通道
-    if (tevData->status == RecWave::Free && AAData->status == RecWave::Free) {
+    //加判断条件是为了防止录波时造成组号混乱
+    if (tevData1->status == RecWave::Free && tevData2->status == RecWave::Free && AAData->status == RecWave::Free) {
         if (channel_flag) {
             val = 0x0100;
         }
@@ -223,7 +224,6 @@ void FifoData::stop_play_voice()
 void FifoData::run(void)
 {
     int ret = 0;
-//    int tmp = 0;
 
     while (true) {
         ret = recv_data (vbase0, (unsigned int *)&(tdata->recv_para));       //接收数据
@@ -253,16 +253,8 @@ void FifoData::run(void)
         }
 
         if(tdata->recv_para.recComplete >0 && tdata->recv_para.recComplete <=16){
-            if(tdata->recv_para.recComplete == 1){
-                usleep(1);          //上传录波数据时，休眠时间较短
-            }
-            else if(tdata->recv_para.recComplete == 4){
-                usleep(1);          //上传录波数据时，休眠时间较短
-            }
-            else if(tdata->recv_para.recComplete == 16){
-                usleep(1);          //上传录波数据时，休眠时间较短
-            }
 
+            usleep(1);          //上传录波数据时，休眠时间较短
         }
         else{
             msleep(45);        //空闲时，休眠时间较长
@@ -279,6 +271,7 @@ void FifoData::check_send_param (RPARA pp [], int index, unsigned int data_mask,
         temp = (data_mask << 16) | pp [index].rval;
         send_data (vbase, &temp, 1);
         if(index != sp_read_fpga && index != sp_groupNum){
+//        if(index != sp_groupNum){
             qDebug("WRITE_REG = 0x%08x", temp);
         }
         pp [index].flag = false;
@@ -414,15 +407,16 @@ void FifoData::recvRecData ()
     //多路同时录波，约定首先传送AD编号较小的通道数据
     //
     //下面算法基于以上生成
+    MODE mode;
     int x = tdata->recv_para.recComplete;
     if (x > 15 || x <= 0) {
         mode = Disable;
     }
     else if (x & 1) {
-        mode = TEV1;   //TEV
+        mode = TEV1;   //TEV1
     }
     else if (x & 2) {
-        mode = Disable;   //AD2暂时不用
+        mode = TEV2;   //TEV2
     }
     else if (x & 4) {
         mode = AA_Ultrasonic;   //AA超声
@@ -433,26 +427,56 @@ void FifoData::recvRecData ()
 
     switch (mode) {
     case TEV1:
-        if(tevData->status == RecWave::Free){
-            tevData->status = RecWave::Working;
-            tevData->startWork();
+        if(tevData2->status == RecWave::Working){
+            tevData2->status = RecWave::Waiting;        //TEV1优先级高于TEV2
+        }
+        if(tevData1->status == RecWave::Free){
+            tevData1->status = RecWave::Working;
+            qDebug()<<"start new rec!!!!!!!!! mode = TEV1!";
+            tevData1->startWork();
         }
         else{
-            tevData->work();
+            tevData1->work();
         }
         break;
 
-    case AA_Ultrasonic:
-        if(tevData->status == RecWave::Working){        //TEV通道正在使用，AA先暂停
-            AAData->status = RecWave::Pending;
+    case TEV2:
+        switch (tevData2->status) {
+        case RecWave::Free:
+            if(tevData1->status == RecWave::Free){
+                tevData2->status = RecWave::Working;
+                qDebug()<<"start new rec!!!!!!!!! mode = TEV2!";
+                tevData2->startWork();
+            }
+            else{
+                tevData2->status = RecWave::Waiting;
+            }
+            break;
+        case RecWave::Working:      //继续上传
+            tevData2->work();
+            break;
+        case RecWave::Waiting:      //改变状态
+            if(tevData1->status == RecWave::Free){
+                tevData2->status = RecWave::Working;
+                tevData2->startWork();
+            }
+            break;
+        default:
+            break;
         }
-        else if(AAData->status == RecWave::Free){
+//        if(tevData2->status == RecWave::Free){
+//            tevData2->status = RecWave::Working;
+//            tevData2->startWork();
+//        }
+//        else{
+//            tevData2->work();
+//        }
+//        break;
+
+    case AA_Ultrasonic:
+        if(AAData->status == RecWave::Free){
             AAData->status = RecWave::Working;
             AAData->startWork();
-        }
-        else if(AAData->status == RecWave::Pending){
-            AAData->status = RecWave::Working;
-            AAData->work();
         }
         else{
             AAData->work();
@@ -468,11 +492,9 @@ void FifoData::recvRecData ()
 void FifoData::read_fpga()
 {
 	tdata->set_send_para (sp_read_fpga, 1);
-	//sendpara ();
     check_send_param (tdata->send_para.send_params,sp_read_fpga, READ_FPGA, vbase1);
-	usleep (1);
+//    usleep (1);
 	tdata->set_send_para (sp_read_fpga, 0);
-	//sendpara ();
     check_send_param (tdata->send_para.send_params,sp_read_fpga, READ_FPGA, vbase1);
 }
 

@@ -16,7 +16,7 @@ public:
 
     enum Status{
         Working,
-        Pending,
+        Waiting,
         Free
     } status;           //工作状态，只能由外部更改
 
@@ -35,7 +35,6 @@ public slots:
 
 
 private:
-    int num;
     G_PARA *tdata;
     int groupNum;       //组号
     VectorList _data;    //录波数据
@@ -43,7 +42,7 @@ private:
     QTime time_start;         //时标
     QTimer *timer;       //计时器（超声波使用）
     MODE mode;          //工作模式
-
+    int groupNum_Offset;         //组号偏置
 
 };
 

@@ -14,7 +14,10 @@
 enum send_params {
 	sp_freq = 0,				//频率（FREQ_REG）
 	sp_backlight,				//背光（BACKLIGHT_REG）
-	sp_recstart,				//0为常态,1为开始录播,2为开始上传（REC_START）
+    sp_recstart_ad1,				//0为常态,1为开始录播,2为开始上传（REC_START_AD1）
+    sp_recstart_ad2,				//0为常态,1为开始录播,2为开始上传（REC_START_AD2）
+    sp_recstart_ad3,				//0为常态,1为开始录播,2为开始上传（REC_START_AD3）
+    sp_recstart_ad4,				//0为常态,1为开始录播,2为开始上传（REC_START_AD4）
 	sp_groupNum,				//传输录波数据的组号（GROUP_NUM）
 	sp_aa_vol,					//AA超声音量调节（AA_VOL）
 	sp_read_fpga,				//读数据标志位（READ_FPGA）
@@ -24,6 +27,7 @@ enum send_params {
 	sp_tev1_threshold,			//TEV脉冲阈值(TEV1_THRESHOLD)
 	sp_tev2_zero,				//TEV参考零点(TEV2_ZERO)
 	sp_tev2_threshold,			//TEV脉冲阈值(TEV2_THRESHOLD)
+    sp_tev_pulse_channel,       //TEV脉冲通道(TEV_PULSE_CHANNEL)
 	
 	sp_num
 };

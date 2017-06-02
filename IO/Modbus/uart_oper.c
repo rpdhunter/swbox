@@ -20,7 +20,7 @@
 
 #include "uart_oper.h"
 
-int uart_set (int fd, int speed, int flow_ctrl, int databits, int stopbits, int parity)
+int uart_set (int fd, int speed, int flow_ctrl, int databits, int stopbits, char parity)
 {
 	int i, speed_num;
 	int speed_arr [] = {B115200, B38400, B19200, B9600, B4800, B2400, B1200, B300};
@@ -155,7 +155,7 @@ int uart_set (int fd, int speed, int flow_ctrl, int databits, int stopbits, int 
 	return 0;
 }
 
-int uart_open (char * port, int speed, int flow_ctrl, int databits, int stopbits, int parity)
+int uart_open (char * port, int speed, int flow_ctrl, int databits, int stopbits, char parity)
 {
 	int fd, flags;
 

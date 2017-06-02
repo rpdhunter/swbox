@@ -66,8 +66,6 @@ void RecWaveManage::playVoiceProgress(int p, int all, bool f)
     ui->label_All->setText(QString::number(all/100.0, 'f', 1) + "s" );
 }
 
-
-
 void RecWaveManage::working(CURRENT_KEY_VALUE *val)
 {
     if (val == NULL) {
@@ -343,6 +341,7 @@ void RecWaveManage::readVoiceData()
     }
 
     emit play_voice(list);
+
 
     file.close();
 

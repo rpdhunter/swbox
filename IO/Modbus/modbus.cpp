@@ -81,7 +81,7 @@ void Modbus::run()
     while (1) {
         len = uart_recv (pd_dev.com_fd, recv_buf, sizeof (recv_buf));
         if (len > 0) {
-            show_msg ("recv msg", (char *)recv_buf, len);
+            show_msg ((char *)"recv msg", (char *)recv_buf, len);
             modbus_com_recv (&pd_dev, recv_buf, len);
         }
         else {
@@ -93,26 +93,6 @@ void Modbus::run()
 
 }
 
-void Modbus::readData()
-{
-    QByteArray buf;
-    buf = serial->readAll();
-    if(buf!=NULL)
-    {
-        qDebug()<<"receive serial data:"<<buf;
-        //        QString str =
-    }
-    else{
-        qDebug()<<"receive serial data failed";
-    }
-}
-
-void Modbus::writeData()
-{
-    QByteArray str;
-    str = "abc";
-    serial->write(str);
-}
 
 void Modbus::tev_modbus_data(int val, int pluse)
 {
@@ -163,7 +143,7 @@ int Modbus::init_modbus_dev(Modbus::modbus_dev_t *ndp)
 
     /* export rs485 rw/rd line */
     ndp->rs485_rw_pin = GPIO_RS485_RW;
-    if (gpio_open (ndp->rs485_rw_pin, "out") < 0) {
+    if (gpio_open (ndp->rs485_rw_pin, (char *)"out") < 0) {
         printf ("failed to export gpio %d\n", GPIO_RS485_RW);
         return -1;
     }
@@ -171,7 +151,7 @@ int Modbus::init_modbus_dev(Modbus::modbus_dev_t *ndp)
     gpio_set (ndp->rs485_rw_pin, RS485_RD);
 
     /* open uart */
-    ndp->com_fd = uart_open (UART_PORT, ndp->baundrate, 0, 8, 1, 'N'); //打开串口，返回文件描述符
+    ndp->com_fd = uart_open ((char*)UART_PORT, ndp->baundrate, 0, 8, 1, 'N'); //打开串口，返回文件描述符
     if (ndp->com_fd < 0) {
         printf ("failed to open port %s\n", UART_PORT);
         return -1;
@@ -259,7 +239,7 @@ int Modbus::modbus_send_msg(Modbus::modbus_dev_t *ndp)
         }
 
         if (len == ndp->send_len) {
-            show_msg ("sent msg", (char *)ndp->send_buf, ndp->send_len);
+            show_msg ((char *)"sent msg", (char *)ndp->send_buf, ndp->send_len);
             ndp->send_len = 0;
             return 0;
         }

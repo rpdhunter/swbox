@@ -41,8 +41,6 @@ signals:
     void closeTimeChanged(int m);
 
 public slots:
-    void readData();
-    void writeData();
     void tev_modbus_data(int val, int pluse);
     void aa_modbus_data(int val);
 
@@ -119,10 +117,7 @@ private:
 
     unsigned short state, tevAmplitude, tevPluse, aaAmplitude;
 
-    QSerialPort *serial;
-
-
-
+//    QSerialPort *serial;
 
 };
 

@@ -231,7 +231,7 @@ void AAWidget::trans_key(quint8 key_code)
 //            } else {
 //                sql_para->aaultra_sql.gain += 0.1;
 //            }
-            if (sql_para->aaultra_sql.gain < 9.95) {
+            if (sql_para->aaultra_sql.gain < 99.95) {
                 sql_para->aaultra_sql.gain += 0.1;
             }
             break;
