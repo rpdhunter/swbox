@@ -85,6 +85,7 @@ typedef struct SQL_PARA {
     int backlight;                  //背光（需要FPGA同步）
     int close_time;                 //自动关机时间
     int max_rec_num;                //录波文件保存个数
+    bool full_featured;              //是否开启全功能
 
 } SQL_PARA;
 

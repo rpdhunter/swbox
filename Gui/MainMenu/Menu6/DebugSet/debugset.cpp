@@ -81,25 +81,19 @@ void DebugSet::iniUi()
 
     readSql();
 
-    //录波数据列表初始化
-    QDir dir = QDir("/root/WaveForm/");
-    int r = ui->listWidget->currentRow();
-    ui->listWidget->clear();
+//    //录波数据列表初始化
+//    QDir dir = QDir("/root/WaveForm/");
+//    int r = ui->listWidget->currentRow();
+//    ui->listWidget->clear();
 
-    QStringList filters;
-    filters << "*.DAT" ;
-    dir.setNameFilters(filters);
-    QStringList list = dir.entryList(QDir::Files);
-    list.replaceInStrings(".DAT", "");
-    ui->listWidget->addItems(list);
-
-//    dir.setPath("/mmc/sdcard/WaveForm/");
-//    list = dir.entryList(QDir::Files);
-
-//    list.replaceInStrings(".DAT", "(SDCard)");
-
+//    QStringList filters;
+//    filters << "*.DAT" ;
+//    dir.setNameFilters(filters);
+//    QStringList list = dir.entryList(QDir::Files);
+//    list.replaceInStrings(".DAT", "");
 //    ui->listWidget->addItems(list);
-    ui->listWidget->setCurrentRow(r);       //保存选择状态
+
+//    ui->listWidget->setCurrentRow(r);       //保存选择状态
 
 }
 
@@ -143,6 +137,8 @@ void DebugSet::readSql()
     //高级
     ui->lineEdit_MaxRecNum->setText(QString("%1").arg(sql_para->max_rec_num));
     ui->lineEdit_time->setText(QString("%1").arg(sql_para->aaultra_sql.time));
+    ui->rbn_2channel_OK->setChecked(sql_para->full_featured);
+    ui->rbn_2channel_Cancel->setChecked(!sql_para->full_featured);
 }
 
 void DebugSet::working(CURRENT_KEY_VALUE *val)
@@ -184,11 +180,11 @@ void DebugSet::trans_key(quint8 key_code)
                 }
 //                saveSql();
             }
-            else if(key_val->grade.val3 == 4 && key_val->grade.val4 != 0){  //查看波形
-//                qDebug()<<"AAAA!" << ui->listWidget->currentRow();
-                key_val->grade.val5 = 1;
-                recWaveForm->working(key_val,ui->listWidget->currentItem()->text());
-            }
+//            else if(key_val->grade.val3 == 4 && key_val->grade.val4 != 0){  //查看波形
+////                qDebug()<<"AAAA!" << ui->listWidget->currentRow();
+//                key_val->grade.val5 = 1;
+//                recWaveForm->working(key_val,ui->listWidget->currentItem()->text());
+//            }
             else{                                                   //保存
                 saveSql();                
             }
@@ -228,7 +224,7 @@ void DebugSet::trans_key(quint8 key_code)
         }
         else{
             key_val->grade.val4 = 0;    //退出三级菜单
-            ui->listWidget->setCurrentRow(-1);
+//            ui->listWidget->setCurrentRow(-1);
         }
 
         break;
@@ -239,7 +235,7 @@ void DebugSet::trans_key(quint8 key_code)
                     key_val->grade.val3 --;
                 }
                 else{
-                    key_val->grade.val3 = 4;
+                    key_val->grade.val3 = 3;
                 }
                 iniUi();        //刷新列表
             }
@@ -269,18 +265,18 @@ void DebugSet::trans_key(quint8 key_code)
                         key_val->grade.val4 --;
                     }
                     else{
-                        key_val->grade.val4 = 3;
+                        key_val->grade.val4 = 4;
                     }
 
                     break;
-                case 4:                 //录波列表
-                    if(ui->listWidget->currentRow() != 0){
-                        ui->listWidget->setCurrentRow(ui->listWidget->currentRow()-1);
-                    }
-                    else{
-                        ui->listWidget->setCurrentRow(ui->listWidget->count()-1);
-                    }
-                    break;
+//                case 4:                 //录波列表
+//                    if(ui->listWidget->currentRow() != 0){
+//                        ui->listWidget->setCurrentRow(ui->listWidget->currentRow()-1);
+//                    }
+//                    else{
+//                        ui->listWidget->setCurrentRow(ui->listWidget->count()-1);
+//                    }
+//                    break;
                 default:
                     break;
                 }
@@ -294,7 +290,7 @@ void DebugSet::trans_key(quint8 key_code)
     case KEY_DOWN:
         if(pass){
             if(key_val->grade.val4 == 0){   //判断在二级菜单
-                if(key_val->grade.val3<4){
+                if(key_val->grade.val3<3){
 
                     key_val->grade.val3 ++;
                 }
@@ -325,21 +321,21 @@ void DebugSet::trans_key(quint8 key_code)
                     }
                     break;
                 case 3:                     //高级
-                    if(key_val->grade.val4 < 3){
+                    if(key_val->grade.val4 < 4){
                         key_val->grade.val4 ++;
                     }
                     else{
                         key_val->grade.val4 = 1;
                     }
                     break;
-                case 4:                     //列表
-                    if(ui->listWidget->currentRow()<ui->listWidget->count()-1){
-                        ui->listWidget->setCurrentRow(ui->listWidget->currentRow()+1);
-                    }
-                    else{
-                        ui->listWidget->setCurrentRow(0);
-                    }
-                    break;
+//                case 4:                     //列表
+//                    if(ui->listWidget->currentRow()<ui->listWidget->count()-1){
+//                        ui->listWidget->setCurrentRow(ui->listWidget->currentRow()+1);
+//                    }
+//                    else{
+//                        ui->listWidget->setCurrentRow(0);
+//                    }
+//                    break;
                 default:
                     break;
                 }
@@ -414,6 +410,9 @@ void DebugSet::trans_key(quint8 key_code)
                         if(sql_para->max_rec_num >20)
                             sql_para->max_rec_num -= 10;
                     }
+                    else if(key_val->grade.val4 == 4){
+                        sql_para->full_featured = !sql_para->full_featured;
+                    }
 
                     break;
                 default:
@@ -431,9 +430,9 @@ void DebugSet::trans_key(quint8 key_code)
         if(pass){
             if(key_val->grade.val4 == 0 && key_val->grade.val3 != 0){   //必须第三层处于工作状态
                 key_val->grade.val4 =1;
-                if(key_val->grade.val3 == 4){
-                    ui->listWidget->setCurrentRow(0);
-                }
+//                if(key_val->grade.val3 == 4){
+//                    ui->listWidget->setCurrentRow(0);
+//                }
             }
             else{
                 switch (key_val->grade.val3) {
@@ -492,6 +491,9 @@ void DebugSet::trans_key(quint8 key_code)
                     }
                     else if(key_val->grade.val4 == 3){
                         sql_para->max_rec_num += 10;
+                    }
+                    else if(key_val->grade.val4 == 4){
+                        sql_para->full_featured = !sql_para->full_featured;
                     }
                     break;
 
@@ -645,5 +647,67 @@ void DebugSet::on_comboBox_currentIndexChanged(int index)
     }
     else{
         ui->lineEdit_time->setEnabled(false);
+    }
+}
+
+QSize CustomTabStyle::sizeFromContents(QStyle::ContentsType type, const QStyleOption *option, const QSize &size, const QWidget *widget) const
+{
+    QSize s = QProxyStyle::sizeFromContents(type, option, size, widget);
+    if (type == QStyle::CT_TabBarTab) {
+        s.transpose();
+        s.rwidth() = 120; // 设置每个tabBar中item的大小
+        s.rheight() = 50;
+    }
+    return s;
+}
+
+void CustomTabStyle::drawControl(QStyle::ControlElement element, const QStyleOption *option, QPainter *painter, const QWidget *widget) const
+{
+    if (element == CE_TabBarTabLabel) {
+        if (const QStyleOptionTab *tab = qstyleoption_cast<const QStyleOptionTab *>(option)) {
+            QRect allRect = tab->rect;
+
+            if (tab->state & QStyle::State_Selected) {
+                painter->save();
+                painter->setPen(0x89cfff);
+                painter->setBrush(QBrush(Qt::darkCyan));
+                painter->drawRect(allRect.adjusted(6, 6, -6, -6));
+                painter->restore();
+            }
+            QTextOption option;
+            option.setAlignment(Qt::AlignCenter);
+            if (tab->state & QStyle::State_Selected) {
+                painter->setPen(0xf8fcff);
+            }
+            else {
+                painter->setPen(0x5d5d5d);
+            }
+
+
+            //这里很奇怪，只能显示2个字符，所以迫不得已做了这个转换
+            QString str;
+            if(tab->text == "0"){
+                str = "TEV";
+            }
+            else if(tab->text == "1"){
+                str = tr("AA Ultrasonic");
+//                str = tr("AA超声");
+            }
+            else if(tab->text == "2"){
+                str = tr("Advanced Setting");
+//                str = tr("高级设置");
+            }
+            else if(tab->text == "3"){
+//                str = tr("Record Show");
+//                str = tr("波形查看");
+            }
+            painter->drawText(allRect, str, option);
+            //                qDebug()<<"tab text is:"<<tab->text;
+            return;
+        }
+    }
+
+    if (element == CE_TabBarTab) {
+        QProxyStyle::drawControl(element, option, painter, widget);
     }
 }

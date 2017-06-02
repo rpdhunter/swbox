@@ -38,7 +38,7 @@ private:
 
     MODE mode;
 
-    int x, min, max;
+    double x, min, max;
 
     double scale;
 

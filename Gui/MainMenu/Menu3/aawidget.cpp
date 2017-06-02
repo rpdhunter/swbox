@@ -8,11 +8,6 @@
 #include <qwt_plot_layout.h>
 
 
-#define AMP_FACTOR_J27_680P 22560.0f
-#define AMP_FACTOR_J27_1N   12200.0f
-#define RESOLUTION_AD_LOW   (5.0/262144.0)
-#define AA_FACTOR   ( RESOLUTION_AD_LOW * 1000000 / AMP_FACTOR_J27_680P )
-
 #define SETTING_NUM 7           //设置菜单条目数
 
 
@@ -85,6 +80,7 @@ AAWidget::AAWidget(QWidget *parent, G_PARA *g_data) :
     recWaveForm = new RecWaveForm(this);
     recWaveForm->hide();
     connect(this, SIGNAL(send_key(quint8)), recWaveForm, SLOT(trans_key(quint8)));
+
 }
 
 AAWidget::~AAWidget()
@@ -220,7 +216,7 @@ void AAWidget::trans_key(quint8 key_code)
             if (sql_para->aaultra_sql.mode == single) {
                 sql_para->aaultra_sql.mode = continuous;
             } else {
-                sql_para->aaultra_sql.mode = continuous;
+                sql_para->aaultra_sql.mode = single;
             }
             break;
         case 2:
@@ -271,7 +267,8 @@ void AAWidget::calc_aa_value (double * aa_val, double * aa_db, int * offset)
 {
 	int d;
 
-	d = (int)data->recv_para.ldata1_max - (int)data->recv_para.ldata1_min;      //最大值-最小值=幅值
+    d = (int)data->recv_para.ldata1_max - (int)data->recv_para.ldata1_min ;      //最大值-最小值=幅值
+//    qDebug()<<"max="<<data->recv_para.ldata1_max << " min = "<<data->recv_para.ldata1_min;
 //	* offset = d / 100;
     * offset = ( d - 1 / sql_para->aaultra_sql.gain / AA_FACTOR ) / 100;
 
@@ -336,9 +333,6 @@ void AAWidget::fresh(bool f)
     if (val < 1) {
         max_val_range = 1;
         ui->label_range->setText("μV");                                                //range fresh
-    } else if (val < 10) {
-        max_val_range = 10;
-        ui->label_range->setText("10μV");                                               //range fresh
     } else if (val < 100) {
         max_val_range = 100;
         ui->label_range->setText("100μV");                                              //range fresh
@@ -350,6 +344,8 @@ void AAWidget::fresh(bool f)
         ui->label_range->setText("10mV");                                               //range fresh
     }
     ui->progressBar->setValue(val * 100 / max_val_range);
+
+//    ui->label_range->setText(QString("%1").arg(data->recv_para.ldata1_max * 4 * sql_para->aaultra_sql.gain * AA_FACTOR));
 }
 
 void AAWidget::fresh_1()

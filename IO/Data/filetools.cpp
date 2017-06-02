@@ -109,7 +109,7 @@ QString FileTools::getFilePath()
         filename.prepend("TEV1_");
         break;
     case TEV2:     //TEV2
-
+        filename.prepend("TEV2_");
         break;
     case AA_Ultrasonic:     //AA超声
         filename.prepend("AAUltrasonic_");

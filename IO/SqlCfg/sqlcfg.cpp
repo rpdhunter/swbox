@@ -137,6 +137,8 @@ SQL_PARA *SqlCfg::default_config(void)
 
     sql_para.max_rec_num = MAX_REC_NUM;
 
+    sql_para.full_featured = 0;
+
     return &sql_para;
 }
 

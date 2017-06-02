@@ -6,6 +6,9 @@
 #include <qwt_plot_layout.h>
 #include <QFile>
 #include <QScrollBar>
+#include "IO/SqlCfg/sqlcfg.h"
+
+#define SHOW_FACTOR 4.0     //保存默认的也是最小的纵轴间距
 
 RecWaveForm::RecWaveForm(QWidget *parent) :
     QWidget(parent)
@@ -21,7 +24,7 @@ RecWaveForm::RecWaveForm(QWidget *parent) :
 
     curve = new QwtPlotCurve();
     curve->setPen(QPen(Qt::darkBlue, 0, Qt::SolidLine, Qt::RoundCap));
-    curve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
+//    curve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
     curve->attach(plot);
 
 
@@ -136,8 +139,11 @@ void RecWaveForm::trans_key(quint8 key_code)
 
 void RecWaveForm::setData(QString str)
 {
-    if(str.contains("TEV")){
+    if(str.contains("TEV1")){
         mode = TEV1;
+    }
+    else if(str.contains("TEV2")){
+        mode = TEV2;
     }
     else if(str.contains("AAUltrasonic")){
         mode = AA_Ultrasonic;
@@ -166,20 +172,37 @@ void RecWaveForm::setData(QString str)
     wave.clear();
     max=0;
     min=0;
+    double v_real = 0;
+
     while (!in.atEnd()) {
         in >> t1 >> t2 >> v;
-        if(mode == TEV1){
-            p = QPointF(i*0.01,v);
-        }
-        else if(mode == AA_Ultrasonic){
-            p = QPointF(i/320.0,v);
+
+        switch (mode) {
+        case TEV1:     //TEV1
+            v_real = v * sqlcfg->get_para()->tev1_sql.gain * TEV_FACTOR;
+            break;
+        case TEV2:     //TEV2
+            v_real = v * sqlcfg->get_para()->tev2_sql.gain * TEV_FACTOR ;
+            break;
+        case AA_Ultrasonic:     //AA超声
+            v_real = (v * 4) * sqlcfg->get_para()->aaultra_sql.gain * AA_FACTOR;
+            break;
+        default:
+            break;
         }
 
-        if(v>max){
-            max = v;
+        if(mode == TEV1 || mode == TEV2){
+            p = QPointF(i*0.01,v_real);
         }
-        else if(v<min){
-            min = v;
+        else if(mode == AA_Ultrasonic){
+            p = QPointF(i/320.0,v_real);
+        }
+
+        if(v_real>max){
+            max = v_real;
+        }
+        else if(v_real<min){
+            min = v_real;
         }
 
         wave.append(p);
@@ -187,12 +210,13 @@ void RecWaveForm::setData(QString str)
         i++;
     }
 
-    if(min > -300){
-        min = -300;
+    if(min > -SHOW_FACTOR){
+        min = -SHOW_FACTOR;
     }
-    if(max < 300){
-        max = 300;
+    if(max < SHOW_FACTOR){
+        max = SHOW_FACTOR;
     }
+
     plot->setAxisScale(QwtPlot::yLeft, min, max);
     /* remove gap */
     plot->axisWidget(QwtPlot::xBottom)->setMargin(0);
@@ -225,30 +249,46 @@ void RecWaveForm::setData(VectorList buf, MODE mod)
     wave.clear();
     max=0;
     min=0;
+    double v_real = 0;
     for (int i = 0; i < buf.length(); ++i) {
-        if(mode == TEV1){
-            p = QPointF(i*0.01,buf.at(i));
-        }
-        else if(mode == AA_Ultrasonic){
-            p = QPointF(i/320.0,buf.at(i));
+
+        switch (mode) {
+        case TEV1:     //TEV1
+            v_real = sqlcfg->get_para()->tev1_sql.gain * TEV_FACTOR * buf.at(i);
+            p = QPointF(i*0.01, v_real);
+//            p = QPointF(i*0.01, buf.at(i));
+            break;
+        case TEV2:     //TEV2
+            v_real = sqlcfg->get_para()->tev2_sql.gain * TEV_FACTOR * buf.at(i);
+            p = QPointF(i*0.01, v_real);
+//            p = QPointF(i*0.01, buf.at(i));
+            break;
+        case AA_Ultrasonic:     //AA超声
+            v_real = (buf.at(i) <<  2 ) * sqlcfg->get_para()->aaultra_sql.gain * AA_FACTOR;
+            p = QPointF(i/320.0, v_real);
+//            p = QPointF(i/320.0, buf.at(i));
+            break;
+        default:
+            break;
         }
 
-        if(buf.at(i)>max){
-            max = buf.at(i);
+        if(v_real>max){
+            max = v_real;
         }
-        else if(buf.at(i)<min){
-            min = buf.at(i);
+        else if(v_real<min){
+            min = v_real;
         }
 
         wave.append(p);
     }
 
-    if(min > -300){
-        min = -300;
+    if(min > -SHOW_FACTOR){
+        min = -SHOW_FACTOR;
     }
-    if(max < 300){
-        max = 300;
+    if(max < SHOW_FACTOR ){
+        max = SHOW_FACTOR;
     }
+
     plot->setAxisScale(QwtPlot::yLeft, min, max);
     /* remove gap */
     plot->axisWidget(QwtPlot::xBottom)->setMargin(0);

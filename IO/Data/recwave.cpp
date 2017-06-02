@@ -85,7 +85,7 @@ void RecWave::work ()
             for (i = 0; i < 256; i++) {
                 _data.append((qint32)tdata->recv_para.recData [ i + 2 ] - 0x8000);
             }
-            printf ("receive recWaveData! send_groupNum=%d\n", tdata->send_para.send_params [sp_groupNum].rval);
+//            printf ("receive recWaveData! send_groupNum=%d\n", tdata->send_para.send_params [sp_groupNum].rval);
             groupNum++;
             tdata->set_send_para (sp_groupNum, groupNum + groupNum_Offset);
         }

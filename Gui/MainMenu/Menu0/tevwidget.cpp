@@ -17,7 +17,7 @@
 
 #define VALUE_MAX  60           //RPPD最大值
 #define SETTING_NUM 8           //设置菜单条目数
-#define TEV_FACTOR  (1.8*1000/65536)
+
 
 
 TEVWidget::TEVWidget(G_PARA *data, Channel channel, QWidget *parent) :

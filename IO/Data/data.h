@@ -11,6 +11,13 @@
 #define MAX(a, b)				((a) > (b) ? (a) : (b))
 #define REC_DATA_SIZE			259
 
+#define AMP_FACTOR_J27_680P 22560.0f
+#define AMP_FACTOR_J27_1N   12200.0f
+#define RESOLUTION_AD_LOW   (5.0/262144.0)
+#define AA_FACTOR   ( RESOLUTION_AD_LOW * 1000000 / AMP_FACTOR_J27_680P )
+
+#define TEV_FACTOR  (1.8*1000/65536)
+
 enum send_params {
 	sp_freq = 0,				//频率（FREQ_REG）
 	sp_backlight,				//背光（BACKLIGHT_REG）

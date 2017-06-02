@@ -255,32 +255,34 @@ void MainMenu::trans_key(quint8 key_code)
             if (key_val.grade.val0 == GRADE0_MENU_MIN_NUM) {
                 key_val.grade.val0 = GRADE0_MENU_MAX_NUM;
             } else {
-#ifdef SIMPLEMODE
-                key_val.grade.val0 -= 3;
-#else
-                if(key_val.grade.val0 == 6){
-                    key_val.grade.val0 = 3;
+                if(sqlcfg->get_para()->full_featured){
+                    if(key_val.grade.val0 == 6){
+                        key_val.grade.val0 = 3;
+                    }
+                    else{
+                        key_val.grade.val0--;
+                    }
                 }
                 else{
-                    key_val.grade.val0--;
+                    key_val.grade.val0 -= 3;
                 }
-#endif
             }
             break;
         case KEY_RIGHT:
             if (key_val.grade.val0 == GRADE0_MENU_MAX_NUM) {
                 key_val.grade.val0 = GRADE0_MENU_MIN_NUM;
             } else {
-#ifdef SIMPLEMODE
-                key_val.grade.val0 += 3;
-#else
-                if(key_val.grade.val0 == 3){
-                    key_val.grade.val0 = 6;
+                if(sqlcfg->get_para()->full_featured){
+                    if(key_val.grade.val0 == 3){
+                        key_val.grade.val0 = 6;
+                    }
+                    else{
+                        key_val.grade.val0++;
+                    }
                 }
                 else{
-                    key_val.grade.val0++;
+                    key_val.grade.val0 += 3;
                 }
-#endif
             }
             break;
         case KEY_OK:
