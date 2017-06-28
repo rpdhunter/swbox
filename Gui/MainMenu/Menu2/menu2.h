@@ -18,6 +18,8 @@ public:
     void sysReset();
     void maxReset();
 
+    void showWaveData(VectorList buf, MODE mod);
+
 signals:
     void send_title_val(CURRENT_KEY_VALUE val);
     void send_key(quint8);
@@ -25,7 +27,11 @@ signals:
 public slots:
     void trans_key(quint8);
     void get_origin_points(QVector<QPoint> p,int group);
+    void showLeftData(int db,int p);
+    void showRightData(int db,int p);
 
+private slots:
+    void fresh_table(void);
 
 private:
     CURRENT_KEY_VALUE *key_val;
@@ -34,7 +40,7 @@ private:
     QLabel  *main_title0, *main_title1, *main_title2, *main_title3,
         *main_title4, *main_title5, *main_title6;
 
-    void fresh_table(void);
+
 };
 
 #endif // MENU2_H

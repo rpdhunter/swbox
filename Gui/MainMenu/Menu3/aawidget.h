@@ -42,7 +42,7 @@ private:
     void maxReset();
     void calc_aa_value (double * aa_val, double * aa_db, int * offset);
 
-    SQL_PARA *sql_para;
+    SQL_PARA sql_para;
 
     int db;         //每秒的最大值，用于给图形传递参数
     double max_db;  //最大值

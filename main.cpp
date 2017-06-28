@@ -7,6 +7,7 @@
 #include <QTranslator>
 #include "Gui/mainwindow.h"
 #include "IO/SqlCfg/sqlcfg.h"
+#include "IO/Data/data.h"
 
 void print(void);
 void print_centor(void);
@@ -18,14 +19,15 @@ int main(int argc, char *argv[])
     /* System print */
     print_centor();
 
-//    qDebug()<<"current thread ID: "<<a.thread()->currentThreadId();
+
 
     /* Sqlite3 init */
     sqlite3_init();
 
+//    qDebug()<<"current thread ID: "<<a.thread()->currentThreadId();
+
+
     QApplication a(argc, argv);
-
-
 
 
 //定义字体
@@ -71,7 +73,7 @@ void print_centor(void)
     printf("\t\tQT PROJ : swbox\n");
     printf("\t     QT version : %d.%d.%d\n", QT_VERSION >> 16,
            0xf & (QT_VERSION >> 8), 0xf & QT_VERSION);
-    printf("\t QT GUI version : 1.1\n");
+    printf("\t QT GUI version : %d.%d\n",VERSION_MAJOR,VERSION_MINOR);
     printf("\t    QT platform : %s\n", str);
     printf("      QT GUI Copyrights : zdit\n");
     printf("\t  QT GUI Author : RPD\n");

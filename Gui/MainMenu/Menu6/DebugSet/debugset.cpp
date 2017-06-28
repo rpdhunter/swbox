@@ -15,7 +15,7 @@ DebugSet::DebugSet(QWidget *parent,G_PARA *g_data) : QFrame(parent),ui(new Ui::D
 
     data = g_data;
 
-    sql_para = sqlcfg->get_para();
+    sql_para = *sqlcfg->get_para();
 
     this->resize(455, 185);
     this->move(2, 31);
@@ -51,9 +51,9 @@ DebugSet::DebugSet(QWidget *parent,G_PARA *g_data) : QFrame(parent),ui(new Ui::D
 
     resetPassword();
 
-    recWaveForm = new RecWaveForm(this);
-    recWaveForm->hide();
-    connect(this, SIGNAL(send_key(quint8)), recWaveForm, SLOT(trans_key(quint8)));
+//    recWaveForm = new RecWaveForm(this);
+//    recWaveForm->hide();
+//    connect(this, SIGNAL(send_key(quint8)), recWaveForm, SLOT(trans_key(quint8)));
 
 }
 
@@ -109,11 +109,11 @@ void DebugSet::resetPassword()
 
 void DebugSet::saveSql()
 {
-    sqlcfg->sql_save(sql_para);
+    sqlcfg->sql_save(&sql_para);
 
     //这些设置中，只有这两个量是需要写入FPGA才能生效的
-	data->set_send_para (sp_tev1_zero, 0x8000 - sql_para->tev1_sql.fpga_zero);
-	data->set_send_para (sp_tev1_threshold, sql_para->tev1_sql.fpga_threshold);
+    data->set_send_para (sp_tev1_zero, 0x8000 - sql_para.tev1_sql.fpga_zero);
+    data->set_send_para (sp_tev1_threshold, sql_para.tev1_sql.fpga_threshold);
 
     qDebug()<<"debug para saved!";
     emit update_statusBar(tr("【调试模式】设置已保存！"));
@@ -122,23 +122,23 @@ void DebugSet::saveSql()
 void DebugSet::readSql()
 {
     //TEV
-    ui->lineEdit_TEV1_THRESHOLD->setText(QString("%1").arg(sql_para->tev1_sql.fpga_threshold) );
-    ui->lineEdit_TEV1_ZERO->setText(QString("%1").arg(sql_para->tev1_sql.fpga_zero) );
-    ui->lineEdit_TEV1_NOISE->setText(QString("%1").arg(sql_para->tev1_sql.tev_offset1) );
+    ui->lineEdit_TEV1_THRESHOLD->setText(QString("%1").arg(sql_para.tev1_sql.fpga_threshold) );
+    ui->lineEdit_TEV1_ZERO->setText(QString("%1").arg(sql_para.tev1_sql.fpga_zero) );
+    ui->lineEdit_TEV1_NOISE->setText(QString("%1").arg(sql_para.tev1_sql.tev_offset1) );
 
-    ui->lineEdit_TEV2_THRESHOLD->setText(QString("%1").arg(sql_para->tev2_sql.fpga_threshold) );
-    ui->lineEdit_TEV2_ZERO->setText(QString("%1").arg(sql_para->tev2_sql.fpga_zero) );
-    ui->lineEdit_TEV2_NOISE->setText(QString("%1").arg(sql_para->tev2_sql.tev_offset1) );
+    ui->lineEdit_TEV2_THRESHOLD->setText(QString("%1").arg(sql_para.tev2_sql.fpga_threshold) );
+    ui->lineEdit_TEV2_ZERO->setText(QString("%1").arg(sql_para.tev2_sql.fpga_zero) );
+    ui->lineEdit_TEV2_NOISE->setText(QString("%1").arg(sql_para.tev2_sql.tev_offset1) );
 
     //AA
-    ui->lineEdit_AA_Step->setText(QString("%1").arg(sql_para->aaultra_sql.aa_step));
-    ui->lineEdit_AA_offset->setText(QString("%1").arg(sql_para->aaultra_sql.aa_offset));
+    ui->lineEdit_AA_Step->setText(QString("%1").arg(sql_para.aaultra_sql.aa_step));
+    ui->lineEdit_AA_offset->setText(QString("%1").arg(sql_para.aaultra_sql.aa_offset));
 
     //高级
-    ui->lineEdit_MaxRecNum->setText(QString("%1").arg(sql_para->max_rec_num));
-    ui->lineEdit_time->setText(QString("%1").arg(sql_para->aaultra_sql.time));
-    ui->rbn_2channel_OK->setChecked(sql_para->full_featured);
-    ui->rbn_2channel_Cancel->setChecked(!sql_para->full_featured);
+    ui->lineEdit_MaxRecNum->setText(QString("%1").arg(sql_para.max_rec_num));
+    ui->lineEdit_time->setText(QString("%1").arg(sql_para.aaultra_sql.time));
+    ui->rbn_2channel_OK->setChecked(sql_para.full_featured);
+    ui->rbn_2channel_Cancel->setChecked(!sql_para.full_featured);
 }
 
 void DebugSet::working(CURRENT_KEY_VALUE *val)
@@ -196,6 +196,7 @@ void DebugSet::trans_key(quint8 key_code)
                 this->widget->hide();
                 ui->tabWidget->show();
                 pass = true;
+                sql_para = *sqlcfg->get_para();     //重新初始化数值显示
 
                 iniUi();
                 key_val->grade.val3 = 1;
@@ -358,22 +359,22 @@ void DebugSet::trans_key(quint8 key_code)
                 case 1:         //TEV
                     switch (key_val->grade.val4) {
                     case 1:
-                        sql_para->tev1_sql.fpga_threshold--;
+                        sql_para.tev1_sql.fpga_threshold--;
                         break;
                     case 2:
-                        sql_para->tev1_sql.fpga_zero--;
+                        sql_para.tev1_sql.fpga_zero--;
                         break;
                     case 3:
-                        sql_para->tev1_sql.tev_offset1--;
+                        sql_para.tev1_sql.tev_offset1--;
                         break;
                     case 4:
-                        sql_para->tev2_sql.fpga_threshold--;
+                        sql_para.tev2_sql.fpga_threshold--;
                         break;
                     case 5:
-                        sql_para->tev2_sql.fpga_zero--;
+                        sql_para.tev2_sql.fpga_zero--;
                         break;
                     case 6:
-                        sql_para->tev2_sql.tev_offset1--;
+                        sql_para.tev2_sql.tev_offset1--;
                         break;
                     default:
                         break;
@@ -381,11 +382,11 @@ void DebugSet::trans_key(quint8 key_code)
                     break;
                 case 2:     //AA
                     if(key_val->grade.val4 == 1){
-                        if(sql_para->aaultra_sql.aa_step > 0.25)
-                            sql_para->aaultra_sql.aa_step -= 0.5;
+                        if(sql_para.aaultra_sql.aa_step > 0.25)
+                            sql_para.aaultra_sql.aa_step -= 0.5;
                     }
                     else if(key_val->grade.val4 == 2){
-                        sql_para->aaultra_sql.aa_offset --;
+                        sql_para.aaultra_sql.aa_offset --;
                     }
                     break;
                 case 3:     //高级
@@ -407,11 +408,11 @@ void DebugSet::trans_key(quint8 key_code)
                         }
                     }
                     else if(key_val->grade.val4 == 3){
-                        if(sql_para->max_rec_num >20)
-                            sql_para->max_rec_num -= 10;
+                        if(sql_para.max_rec_num >20)
+                            sql_para.max_rec_num -= 10;
                     }
                     else if(key_val->grade.val4 == 4){
-                        sql_para->full_featured = !sql_para->full_featured;
+                        sql_para.full_featured = !sql_para.full_featured;
                     }
 
                     break;
@@ -442,22 +443,22 @@ void DebugSet::trans_key(quint8 key_code)
                 case 1:     //TEV
                     switch (key_val->grade.val4) {
                     case 1:
-                        sql_para->tev1_sql.fpga_threshold++;
+                        sql_para.tev1_sql.fpga_threshold++;
                         break;
                     case 2:
-                        sql_para->tev1_sql.fpga_zero++;
+                        sql_para.tev1_sql.fpga_zero++;
                         break;
                     case 3:
-                        sql_para->tev1_sql.tev_offset1++;
+                        sql_para.tev1_sql.tev_offset1++;
                         break;
                     case 4:
-                        sql_para->tev2_sql.fpga_threshold++;
+                        sql_para.tev2_sql.fpga_threshold++;
                         break;
                     case 5:
-                        sql_para->tev2_sql.fpga_zero++;
+                        sql_para.tev2_sql.fpga_zero++;
                         break;
                     case 6:
-                        sql_para->tev2_sql.tev_offset1++;
+                        sql_para.tev2_sql.tev_offset1++;
                         break;
                     default:
                         break;
@@ -465,10 +466,10 @@ void DebugSet::trans_key(quint8 key_code)
                     break;
                 case 2:     //AA
                     if(key_val->grade.val4 == 1){
-                        sql_para->aaultra_sql.aa_step += 0.5;
+                        sql_para.aaultra_sql.aa_step += 0.5;
                     }
                     else if(key_val->grade.val4 == 2){
-                        sql_para->aaultra_sql.aa_offset ++;
+                        sql_para.aaultra_sql.aa_offset ++;
                     }
                     break;
                 case 3:     //高级
@@ -490,10 +491,10 @@ void DebugSet::trans_key(quint8 key_code)
                         }
                     }
                     else if(key_val->grade.val4 == 3){
-                        sql_para->max_rec_num += 10;
+                        sql_para.max_rec_num += 10;
                     }
                     else if(key_val->grade.val4 == 4){
-                        sql_para->full_featured = !sql_para->full_featured;
+                        sql_para.full_featured = !sql_para.full_featured;
                     }
                     break;
 
@@ -609,34 +610,39 @@ void DebugSet::fresh()
             }
             break;
         case 3:         //高级
-            if(key_val->grade.val4 == 0){
-                ui->comboBox->setStyleSheet("QComboBox { background: lightGray }");
-                ui->lineEdit_time->deselect();
-                ui->lineEdit_MaxRecNum->deselect();
-            }
-            else if(key_val->grade.val4 == 1){
+            ui->comboBox->setStyleSheet("QComboBox { background: lightGray }");
+            ui->lineEdit_time->deselect();
+            ui->lineEdit_MaxRecNum->deselect();
+            ui->rbn_2channel_OK->setStyleSheet("");
+            ui->rbn_2channel_Cancel->setStyleSheet("");
+            switch (key_val->grade.val4) {
+            case 0:
+                break;
+            case 1:
                 ui->comboBox->setStyleSheet("QComboBox { background: gray }");
-                ui->lineEdit_time->deselect();
-                ui->lineEdit_MaxRecNum->deselect();
-            }
-            else if(key_val->grade.val4 == 2){
-                ui->comboBox->setStyleSheet("QComboBox { background: lightGray }");
+                break;
+            case 2:
                 ui->lineEdit_time->selectAll();
-                ui->lineEdit_MaxRecNum->deselect();
-            }
-            else if(key_val->grade.val4 == 3){
-                ui->comboBox->setStyleSheet("QComboBox { background: lightGray }");
-                ui->lineEdit_time->deselect();
+                break;
+            case 3:
                 ui->lineEdit_MaxRecNum->selectAll();
+                break;
+            case 4:
+                if(sql_para.full_featured){
+                    ui->rbn_2channel_OK->setStyleSheet("QRadioButton {background: gray }");
+                }
+                else{
+                    ui->rbn_2channel_Cancel->setStyleSheet("QRadioButton {background: gray }");
+                }
+                break;
+            default:
+                break;
             }
             break;
         default:
             break;
         }
-
-
     }
-
 }
 
 

@@ -46,7 +46,7 @@ void BarChart::fresh(void)
     for (i = 1; i < CHART_NUM; i++) {
         if (barchart_data[i].height < *low) {
             barchart_data[i].color = QColor(Qt::green);
-        } else if (barchart_data[i].height > *high) {
+        } else if (barchart_data[i].height >= *high) {
             barchart_data[i].color = QColor(Qt::red);
         } else {
             barchart_data[i].color = QColor(Qt::yellow);

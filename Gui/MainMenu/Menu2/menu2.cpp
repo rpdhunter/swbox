@@ -49,7 +49,7 @@ Menu2::Menu2(QWidget *parent, G_PARA *g_data) : QFrame(parent)
     faultlocation = new FaultLocation(g_data, this);
 
     connect(this, SIGNAL(send_key(quint8)), faultlocation, SLOT(trans_key(quint8)));
-
+    connect(faultlocation,SIGNAL(fresh_parent()),this,SLOT(fresh_table()));
 }
 
 void Menu2::working(CURRENT_KEY_VALUE *val)
@@ -71,7 +71,12 @@ void Menu2::sysReset()
 
 void Menu2::maxReset()
 {
-//    aaultrasonic->maxReset();
+    //    aaultrasonic->maxReset();
+}
+
+void Menu2::showWaveData(VectorList buf, MODE mod)
+{
+    faultlocation->showWaveData(buf,mod);
 }
 
 void Menu2::trans_key(quint8 key_code)
@@ -125,6 +130,16 @@ void Menu2::get_origin_points(QVector<QPoint> p, int group)
     faultlocation->get_origin_points(p,group);
 }
 
+void Menu2::showLeftData(int db, int p)
+{
+    faultlocation->showLeftData(db,p);
+}
+
+void Menu2::showRightData(int db, int p)
+{
+    faultlocation->showRightData(db,p);
+}
+
 void Menu2::fresh_table(void)
 {
     if (key_val->grade.val0 == 2 && !key_val->grade.val1) {
@@ -133,7 +148,7 @@ void Menu2::fresh_table(void)
         main_title2->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m31.png);}");
         main_title3->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m42.png);}");
         main_title4->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m50.png);}");
-        main_title5->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m60.png);}");
+        main_title5->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m62.png);}");
         main_title6->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m72.png);}");
     } else if (key_val->grade.val0 == 2 && key_val->grade.val1) {
         main_title0->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m10.png);}");

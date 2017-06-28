@@ -58,7 +58,7 @@ MainMenu::MainMenu(QWidget *parent, G_PARA *g_data) : QFrame(parent)
     menu4 = new Menu4(this);
     menu4->hide();
 
-    menu5 = new Menu5(this);
+    menu5 = new Menu5(this, g_data);
     menu5->hide();
 
     menu6 = new Menu6(this, g_data);
@@ -105,6 +105,9 @@ MainMenu::MainMenu(QWidget *parent, G_PARA *g_data) : QFrame(parent)
     //modbus相关
     connect(menu0,SIGNAL(tev_modbus_data(int,int)),this,SIGNAL(tev_modbus_data(int,int)));
     connect(menu3,SIGNAL(aa_modbus_data(int)),this,SIGNAL(aa_modbus_data(int)));
+
+    connect(menu0,SIGNAL(tev_modbus_data(int,int)),menu2,SLOT(showLeftData(int,int)));
+    connect(menu1,SIGNAL(tev_modbus_data(int,int)),menu2,SLOT(showRightData(int,int)));
 
     //故障定位相关
     connect(menu0,SIGNAL(origin_pluse_points(QVector<QPoint>,int)),menu2,SLOT(get_origin_points(QVector<QPoint>,int)));
@@ -213,17 +216,7 @@ void MainMenu::fresh_title(CURRENT_KEY_VALUE val)
         }
         break;
     case MENU5:
-        if (!val.grade.val1) {
-            menu_title_name->setText(tr("智能巡检"));
-        } else if (val.grade.val1 == 1){
-            menu_title_name->setText(tr("智能巡检-载入数据"));
-        } else if (val.grade.val1 == 2) {
-            menu_title_name->setText(tr("智能巡检-环境记录"));
-        } else if (val.grade.val1 == 3){
-            menu_title_name->setText(tr("智能巡检-背景记录"));
-        } else if (val.grade.val1 == 4) {
-            menu_title_name->setText(tr("智能巡检-测试部位"));
-        }
+        menu_title_name->setText(tr("电缆局放检测"));
         break;
     case MENU6:
         if (!val.grade.val1) {
@@ -252,11 +245,15 @@ void MainMenu::trans_key(quint8 key_code)
     if (!key_val.grade.val1) {                                                  //current grade0 menu
         switch (key_code) {
         case KEY_LEFT:
+            if(key_val.grade.val0 == 5){
+                emit switch_rfct_mode(0);
+            }
+
             if (key_val.grade.val0 == GRADE0_MENU_MIN_NUM) {
                 key_val.grade.val0 = GRADE0_MENU_MAX_NUM;
             } else {
                 if(sqlcfg->get_para()->full_featured){
-                    if(key_val.grade.val0 == 6){
+                    if(key_val.grade.val0 == 5){
                         key_val.grade.val0 = 3;
                     }
                     else{
@@ -267,14 +264,24 @@ void MainMenu::trans_key(quint8 key_code)
                     key_val.grade.val0 -= 3;
                 }
             }
+
+            if(key_val.grade.val0 == 5){
+                emit switch_rfct_mode(1);
+            }
             break;
+
         case KEY_RIGHT:
+
+            if(key_val.grade.val0 == 5){
+                emit switch_rfct_mode(0);
+            }
+
             if (key_val.grade.val0 == GRADE0_MENU_MAX_NUM) {
                 key_val.grade.val0 = GRADE0_MENU_MIN_NUM;
             } else {
                 if(sqlcfg->get_para()->full_featured){
                     if(key_val.grade.val0 == 3){
-                        key_val.grade.val0 = 6;
+                        key_val.grade.val0 = 5;
                     }
                     else{
                         key_val.grade.val0++;
@@ -284,6 +291,11 @@ void MainMenu::trans_key(quint8 key_code)
                     key_val.grade.val0 += 3;
                 }
             }
+
+            if(key_val.grade.val0 == 5){
+                emit switch_rfct_mode(1);
+            }
+
             break;
         case KEY_OK:
         case KEY_UP:
@@ -305,18 +317,29 @@ void MainMenu::showWaveData(VectorList buf,MODE mod)
         menu6->showWaveData(buf,mod);
         qDebug()<<"menu6 show wave data!";
     }
-    if(menu0->isVisible()){
+    if(menu0->isVisible() && mod == TEV1){
         menu0->showWaveData(buf,mod);
         qDebug()<<"menu0 show wave data!";
     }
-    if(menu1->isVisible()){
+    if(menu1->isVisible() && mod == TEV2){
         menu1->showWaveData(buf,mod);
         qDebug()<<"menu1 show wave data!";
     }
-    if(menu3->isVisible()){
+    if(menu3->isVisible() && mod == AA_Ultrasonic){
         menu3->showWaveData(buf,mod);
         qDebug()<<"menu3 show wave data!";
     }
+
+    if(menu2->isVisible() && mod == TEV_Double){
+        menu2->showWaveData(buf,mod);
+        qDebug()<<"menu3 show wave data!";
+    }
+
+//    if(menu5->isVisible() && (mod == TEV1 || mod == TEV2 ) ){
+//        menu5->showWaveData(buf,mod);
+//        qDebug()<<"menu3 show wave data!";
+//    }
+
 }
 
 void MainMenu::fresg_freq(int fre)
@@ -345,6 +368,8 @@ void MainMenu::playVoiceProgress(int p, int all,bool f)
 {
     menu6->playVoiceProgress(p,all,f);
 }
+
+
 
 
 

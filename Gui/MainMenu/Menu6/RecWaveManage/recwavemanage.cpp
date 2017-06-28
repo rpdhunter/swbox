@@ -81,7 +81,7 @@ void RecWaveManage::working(CURRENT_KEY_VALUE *val)
 void RecWaveManage::listWdigetIni()
 {
     //录波数据列表初始化
-//    QDir dir = QDir("/root/WaveForm/");
+    QDir dir = QDir("/root/WaveForm/");
     int r = listWidget->currentRow();
     listWidget->clear();
 
@@ -93,6 +93,7 @@ void RecWaveManage::listWdigetIni()
     listWidget->addItems(list);
 
     listWidget->setCurrentRow(r);       //保存选择状态
+
 }
 
 void RecWaveManage::trans_key(quint8 key_code)
@@ -293,6 +294,10 @@ void RecWaveManage::deleteAll()
 {
     qDebug()<<"delete All";
     QStringList list = dir.entryList(QDir::Files);
+//    QStringList list = dir.entryList();
+    qDebug()<<"to be delete number:"<<list.length();
+//    qDebug()<<"to be delete number:"<<dir.entryInfoList().length();
+
     foreach (QString l, list) {
         dir.remove(l);
     }

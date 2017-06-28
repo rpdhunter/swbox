@@ -17,7 +17,7 @@ FileTools::FileTools(VectorList data, MODE mode)
 
 FileTools::~FileTools()
 {
-    qDebug()<<"new thread save completed!";
+    qDebug()<<"new thread save completed! mode="<<_mode;
 }
 
 void FileTools::run()
@@ -34,11 +34,11 @@ void FileTools::run()
         wavToMp3();
     }
 
-	system ("sync");
-
     //空间管理
     spaceControl("/root/WaveForm/");
     spaceControl("/mmc/sdcard/WaveForm/");
+
+    system ("sync");
 
 }
 
@@ -73,12 +73,25 @@ void FileTools::saveDataFile()
         QDataStream out(&file);
         out.setByteOrder(QDataStream::LittleEndian);
         short a;
-        for(int i=0;i<_data.length();i++){
-            out << (quint32)(i+1);
-            out << (quint32)0xFF;
-            a = (qint16)_data[i];
-            out << a;
+        if(_mode == TEV_Double){
+            for(int i=0;i<_data.length()/2;i++){
+                out << (quint32)(i+1);
+                out << (quint32)0xFF;
+                a = (qint16)_data[i];
+                out << a;
+                a = (qint16)_data[i + _data.length()/2];
+                out << a;
+            }
         }
+        else {
+            for(int i=0;i<_data.length();i++){
+                out << (quint32)(i+1);
+                out << (quint32)0xFF;
+                a = (qint16)_data[i];
+                out << a;
+            }
+        }
+
 
         if(file.copy("/mmc/sdcard/WaveForm/" + filename + ".DAT")){
             qDebug()<<"copy " + filename + ".DAT to SDCard succeed!";
@@ -110,6 +123,9 @@ QString FileTools::getFilePath()
         break;
     case TEV2:     //TEV2
         filename.prepend("TEV2_");
+        break;
+    case TEV_Double:     //TEV_Double
+        filename.prepend("TEVDouble_");
         break;
     case AA_Ultrasonic:     //AA超声
         filename.prepend("AAUltrasonic_");
@@ -153,12 +169,23 @@ void FileTools::saveCfgFile()
     file.open(QIODevice::WriteOnly | QIODevice::Text);
     QTextStream out(&file);
     out << "wave1,,1999" << "\n";
-    out << "1,1A,0D" << "\n";
-    out << "1,UA,,,V,1.000000,0.000000,0,-32768,32767,1.000000,1.000000,S" << "\n";
-    //    out << "50.000000" << "\n";
-    out << sqlcfg->get_para()->freq_val << ".000000" << "\n";
-    out << "1" << "\n";
-    out << "3200," << _data.length() << "\n";     //点数可变
+    if(_mode == TEV_Double){
+        out << "2,2A,0D" << "\n";
+        out << "1,UA,,,V,1.000000,0.000000,0,-32768,32767,1.000000,1.000000,S" << "\n";
+        out << "2,UB,,,V,1.000000,0.000000,0,-32768,32767,1.000000,1.000000,S" << "\n";
+        out << sqlcfg->get_para()->freq_val << ".000000" << "\n";
+        out << "1" << "\n";
+        out << "3200," << _data.length()/2 << "\n";     //点数可变
+    }
+    else{
+        out << "1,1A,0D" << "\n";
+        out << "1,UA,,,V,1.000000,0.000000,0,-32768,32767,1.000000,1.000000,S" << "\n";
+        out << sqlcfg->get_para()->freq_val << ".000000" << "\n";
+        out << "1" << "\n";
+        out << "3200," << _data.length() << "\n";     //点数可变
+    }
+
+
     out << QDateTime::currentDateTime().toString() << "\n";
     out << QDateTime::currentDateTime().toString() << "\n";
     out << "BINARY" << "\n";
@@ -280,7 +307,7 @@ void FileTools::spaceControl(QString str)
             }
         }
 
-		system ("sync");
+//		system ("sync");
     }
 }
 

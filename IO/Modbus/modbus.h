@@ -60,6 +60,11 @@ private:
         md_rd_reg_aa_mag,
         md_rd_reg_aa_severity,
 
+		/* suggest value */
+        md_rd_reg_tev_nb_sug = 0x0030,
+        md_rd_reg_tev_zb_sug,
+        md_rd_reg_aa_bias_sug,
+
         /* read and write */
         md_rw_reg_tev_gain = 0x0040,
         md_rw_reg_tev_noise_bias,

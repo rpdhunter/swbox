@@ -44,6 +44,8 @@ signals:
     void play_voice(VectorList);        //发送播放声音的指令
     void stop_play_voice();             //终止播放
 
+    void switch_rfct_mode(int);    //进入（离开）RFCT模式
+
 public slots:
     void fresh_menu(void);
     void fresh_title(CURRENT_KEY_VALUE);
@@ -72,8 +74,6 @@ private:
 
     int grade0_val;
     CURRENT_KEY_VALUE key_val;
-
-//    QTimer *max_reset_timer;   //最大值清零计时器
 
 };
 

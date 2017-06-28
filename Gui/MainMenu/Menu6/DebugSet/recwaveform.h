@@ -26,8 +26,8 @@ private:
     CURRENT_KEY_VALUE *key_val;
 
     QwtPlot *plot;
-    QVector<QPointF> wave;
-    QwtPlotCurve *curve;
+    QVector<QPointF> wave1, wave2;
+    QwtPlotCurve *curve1, *curve2;
 
     void setData(QString str);
     void setData(VectorList buf, MODE mod);

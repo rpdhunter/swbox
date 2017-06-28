@@ -37,7 +37,7 @@ signals:
 
 private:
     CURRENT_KEY_VALUE *key_val;
-    SQL_PARA *sql_para;
+    SQL_PARA sql_para;
     G_PARA *data;
 
     Ui::OptionUi *ui;

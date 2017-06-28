@@ -71,6 +71,9 @@ MainWindow::MainWindow(QWidget *parent)
     connect(mainmenu,SIGNAL(play_voice(VectorList)),fifodata,SLOT(playVoiceData(VectorList)));
     connect(fifodata,SIGNAL(playVoiceProgress(int,int,bool)),mainmenu,SLOT(playVoiceProgress(int,int,bool)));
     connect(mainmenu,SIGNAL(stop_play_voice()),fifodata,SLOT(stop_play_voice()));
+
+    //高频CT模式
+    connect(mainmenu,SIGNAL(switch_rfct_mode(int)),fifodata,SLOT(switch_rfct_mode(int)));
 }
 
 void MainWindow::showTime()

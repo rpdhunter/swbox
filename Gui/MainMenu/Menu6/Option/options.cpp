@@ -30,29 +30,29 @@ Options::~Options()
 void Options::optionIni()
 {
     /* get sql para */
-    sql_para = sqlcfg->get_para();
+    sql_para = *sqlcfg->get_para();
 
     //时间
     _datetime = QDateTime::currentDateTime();
     ui->dateTimeEdit->setDateTime(_datetime);
 
     //频率
-    _freq = sql_para->freq_val;
+    _freq = sql_para.freq_val;
     updateCheckBox();
 
     //背光
-    _backlight = sql_para->backlight;
+    _backlight = sql_para.backlight;
     ui->slider_backlight->setValue(_backlight + 1); //保存值为0-7,显示值为1-8
 
     //自动录波
-    ui->checkBox_1->setChecked(sql_para->tev1_sql.auto_rec);
-    ui->checkBox_2->setChecked(sql_para->tev2_sql.auto_rec);
+    ui->checkBox_1->setChecked(sql_para.tev1_sql.auto_rec);
+    ui->checkBox_2->setChecked(sql_para.tev2_sql.auto_rec);
 
     //自动关机时间
-    ui->lineEdit_CloseTime->setText(QString("%1").arg(sql_para->close_time));
+    ui->lineEdit_CloseTime->setText(QString("%1").arg(sql_para.close_time));
 
     //语言
-    if(sql_para->language == LANGUAGE::CN)
+    if(sql_para.language == LANGUAGE::CN)
         ui->rbt_CN->setChecked(true);
     else
         ui->rbt_EN->setChecked(true);
@@ -87,17 +87,16 @@ void Options::saveOptions()
     saveAutoRec();
 
     //保存其他设置
-    sql_para->close_time = ui->lineEdit_CloseTime->text().toInt();
-    emit closeTimeChanged(sql_para->close_time );
-    sqlcfg->sql_save(sql_para);
+    sql_para.close_time = ui->lineEdit_CloseTime->text().toInt();
+    emit closeTimeChanged(sql_para.close_time );
+    sqlcfg->sql_save(&sql_para);
 
 }
 
 void Options::saveFreq()
 {
 	data->set_send_para (sp_freq, (_freq == 50) ? 0 : 1);
-    sql_para->freq_val = _freq;
-    sqlcfg->sql_save(sql_para);
+    sql_para.freq_val = _freq;
     emit fregChanged(_freq);
 }
 
@@ -121,8 +120,8 @@ void Options::saveDatetime()
 
 void Options::setBacklight()
 {
-    sql_para->backlight = _backlight;
-    sqlcfg->sql_save(sql_para);
+    sql_para.backlight = _backlight;
+//    sqlcfg->sql_save(&sql_para);
 
 	data->set_send_para (sp_backlight, _backlight);
 }
@@ -134,7 +133,7 @@ void Options::saveAutoRec()
     //rec1=1 rec2=0 tev_auto_rec.rval=1
     //rec1=0 rec2=1 tev_auto_rec.rval=2
     //rec1=1 rec2=1 tev_auto_rec.rval=3
-	data->set_send_para (sp_tev_auto_rec, sql_para->tev1_sql.auto_rec + 2 * sql_para->tev2_sql.auto_rec);
+    data->set_send_para (sp_tev_auto_rec, sql_para.tev1_sql.auto_rec + 2 * sql_para.tev2_sql.auto_rec);
 }
 
 
@@ -165,10 +164,10 @@ void Options::trans_key(quint8 key_code)
     case KEY_OK:
         if(key_val->grade.val3 != 0){   //保存退出状态
             if(key_val->grade.val3 == 4 && key_val->grade.val5 == 0){       //自动录波
-                sql_para->tev1_sql.auto_rec = !sql_para->tev1_sql.auto_rec;
+                sql_para.tev1_sql.auto_rec = !sql_para.tev1_sql.auto_rec;
             }
             else if(key_val->grade.val3 == 4 && key_val->grade.val5 == 1){
-                sql_para->tev2_sql.auto_rec = !sql_para->tev2_sql.auto_rec;
+                sql_para.tev2_sql.auto_rec = !sql_para.tev2_sql.auto_rec;
             }
             saveOptions();
             emit update_statusBar(tr("【参数设置】已保存！"));
@@ -185,7 +184,7 @@ void Options::trans_key(quint8 key_code)
             key_val->grade.val2 = 0;    //其他模式下就全退出了
             key_val->grade.val3 = 0;
             this->hide();
-            setBacklight();
+            setBacklight();     //返回的话，生效的背光设置需要取消
             fresh_parent();
         }
         break;
@@ -304,12 +303,12 @@ void Options::trans_key(quint8 key_code)
                 ui->lineEdit_CloseTime->setText(QString("%1").arg(temp - 1));
             break;
         case 6:
-            if(sql_para->language == LANGUAGE::EN){
-                sql_para->language = LANGUAGE::CN;
+            if(sql_para.language == LANGUAGE::EN){
+                sql_para.language = LANGUAGE::CN;
                 ui->rbt_CN->setChecked(true);
             }
             else{
-                sql_para->language = LANGUAGE::EN;
+                sql_para.language = LANGUAGE::EN;
                 ui->rbt_EN->setChecked(true);
             }
             break;
@@ -361,12 +360,12 @@ void Options::trans_key(quint8 key_code)
             break;
 
         case 6:
-            if(sql_para->language == LANGUAGE::EN){
-                sql_para->language = LANGUAGE::CN;
+            if(sql_para.language == LANGUAGE::EN){
+                sql_para.language = LANGUAGE::CN;
                 ui->rbt_CN->setChecked(true);
             }
             else{
-                sql_para->language = LANGUAGE::EN;
+                sql_para.language = LANGUAGE::EN;
                 ui->rbt_EN->setChecked(true);
             }
             break;
@@ -454,8 +453,8 @@ void Options::refresh()
         ui->checkBox_2->setStyleSheet("");
     }
 
-    ui->checkBox_1->setChecked(sql_para->tev1_sql.auto_rec);
-    ui->checkBox_2->setChecked(sql_para->tev2_sql.auto_rec);
+    ui->checkBox_1->setChecked(sql_para.tev1_sql.auto_rec);
+    ui->checkBox_2->setChecked(sql_para.tev2_sql.auto_rec);
 }
 
 

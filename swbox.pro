@@ -33,10 +33,6 @@ SOURCES += \
     Gui/MainMenu/Menu6/menu6.cpp \
     Gui/MainMenu/StatusBar/statusbar.cpp \
     Gui/MainMenu/mainmenu.cpp \
-    Gui/MainMenu/Menu5/BackRecd/backrecd.cpp \
-    Gui/MainMenu/Menu5/EnvRecd/envrecd.cpp \
-    Gui/MainMenu/Menu5/LoadData/loaddata.cpp \
-    Gui/MainMenu/Menu5/TestPos/testpos.cpp \
     Gui/MainMenu/Menu4/HFCAmplitude/hfcamplitude.cpp \
     Gui/MainMenu/Menu4/HFCAtlas/hfcatlas.cpp \
     Gui/MainMenu/Menu4/HFCAmplitude/hfcbarchart.cpp \
@@ -62,7 +58,8 @@ SOURCES += \
     Gui/MainMenu/Menu3/menu3.cpp \
     Gui/MainMenu/Menu2/faultlocation.cpp \
     Gui/MainMenu/Menu3/aawidget.cpp \
-    Gui/MainMenu/Menu6/RecWaveManage/recwavemanage.cpp
+    Gui/MainMenu/Menu6/RecWaveManage/recwavemanage.cpp \
+    Gui/MainMenu/Menu5/rfctwidget.cpp
 
 
 HEADERS  += \
@@ -73,10 +70,6 @@ HEADERS  += \
     Gui/MainMenu/Menu6/menu6.h \
     Gui/MainMenu/StatusBar/statusbar.h \
     Gui/MainMenu/mainmenu.h \
-    Gui/MainMenu/Menu5/BackRecd/backrecd.h \
-    Gui/MainMenu/Menu5/EnvRecd/envrecd.h \
-    Gui/MainMenu/Menu5/LoadData/loaddata.h \
-    Gui/MainMenu/Menu5/TestPos/testpos.h \
     Gui/MainMenu/Menu4/HFCAmplitude/hfcamplitude.h \
     Gui/MainMenu/Menu4/HFCAtlas/hfcatlas.h \
     Gui/MainMenu/Menu4/HFCAmplitude/hfcbarchart.h \
@@ -104,7 +97,8 @@ HEADERS  += \
     Gui/MainMenu/Menu3/menu3.h \
     Gui/MainMenu/Menu2/faultlocation.h \
     Gui/MainMenu/Menu3/aawidget.h \
-    Gui/MainMenu/Menu6/RecWaveManage/recwavemanage.h
+    Gui/MainMenu/Menu6/RecWaveManage/recwavemanage.h \
+    Gui/MainMenu/Menu5/rfctwidget.h
 
 
 RESOURCES += \
@@ -136,4 +130,5 @@ FORMS += \
     Gui/MainMenu/Menu0/amplitude1.ui \
     Gui/MainMenu/Menu2/faultlocation.ui \
     Gui/MainMenu/Menu3/aawidget.ui \
-    Gui/MainMenu/Menu6/RecWaveManage/voiceplayer.ui
+    Gui/MainMenu/Menu6/RecWaveManage/voiceplayer.ui \
+    Gui/MainMenu/Menu5/rfctwidget.ui

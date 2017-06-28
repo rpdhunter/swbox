@@ -44,8 +44,19 @@ enum TEV_CHART_MODE {
     Histogram = 2,
 };
 
+enum LOCATION_TRIGGER_CHANNEL {
+    Left = 0,
+    Right = 1,
+    Double = 2,
+};
+
+enum LOCATION_CHART_MODE {
+    CURVE = 0,
+    COMPASS = 1,
+};
+
 typedef struct TEV_SQL {
-    bool mode;                      //脉冲触发模式
+    bool mode;                      //检测模式
     TEV_CHART_MODE mode_chart;      //图形显示模式
     int high;                       //红色报警阈值
     int low;                        //黄色报警阈值
@@ -56,6 +67,13 @@ typedef struct TEV_SQL {
     uint fpga_threshold;            //TEV阈值（需要FPGA同步）
     bool auto_rec;                  //自动录波（需要FPGA同步）
 } TEV_SQL;
+
+typedef struct TEV_LOCATION_SQL {
+    bool mode;                      //检测模式
+    int time;                       //触发时长
+    LOCATION_TRIGGER_CHANNEL channel;   //触发通道
+    LOCATION_CHART_MODE chart_mode;      //图形显示模式
+} TEV_LOCATION_SQL;
 
 #define TIME_MAX                60
 #define TIME_MIN                1
@@ -78,6 +96,7 @@ typedef struct AAULTRA_SQL {
 /* Sql para */
 typedef struct SQL_PARA {
     TEV_SQL tev1_sql, tev2_sql;     //地电波设置(通道1和2)
+    TEV_LOCATION_SQL location_sql;      //定位模式设置
     AAULTRA_SQL aaultra_sql;        //AA超声设置
 
     bool language;                  //语言设置

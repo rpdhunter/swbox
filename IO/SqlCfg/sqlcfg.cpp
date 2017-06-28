@@ -114,6 +114,13 @@ SQL_PARA *SqlCfg::default_config(void)
     sql_para.tev2_sql.fpga_threshold = FPGA_THRESHOLD;
     sql_para.tev2_sql.auto_rec = false;						//自动录波默认关闭
 
+    /* location mode */
+    sql_para.location_sql.mode = single;
+    sql_para.location_sql.time = 2;
+    sql_para.location_sql.channel = Double;
+    sql_para.location_sql.chart_mode = CURVE;
+
+
     /* aaultrasonic mode */
     sql_para.aaultra_sql.mode = continuous;
     sql_para.aaultra_sql.vol = AA_VOL_DEFAULT;
@@ -158,6 +165,9 @@ void sqlite3_init(void)
 
 void SqlCfg::sql_save(SQL_PARA *sql_para)
 {
+    this->sql_para = *sql_para;      //新加的，实现保存变量功能
+
+    //以下为原代码，实现写入数据库功能
     bool exit_flag = true;
     sqlite3_stmt * stmt = NULL;
     const char * c_str;

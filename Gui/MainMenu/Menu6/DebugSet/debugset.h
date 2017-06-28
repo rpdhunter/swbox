@@ -73,7 +73,7 @@ private:
 
     CURRENT_KEY_VALUE *key_val;
     G_PARA *data;
-    SQL_PARA *sql_para;
+    SQL_PARA sql_para;
 
 
     QWidget *widget;        //密码窗口
@@ -83,7 +83,7 @@ private:
     QString password;   //密码
     QString password_set;   //密码设定值
 
-    RecWaveForm *recWaveForm;
+//    RecWaveForm *recWaveForm;
 
     QTimer *timer;      //备用
 

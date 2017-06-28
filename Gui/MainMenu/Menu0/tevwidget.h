@@ -49,7 +49,6 @@ private slots:
     void fresh_plot(void);
     void fresh_PRPD();
     void fresh_Histogram();
-//    void change_channel();
     void maxReset();        //最大值清零
 
 private:
@@ -60,7 +59,7 @@ private:
     int db;
     int max_db;
     quint32 pulse_cnt_last; //上一秒秒冲数
-    SQL_PARA *sql_para;
+    SQL_PARA sql_para;
     TEV_SQL *tev_sql;
 
     QTimer *timer1, *timer2 , *timer3;
@@ -87,10 +86,11 @@ private:
     void PRPDReset();
     void rec_wave();
 	void calc_tev_value (double * tev_val, double * tev_db, int * sug_central_offset, int * sug_offset);
+    void reloadSql();   //重新装载设置
 
-    int temp;
+//    int temp;
     Channel channel;
-    bool channel_flag;
+//    bool channel_flag;
 
     RecWaveForm *recWaveForm;
 };

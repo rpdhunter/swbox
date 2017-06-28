@@ -436,6 +436,9 @@ int Modbus::get_reg_value(unsigned short reg, unsigned short *val)
     case md_rd_reg_tev_severity:
     case md_rd_reg_aa_mag:
     case md_rd_reg_aa_severity:
+	case md_rd_reg_tev_nb_sug:
+	case md_rd_reg_tev_zb_sug:
+	case md_rd_reg_aa_bias_sug:
     case md_rw_reg_tev_gain:
     case md_rw_reg_tev_noise_bias:
     case md_rw_reg_tev_zero_bias:
@@ -509,6 +512,8 @@ void Modbus::transData()
 {
     sql_para = sqlcfg->get_para();
 
+    data_stand[md_rd_reg_dev_st] = (VERSION_MAJOR<<12) + (VERSION_MINOR<<8);        //存储版本号
+
     unsigned short val = data_stand[md_rd_reg_tev_mag];
     if(val < sql_para->tev1_sql.low){
         data_stand[md_rd_reg_tev_severity] = 0;
@@ -530,6 +535,10 @@ void Modbus::transData()
     else{
         data_stand[md_rd_reg_aa_severity] = 2;
     }
+
+	data_stand [md_rd_reg_tev_nb_sug] = 0;
+	data_stand [md_rd_reg_tev_zb_sug] = 0;
+	data_stand [md_rd_reg_aa_bias_sug] = 0;
 
     data_stand[md_rw_reg_tev_gain] = sql_para->tev1_sql.gain;
     data_stand[md_rw_reg_tev_noise_bias] = sql_para->tev1_sql.tev_offset1;

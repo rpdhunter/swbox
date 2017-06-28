@@ -51,6 +51,8 @@ Menu1::Menu1(QWidget *parent, G_PARA *g_data) : QFrame(parent)
     connect(tevWidget,SIGNAL(offset_suggest(int,int)),this,SIGNAL(offset_suggest(int,int)));
     connect(tevWidget,SIGNAL(origin_pluse_points(QVector<QPoint>,int)),this,SIGNAL(origin_pluse_points(QVector<QPoint>,int)));
     connect(tevWidget,SIGNAL(startRecWave(int,int)),this,SIGNAL(startRecWave(int,int)));
+
+    connect(tevWidget,SIGNAL(tev_modbus_data(int,int)),this,SIGNAL(tev_modbus_data(int,int)));
 }
 
 void Menu1::working(CURRENT_KEY_VALUE *val)
@@ -122,10 +124,8 @@ void Menu1::fresh_table(void)
         main_title1->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m21.png);}");
         main_title2->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m32.png);}");
         main_title3->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m42.png);}");
-//        main_title4->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m52.png);}");
-//        main_title5->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m62.png);}");
         main_title4->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m50.png);}");
-        main_title5->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m60.png);}");
+        main_title5->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m62.png);}");
         main_title6->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m72.png);}");
     } else if (key_val->grade.val0 == 1 && key_val->grade.val1) {
         main_title0->setStyleSheet("QLabel {border-image: url(:/widgetphoto/mainmenu/m10.png);}");

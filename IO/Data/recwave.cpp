@@ -86,24 +86,28 @@ void RecWave::work ()
                 _data.append((qint32)tdata->recv_para.recData [ i + 2 ] - 0x8000);
             }
 //            printf ("receive recWaveData! send_groupNum=%d\n", tdata->send_para.send_params [sp_groupNum].rval);
+            qDebug()<<"TEV1 receive data succeed! send groupNum = "<<tdata->send_para.send_params [sp_groupNum].rval;
             groupNum++;
             tdata->set_send_para (sp_groupNum, groupNum + groupNum_Offset);
         }
         else {                                                               //不匹配，再发一次
-            printf("receive recWaveData failed! send groupNum=%d\n",tdata->send_para.send_params [sp_groupNum].rval);
-            printf("recv groupNum=%d\n",tdata->recv_para.groupNum);
-            tdata->set_send_para (sp_groupNum, tdata->send_para.send_params [sp_groupNum].rval);
+//            printf("receive recWaveData failed! send groupNum=%d\n",tdata->send_para.send_params [sp_groupNum].rval);
+//            printf("recv groupNum=%d\n",tdata->recv_para.groupNum);
+            qDebug()<<"TEV1 receive failed! send groupNum = "<<tdata->send_para.send_params [sp_groupNum].rval
+                   << "recv groupNum = "<< tdata->recv_para.groupNum + groupNum_Offset;
+            tdata->set_send_para (sp_groupNum, groupNum + groupNum_Offset);
         }
 
         //结束判断
         if (groupNum == GROUP_NUM_MAX) {        //接收组装数据完毕
             tdata->set_send_para (sp_recstart_ad1, 0);
-            tdata->send_para.send_params [sp_groupNum].flag = false;
+//            tdata->send_para.send_params [sp_groupNum].flag = false;
 
             qDebug()<<QString("rec wave cost time: %1 ms").arg( - QTime::currentTime().msecsTo(time_start));
             qDebug()<<"receive recWaveData complete! MODE = TEV1";
             // 录波完成，发送数据，通知GUI和文件保存
             emit waveData (_data,mode);
+            qDebug()<<"TEV1 Working --> Free";
             status = Free;
         }
         break;
@@ -112,25 +116,27 @@ void RecWave::work ()
             for (i = 0; i < 256; i++) {
                 _data.append((qint32)tdata->recv_para.recData [ i + 2 ] - 0x8000);
             }
-            printf ("receive recWaveData! send_groupNum=%d\n", tdata->send_para.send_params [sp_groupNum].rval);
+            qDebug()<<"TEV2 receive data succeed! send groupNum = "<<tdata->send_para.send_params [sp_groupNum].rval;
             groupNum++;
             tdata->set_send_para (sp_groupNum, groupNum + groupNum_Offset);
         }
         else {                                                               //不匹配，再发一次
-            printf("receive recWaveData failed! send groupNum=%d\n",tdata->send_para.send_params [sp_groupNum].rval);
-            printf("recv groupNum=%d\n",tdata->recv_para.groupNum);
-            tdata->set_send_para (sp_groupNum, tdata->send_para.send_params [sp_groupNum].rval);
+            qDebug()<<"TEV2 receive failed! send groupNum = "<<tdata->send_para.send_params [sp_groupNum].rval
+                   << "recv groupNum = "<< tdata->recv_para.groupNum + groupNum_Offset;
+            tdata->set_send_para (sp_groupNum, groupNum + groupNum_Offset);
+            qDebug()<<"error groupNum_Offset = "<<groupNum_Offset << "   groupNum = "<< groupNum;
         }
 
         //结束判断
         if (groupNum == GROUP_NUM_MAX) {        //接收组装数据完毕
             tdata->set_send_para (sp_recstart_ad2, 0);
-            tdata->send_para.send_params [sp_groupNum].flag = false;
+//            tdata->send_para.send_params [sp_groupNum].flag = false;
 
             qDebug()<<QString("rec wave cost time: %1 ms").arg( - QTime::currentTime().msecsTo(time_start));
             qDebug()<<"receive recWaveData complete! MODE = TEV2";
             // 录波完成，发送数据，通知GUI和文件保存
             emit waveData (_data,mode);
+            qDebug()<<"TEV2 Working --> Free";
             status = Free;
         }
         break;
@@ -148,9 +154,11 @@ void RecWave::work ()
             tdata->set_send_para (sp_groupNum, groupNum + groupNum_Offset);
         }
         else {                                                               //不匹配，再发一次
-            printf("receive recWaveData failed! send groupNum=%d\n",tdata->send_para.send_params [sp_groupNum].rval);
-            printf("recv groupNum=%d\n",tdata->recv_para.groupNum);
-            tdata->set_send_para (sp_groupNum, tdata->send_para.send_params [sp_groupNum].rval);
+//            printf("receive recWaveData failed! send groupNum=%d\n",tdata->send_para.send_params [sp_groupNum].rval);
+//            printf("recv groupNum=%d\n",tdata->recv_para.groupNum);
+            qDebug()<<"AA_Ultrasonic receive failed! send groupNum = "<<tdata->send_para.send_params [sp_groupNum].rval
+                   << "recv groupNum = "<< tdata->recv_para.groupNum + groupNum_Offset;
+            tdata->set_send_para (sp_groupNum, groupNum + groupNum_Offset);
         }
         break;
     default:

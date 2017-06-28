@@ -30,17 +30,10 @@ TEVWidget::TEVWidget(G_PARA *data, Channel channel, QWidget *parent) :
     this->setStyleSheet("TEVWidget {border-image: url(:/widgetphoto/mainmenu/bk2.png);}");
 
     key_val = NULL;
-    /* get sql para */
-    sql_para = sqlcfg->get_para();
 
     this->channel = channel;
-    if(channel == Left){
-        tev_sql = &sql_para->tev1_sql;
-    }
-    else{
-        tev_sql = &sql_para->tev2_sql;
-    }
 
+    reloadSql();
 
     this->data = data;
     db = 0;
@@ -101,9 +94,11 @@ TEVWidget::~TEVWidget()
 
 void TEVWidget::showWaveData(VectorList buf, MODE mod)
 {
-    key_val->grade.val1 = 1;        //为了锁住主界面，防止左右键切换通道
-    key_val->grade.val5 = 1;
-    recWaveForm->working(key_val,buf,mod);
+    if( (key_val->grade.val0 == 0 && channel == Left) || (key_val->grade.val0 == 1 && channel == Right)){
+        key_val->grade.val1 = 1;        //为了锁住主界面，防止左右键切换通道
+        key_val->grade.val5 = 1;
+        recWaveForm->working(key_val,buf,mod);
+    }
 }
 
 void TEVWidget::PRPS_inti()
@@ -232,6 +227,7 @@ void TEVWidget::working(CURRENT_KEY_VALUE *val)
         return;
     }
     key_val = val;
+    reloadSql();        //重置默认数据
     this->show();
 }
 
@@ -257,7 +253,7 @@ void TEVWidget::trans_key(quint8 key_code)
 
     switch (key_code) {
     case KEY_OK:
-        sqlcfg->sql_save(sql_para);
+        sqlcfg->sql_save(&sql_para);
         timer1->start();                                                         //and timer no stop
         if(key_val->grade.val2 == 6){
             rec_wave();     //开始录波
@@ -274,6 +270,8 @@ void TEVWidget::trans_key(quint8 key_code)
     case KEY_CANCEL:
         key_val->grade.val1 = 0;
         key_val->grade.val2 = 0;
+        reloadSql();        //重置默认数据
+        timer1->start();    //重启设置后，手动开一次
         break;
     case KEY_UP:
         if (key_val->grade.val2 < 2) {
@@ -408,7 +406,20 @@ void TEVWidget::calc_tev_value (double * tev_val, double * tev_db, int * sug_cen
 
 //    if( db > 50){
 //        qDebug()<<"tev_db = "<<db << "\td_max = "<<a<<"\td_min = "<<b;
-//    }
+    //    }
+}
+
+void TEVWidget::reloadSql()
+{
+    /* get sql para */
+    sql_para = *sqlcfg->get_para();
+
+    if(channel == Left){
+        tev_sql = &sql_para.tev1_sql;
+    }
+    else{
+        tev_sql = &sql_para.tev2_sql;
+    }
 }
 
 void TEVWidget::fresh_plot()
@@ -418,9 +429,9 @@ void TEVWidget::fresh_plot()
     int sug_central_offset, sug_offset;
 //    quint32 signal_pulse_cnt;
 
-    if (tev_sql->mode == single) {
-        timer1->stop();      //如果单次模式，停止计时器
-    }
+//    if (tev_sql->mode == single) {
+//        timer1->stop();      //如果单次模式，停止计时器
+//    }
 
 #if 0
     double a,b;
@@ -457,7 +468,7 @@ void TEVWidget::fresh_plot()
     pulse_cnt_show = pulse_cnt_last + pulse_cnt;    //显示2秒的脉冲计数
     pulse_cnt_last = pulse_cnt;
 
-    degree = pow(t,tev_sql->gain) * (double)pulse_cnt / sql_para->freq_val;     //严重度算法更改
+    degree = pow(t,tev_sql->gain) * (double)pulse_cnt / sql_para.freq_val;     //严重度算法更改
 
     ui->label_pluse->setText(tr("脉冲数: ") + QString::number(pulse_cnt_show));
     ui->label_degree->setText(tr("严重度: ") + QString::number(degree, 'f', 2));
@@ -468,7 +479,7 @@ void TEVWidget::fresh_plot()
 
     emit tev_modbus_data(db,pulse_cnt_show);
 
-    if ( db > tev_sql->high) {
+    if ( db >= tev_sql->high) {
         ui->label_val->setStyleSheet("QLabel {font-family:WenQuanYi Micro Hei;font-size:60px;color:red}");
     } else if (db >= tev_sql->low) {
         ui->label_val->setStyleSheet("QLabel {font-family:WenQuanYi Micro Hei;font-size:60px;color:yellow}");
@@ -600,9 +611,9 @@ void TEVWidget::transData(int x, int y)
     }
 
     //    x = x * 360 * 50 / 1e8;
-    if(x>360){
-        qDebug()<<"x="<<x;
-    }
+//    if(x>360){
+//        qDebug()<<"x="<<x;
+//    }
 
 
     if(x<360 && x>=0 && y<=60 &&y>=-60){
@@ -649,8 +660,10 @@ void TEVWidget::maxReset()
 void TEVWidget::fresh_setting()
 {
     if (tev_sql->mode == single) {
+        timer1->setSingleShot(true);
         ui->comboBox->setItemText(0,tr("检测模式    [单次]"));
     } else {
+        timer1->setSingleShot(false);
         ui->comboBox->setItemText(0,tr("检测模式    [连续]"));
     }
     if (tev_sql->mode_chart == PRPD) {
@@ -659,7 +672,7 @@ void TEVWidget::fresh_setting()
         plot_PRPS->hide();
         plot_Histogram->hide();
     } else if(tev_sql->mode_chart == PRPS){
-        ui->comboBox->setItemText(1,tr("图形显示    [PRPS]"));
+        ui->comboBox->setItemText(1,tr("图形显示  [时序图]"));
         plot_PRPD->hide();
         plot_PRPS->show();
         plot_Histogram->hide();
