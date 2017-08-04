@@ -131,6 +131,14 @@ SQL_PARA *SqlCfg::default_config(void)
     sql_para.aaultra_sql.aa_step = 2;
     sql_para.aaultra_sql.aa_offset = 0;
 
+    sql_para.rfct_sql.mode = continuous;
+    sql_para.rfct_sql.gain = 1.0;
+    sql_para.rfct_sql.high = RFCT_HIGH;					//default high
+    sql_para.rfct_sql.low = RFCT_LOW;						//default low
+    sql_para.rfct_sql.mode_chart = PRPS;
+    sql_para.rfct_sql.filter = NONE;
+    sql_para.rfct_sql.time = 5;                 //录波时长
+
     /* setting para */
     sql_para.freq_val = SYSTEM_FREQ;						//default 50Hz
 

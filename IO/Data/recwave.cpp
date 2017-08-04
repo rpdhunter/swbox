@@ -14,6 +14,8 @@ RecWave::RecWave(G_PARA *gdata, MODE mode, QObject *parent) : QObject(parent)
         groupNum_Offset = 0;
         break;
     case TEV2:
+    case RFCT:
+    case RFCT_CONTINUOUS:
         groupNum_Offset = 0x100;
         break;
     case AA_Ultrasonic:
@@ -30,14 +32,18 @@ RecWave::RecWave(G_PARA *gdata, MODE mode, QObject *parent) : QObject(parent)
 }
 
 //从GUI发起录波指令
-void RecWave::recStart (int time)
-{	
+void RecWave::recStart (MODE m, int time)
+{
+    mode = m;
     switch (mode) {
     case TEV1:
         tdata->set_send_para (sp_recstart_ad1, 1);
         break;
     case TEV2:
+    case RFCT:
+    case RFCT_CONTINUOUS:
         tdata->set_send_para (sp_recstart_ad2, 1);
+//        qDebug()<<"mode ="<<mode;
         break;
     case AA_Ultrasonic:
         tdata->set_send_para (sp_recstart_ad3, 1);
@@ -62,6 +68,8 @@ void RecWave::startWork()
         tdata->set_send_para (sp_recstart_ad1, 2);		//数据上传开始
         break;
     case TEV2:
+    case RFCT:
+    case RFCT_CONTINUOUS:
         tdata->set_send_para (sp_recstart_ad2, 2);		//数据上传开始
         break;
     case AA_Ultrasonic:
@@ -104,26 +112,30 @@ void RecWave::work ()
 //            tdata->send_para.send_params [sp_groupNum].flag = false;
 
             qDebug()<<QString("rec wave cost time: %1 ms").arg( - QTime::currentTime().msecsTo(time_start));
-            qDebug()<<"receive recWaveData complete! MODE = TEV1";
+//            qDebug()<<"receive recWaveData complete! MODE = TEV1";
             // 录波完成，发送数据，通知GUI和文件保存
             emit waveData (_data,mode);
-            qDebug()<<"TEV1 Working --> Free";
+//            qDebug()<<"TEV1 Working --> Free";
             status = Free;
         }
         break;
     case TEV2:
+    case RFCT:
+    case RFCT_CONTINUOUS:
         if (tdata->recv_para.groupNum + groupNum_Offset == tdata->send_para.send_params [sp_groupNum].rval) {      //收发相匹配，拷贝数据
             for (i = 0; i < 256; i++) {
                 _data.append((qint32)tdata->recv_para.recData [ i + 2 ] - 0x8000);
             }
-            qDebug()<<"TEV2 receive data succeed! send groupNum = "<<tdata->send_para.send_params [sp_groupNum].rval;
+//            qDebug()<<"TEV2 receive data succeed! send groupNum = "<<tdata->send_para.send_params [sp_groupNum].rval;
             groupNum++;
             tdata->set_send_para (sp_groupNum, groupNum + groupNum_Offset);
         }
-        else {                                                               //不匹配，再发一次
+        else {                                                               //不匹配，结束本次录波
             qDebug()<<"TEV2 receive failed! send groupNum = "<<tdata->send_para.send_params [sp_groupNum].rval
                    << "recv groupNum = "<< tdata->recv_para.groupNum + groupNum_Offset;
-            tdata->set_send_para (sp_groupNum, groupNum + groupNum_Offset);
+//            tdata->set_send_para (sp_groupNum, groupNum + groupNum_Offset);
+            status = Free;
+            tdata->set_send_para (sp_recstart_ad2, 0);
             qDebug()<<"error groupNum_Offset = "<<groupNum_Offset << "   groupNum = "<< groupNum;
         }
 
@@ -133,11 +145,11 @@ void RecWave::work ()
 //            tdata->send_para.send_params [sp_groupNum].flag = false;
 
             qDebug()<<QString("rec wave cost time: %1 ms").arg( - QTime::currentTime().msecsTo(time_start));
-            qDebug()<<"receive recWaveData complete! MODE = TEV2";
+//            qDebug()<<"receive recWaveData complete! MODE = TEV2";
+//            qDebug()<<"TEV2 Working --> Free";
+            status = Free;
             // 录波完成，发送数据，通知GUI和文件保存
             emit waveData (_data,mode);
-            qDebug()<<"TEV2 Working --> Free";
-            status = Free;
         }
         break;
     case AA_Ultrasonic:
@@ -172,7 +184,7 @@ void RecWave::AA_rec_end()
 	tdata->set_send_para (sp_groupNum, 0);
     tdata->set_send_para (sp_recstart_ad3, 0);
 
-    qDebug()<<"receive recAAData complete! MODE = AA Ultrasonic" << _data.length() << " points";
+//    qDebug()<<"receive recAAData complete! MODE = AA Ultrasonic" << _data.length() << " points";
     //录波完成，发送数据，通知GUI和文件保存
     emit waveData(_data,mode);
 

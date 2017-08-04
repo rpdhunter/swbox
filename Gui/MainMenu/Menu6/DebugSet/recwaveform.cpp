@@ -86,7 +86,9 @@ void RecWaveForm::working(CURRENT_KEY_VALUE *val,VectorList buf, MODE mod)
 
     if( (key_val->grade.val0 == 0 && mod == TEV1)
             || (key_val->grade.val0 == 1 && mod == TEV2)
-            || (key_val->grade.val0 == 3 && mod == AA_Ultrasonic)){                                             //not current menu
+            || (key_val->grade.val0 == 3 && mod == AA_Ultrasonic)
+            || (key_val->grade.val0 == 5 && mod == RFCT)
+            || (key_val->grade.val0 == 5 && mod == RFCT_CONTINUOUS)){                                             //not current menu
         setData(buf,mod);
         this->show();
     }
@@ -116,6 +118,8 @@ void RecWaveForm::trans_key(quint8 key_code)
         key_val->grade.val5 = 0;
         if(key_val->grade.val0 != 6){
             key_val->grade.val1 = 0;
+            key_val->grade.val2 = 0;
+            emit fresh_parent();
         }
         if(mode == TEV_Double){
             plot->legend()->deleteLater();
@@ -172,6 +176,11 @@ void RecWaveForm::setData(QString str)
 //        qDebug()<<"tev_double";
         plot->insertLegend( new QwtLegend(),  QwtPlot::RightLegend, -2 );
     }
+    else if(str.contains("RFCT_")){
+        mode = RFCT;
+//        qDebug()<<"RFCT";
+    }
+
 
     QFile file;
 //    if(str.contains("(SDCard)")){
@@ -230,6 +239,12 @@ void RecWaveForm::setData(QString str)
             curve2->attach(plot);
             v_real = MAX(v_real,temp);
             break;
+        case RFCT:     //RFCT
+        case RFCT_CONTINUOUS:
+            v_real = v * sqlcfg->get_para()->rfct_sql.gain * TEV_FACTOR;
+            p = QPointF(i*0.01,v_real);
+            wave1.append(p);
+            break;
         default:
             break;
         }
@@ -256,7 +271,7 @@ void RecWaveForm::setData(QString str)
     plot->axisWidget(QwtPlot::xBottom)->setMargin(0);
     plot->axisWidget(QwtPlot::yLeft)->setMargin(0);
     plot->axisWidget(QwtPlot::yLeft)->setSpacing(10);
-    if(mode == TEV1 || mode == TEV2 || mode == TEV_Double){
+    if(mode == TEV1 || mode == TEV2 || mode == TEV_Double || mode == RFCT || mode == RFCT_CONTINUOUS){
         plot->axisWidget(QwtPlot::xBottom)->setTitle("us");
         plot->axisWidget(QwtPlot::yLeft)->setTitle("V m");
     }
@@ -293,6 +308,8 @@ void RecWaveForm::setData(VectorList buf, MODE mod)
 //            p = QPointF(i*0.01, buf.at(i));
             break;
         case TEV2:     //TEV2
+        case RFCT:
+        case RFCT_CONTINUOUS:
             v_real = sqlcfg->get_para()->tev2_sql.gain * TEV_FACTOR * buf.at(i);
             p = QPointF(i*0.01, v_real);
 //            p = QPointF(i*0.01, buf.at(i));
@@ -328,7 +345,7 @@ void RecWaveForm::setData(VectorList buf, MODE mod)
     plot->axisWidget(QwtPlot::xBottom)->setMargin(0);
     plot->axisWidget(QwtPlot::yLeft)->setMargin(0);
     plot->axisWidget(QwtPlot::yLeft)->setSpacing(10);
-    if(mode == TEV1){
+    if(mode == TEV1 || mode == TEV2 || mode == TEV_Double || mode == RFCT || mode == RFCT_CONTINUOUS){
         plot->axisWidget(QwtPlot::xBottom)->setTitle("us");
         plot->axisWidget(QwtPlot::yLeft)->setTitle("V m");
     }

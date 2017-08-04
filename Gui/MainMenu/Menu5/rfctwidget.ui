@@ -19,41 +19,6 @@
   <property name="frameShadow">
    <enum>QFrame::Raised</enum>
   </property>
-  <widget class="QComboBox" name="comboBox">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>131</width>
-     <height>25</height>
-    </rect>
-   </property>
-   <item>
-    <property name="text">
-     <string>触发模式  [单次]</string>
-    </property>
-   </item>
-   <item>
-    <property name="text">
-     <string>显示模式  [罗盘]</string>
-    </property>
-   </item>
-   <item>
-    <property name="text">
-     <string>触发通道      [1]</string>
-    </property>
-   </item>
-   <item>
-    <property name="text">
-     <string>触发时长      [2]</string>
-    </property>
-   </item>
-   <item>
-    <property name="text">
-     <string>保存当前波形</string>
-    </property>
-   </item>
-  </widget>
   <widget class="QWidget" name="widget" native="true">
    <property name="geometry">
     <rect>
@@ -162,7 +127,7 @@
          <string notr="true">QLabel {color:white;}</string>
         </property>
         <property name="text">
-         <string>dB</string>
+         <string>pC</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignBottom|Qt::AlignRight|Qt::AlignTrailing</set>
@@ -185,6 +150,65 @@
      </layout>
     </item>
    </layout>
+  </widget>
+  <widget class="QComboBox" name="comboBox">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>131</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true"/>
+   </property>
+   <property name="editable">
+    <bool>true</bool>
+   </property>
+   <property name="currentIndex">
+    <number>0</number>
+   </property>
+   <item>
+    <property name="text">
+     <string>检测模式      [单次]</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>图形显示  [柱状图]</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>增益系数     [×1.0]</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>滤波器          [无]</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>连续录波     [5]s</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>单次录波</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>最大值重置</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>PRPD图重置</string>
+    </property>
+   </item>
   </widget>
  </widget>
  <resources/>

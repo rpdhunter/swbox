@@ -36,6 +36,7 @@
 #define WORKING_MODE_AD3        0x0013          //AD3工作模式，1代表AE，0代表AA
 #define WORKING_MODE_AD4        0x0014          //AD4工作模式，1代表AE，0代表AA
 #define READ_FPGA_MODE_1        0x0015          //工作模式1时，读数据标志位（bool）
+#define KEYBOARD_BACKLIGHT      0x0016          //0熄灭键盘灯，1打开键盘灯
 
 
 //读写寄存器
@@ -53,7 +54,7 @@ public:
     explicit FifoData(G_PARA *g_data);
 
 public slots:
-    void startRecWave(int mode , int time);       //启动录波，需要主函数建立连接
+    void startRecWave(MODE mode , int time);       //启动录波，需要主函数建立连接
     void playVoiceData(VectorList wave);            //向FPGA发送声音数据
     void switch_rfct_mode(int f);      //切换到高频CT模式
 
@@ -87,7 +88,7 @@ private:
     volatile quint32 *vbase4, *vbase5;
     G_PARA * tdata;
 
-    RecWave *tevData1, *tevData2, *AAData;
+    RecWave *h_channel1, *h_channel2, *l_channel1;
     FileTools *filetools;   //文件工具，实现保存文件
 
     void recvRecData();     //接收录波数据
@@ -107,6 +108,8 @@ private:
     VectorList rec_double;  //保存双通道录波的数据
 
     int rfct_mode;     //是否处于rfct模式
+
+    bool isRecording;     //是否处于录波中
 
 protected:
     void run(void);

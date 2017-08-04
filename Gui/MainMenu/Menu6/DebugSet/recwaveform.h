@@ -17,6 +17,9 @@ public:
     explicit RecWaveForm(QWidget *parent = 0);
     ~RecWaveForm();
 
+signals:
+    void fresh_parent();
+
 public slots:
     void working(CURRENT_KEY_VALUE *val,QString str);
     void working(CURRENT_KEY_VALUE *val,VectorList buf, MODE mod);     //重载

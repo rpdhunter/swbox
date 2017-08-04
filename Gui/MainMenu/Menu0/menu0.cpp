@@ -1,4 +1,5 @@
 #include "menu0.h"
+#include "IO/Data/data.h"
 
 Menu0::Menu0(QWidget *parent, G_PARA *g_data) : QFrame(parent)
 {
@@ -37,12 +38,12 @@ Menu0::Menu0(QWidget *parent, G_PARA *g_data) : QFrame(parent)
     main_title6->resize(main_title0->width(), main_title0->height());
     main_title6->move(main_title5->x() + 45, main_title0->y());
 
-    tevWidget = new TEVWidget(g_data,TEVWidget::Channel::Left,this);
+    tevWidget = new TEVWidget(g_data,MODE::TEV1,this);
     connect(this, &Menu0::send_key, tevWidget, &TEVWidget::trans_key);
     connect(tevWidget,SIGNAL(offset_suggest(int,int)),this,SIGNAL(offset_suggest(int,int)));
     connect(tevWidget,SIGNAL(tev_modbus_data(int,int)),this,SIGNAL(tev_modbus_data(int,int)));
     connect(tevWidget,SIGNAL(origin_pluse_points(QVector<QPoint>,int)),this,SIGNAL(origin_pluse_points(QVector<QPoint>,int)));
-    connect(tevWidget,SIGNAL(startRecWave(int,int)),this,SIGNAL(startRecWave(int,int)));
+    connect(tevWidget,SIGNAL(startRecWave(MODE,int)),this,SIGNAL(startRecWave(MODE,int)));
 }
 
 void Menu0::working(CURRENT_KEY_VALUE *val)

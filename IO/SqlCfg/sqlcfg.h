@@ -21,6 +21,9 @@
 #define AA_HIGH				40
 #define AA_LOW				20
 
+#define RFCT_HIGH				40
+#define RFCT_LOW				20
+
 #define SYSTEM_FREQ			50
 #define BACK_LIGTH			4
 #define SHUT_DOWN_TIME		5
@@ -38,10 +41,16 @@ enum TRIGGER_MODE {
     continuous = 1,
 };
 
-enum TEV_CHART_MODE {
+enum DISPLAY {
     PRPS = 0,
     PRPD = 1,
     Histogram = 2,
+};
+
+enum FILTER {
+    HP_500K = 1,
+    HP_1800K = 2,
+    NONE = 3,
 };
 
 enum LOCATION_TRIGGER_CHANNEL {
@@ -57,7 +66,7 @@ enum LOCATION_CHART_MODE {
 
 typedef struct TEV_SQL {
     bool mode;                      //检测模式
-    TEV_CHART_MODE mode_chart;      //图形显示模式
+    DISPLAY mode_chart;          //图形显示模式
     int high;                       //红色报警阈值
     int low;                        //黄色报警阈值
     int tev_offset1;                //TEV偏置1，目前用作噪声偏置
@@ -92,12 +101,24 @@ typedef struct AAULTRA_SQL {
     int aa_offset;                  //AA超声偏置值
 } AAULTRA_SQL;
 
+/* rfct mode */
+typedef struct RFCT_SQL {
+    bool mode;                      //检测模式
+    DISPLAY mode_chart;      //图形显示模式
+    int high;                       //红色报警阈值
+    int low;                        //黄色报警阈值
+    double gain;                    //增益
+    FILTER filter;                  //滤波器
+    int time;                       //录波时长
+} RFCT_SQL;
+
 
 /* Sql para */
 typedef struct SQL_PARA {
     TEV_SQL tev1_sql, tev2_sql;     //地电波设置(通道1和2)
     TEV_LOCATION_SQL location_sql;      //定位模式设置
     AAULTRA_SQL aaultra_sql;        //AA超声设置
+    RFCT_SQL rfct_sql;              //高频CT模式
 
     bool language;                  //语言设置
     int freq_val;                   //频率（需要FPGA同步）

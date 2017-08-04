@@ -6,7 +6,8 @@
 
 QT       += core gui widgets network
 
-QT += serialport
+QT += serialport sql
+#QT += opengl
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -15,7 +16,6 @@ TEMPLATE = app
 
 #DEFINES += QT_NO_DEBUG_OUTPUT
 DEFINES += ARM
-#DEFINES += SIMPLEMODE
 
 TRANSLATIONS += trans/en.ts
 
@@ -59,7 +59,8 @@ SOURCES += \
     Gui/MainMenu/Menu2/faultlocation.cpp \
     Gui/MainMenu/Menu3/aawidget.cpp \
     Gui/MainMenu/Menu6/RecWaveManage/recwavemanage.cpp \
-    Gui/MainMenu/Menu5/rfctwidget.cpp
+    Gui/MainMenu/Menu5/rfctwidget.cpp \
+    IO/Data/logtools.cpp
 
 
 HEADERS  += \
@@ -98,7 +99,8 @@ HEADERS  += \
     Gui/MainMenu/Menu2/faultlocation.h \
     Gui/MainMenu/Menu3/aawidget.h \
     Gui/MainMenu/Menu6/RecWaveManage/recwavemanage.h \
-    Gui/MainMenu/Menu5/rfctwidget.h
+    Gui/MainMenu/Menu5/rfctwidget.h \
+    IO/Data/logtools.h
 
 
 RESOURCES += \
@@ -121,7 +123,15 @@ LIBS += \
     -L"/usr/local/sqlite3-pc/lib" -lsqlite3
 }
 
-DISTFILES +=
+#INCLUDEPATH += \
+#    /usr/local/qwtplot3d/include
+
+#LIBS += \
+#    -L/usr/local/qwtplot3d/lib -lqwtplot3d -lGLU
+
+DISTFILES += \
+    BOOT.bin \
+    PDTEV操作指南_V1.1.docx
 
 FORMS += \
     Gui/MainMenu/Menu6/Option/optionui.ui \

@@ -22,7 +22,7 @@ signals:
     void send_key(quint8);
     void offset_suggest(int,int);
     void origin_pluse_points(QVector<QPoint> p, int group);
-    void startRecWave(int, int);
+    void startRecWave(MODE, int);
     void tev_modbus_data(int,int);
 
 public slots:

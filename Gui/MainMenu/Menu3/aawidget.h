@@ -6,6 +6,7 @@
 #include "IO/Key/key.h"
 #include "IO/SqlCfg/sqlcfg.h"
 #include "../Menu6/DebugSet/recwaveform.h"
+#include "IO/Data/logtools.h"
 
 namespace Ui {
 class AAWidget;
@@ -26,9 +27,11 @@ public:
 
 signals:
     void send_key(quint8);
+    void fresh_parent();
     void aa_modbus_data(int);
-    void startRecWave(int, int);        //开始录播
+    void startRecWave(MODE, int);        //开始录播
     void offset_suggest(int);
+    void aa_log_data(double,int,double);
 
 public slots:
     void working(CURRENT_KEY_VALUE *val);
@@ -48,15 +51,14 @@ private:
     double max_db;  //最大值
     double temp_db; //显示值缓冲区，用于减缓刷新
 
-
+    Ui::AAWidget *ui;
     CURRENT_KEY_VALUE *key_val;
     QTimer *timer1 , *timer2;
     G_PARA *data;
     BarChart *chart;
     RecWaveForm *recWaveForm;
+    LogTools *logtools;
 
-private:
-    Ui::AAWidget *ui;
 };
 
 #endif // AAWIDGET_H

@@ -22,7 +22,7 @@ public:
 
     explicit RecWave(G_PARA *gdata, MODE mode, QObject *parent = 0);
 
-    void recStart(int time = 10);   //time为录波时长
+    void recStart(MODE m,int time = 10);   //time为录波时长
 
     void startWork();   //开始接收数据
     void work();        //接收数据

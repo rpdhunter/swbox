@@ -6,7 +6,8 @@
 #include <qwt_scale_draw.h>
 #include <qwt_scale_widget.h>
 #include <qwt_plot_layout.h>
-
+#include <QThreadPool>
+#include "IO/Data/filetools.h"
 
 #define SETTING_NUM 7           //设置菜单条目数
 
@@ -80,6 +81,10 @@ AAWidget::AAWidget(QWidget *parent, G_PARA *g_data) :
     recWaveForm = new RecWaveForm(this);
     recWaveForm->hide();
     connect(this, SIGNAL(send_key(quint8)), recWaveForm, SLOT(trans_key(quint8)));
+    connect(recWaveForm,SIGNAL(fresh_parent()),this,SIGNAL(fresh_parent()));
+
+    logtools = new LogTools(MODE::AA_Ultrasonic);      //日志保存模块
+    connect(this,SIGNAL(aa_log_data(double,int,double)),logtools,SLOT(dealLog(double,int,double)));
 
 }
 
@@ -94,6 +99,8 @@ void AAWidget::showWaveData(VectorList buf, MODE mod)
         key_val->grade.val1 = 1;        //为了锁住主界面，防止左右键切换通道
         key_val->grade.val5 = 1;
         recWaveForm->working(key_val,buf,mod);
+        FileTools *filetools = new FileTools(buf,mod);      //开一个线程，为了不影响数据接口性能
+        QThreadPool::globalInstance()->start(filetools);
     }
 }
 
@@ -131,17 +138,20 @@ void AAWidget::trans_key(quint8 key_code)
         }
 
         if(key_val->grade.val2 == 6){       //发送录波信号
-            emit startRecWave(2, sql_para.aaultra_sql.time);
+            emit startRecWave(AA_Ultrasonic, sql_para.aaultra_sql.time);
+            key_val->grade.val1 = 1;        //为了锁住主界面，防止左右键切换通道
+            key_val->grade.val5 = 1;
+            emit fresh_parent();
+            break;
         }
-
-        key_val->grade.val1 = 0;
-        key_val->grade.val2 = 0;
         if (sql_para.aaultra_sql.vol != sqlcfg->get_para()->aaultra_sql.vol){   //判断音量调节生效
             data->set_send_para (sp_aa_vol, sql_para.aaultra_sql.vol);
             qDebug()<<"vol changed!";
         }
 
         sqlcfg->sql_save(&sql_para);
+        key_val->grade.val1 = 0;
+        key_val->grade.val2 = 0;
         timer1->start();                                                         //and timer no stop
         timer2->start();
         break;
@@ -181,13 +191,6 @@ void AAWidget::trans_key(quint8 key_code)
             }
             break;
         case 2:
-//            if (sql_para.aaultra_sql.gain < 1) {
-//                sql_para.aaultra_sql.gain = 1;
-//            } else if (sql_para.aaultra_sql.gain > 10) {
-//                sql_para.aaultra_sql.gain = 10;
-//            } else {
-//                sql_para.aaultra_sql.gain -= 0.1;
-//            }
             if (sql_para.aaultra_sql.gain > 0.15) {
                 sql_para.aaultra_sql.gain -= 0.1;
             }
@@ -228,13 +231,6 @@ void AAWidget::trans_key(quint8 key_code)
             }
             break;
         case 2:
-//            if (sql_para.aaultra_sql.gain <1) {
-//                sql_para.aaultra_sql.gain = 1;
-//            } else if (sql_para.aaultra_sql.gain > 10) {
-//                sql_para.aaultra_sql.gain = 10;
-//            } else {
-//                sql_para.aaultra_sql.gain += 0.1;
-//            }
             if (sql_para.aaultra_sql.gain < 99.95) {
                 sql_para.aaultra_sql.gain += 0.1;
             }
@@ -268,6 +264,7 @@ void AAWidget::trans_key(quint8 key_code)
     default:
         break;
     }
+    emit fresh_parent();
     fresh_setting();
 }
 
@@ -322,6 +319,7 @@ void AAWidget::fresh(bool f)
             ui->label_val->setStyleSheet("QLabel {font-family:WenQuanYi Micro Hei;font-size:60px;color:green}");
         }
         emit aa_modbus_data(db);
+        emit aa_log_data(val_db,0,0);
 //        db = val;
     }
     else{   //条件显示
@@ -393,11 +391,11 @@ void AAWidget::fresh_setting()
     ui->comboBox->setItemText(2,tr("音量调节    [×%1]").arg(QString::number(sql_para.aaultra_sql.vol)));
     ui->comboBox->setItemText(3,tr("黄色报警阈值[%1]dB").arg(QString::number(sql_para.aaultra_sql.low)));
     ui->comboBox->setItemText(4,tr("红色报警阈值[%1]dB").arg(QString::number(sql_para.aaultra_sql.high)));
-    ui->comboBox->setItemText(5,tr("波形记录     [%1]s").arg(sql_para.aaultra_sql.time));
+    ui->comboBox->setItemText(5,tr("连续录波     [%1]s").arg(sql_para.aaultra_sql.time));
 
     ui->comboBox->setCurrentIndex(key_val->grade.val2-1);
 
-    if (key_val->grade.val2 && key_val->grade.val0 ==3) {
+    if (key_val->grade.val2 && key_val->grade.val0 ==3 && key_val->grade.val5 == 0) {
         ui->comboBox->showPopup();
     }
     else{

@@ -21,8 +21,8 @@
 
 Modbus::Modbus(QObject *parent, G_PARA *g_data) : QThread(parent)
 {
-	int i;
-	
+    int i;
+
     data = g_data;
     sql_para = new SQL_PARA;
     data_stand = new unsigned short[md_wr_reg_max];
@@ -93,19 +93,6 @@ void Modbus::run()
 
 }
 
-
-void Modbus::tev_modbus_data(int val, int pluse)
-{
-    data_stand[md_rd_reg_tev_mag] = val;
-    data_stand[md_rd_reg_tev_cnt] = pluse;
-//    qDebug()<<"tev modbus data changed! \t " << val << "\t"<< pluse;
-}
-
-void Modbus::aa_modbus_data(int val)
-{
-    data_stand[md_rd_reg_aa_mag] = val;
-//    qDebug()<<"aa modbus data changed!  \t" << val;
-}
 
 unsigned short Modbus::modbus_crc(unsigned char *buf, unsigned char length)
 {
@@ -436,9 +423,9 @@ int Modbus::get_reg_value(unsigned short reg, unsigned short *val)
     case md_rd_reg_tev_severity:
     case md_rd_reg_aa_mag:
     case md_rd_reg_aa_severity:
-	case md_rd_reg_tev_nb_sug:
-	case md_rd_reg_tev_zb_sug:
-	case md_rd_reg_aa_bias_sug:
+    case md_rd_reg_tev_zero_sug:
+    case md_rd_reg_tev_noise_sug:
+    case md_rd_reg_aa_bias_sug:
     case md_rw_reg_tev_gain:
     case md_rw_reg_tev_noise_bias:
     case md_rw_reg_tev_zero_bias:
@@ -536,9 +523,8 @@ void Modbus::transData()
         data_stand[md_rd_reg_aa_severity] = 2;
     }
 
-	data_stand [md_rd_reg_tev_nb_sug] = 0;
-	data_stand [md_rd_reg_tev_zb_sug] = 0;
-	data_stand [md_rd_reg_aa_bias_sug] = 0;
+
+
 
     data_stand[md_rw_reg_tev_gain] = sql_para->tev1_sql.gain;
     data_stand[md_rw_reg_tev_noise_bias] = sql_para->tev1_sql.tev_offset1;
@@ -548,6 +534,32 @@ void Modbus::transData()
 
 
 
+void Modbus::tev_modbus_data(int val, int pluse)
+{
+    data_stand[md_rd_reg_tev_mag] = val;
+    data_stand[md_rd_reg_tev_cnt] = pluse;
+//    qDebug()<<"tev modbus data changed! \t " << val << "\t"<< pluse;
+}
+
+void Modbus::aa_modbus_data(int val)
+{
+    data_stand[md_rd_reg_aa_mag] = val;
+    //    qDebug()<<"aa modbus data changed!  \t" << val;
+}
+
+void Modbus::tev_modbus_suggest(int val1, int val2)
+{
+    data_stand [md_rd_reg_tev_zero_sug] = val1;
+    data_stand [md_rd_reg_tev_noise_sug] = val2;
+
+//    qDebug()<<"tev modbus data changed! \t " << val1 << "\t"<< val2;
+}
+
+void Modbus::aa_modbus_suggest(int val)
+{
+    data_stand [md_rd_reg_aa_bias_sug] = val;
+//    qDebug()<<"aa modbus data changed!  \t" << val;
+}
 
 
 

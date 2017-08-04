@@ -49,7 +49,7 @@
    </item>
    <item>
     <property name="text">
-     <string>波形记录[5s]</string>
+     <string>连续录波[5s]</string>
     </property>
    </item>
    <item>

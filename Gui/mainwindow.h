@@ -13,6 +13,7 @@
 #include "IO/Data/fifodata.h"
 #include "IO/Modbus/modbus.h"
 #include <QPixmap>
+#include <QSplashScreen>
 
 #define RESOLUTION_X		480
 #define RESOLUTION_Y		272
@@ -21,7 +22,7 @@ class MainWindow : public QFrame
 {
     Q_OBJECT
 public:
-    MainWindow(QWidget *parent = NULL);
+    MainWindow(QSplashScreen *sp, QWidget *parent = NULL);
 
 signals:
     void sendkey(quint8);

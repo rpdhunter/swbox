@@ -16,6 +16,7 @@
 #include "Menu6/menu6.h"
 #include "IO/Key/key.h"
 #include "IO/Data/data.h"
+#include <QSplashScreen>
 
 enum MENU_LIST {
     MENU0 = 0,
@@ -32,12 +33,12 @@ class MainMenu : public QFrame
 #define MAINMENU_NUM        8                                                   //main menu number
     Q_OBJECT
 public:
-    explicit MainMenu(QWidget *parent = NULL, G_PARA *g_data = NULL);
+    explicit MainMenu(QSplashScreen *sp, QWidget *parent = NULL, G_PARA *g_data = NULL);
 
 signals:
     void send_key(quint8);
 
-    void startRecWv(int,int);      //开始录播信号,参数范围0-5,0为地电波,1为AA超声...
+    void startRecWv(MODE,int);      //开始录播信号,参数范围0-5,0为地电波,1为AA超声...
     void closeTimeChanged(int);
     void tev_modbus_data(int,int);
     void aa_modbus_data(int);
@@ -45,6 +46,9 @@ signals:
     void stop_play_voice();             //终止播放
 
     void switch_rfct_mode(int);    //进入（离开）RFCT模式
+
+    void modbus_tev_offset_suggest(int,int);
+    void modbus_aa_offset_suggest(int);
 
 public slots:
     void fresh_menu(void);

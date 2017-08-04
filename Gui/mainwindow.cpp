@@ -1,7 +1,10 @@
 #include "mainwindow.h"
 #include <QBuffer>
+#include <QDesktopWidget>
+#include <QApplication>
+#include <QScreen>
 
-MainWindow::MainWindow(QWidget *parent)
+MainWindow::MainWindow(QSplashScreen *sp, QWidget *parent)
     : QFrame(parent)
 {
     /* GUI */
@@ -9,6 +12,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     /* get data from fpga fifo */
     g_data = new G_PARA;
+
 	if (g_data != NULL) {
 	    //memset是一个c++函数，用于快速清零一块内存区域
 		memset(g_data, 0, sizeof(G_PARA));
@@ -17,18 +21,22 @@ MainWindow::MainWindow(QWidget *parent)
 		exit (0);
 	}
 
+    sp->showMessage(tr("正在设置定值..."),Qt::AlignBottom|Qt::AlignLeft);
 #ifdef ARM
     //开启新线程，持续监听FPGA的数据，
     fifodata = new FifoData(g_data);
 #endif
 
+    sp->showMessage(tr("正在初始化菜单..."),Qt::AlignBottom|Qt::AlignLeft);
     /* main menu */
-    mainmenu = new MainMenu(this, g_data);
+    mainmenu = new MainMenu(sp, this, g_data);
+
 
 
 
 #ifdef ARM
     /* detect key */
+    sp->showMessage(tr("正在开启子线程..."),Qt::AlignBottom|Qt::AlignLeft);
     //开启键盘监测线程，持续监听键盘输入
     keydetect = new KeyDetect(this);
 
@@ -45,7 +53,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(this, &MainWindow::sendkey, mainmenu, &MainMenu::trans_key);        //trans key value
 
     //录波信号
-    connect(mainmenu,SIGNAL(startRecWv(int,int)),fifodata,SLOT(startRecWave(int,int)));
+    connect(mainmenu,SIGNAL(startRecWv(MODE,int)),fifodata,SLOT(startRecWave(MODE,int)));
     connect(fifodata,SIGNAL(waveData(VectorList,MODE)),mainmenu,SLOT(showWaveData(VectorList,MODE)));
 
     //系统重启
@@ -66,6 +74,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(mainmenu,SIGNAL(tev_modbus_data(int,int)),modbus,SLOT(tev_modbus_data(int,int)));
     connect(mainmenu,SIGNAL(aa_modbus_data(int)),modbus,SLOT(aa_modbus_data(int)));
     connect(modbus,SIGNAL(closeTimeChanged(int)),this,SLOT(setCloseTime(int)));
+    connect(mainmenu,SIGNAL(modbus_tev_offset_suggest(int,int)),modbus,SLOT(tev_modbus_suggest(int,int)) );
+    connect(mainmenu,SIGNAL(modbus_aa_offset_suggest(int)),modbus,SLOT(aa_modbus_suggest(int)) );
 
     //声音播放
     connect(mainmenu,SIGNAL(play_voice(VectorList)),fifodata,SLOT(playVoiceData(VectorList)));
@@ -86,8 +96,8 @@ void MainWindow::showTime()
 
 void MainWindow::printSc()
 {
-    QPixmap fullScreenPixmap = this->grab(this->rect());
-//    bool flag = fullScreenPixmap.save(QString("./ScreenShots/%1.png").arg(QTime::currentTime().toString("-hh-mm-ss")),"PNG");
+//    QPixmap fullScreenPixmap = this->grab(this->rect());          //老的截屏方式，只能截取指定Wdiget及其子类
+    QPixmap fullScreenPixmap = QGuiApplication::primaryScreen()->grabWindow(0);     //新截屏方式更加完美
     bool flag = fullScreenPixmap.save(QString("./ScreenShots/ScreenShots-%1.png").arg(QTime::currentTime().toString("hh-mm-ss")),"PNG");
     if(flag)
         qDebug()<<"fullScreen saved!";

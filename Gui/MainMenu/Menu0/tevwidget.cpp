@@ -13,6 +13,9 @@
 #include <qwt_plot_curve.h>
 #include <qwt_scale_engine.h>
 #include <qwt_plot_histogram.h>
+//#include <QLineEdit>
+#include <QThreadPool>
+#include "IO/Data/filetools.h"
 
 
 #define VALUE_MAX  60           //RPPD最大值
@@ -20,7 +23,7 @@
 
 
 
-TEVWidget::TEVWidget(G_PARA *data, Channel channel, QWidget *parent) :
+TEVWidget::TEVWidget(G_PARA *data, MODE channel, QWidget *parent) :
     QFrame(parent),
     ui(new Ui::Amplitude1)
 {
@@ -31,7 +34,7 @@ TEVWidget::TEVWidget(G_PARA *data, Channel channel, QWidget *parent) :
 
     key_val = NULL;
 
-    this->channel = channel;
+    this->mode = channel;
 
     reloadSql();
 
@@ -41,8 +44,9 @@ TEVWidget::TEVWidget(G_PARA *data, Channel channel, QWidget *parent) :
 
     pulse_cnt_last = 0;
 
+//    ui->comboBox->setParent(this);
 
-    QLineEdit *lineEdit = new QLineEdit;
+    QLineEdit *lineEdit = new QLineEdit(this);
     ui->comboBox->setStyleSheet("QComboBox {border-image: url(:/widgetphoto/mainmenu/para_child.png);color:gray; }"
 //                                "QComboBox::down-arrow {image: url(:/widgetphoto/mainmenu/down.png}"
 //                                "QComboBox::drop-down {width: 30px;}"
@@ -52,6 +56,7 @@ TEVWidget::TEVWidget(G_PARA *data, Channel channel, QWidget *parent) :
     ui->comboBox->lineEdit()->setReadOnly(true);
     ui->comboBox->lineEdit()->setStyleSheet("QLineEdit {border-image: url(:/widgetphoto/mainmenu/para_child.png);color:gray}");
     ui->comboBox->view()->setStyleSheet("QListView {border-image: url(:/widgetphoto/mainmenu/para_child.png);color:gray;outline: none;}");
+//    ui->comboBox->view()->setParent(ui->comboBox);
 
 
 
@@ -85,6 +90,10 @@ TEVWidget::TEVWidget(G_PARA *data, Channel channel, QWidget *parent) :
     recWaveForm = new RecWaveForm(this);
     recWaveForm->hide();
     connect(this, SIGNAL(send_key(quint8)), recWaveForm, SLOT(trans_key(quint8)));
+
+    logtools = new LogTools(mode);      //日志保存模块
+    connect(this,SIGNAL(tev_log_data(double,int,double)),logtools,SLOT(dealLog(double,int,double)));
+    connect(this,SIGNAL(tev_PRPD_data(QVector<QwtPoint3D>)),logtools,SLOT(dealRPRDLog(QVector<QwtPoint3D>)));
 }
 
 TEVWidget::~TEVWidget()
@@ -94,10 +103,12 @@ TEVWidget::~TEVWidget()
 
 void TEVWidget::showWaveData(VectorList buf, MODE mod)
 {
-    if( (key_val->grade.val0 == 0 && channel == Left) || (key_val->grade.val0 == 1 && channel == Right)){
+    if( (key_val->grade.val0 == 0 && mode == TEV1) || (key_val->grade.val0 == 1 && mode == TEV2)){
         key_val->grade.val1 = 1;        //为了锁住主界面，防止左右键切换通道
         key_val->grade.val5 = 1;
         recWaveForm->working(key_val,buf,mod);
+        FileTools *filetools = new FileTools(buf,mod);      //开一个线程，为了不影响数据接口性能
+        QThreadPool::globalInstance()->start(filetools);
     }
 }
 
@@ -237,11 +248,11 @@ void TEVWidget::trans_key(quint8 key_code)
         return;
     }
 
-    if(channel == Left && key_val->grade.val0 != 0){
+    if(mode == TEV1 && key_val->grade.val0 != 0){
         return;
     }
 
-    if(channel == Right && key_val->grade.val0 != 1){
+    if(mode == TEV2 && key_val->grade.val0 != 1){
         return;
     }
 
@@ -377,7 +388,7 @@ void TEVWidget::calc_tev_value (double * tev_val, double * tev_db, int * sug_cen
 	int d_max, d_min, a, b;
 	double db;
 	
-	if (channel == Left) {
+    if (mode == TEV1) {
 		d_max = data->recv_para.hdata0.ad.ad_max;
 		d_min = data->recv_para.hdata0.ad.ad_min;
     }
@@ -414,7 +425,7 @@ void TEVWidget::reloadSql()
     /* get sql para */
     sql_para = *sqlcfg->get_para();
 
-    if(channel == Left){
+    if(mode == TEV1){
         tev_sql = &sql_para.tev1_sql;
     }
     else{
@@ -458,7 +469,7 @@ void TEVWidget::fresh_plot()
 
     //脉冲计数和严重度
 //    signal_pulse_cnt = data->recv_para.pulse1.edge.neg + data->recv_para.pulse1.edge.pos;
-    if(channel == Left){
+    if(mode == TEV1){
         pulse_cnt = data->recv_para.hpulse0_totol;
     }
     else{
@@ -478,6 +489,7 @@ void TEVWidget::fresh_plot()
     db = (int)s;
 
     emit tev_modbus_data(db,pulse_cnt_show);
+    emit tev_log_data(s,pulse_cnt_show,degree);
 
     if ( db >= tev_sql->high) {
         ui->label_val->setStyleSheet("QLabel {font-family:WenQuanYi Micro Hei;font-size:60px;color:red}");
@@ -510,7 +522,7 @@ void TEVWidget::fresh_PRPD()
     int x,y,len;
 //    qDebug()<<"data->recv_para.recData[0] = "<<data->recv_para.recData[0];
     if(groupNum != data->recv_para.recData[0] && data->recv_para.recComplete == 0){     //有效数据
-        if( (channel == Left && data->recv_para.recData[0] < 4) || (channel == Right && data->recv_para.recData[0] >= 4) ){
+        if( (mode == TEV1 && data->recv_para.recData[0] < 4) || (mode == TEV2 && data->recv_para.recData[0] >= 4) ){
             groupNum = data->recv_para.recData[0];
             //处理数据
 
@@ -637,18 +649,14 @@ void TEVWidget::PRPDReset()
             map[i][j]=0;
         }
     }
+    emit tev_PRPD_data(points);
     points.clear();
     fresh_PRPD();
 }
 
 void TEVWidget::rec_wave()
 {
-    if(channel == Left){
-        emit startRecWave(0,0);
-    }
-    else{
-        emit startRecWave(1,0);
-    }
+    emit startRecWave(mode,0);
 }
 
 void TEVWidget::maxReset()
@@ -689,7 +697,7 @@ void TEVWidget::fresh_setting()
 
     ui->comboBox->setCurrentIndex(key_val->grade.val2-1);
 
-    if(channel == Left){
+    if(mode == TEV1){
         if (key_val->grade.val2 && key_val->grade.val0 ==0) {
             ui->comboBox->showPopup();
         }
@@ -697,7 +705,7 @@ void TEVWidget::fresh_setting()
             ui->comboBox->hidePopup();
         }
     }
-    else if(channel == Right){
+    else if(mode == TEV2){
         if (key_val->grade.val2 && key_val->grade.val0 ==1) {
             ui->comboBox->showPopup();
         }

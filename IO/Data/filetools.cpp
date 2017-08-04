@@ -17,7 +17,7 @@ FileTools::FileTools(VectorList data, MODE mode)
 
 FileTools::~FileTools()
 {
-    qDebug()<<"new thread save completed! mode="<<_mode;
+//    qDebug()<<"new thread save completed! mode="<<_mode;
 }
 
 void FileTools::run()
@@ -94,7 +94,7 @@ void FileTools::saveDataFile()
 
 
         if(file.copy("/mmc/sdcard/WaveForm/" + filename + ".DAT")){
-            qDebug()<<"copy " + filename + ".DAT to SDCard succeed!";
+//            qDebug()<<"copy " + filename + ".DAT to SDCard succeed!";
         }
         else{
             qDebug()<<"copy " + filename + ".DAT to SDCard failed!";
@@ -130,6 +130,11 @@ QString FileTools::getFilePath()
     case AA_Ultrasonic:     //AA超声
         filename.prepend("AAUltrasonic_");
         break;
+    case RFCT:
+        filename.prepend("RFCT_");
+        break;
+    case RFCT_CONTINUOUS:
+        filename.prepend("RFCT_CONTINUOUS_");
     default:
         break;
     }
@@ -191,7 +196,7 @@ void FileTools::saveCfgFile()
     out << "BINARY" << "\n";
 
     if(file.copy("/mmc/sdcard/WaveForm/" + filename + ".CFG")){
-        qDebug()<<"copy " + filename + ".CFG to SDCard succeed!";
+//        qDebug()<<"copy " + filename + ".CFG to SDCard succeed!";
     }
     else{
         qDebug()<<"copy " + filename + ".CFG to SDCard failed!";

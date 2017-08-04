@@ -49,6 +49,7 @@ Menu5::Menu5(QWidget *parent, G_PARA *g_data) : QFrame(parent)
     rfctwidget = new RFCTWidget(this,g_data);
     connect(this, SIGNAL(send_key(quint8)), rfctwidget, SLOT(trans_key(quint8)));
     connect(rfctwidget,SIGNAL(fresh_parent()),this,SLOT(fresh_table()));
+    connect(rfctwidget,SIGNAL(startRecWave(MODE,int)),this,SIGNAL(startRecWave(MODE,int)));
 
 }
 
@@ -62,6 +63,11 @@ void Menu5::working(CURRENT_KEY_VALUE *val)
     rfctwidget->working(val);
     fresh_table();
     this->show();
+}
+
+void Menu5::showWaveData(VectorList buf, MODE mod)
+{
+    rfctwidget->showWaveData(buf,mod);
 }
 
 void Menu5::trans_key(quint8 key_code)

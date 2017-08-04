@@ -3,7 +3,7 @@
 
 //控制主界面显示
 //核心是根据键盘事件，改变图标状态
-MainMenu::MainMenu(QWidget *parent, G_PARA *g_data) : QFrame(parent)
+MainMenu::MainMenu(QSplashScreen *sp, QWidget *parent, G_PARA *g_data) : QFrame(parent)
 {
 //    ch = 0;
     key_val.val = 0;
@@ -43,21 +43,25 @@ MainMenu::MainMenu(QWidget *parent, G_PARA *g_data) : QFrame(parent)
     statusbar->show();
 
     /* menu view */
+    sp->showMessage(tr("正在初始化TEV模块..."),Qt::AlignBottom|Qt::AlignLeft);
     menu0 = new Menu0(this, g_data);
     menu0->hide();
 
     menu1 = new Menu1(this, g_data);
     menu1->hide();
 
+    sp->showMessage(tr("正在初始化定位模块..."),Qt::AlignBottom|Qt::AlignLeft);
     menu2 = new Menu2(this, g_data);
     menu2->hide();
 
+    sp->showMessage(tr("正在初始化AA超声波模块..."),Qt::AlignBottom|Qt::AlignLeft);
     menu3 = new Menu3(this, g_data);
     menu3->hide();
 
     menu4 = new Menu4(this);
     menu4->hide();
 
+    sp->showMessage(tr("正在初始化RFCT模块..."),Qt::AlignBottom|Qt::AlignLeft);
     menu5 = new Menu5(this, g_data);
     menu5->hide();
 
@@ -86,10 +90,11 @@ MainMenu::MainMenu(QWidget *parent, G_PARA *g_data) : QFrame(parent)
     connect(menu6, &Menu6::send_title_val, this, &MainMenu::fresh_title);
 
     //录波
-    connect(menu6,SIGNAL(startRecWv(int,int)),this,SIGNAL(startRecWv(int,int)));
-    connect(menu0,SIGNAL(startRecWave(int,int)),this,SIGNAL(startRecWv(int,int)));
-    connect(menu1,SIGNAL(startRecWave(int,int)),this,SIGNAL(startRecWv(int,int)));
-    connect(menu3,SIGNAL(startRecWave(int,int)),this,SIGNAL(startRecWv(int,int)));
+//    connect(menu6,SIGNAL(startRecWv(int,int)),this,SIGNAL(startRecWv(MODE,int)));
+    connect(menu0,SIGNAL(startRecWave(MODE,int)),this,SIGNAL(startRecWv(MODE,int)));
+    connect(menu1,SIGNAL(startRecWave(MODE,int)),this,SIGNAL(startRecWv(MODE,int)));
+    connect(menu3,SIGNAL(startRecWave(MODE,int)),this,SIGNAL(startRecWv(MODE,int)));
+    connect(menu5,SIGNAL(startRecWave(MODE,int)),this,SIGNAL(startRecWv(MODE,int)));
 
     //杂项状态即时显示
     connect(menu6,SIGNAL(fregChanged(int)),this,SLOT(fresg_freq(int)));
@@ -108,6 +113,9 @@ MainMenu::MainMenu(QWidget *parent, G_PARA *g_data) : QFrame(parent)
 
     connect(menu0,SIGNAL(tev_modbus_data(int,int)),menu2,SLOT(showLeftData(int,int)));
     connect(menu1,SIGNAL(tev_modbus_data(int,int)),menu2,SLOT(showRightData(int,int)));
+
+    connect(menu0,SIGNAL(offset_suggest(int,int)),this,SIGNAL(modbus_tev_offset_suggest(int,int)) );
+    connect(menu3,SIGNAL(offset_suggest(int)),this,SIGNAL(modbus_aa_offset_suggest(int)) );
 
     //故障定位相关
     connect(menu0,SIGNAL(origin_pluse_points(QVector<QPoint>,int)),menu2,SLOT(get_origin_points(QVector<QPoint>,int)));
@@ -251,7 +259,8 @@ void MainMenu::trans_key(quint8 key_code)
 
             if (key_val.grade.val0 == GRADE0_MENU_MIN_NUM) {
                 key_val.grade.val0 = GRADE0_MENU_MAX_NUM;
-            } else {
+            }
+            else {
                 if(sqlcfg->get_para()->full_featured){
                     if(key_val.grade.val0 == 5){
                         key_val.grade.val0 = 3;
@@ -266,7 +275,7 @@ void MainMenu::trans_key(quint8 key_code)
             }
 
             if(key_val.grade.val0 == 5){
-                emit switch_rfct_mode(1);
+                emit switch_rfct_mode(sqlcfg->get_para()->rfct_sql.filter);
             }
             break;
 
@@ -278,8 +287,9 @@ void MainMenu::trans_key(quint8 key_code)
 
             if (key_val.grade.val0 == GRADE0_MENU_MAX_NUM) {
                 key_val.grade.val0 = GRADE0_MENU_MIN_NUM;
-            } else {
-                if(sqlcfg->get_para()->full_featured){
+            }
+            else {
+                if(sqlcfg->get_para()->full_featured){      //切换模式，顺带切滤波器
                     if(key_val.grade.val0 == 3){
                         key_val.grade.val0 = 5;
                     }
@@ -293,7 +303,7 @@ void MainMenu::trans_key(quint8 key_code)
             }
 
             if(key_val.grade.val0 == 5){
-                emit switch_rfct_mode(1);
+                emit switch_rfct_mode(sqlcfg->get_para()->rfct_sql.filter);
             }
 
             break;
@@ -315,30 +325,30 @@ void MainMenu::showWaveData(VectorList buf,MODE mod)
 {
     if(menu6->isVisible()){
         menu6->showWaveData(buf,mod);
-        qDebug()<<"menu6 show wave data!";
+//        qDebug()<<"menu6 show wave data!";
     }
     if(menu0->isVisible() && mod == TEV1){
         menu0->showWaveData(buf,mod);
-        qDebug()<<"menu0 show wave data!";
+//        qDebug()<<"menu0 show wave data!";
     }
     if(menu1->isVisible() && mod == TEV2){
         menu1->showWaveData(buf,mod);
-        qDebug()<<"menu1 show wave data!";
+//        qDebug()<<"menu1 show wave data!";
     }
     if(menu3->isVisible() && mod == AA_Ultrasonic){
         menu3->showWaveData(buf,mod);
-        qDebug()<<"menu3 show wave data!";
+//        qDebug()<<"menu3 show wave data!";
     }
 
     if(menu2->isVisible() && mod == TEV_Double){
         menu2->showWaveData(buf,mod);
-        qDebug()<<"menu3 show wave data!";
+//        qDebug()<<"menu3 show wave data!";
     }
 
-//    if(menu5->isVisible() && (mod == TEV1 || mod == TEV2 ) ){
-//        menu5->showWaveData(buf,mod);
-//        qDebug()<<"menu3 show wave data!";
-//    }
+    if(menu5->isVisible() && (mod == RFCT ) ){
+        menu5->showWaveData(buf,mod);
+//        qDebug()<<"menu5 show wave data!";
+    }
 
 }
 

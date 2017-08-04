@@ -15,10 +15,12 @@ public:
     explicit Menu5(QWidget *parent = 0, G_PARA *g_data = NULL);
 
     void working(CURRENT_KEY_VALUE *val);
+    void showWaveData(VectorList buf, MODE mod);
 
 signals:
     void send_title_val(CURRENT_KEY_VALUE val);
     void send_key(quint8);
+    void startRecWave(MODE, int);
 
 public slots:
     void trans_key(quint8);

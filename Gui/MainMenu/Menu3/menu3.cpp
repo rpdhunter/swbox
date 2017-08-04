@@ -51,8 +51,9 @@ Menu3::Menu3(QWidget *parent, G_PARA *g_data) : QFrame(parent)
     aaultrasonic = new AAWidget(this,g_data);
 
     connect(this, SIGNAL(send_key(quint8)), aaultrasonic, SLOT(trans_key(quint8)));
+    connect(aaultrasonic,SIGNAL(fresh_parent()),this,SLOT(fresh_table()));
     connect(aaultrasonic,SIGNAL(aa_modbus_data(int)),this,SIGNAL(aa_modbus_data(int)));
-    connect(aaultrasonic,SIGNAL(startRecWave(int,int)),this,SIGNAL(startRecWave(int,int)));
+    connect(aaultrasonic,SIGNAL(startRecWave(MODE,int)),this,SIGNAL(startRecWave(MODE,int)));
     connect(aaultrasonic,SIGNAL(offset_suggest(int)),this,SIGNAL(offset_suggest(int)));
 }
 

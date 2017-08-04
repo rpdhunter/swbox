@@ -49,5 +49,6 @@
         <file>widgetphoto/mainmenu/para1.png</file>
         <file>widgetphoto/mainmenu/para2.png</file>
         <file>widgetphoto/ohv_gary.png</file>
+        <file>widgetphoto/powersystem.png</file>
     </qresource>
 </RCC>

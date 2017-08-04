@@ -8,6 +8,7 @@
 #include "IO/SqlCfg/sqlcfg.h"
 #include <QVector>
 #include "../Menu6/DebugSet/recwaveform.h"
+#include "IO/Data/logtools.h"
 
 namespace Ui {
 class Amplitude1;
@@ -23,12 +24,7 @@ class TEVWidget : public QFrame
     Q_OBJECT
 
 public:
-    enum Channel{
-        Left,
-        Right
-    };
-
-    explicit TEVWidget(G_PARA *data, Channel channel, QWidget *parent = 0);
+    explicit TEVWidget(G_PARA *data, MODE mode, QWidget *parent = 0);
     ~TEVWidget();
 
     void showWaveData(VectorList buf, MODE mod);
@@ -42,8 +38,10 @@ signals:
     void send_key(quint8);
     void offset_suggest(int,int);                               //中心点和噪声建议值
     void tev_modbus_data(int,int);                              //为modbus提供原始数据
+    void tev_log_data(double val, int pulse, double degree);    //发送日志数据
+    void tev_PRPD_data(QVector<QwtPoint3D>);
     void origin_pluse_points(QVector<QPoint> p, int group);     //p是读取到的脉冲点，group是组号，目的是为故障定位提供原始数据
-    void startRecWave(int, int);
+    void startRecWave(MODE, int);
 
 private slots:
     void fresh_plot(void);
@@ -89,10 +87,11 @@ private:
     void reloadSql();   //重新装载设置
 
 //    int temp;
-    Channel channel;
+    MODE mode;
 //    bool channel_flag;
 
     RecWaveForm *recWaveForm;
+    LogTools *logtools;
 };
 
 #endif // AMPLITUDE1_H

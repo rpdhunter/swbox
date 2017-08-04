@@ -44,6 +44,9 @@ public slots:
     void tev_modbus_data(int val, int pluse);
     void aa_modbus_data(int val);
 
+    void tev_modbus_suggest(int val1, int val2);
+    void aa_modbus_suggest(int val);
+
 protected:
     void run(void);
 
@@ -60,9 +63,9 @@ private:
         md_rd_reg_aa_mag,
         md_rd_reg_aa_severity,
 
-		/* suggest value */
-        md_rd_reg_tev_nb_sug = 0x0030,
-        md_rd_reg_tev_zb_sug,
+        /* suggest value */
+        md_rd_reg_tev_zero_sug = 0x0030,
+        md_rd_reg_tev_noise_sug,
         md_rd_reg_aa_bias_sug,
 
         /* read and write */

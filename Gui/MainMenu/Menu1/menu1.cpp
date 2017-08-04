@@ -46,11 +46,11 @@ Menu1::Menu1(QWidget *parent, G_PARA *g_data) : QFrame(parent)
     main_title6->move(main_title5->x() + 45, main_title0->y());
 
     /* content */
-    tevWidget = new TEVWidget(g_data,TEVWidget::Channel::Right,this);
+    tevWidget = new TEVWidget(g_data,TEV2,this);
     connect(this, &Menu1::send_key, tevWidget, &TEVWidget::trans_key);
     connect(tevWidget,SIGNAL(offset_suggest(int,int)),this,SIGNAL(offset_suggest(int,int)));
     connect(tevWidget,SIGNAL(origin_pluse_points(QVector<QPoint>,int)),this,SIGNAL(origin_pluse_points(QVector<QPoint>,int)));
-    connect(tevWidget,SIGNAL(startRecWave(int,int)),this,SIGNAL(startRecWave(int,int)));
+    connect(tevWidget,SIGNAL(startRecWave(MODE,int)),this,SIGNAL(startRecWave(MODE,int)));
 
     connect(tevWidget,SIGNAL(tev_modbus_data(int,int)),this,SIGNAL(tev_modbus_data(int,int)));
 }

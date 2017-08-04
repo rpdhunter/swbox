@@ -19,7 +19,7 @@
 #define TEV_FACTOR  (1.8*1000/65536)
 
 #define VERSION_MAJOR   1       //软件版本号
-#define VERSION_MINOR   3
+#define VERSION_MINOR   4
 
 enum send_params {
 	sp_freq = 0,				//频率（FREQ_REG）
@@ -42,6 +42,7 @@ enum send_params {
     sp_working_mode_ad3,        //工作模式(WORKING_MODE_AD3)
     sp_working_mode_ad4,        //工作模式(WORKING_MODE_AD4)
     sp_read_fpga_mode1,         //工作模式1，读数据标志位（READ_FPGA）
+    sp_keyboard_backlight,      //键盘背光
 	
 	sp_num
 };
@@ -118,11 +119,13 @@ public:
 #pragma pack()
 
 enum MODE{
-    TEV1,                    //0
-    TEV2,
-    TEV_Double,
-    AA_Ultrasonic,          //1
-    AE_Ultrasonic,
+    TEV1 = 0,                    //0
+    TEV2 = 1,
+    AA_Ultrasonic = 2,          //1
+    AE_Ultrasonic = 3,
+    TEV_Double = 4,
+    RFCT = 5,
+    RFCT_CONTINUOUS = 6,        //连续录波
     Disable
 };
 
