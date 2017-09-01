@@ -1,102 +1,733 @@
 #include "mainwindow.h"
-#include <QBuffer>
-#include <QDesktopWidget>
+#include "ui_mainwindow.h"
+#include <QtDebug>
+
+#ifdef PRINTSCREEN
+#include <QPixmap>
 #include <QApplication>
 #include <QScreen>
-
-MainWindow::MainWindow(QSplashScreen *sp, QWidget *parent)
-    : QFrame(parent)
-{
-    /* GUI */
-    this->setGeometry (0, 0, RESOLUTION_X, RESOLUTION_Y);
-
-    /* get data from fpga fifo */
-    g_data = new G_PARA;
-
-	if (g_data != NULL) {
-	    //memset是一个c++函数，用于快速清零一块内存区域
-		memset(g_data, 0, sizeof(G_PARA));
-	}
-	else {
-		exit (0);
-	}
-
-    sp->showMessage(tr("正在设置定值..."),Qt::AlignBottom|Qt::AlignLeft);
-#ifdef ARM
-    //开启新线程，持续监听FPGA的数据，
-    fifodata = new FifoData(g_data);
 #endif
 
-    sp->showMessage(tr("正在初始化菜单..."),Qt::AlignBottom|Qt::AlignLeft);
-    /* main menu */
-    mainmenu = new MainMenu(sp, this, g_data);
 
+MainWindow::MainWindow(QSplashScreen *sp, QWidget *parent ) :
+    QFrame(parent),
+    ui(new Ui::MainWindow)
+{
+    ui->setupUi(this);
+    this->setGeometry (0, 0, RESOLUTION_X, RESOLUTION_Y);
 
+    QPalette Pal(this->palette());
+    Pal.setColor(QPalette::Background, QColor(36,36,36));
+    this->setPalette(Pal);
 
+//    sqlcfg->sql_save(sqlcfg->default_config());       //用于程序崩溃时重置数据
 
-#ifdef ARM
-    /* detect key */
-    sp->showMessage(tr("正在开启子线程..."),Qt::AlignBottom|Qt::AlignLeft);
-    //开启键盘监测线程，持续监听键盘输入
+    key_val.val = 0;
+    data = new G_PARA;
+    memset(data, 0, sizeof(G_PARA));
+
+    sp->showMessage(tr("正在初始化实时数据库..."),Qt::AlignBottom|Qt::AlignLeft);
+    init_rdb();
+
+    sp->showMessage(tr("正在设置FPGA..."),Qt::AlignBottom|Qt::AlignLeft);
+    fifodata = new FifoData(data);
+
+    sp->showMessage(tr("正在初始化按键..."),Qt::AlignBottom|Qt::AlignLeft);
     keydetect = new KeyDetect(this);
 
-
-    modbus = new Modbus(this,g_data);
+    sp->showMessage(tr("正在初始化通信..."),Qt::AlignBottom|Qt::AlignLeft);
+    modbus = new Modbus(this,data);
 
     //注册两个自定义类型
     qRegisterMetaType<VectorList>("VectorList");
     qRegisterMetaType<MODE>("MODE");
 
+    connect(keydetect, &KeyDetect::sendkey, this, &MainWindow::trans_key);
 
-    connect(keydetect, &KeyDetect::sendkey, mainmenu, &MainMenu::trans_key);    //trans key value
+#ifdef PRINTSCREEN
+    connect(timer_time,SIGNAL(timeout()),this,SLOT(printSc()));  //截屏
 #endif
-    connect(this, &MainWindow::sendkey, mainmenu, &MainMenu::trans_key);        //trans key value
-
-    //录波信号
-    connect(mainmenu,SIGNAL(startRecWv(MODE,int)),fifodata,SLOT(startRecWave(MODE,int)));
-    connect(fifodata,SIGNAL(waveData(VectorList,MODE)),mainmenu,SLOT(showWaveData(VectorList,MODE)));
-
-    //系统重启
-    rebootTimer = new QTimer;
-    setCloseTime(sqlcfg->get_para()->close_time);
-    connect(keydetect,SIGNAL(sendkey(quint8)),this,SLOT(resetTimerFromKey()));
-    connect(mainmenu,SIGNAL(closeTimeChanged(int)),this,SLOT(setCloseTime(int)));
-    connect(rebootTimer,SIGNAL(timeout()),this,SLOT(system_reboot()));
-
-    //状态栏显示
-    showTimer = new QTimer;
-    showTimer->start(1000);
-    connect(showTimer,SIGNAL(timeout()),this,SLOT(showTime()));
-
-//    connect(showTimer,SIGNAL(timeout()),this,SLOT(printSc()));  //截屏
 
     //modbus相关
-    connect(mainmenu,SIGNAL(tev_modbus_data(int,int)),modbus,SLOT(tev_modbus_data(int,int)));
-    connect(mainmenu,SIGNAL(aa_modbus_data(int)),modbus,SLOT(aa_modbus_data(int)));
-    connect(modbus,SIGNAL(closeTimeChanged(int)),this,SLOT(setCloseTime(int)));
-    connect(mainmenu,SIGNAL(modbus_tev_offset_suggest(int,int)),modbus,SLOT(tev_modbus_suggest(int,int)) );
-    connect(mainmenu,SIGNAL(modbus_aa_offset_suggest(int)),modbus,SLOT(aa_modbus_suggest(int)) );
+//    connect(mainmenu,SIGNAL(tev_modbus_data(int,int)),modbus,SLOT(tev_modbus_data(int,int)));
+//    connect(mainmenu,SIGNAL(aa_modbus_data(int)),modbus,SLOT(aa_modbus_data(int)));
+    connect(modbus,SIGNAL(closeTimeChanged(int)),this,SLOT(set_reboot_time()) );
+//    connect(mainmenu,SIGNAL(modbus_tev_offset_suggest(int,int)),modbus,SLOT(tev_modbus_suggest(int,int)) );
+//    connect(mainmenu,SIGNAL(modbus_aa_offset_suggest(int)),modbus,SLOT(aa_modbus_suggest(int)) );
 
-    //声音播放
-    connect(mainmenu,SIGNAL(play_voice(VectorList)),fifodata,SLOT(playVoiceData(VectorList)));
-    connect(fifodata,SIGNAL(playVoiceProgress(int,int,bool)),mainmenu,SLOT(playVoiceProgress(int,int,bool)));
-    connect(mainmenu,SIGNAL(stop_play_voice()),fifodata,SLOT(stop_play_voice()));
 
-    //高频CT模式
-    connect(mainmenu,SIGNAL(switch_rfct_mode(int)),fifodata,SLOT(switch_rfct_mode(int)));
+    sp->showMessage(tr("正在初始化主菜单..."),Qt::AlignBottom|Qt::AlignLeft);
+    menu_init();
+    statusbar_init();
+    function_init(sp);
+    options_init();
+
+    ui->tabWidget->setCurrentIndex(0);
 }
 
-void MainWindow::showTime()
+MainWindow::~MainWindow()
 {
-    int s = rebootTimer->remainingTime() / 1000;    //自动关机秒数
-    if(rebootTimer->isActive() && s<60){
-        mainmenu->showReminTime(rebootTimer->remainingTime() / 1000 , tr("自动关机"));
+    delete ui;
+}
+
+void MainWindow::menu_init()
+{
+    ui->tabWidget->setStyleSheet("QTabBar::tab {border: 0px solid white; min-width: 0ex;padding: 1px; }"
+                                 "QTabBar::tab:selected{ background:rgb(46, 52, 54);  }"
+                                 "QTabBar::tab:!selected{ background:transparent;   }"
+                                 "QTabWidget::pane{border-width:0px;}"
+                                 );
+    menu_icon0 = new QLabel(this);
+    menu_icon0->resize(41, 24);
+    menu_icon1 = new QLabel(this);
+    menu_icon1->resize(41, 24);
+    menu_icon2 = new QLabel(this);
+    menu_icon2->resize(41, 24);
+    menu_icon3 = new QLabel(this);
+    menu_icon3->resize(41, 24);
+    menu_icon4 = new QLabel(this);
+    menu_icon4->resize(41, 24);
+    menu_icon5 = new QLabel(this);
+    menu_icon5->resize(41, 24);
+
+    ui->tabWidget->tabBar()->setTabButton(0,QTabBar::LeftSide,menu_icon0);
+    ui->tabWidget->tabBar()->setTabButton(1,QTabBar::LeftSide,menu_icon1);
+    ui->tabWidget->tabBar()->setTabButton(2,QTabBar::LeftSide,menu_icon2);
+    ui->tabWidget->tabBar()->setTabButton(3,QTabBar::LeftSide,menu_icon3);
+    ui->tabWidget->tabBar()->setTabButton(4,QTabBar::LeftSide,menu_icon4);
+    ui->tabWidget->tabBar()->setTabButton(5,QTabBar::LeftSide,menu_icon5);
+
+    //设置每个通道界面的背景，由于使用样式表，会造成子部件背景色混乱，改用调色板设置
+    QPalette Pal(this->palette());
+    Pal.setColor(QPalette::Background, QColor(46, 52, 54));
+    for (int i = 0; i < ui->tabWidget->count(); ++i) {
+        ui->tabWidget->widget(i)->setPalette(Pal);
+    }
+    connect(ui->tabWidget,SIGNAL(currentChanged(int)),this,SLOT(fresh_menu_icon()) );
+}
+
+void MainWindow::statusbar_init()
+{
+    battery = new Battery;
+
+    timer_time = new QTimer();
+    timer_time->setInterval(1000);   //1秒1跳
+    timer_time->start();
+
+    timer_batt = new QTimer();
+    timer_batt->setInterval(10000);   //10秒1跳
+    timer_batt->start();
+
+    timer_reboot =  new QTimer();
+    timer_reboot->setSingleShot(true);
+    set_reboot_time();
+
+    connect(timer_time, SIGNAL(timeout()), this, SLOT(fresh_time()) );
+    connect(timer_batt, SIGNAL(timeout()), this, SLOT(fresh_batt()) );
+    connect(timer_reboot, SIGNAL(timeout()), this, SLOT(system_reboot()) );
+
+    fresh_batt();       //立刻显示一次电量
+
+    ui->lab_logo->setPixmap(QPixmap(":/widgetphoto/bk/ohv_gary.png").scaled(ui->lab_logo->size()));     //logo
+}
+
+void MainWindow::function_init(QSplashScreen *sp)
+{
+    tev1_widget = NULL;
+    tev2_widget = NULL;
+    hfct1_widget = NULL;
+    hfct2_widget = NULL;
+    double_widget = NULL;
+    aa_widget = NULL;
+    ae_widget = NULL;
+
+    sp->showMessage(tr("正在初始化高频通道..."),Qt::AlignBottom|Qt::AlignLeft);
+    channel_init(sqlcfg->get_para()->menu_h1,0);
+    channel_init(sqlcfg->get_para()->menu_h2,1);
+    channel_init(sqlcfg->get_para()->menu_double,2);
+    sp->showMessage(tr("正在初始化低频通道..."),Qt::AlignBottom|Qt::AlignLeft);
+    channel_init(sqlcfg->get_para()->menu_aa,3);
+    channel_init(sqlcfg->get_para()->menu_ae,4);
+    mode_list.append(Options_Mode);
+
+    if(tev1_widget != NULL){
+        connect(this, SIGNAL(send_key(quint8)), tev1_widget, SLOT(trans_key(quint8)) );
+        connect(tev1_widget,SIGNAL(fresh_parent()), this, SLOT(fresh_menu_icon()) );
+        connect(tev1_widget,SIGNAL(startRecWave(MODE,int)),fifodata,SLOT(startRecWave(MODE,int)) );
+        connect(fifodata,SIGNAL(waveData(VectorList,MODE)),tev1_widget,SLOT(showWaveData(VectorList,MODE)) );
+    }
+    if(tev2_widget != NULL){
+        connect(this, SIGNAL(send_key(quint8)), tev2_widget, SLOT(trans_key(quint8)) );
+        connect(tev2_widget,SIGNAL(fresh_parent()), this, SLOT(fresh_menu_icon()) );
+    }
+    if(hfct1_widget != NULL){
+        connect(this, SIGNAL(send_key(quint8)), hfct1_widget, SLOT(trans_key(quint8)) );
+        connect(hfct1_widget,SIGNAL(fresh_parent()), this, SLOT(fresh_menu_icon()) );
+    }
+    if(hfct2_widget != NULL){
+        connect(this, SIGNAL(send_key(quint8)), hfct2_widget, SLOT(trans_key(quint8)) );
+        connect(hfct2_widget,SIGNAL(fresh_parent()), this, SLOT(fresh_menu_icon()) );
+    }
+    if(double_widget != NULL){
+        connect(this, SIGNAL(send_key(quint8)), double_widget, SLOT(trans_key(quint8)) );
+        connect(double_widget,SIGNAL(fresh_parent()), this, SLOT(fresh_menu_icon()) );
+    }
+    if(aa_widget != NULL){
+        connect(this, SIGNAL(send_key(quint8)), aa_widget, SLOT(trans_key(quint8)) );
+        connect(aa_widget,SIGNAL(fresh_parent()), this, SLOT(fresh_menu_icon()) );
+    }
+    if(ae_widget != NULL){
+        connect(this, SIGNAL(send_key(quint8)), ae_widget, SLOT(trans_key(quint8)) );
+        connect(ae_widget,SIGNAL(fresh_parent()), this, SLOT(fresh_menu_icon()) );
     }
 }
 
+void MainWindow::channel_init(MODE mode, int index)
+{
+    switch (index) {
+    case 0:
+        switch (mode) {
+        case TEV1:
+            tev1_widget = new TEVWidget(data,&key_val,mode,0,ui->H_Channel1);
+            break;
+        case TEV2:
+            tev2_widget = new TEVWidget(data,&key_val,mode,0,ui->H_Channel1);
+            break;
+        case HFCT1:
+            hfct1_widget = new HFCTWidget(data,&key_val,mode,0,ui->H_Channel1);
+            break;
+        case HFCT2:
+            hfct2_widget = new HFCTWidget(data,&key_val,mode,0,ui->H_Channel1);
+            break;
+        default:
+            mode = Disable;
+            break;
+        }
+        break;
+    case 1:
+        switch (mode) {
+        case TEV1:
+            tev1_widget = new TEVWidget(data,&key_val,mode,1,ui->H_Channel2);
+            break;
+        case TEV2:
+            tev2_widget = new TEVWidget(data,&key_val,mode,1,ui->H_Channel2);
+            break;
+        case HFCT1:
+            hfct1_widget = new HFCTWidget(data,&key_val,mode,1,ui->H_Channel2);
+            break;
+        case HFCT2:
+            hfct2_widget = new HFCTWidget(data,&key_val,mode,1,ui->H_Channel2);
+            break;
+        default:
+            mode = Disable;
+            break;
+        }
+        break;
+    case 2:
+        if(mode == Double_Channel){
+            double_widget = new FaultLocation(data,&key_val,2,ui->Double_Channel);
+        }
+        else{
+            mode = Disable;
+        }
+        break;
+    case 3:
+        if(mode == AA_Ultrasonic){
+            aa_widget = new AAWidget(data,&key_val,3,ui->L_Channel1);
+        }
+        else{
+            mode = Disable;
+        }
+        break;
+    case 4:
+        if(mode == AE_Ultrasonic){
+            ae_widget = new AEWidget(data,&key_val,4,ui->L_Channel2);
+        }
+        else{
+            mode = Disable;
+        }
+        break;
+    default:
+        break;
+    }
+
+    mode_list.append(mode);
+}
+
+void MainWindow::options_init()
+{
+    options = new Options(ui->Options,data);
+    debugset = new DebugSet(data,ui->Options);
+    systeminfo = new SystemInfo(ui->Options);
+    factoryreset = new FactoryReset(ui->Options);
+    recwavemanage = new RecWaveManage(ui->Options);
+
+    connect(this, SIGNAL(send_key(quint8)), options, SLOT(trans_key(quint8)) );
+    connect(this, SIGNAL(send_key(quint8)), debugset, SLOT(trans_key(quint8)) );
+    connect(this, SIGNAL(send_key(quint8)), systeminfo, SLOT(trans_key(quint8)) );
+    connect(this, SIGNAL(send_key(quint8)), factoryreset, SLOT(trans_key(quint8)) );
+    connect(this, SIGNAL(send_key(quint8)), recwavemanage, SLOT(trans_key(quint8)) );
+    connect(options,SIGNAL(fresh_parent()), this, SLOT(fresh_menu_icon()) );
+    connect(debugset,SIGNAL(fresh_parent()), this, SLOT(fresh_menu_icon()) );
+    connect(systeminfo,SIGNAL(fresh_parent()), this, SLOT(fresh_menu_icon()) );
+    connect(factoryreset,SIGNAL(fresh_parent()), this, SLOT(fresh_menu_icon()) );
+    connect(recwavemanage,SIGNAL(fresh_parent()), this, SLOT(fresh_menu_icon()) );
+    //显示信息
+    connect(options,SIGNAL(update_statusBar(QString)), this, SLOT(show_message(QString)) );
+    connect(options, SIGNAL(closeTimeChanged(int)), this, SLOT(set_reboot_time()) );
+    connect(debugset,SIGNAL(update_statusBar(QString)), this, SLOT(show_message(QString)) );
+    //播放声音
+    connect(recwavemanage,SIGNAL(play_voice(VectorList)),fifodata,SIGNAL(playVoiceData(VectorList)));
+    connect(recwavemanage,SIGNAL(stop_play_voice()),fifodata,SIGNAL(stop_play_voice()));
+    connect(fifodata,SIGNAL(playVoiceProgress(int,int,bool)),recwavemanage,SLOT(playVoiceProgress(int,int,bool)));
+}
+
+void MainWindow::trans_key(quint8 key_code)
+{
+    //    qDebug()<<"val0 = "<<key_val.grade.val0 <<"\nval1 = "<<key_val.grade.val1 <<"\nval2 = "<<key_val.grade.val2 ;
+
+    set_reboot_time();          //接到任何按键，重置重启计时器
+
+    if(key_val.grade.val0 == 5 && key_val.grade.val2 !=0 ){
+        emit send_key(key_code);
+        return;
+    }
+    if(key_val.grade.val0 != 5 && key_val.grade.val1 !=0 ){
+        emit send_key(key_code);
+        return;
+    }
+
+    switch (key_code) {
+    case KEY_LEFT:
+        if(key_val.grade.val1 == 0 ){
+            do{
+                Common::change_index(key_val.grade.val0, -1, 5, 0);
+            }
+            while(mode_list.at(key_val.grade.val0) == Disable);
+            ui->tabWidget->setCurrentIndex(key_val.grade.val0);
+        }
+        break;
+    case KEY_RIGHT:
+        if(key_val.grade.val1 == 0 ){
+            do{
+                Common::change_index(key_val.grade.val0, 1, 5, 0);
+            }
+            while(mode_list.at(key_val.grade.val0) == Disable);
+            ui->tabWidget->setCurrentIndex(key_val.grade.val0);
+        }
+        break;
+    case KEY_OK:
+        if(key_val.grade.val0 == 5){
+            switch (key_val.grade.val1) {
+            case 1:
+                key_val.grade.val2 = 1;
+                options->working(&key_val);
+                break;
+            case 2:
+                key_val.grade.val2 = 1;
+                debugset->working(&key_val);
+                break;
+            case 3:
+                key_val.grade.val2 = 1;
+                recwavemanage->working(&key_val);
+                break;
+            case 4:
+                key_val.grade.val2 = 1;
+                systeminfo->working(&key_val);
+                break;
+            case 5:
+                key_val.grade.val2 = 1;
+                factoryreset->working(&key_val);
+                break;
+            default:
+                break;
+            }
+            fresh_menu_icon();
+        }
+        break;
+    case KEY_UP:
+        if (key_val.grade.val0 == 5) {
+            Common::change_index(key_val.grade.val1,-1,5,1);
+        }
+        else{
+            key_val.grade.val1 = 1;
+            emit send_key(key_code);
+        }
+        break;
+    case KEY_DOWN:
+        if (key_val.grade.val0 == 5) {
+            Common::change_index(key_val.grade.val1,1,5,1);
+        }
+        else{
+            key_val.grade.val1 = 1;
+            emit send_key(key_code);
+        }
+        break;
+    case KEY_CANCEL:
+        if (key_val.grade.val1 > 0){
+            key_val.grade.val1 = 0;
+            emit send_key(key_code);
+        }
+        break;
+    default:
+        break;
+    }
+
+    fresh_grade1();
+    fresh_menu_icon();
+}
+
+void MainWindow::fresh_menu_icon()
+{
+    //先根据图标的刷新模式，绘制非当前图标
+    if(key_val.grade.val1 == 0){
+        set_non_current_menu_icon();
+    }
+    else{
+        set_disable_menu_icon();
+    }
+
+    //再刷新当前图标
+    switch (key_val.grade.val0) {
+    case 0:
+        switch (mode_list.at(0)) {
+        case TEV1:
+            menu_icon0->setPixmap(QPixmap(":/widgetphoto/menu/TEV1_1.png"));
+            ui->lab_imformation->setText(tr("地电波检测(通道1)"));
+            break;
+        case TEV2:
+            menu_icon0->setPixmap(QPixmap(":/widgetphoto/menu/TEV2_1.png"));
+            ui->lab_imformation->setText(tr("地电波检测(通道2)"));
+            break;
+        case HFCT1:
+            menu_icon0->setPixmap(QPixmap(":/widgetphoto/menu/HFCT1_1.png"));
+            ui->lab_imformation->setText(tr("电缆局放检测(通道1)"));
+            break;
+        case HFCT2:
+            menu_icon0->setPixmap(QPixmap(":/widgetphoto/menu/HFCT2_1.png"));
+            ui->lab_imformation->setText(tr("电缆局放检测(通道2)"));
+            break;
+        default:
+            break;
+        }
+        break;
+    case 1:
+        switch (mode_list.at(1)) {
+        case TEV1:
+            menu_icon1->setPixmap(QPixmap(":/widgetphoto/menu/TEV1_1.png"));
+            ui->lab_imformation->setText(tr("地电波检测(通道1)"));
+            break;
+        case TEV2:
+            menu_icon1->setPixmap(QPixmap(":/widgetphoto/menu/TEV2_1.png"));
+            ui->lab_imformation->setText(tr("地电波检测(通道2)"));
+            break;
+        case HFCT1:
+            menu_icon1->setPixmap(QPixmap(":/widgetphoto/menu/HFCT1_1.png"));
+            ui->lab_imformation->setText(tr("电缆局放检测(通道1)"));
+            break;
+        case HFCT2:
+            menu_icon1->setPixmap(QPixmap(":/widgetphoto/menu/HFCT2_1.png"));
+            ui->lab_imformation->setText(tr("电缆局放检测(通道2)"));
+            break;
+        default:
+            break;
+        }
+        break;
+    case 2:
+        menu_icon2->setPixmap(QPixmap(":/widgetphoto/menu/Double_1.png"));
+        ui->lab_imformation->setText(tr("双通道检测"));
+        break;
+    case 3:
+        menu_icon3->setPixmap(QPixmap(":/widgetphoto/menu/AA_1.png"));
+        ui->lab_imformation->setText(tr("AA超声波检测"));
+        break;
+    case 4:
+        menu_icon4->setPixmap(QPixmap(":/widgetphoto/menu/AE_1.png"));
+        ui->lab_imformation->setText(tr("AE超声波检测"));
+        break;
+    case 5:
+        menu_icon5->setPixmap(QPixmap(":/widgetphoto/menu/Option_1.png"));
+        ui->lab_imformation->setText(tr("系统设置"));
+        if (!key_val.grade.val1) {
+            ui->lab_imformation->setText(tr("系统设置"));
+        } else if (key_val.grade.val1 == 1){
+            ui->lab_imformation->setText(tr("系统设置-参数设置"));
+        } else if (key_val.grade.val1 == 2) {
+            ui->lab_imformation->setText(tr("系统设置-调试模式"));
+        } else if (key_val.grade.val1 == 3){
+            ui->lab_imformation->setText(tr("系统设置-录波管理"));
+        } else if (key_val.grade.val1 == 4) {
+            ui->lab_imformation->setText(tr("系统设置-系统信息"));
+        } else if (key_val.grade.val1 == 5) {
+            ui->lab_imformation->setText(tr("系统设置-恢复出厂"));
+        }
+        break;
+    default:
+        break;
+    }
+}
+
+//非活动菜单
+//存在于光标位于顶层菜单，可用左右键切换时，非当前菜单的图标
+//资源文件后缀为2
+void MainWindow::set_non_current_menu_icon()
+{
+    switch (mode_list.at(0)) {
+    case TEV1:
+        menu_icon0->setPixmap(QPixmap(":/widgetphoto/menu/TEV1_2.png"));
+        break;
+    case TEV2:
+        menu_icon0->setPixmap(QPixmap(":/widgetphoto/menu/TEV2_2.png"));
+        break;
+    case HFCT1:
+        menu_icon0->setPixmap(QPixmap(":/widgetphoto/menu/HFCT1_2.png"));
+        break;
+    case HFCT2:
+        menu_icon0->setPixmap(QPixmap(":/widgetphoto/menu/HFCT2_2.png"));
+        break;
+    default:                     //禁用
+        if(mode_list.at(1) == TEV1){
+            menu_icon0->setPixmap(QPixmap(":/widgetphoto/menu/TEV2_0.png"));
+        }
+        else{
+            menu_icon0->setPixmap(QPixmap(":/widgetphoto/menu/TEV1_0.png"));
+        }
+        break;
+    }
+
+    switch (mode_list.at(1)) {
+    case TEV1:
+        menu_icon1->setPixmap(QPixmap(":/widgetphoto/menu/TEV1_2.png"));
+        break;
+    case TEV2:
+        menu_icon1->setPixmap(QPixmap(":/widgetphoto/menu/TEV2_2.png"));
+        break;
+    case HFCT1:
+        menu_icon1->setPixmap(QPixmap(":/widgetphoto/menu/HFCT1_2.png"));
+        break;
+    case HFCT2:
+        menu_icon1->setPixmap(QPixmap(":/widgetphoto/menu/HFCT2_2.png"));
+        break;
+    default:                     //禁用
+        if(mode_list.at(0) == TEV2){
+            menu_icon1->setPixmap(QPixmap(":/widgetphoto/menu/TEV1_0.png"));
+        }
+        else{
+            menu_icon1->setPixmap(QPixmap(":/widgetphoto/menu/TEV2_0.png"));
+        }
+        break;
+    }
+
+    switch (mode_list.at(2)) {
+    case Double_Channel:
+        menu_icon2->setPixmap(QPixmap(":/widgetphoto/menu/Double_2.png"));
+        break;
+    default:                     //禁用
+        menu_icon2->setPixmap(QPixmap(":/widgetphoto/menu/Double_0.png"));
+        break;
+    }
+
+    switch (mode_list.at(3)) {
+    case AA_Ultrasonic:
+        menu_icon3->setPixmap(QPixmap(":/widgetphoto/menu/AA_2.png"));
+        break;
+    default:                     //禁用
+        menu_icon3->setPixmap(QPixmap(":/widgetphoto/menu/AA_0.png"));
+        break;
+    }
+
+    switch (mode_list.at(4)) {
+    case AE_Ultrasonic:
+        menu_icon4->setPixmap(QPixmap(":/widgetphoto/menu/AE_2.png"));
+        break;
+    default:                     //禁用
+        menu_icon4->setPixmap(QPixmap(":/widgetphoto/menu/AE_0.png"));
+        break;
+    }
+
+    menu_icon5->setPixmap(QPixmap(":/widgetphoto/menu/Option_2.png"));
+}
+
+//禁用菜单
+//存在于光标操作子项目，其他全禁用的时候
+//资源文件后缀为0
+void MainWindow::set_disable_menu_icon()
+{
+    switch (mode_list.at(0)) {
+    case TEV1:
+        menu_icon0->setPixmap(QPixmap(":/widgetphoto/menu/TEV1_0.png"));
+        break;
+    case TEV2:
+        menu_icon0->setPixmap(QPixmap(":/widgetphoto/menu/TEV2_0.png"));
+        break;
+    case HFCT1:
+        menu_icon0->setPixmap(QPixmap(":/widgetphoto/menu/HFCT1_0.png"));
+        break;
+    case HFCT2:
+        menu_icon0->setPixmap(QPixmap(":/widgetphoto/menu/HFCT2_0.png"));
+        break;
+    default:                     //禁用
+        if(mode_list.at(1) == TEV1){
+            menu_icon0->setPixmap(QPixmap(":/widgetphoto/menu/TEV2_0.png"));
+        }
+        else{
+            menu_icon0->setPixmap(QPixmap(":/widgetphoto/menu/TEV1_0.png"));
+        }
+        break;
+    }
+
+    switch (mode_list.at(1)) {
+    case TEV1:
+        menu_icon1->setPixmap(QPixmap(":/widgetphoto/menu/TEV1_0.png"));
+        break;
+    case TEV2:
+        menu_icon1->setPixmap(QPixmap(":/widgetphoto/menu/TEV2_0.png"));
+        break;
+    case HFCT1:
+        menu_icon1->setPixmap(QPixmap(":/widgetphoto/menu/HFCT1_0.png"));
+        break;
+    case HFCT2:
+        menu_icon1->setPixmap(QPixmap(":/widgetphoto/menu/HFCT2_0.png"));
+        break;
+    default:                     //禁用
+        if(mode_list.at(0) == TEV2){
+            menu_icon1->setPixmap(QPixmap(":/widgetphoto/menu/TEV1_0.png"));
+        }
+        else{
+            menu_icon1->setPixmap(QPixmap(":/widgetphoto/menu/TEV2_0.png"));
+        }
+        break;
+    }
+
+    menu_icon2->setPixmap(QPixmap(":/widgetphoto/menu/Double_0.png"));
+    menu_icon3->setPixmap(QPixmap(":/widgetphoto/menu/AA_0.png"));
+    menu_icon4->setPixmap(QPixmap(":/widgetphoto/menu/AE_0.png"));
+    menu_icon5->setPixmap(QPixmap(":/widgetphoto/menu/Option_0.png"));
+}
+
+//刷新系统设置页面的二级菜单
+void MainWindow::fresh_grade1()
+{
+    ui->lab_Options->setStyleSheet("QLabel {border-image: url(:/widgetphoto/bk/grade2_bk.png);color:gray;}");
+    ui->lab_Debug->setStyleSheet("QLabel {border-image: url(:/widgetphoto/bk/grade2_bk.png);color:gray;}");
+    ui->lab_RecWave->setStyleSheet("QLabel {border-image: url(:/widgetphoto/bk/grade2_bk.png);color:gray;}");
+    ui->lab_SysInfo->setStyleSheet("QLabel {border-image: url(:/widgetphoto/bk/grade2_bk.png);color:gray;}");
+    ui->lab_factory->setStyleSheet("QLabel {border-image: url(:/widgetphoto/bk/grade2_bk.png);color:gray;}");
+
+    switch (key_val.grade.val1) {
+    case 1:
+        ui->lab_Options->setStyleSheet("QLabel {border-image: url(:/widgetphoto/bk/grade2_bk.png);color:white;}");
+        break;
+    case 2:
+        ui->lab_Debug->setStyleSheet("QLabel {border-image: url(:/widgetphoto/bk/grade2_bk.png);color:white;}");
+        break;
+    case 3:
+        ui->lab_RecWave->setStyleSheet("QLabel {border-image: url(:/widgetphoto/bk/grade2_bk.png);color:white;}");
+        break;
+    case 4:
+        ui->lab_SysInfo->setStyleSheet("QLabel {border-image: url(:/widgetphoto/bk/grade2_bk.png);color:white;}");
+        break;
+    case 5:
+        ui->lab_factory->setStyleSheet("QLabel {border-image: url(:/widgetphoto/bk/grade2_bk.png);color:white;}");
+        break;
+    default:
+        break;
+    }
+}
+
+void MainWindow::set_reboot_time()
+{
+    int m = sqlcfg->get_para()->close_time;
+    if(m != 0){
+        timer_reboot->setInterval(m*60 *1000);
+        timer_reboot->start();
+        //        qDebug()<<"reboot timer started!  interval is :"<<m*60<<"sec";
+    }
+    else if(timer_reboot->isActive()){
+        timer_reboot->stop();
+        qDebug()<<"reboot timer stoped!";
+    }
+}
+
+void MainWindow::fresh_time()
+{
+    ui->lab_time->setText(QDate::currentDate().toString("yyyy年M月d日")
+                          + " "
+                          + QTime::currentTime().toString("h:mm:ss"));
+
+    int s = timer_reboot->remainingTime() / 1000;    //自动关机秒数
+    if(timer_reboot->isActive() && s < 60){
+        ui->lab_imformation->setText(tr("再过%1秒将自动关机，按任意键取消").arg(s));
+    }
+}
+
+void MainWindow::fresh_batt()
+{
+    int batt_val;
+
+    batt_val = battery->battValue();
+    ui->lab_pwr_num->setText(QString("%1%").arg(batt_val));
+    if(batt_val>25){
+        ui->lab_pwr_num->setStyleSheet("QLabel {color:white;}");
+    }
+    else{
+        ui->lab_pwr_num->setStyleSheet("QLabel {color:red;}");
+    }
+
+    switch (batt_val / 10) {
+    case 0:
+        ui->lab_pwr->setStyleSheet("QLabel {border-image: url(:/widgetphoto/pwr/pwr0.png);}");
+        break;
+    case 1:
+        ui->lab_pwr->setStyleSheet("QLabel {border-image: url(:/widgetphoto/pwr/pwr10.png);}");
+        break;
+    case 2:
+        ui->lab_pwr->setStyleSheet("QLabel {border-image: url(:/widgetphoto/pwr/pwr20.png);}");
+        break;
+    case 3:
+        ui->lab_pwr->setStyleSheet("QLabel {border-image: url(:/widgetphoto/pwr/pwr30.png);}");
+        break;
+    case 4:
+        ui->lab_pwr->setStyleSheet("QLabel {border-image: url(:/widgetphoto/pwr/pwr40.png);}");
+        break;
+    case 5:
+        ui->lab_pwr->setStyleSheet("QLabel {border-image: url(:/widgetphoto/pwr/pwr50.png);}");
+        break;
+    case 6:
+        ui->lab_pwr->setStyleSheet("QLabel {border-image: url(:/widgetphoto/pwr/pwr60.png);}");
+        break;
+    case 7:
+        ui->lab_pwr->setStyleSheet("QLabel {border-image: url(:/widgetphoto/pwr/pwr70.png);}");
+        break;
+    case 8:
+        ui->lab_pwr->setStyleSheet("QLabel {border-image: url(:/widgetphoto/pwr/pwr80.png);}");
+        break;
+    case 9:
+        ui->lab_pwr->setStyleSheet("QLabel {border-image: url(:/widgetphoto/pwr/pwr90.png);}");
+        break;
+    case 10:
+        ui->lab_pwr->setStyleSheet("QLabel {border-image: url(:/widgetphoto/pwr/pwr100.png);}");
+        break;
+    default:
+        break;
+    }
+}
+
+void MainWindow::system_reboot()
+{
+    qDebug()<<"system will reboot immediately!";
+    system("reboot");
+}
+
+void MainWindow::show_message(QString str)
+{
+    ui->lab_imformation->setText(str);
+}
+
+#ifdef PRINTSCREEN
 void MainWindow::printSc()
 {
-//    QPixmap fullScreenPixmap = this->grab(this->rect());          //老的截屏方式，只能截取指定Wdiget及其子类
+    //    QPixmap fullScreenPixmap = this->grab(this->rect());                      //老的截屏方式，只能截取指定Wdiget及其子类
     QPixmap fullScreenPixmap = QGuiApplication::primaryScreen()->grabWindow(0);     //新截屏方式更加完美
     bool flag = fullScreenPixmap.save(QString("./ScreenShots/ScreenShots-%1.png").arg(QTime::currentTime().toString("hh-mm-ss")),"PNG");
     if(flag)
@@ -104,66 +735,4 @@ void MainWindow::printSc()
     else
         qDebug()<<"fullScreen failed!";
 }
-
-void MainWindow::system_reboot()
-{
-    system("reboot");
-}
-
-void MainWindow::setCloseTime(int m)
-{
-    if(m!=0){
-        rebootFlag = true;
-        rebootTimer->setInterval(m*60 *1000);
-        rebootTimer->start();   //永远开启
-        qDebug()<<"reboot timer started!  interval is :"<<m*60<<"sec";
-    }
-    else{
-        rebootFlag = false;
-        rebootTimer->stop();
-        qDebug()<<"reboot timer stoped!";
-    }
-}
-
-void MainWindow::resetTimerFromKey()
-{
-    if(rebootFlag){
-        rebootTimer->start();
-    }
-    else{
-        rebootTimer->stop();
-    }
-}
-
-
-//主窗口的按键事件，程序中有实际用处
-void MainWindow::keyPressEvent(QKeyEvent *event)
-{
-//    qDebug("key_val = %02x [FILE:%s LINE:%d]", event->key(), __FILE__, __LINE__);
-
-    rebootTimer->start();   //重置关机计时器
-    qDebug()<< "rebootTimer reset!\n";
-
-    switch (event->key()) {
-    case Qt::Key_Escape:
-        emit sendkey(KEY_CANCEL);
-        break;
-    case Qt::Key_Return:
-        emit sendkey(KEY_OK);
-        break;
-    case Qt::Key_Up:
-        emit sendkey(KEY_UP);
-        break;
-    case Qt::Key_Down:
-        emit sendkey(KEY_DOWN);
-        break;
-    case Qt::Key_Left:
-        emit sendkey(KEY_LEFT);
-        break;
-    case Qt::Key_Right:
-        emit sendkey(KEY_RIGHT);
-        break;
-    default:
-        break;
-    }
-}
+#endif

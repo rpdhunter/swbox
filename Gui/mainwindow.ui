@@ -1,0 +1,368 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QFrame" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>480</width>
+    <height>272</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Frame</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true"/>
+  </property>
+  <property name="frameShape">
+   <enum>QFrame::NoFrame</enum>
+  </property>
+  <property name="frameShadow">
+   <enum>QFrame::Plain</enum>
+  </property>
+  <property name="lineWidth">
+   <number>0</number>
+  </property>
+  <widget class="QTabWidget" name="tabWidget">
+   <property name="geometry">
+    <rect>
+     <x>8</x>
+     <y>25</y>
+     <width>464</width>
+     <height>225</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true"/>
+   </property>
+   <property name="currentIndex">
+    <number>1</number>
+   </property>
+   <property name="iconSize">
+    <size>
+     <width>39</width>
+     <height>24</height>
+    </size>
+   </property>
+   <widget class="QWidget" name="H_Channel1">
+    <property name="autoFillBackground">
+     <bool>true</bool>
+    </property>
+    <attribute name="title">
+     <string/>
+    </attribute>
+   </widget>
+   <widget class="QWidget" name="H_Channel2">
+    <property name="autoFillBackground">
+     <bool>true</bool>
+    </property>
+    <attribute name="title">
+     <string/>
+    </attribute>
+   </widget>
+   <widget class="QWidget" name="Double_Channel">
+    <property name="autoFillBackground">
+     <bool>true</bool>
+    </property>
+    <attribute name="title">
+     <string/>
+    </attribute>
+   </widget>
+   <widget class="QWidget" name="L_Channel1">
+    <property name="autoFillBackground">
+     <bool>true</bool>
+    </property>
+    <attribute name="title">
+     <string/>
+    </attribute>
+   </widget>
+   <widget class="QWidget" name="L_Channel2">
+    <property name="autoFillBackground">
+     <bool>true</bool>
+    </property>
+    <attribute name="title">
+     <string/>
+    </attribute>
+   </widget>
+   <widget class="QWidget" name="Options">
+    <property name="autoFillBackground">
+     <bool>true</bool>
+    </property>
+    <attribute name="title">
+     <string/>
+    </attribute>
+    <widget class="QLabel" name="lab_Options">
+     <property name="geometry">
+      <rect>
+       <x>131</x>
+       <y>21</y>
+       <width>191</width>
+       <height>40</height>
+      </rect>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+border-image: url(:/widgetphoto/bk/grade2_bk.png);
+color:gray;
+}</string>
+     </property>
+     <property name="text">
+      <string>参数设置</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignHCenter|Qt::AlignTop</set>
+     </property>
+     <property name="indent">
+      <number>7</number>
+     </property>
+    </widget>
+    <widget class="QLabel" name="lab_Debug">
+     <property name="geometry">
+      <rect>
+       <x>131</x>
+       <y>49</y>
+       <width>191</width>
+       <height>40</height>
+      </rect>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+border-image: url(:/widgetphoto/bk/grade2_bk.png);
+color:gray;
+}</string>
+     </property>
+     <property name="text">
+      <string>调试模式</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignHCenter|Qt::AlignTop</set>
+     </property>
+     <property name="indent">
+      <number>7</number>
+     </property>
+    </widget>
+    <widget class="QLabel" name="lab_RecWave">
+     <property name="geometry">
+      <rect>
+       <x>131</x>
+       <y>77</y>
+       <width>191</width>
+       <height>40</height>
+      </rect>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+border-image: url(:/widgetphoto/bk/grade2_bk.png);
+color:gray;
+}</string>
+     </property>
+     <property name="text">
+      <string>录波管理</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignHCenter|Qt::AlignTop</set>
+     </property>
+     <property name="indent">
+      <number>7</number>
+     </property>
+    </widget>
+    <widget class="QLabel" name="lab_SysInfo">
+     <property name="geometry">
+      <rect>
+       <x>131</x>
+       <y>105</y>
+       <width>191</width>
+       <height>40</height>
+      </rect>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+border-image: url(:/widgetphoto/bk/grade2_bk.png);
+color:gray;
+}</string>
+     </property>
+     <property name="text">
+      <string>系统信息</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignHCenter|Qt::AlignTop</set>
+     </property>
+     <property name="margin">
+      <number>0</number>
+     </property>
+     <property name="indent">
+      <number>7</number>
+     </property>
+    </widget>
+    <widget class="QLabel" name="lab_factory">
+     <property name="geometry">
+      <rect>
+       <x>131</x>
+       <y>133</y>
+       <width>191</width>
+       <height>40</height>
+      </rect>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+border-image: url(:/widgetphoto/bk/grade2_bk.png);
+color:gray;
+}</string>
+     </property>
+     <property name="text">
+      <string>恢复出厂</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignHCenter|Qt::AlignTop</set>
+     </property>
+     <property name="indent">
+      <number>7</number>
+     </property>
+    </widget>
+   </widget>
+  </widget>
+  <widget class="QLabel" name="lab_imformation">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>253</y>
+     <width>301</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="autoFillBackground">
+    <bool>false</bool>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QLabel {
+color:white;
+background:transparent;
+}
+</string>
+   </property>
+   <property name="text">
+    <string>TextLabel</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="lab_freq">
+   <property name="geometry">
+    <rect>
+     <x>365</x>
+     <y>10</y>
+     <width>41</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QLabel {color:white;}</string>
+   </property>
+   <property name="text">
+    <string>50Hz</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="lab_logo">
+   <property name="geometry">
+    <rect>
+     <x>350</x>
+     <y>250</y>
+     <width>122</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QLabel {
+color:white;
+background:transparent;
+}
+</string>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="pixmap">
+    <pixmap resource="../resource/resource.qrc">:/widgetphoto/bk/ohv_gary.png</pixmap>
+   </property>
+  </widget>
+  <widget class="QLabel" name="lab_time">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>7</y>
+     <width>171</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QLabel {color:white;}</string>
+   </property>
+   <property name="text">
+    <string>TextLabel</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="lab_pwr">
+   <property name="geometry">
+    <rect>
+     <x>410</x>
+     <y>14</y>
+     <width>25</width>
+     <height>9</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QLabel" name="lab_pwr_num">
+   <property name="geometry">
+    <rect>
+     <x>440</x>
+     <y>10</y>
+     <width>41</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QLabel {color:white;}</string>
+   </property>
+   <property name="text">
+    <string>90%</string>
+   </property>
+  </widget>
+ </widget>
+ <resources>
+  <include location="../resource/resource.qrc"/>
+ </resources>
+ <connections/>
+</ui>

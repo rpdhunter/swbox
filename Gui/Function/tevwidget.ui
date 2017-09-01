@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>TevWidget</class>
+ <widget class="QWidget" name="TevWidget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>458</width>
+    <height>193</height>
+   </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true"/>
+  </property>
+  <widget class="QComboBox" name="comboBox">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>131</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true"/>
+   </property>
+   <property name="editable">
+    <bool>true</bool>
+   </property>
+   <property name="currentIndex">
+    <number>0</number>
+   </property>
+   <item>
+    <property name="text">
+     <string>检测模式          [单次]</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>图形显示  [柱状图]</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>增益系数     [×1.0]</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>黄色报警阈值[20]dB</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>红色报警阈值[40]dB</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>单次录波</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>最大值重置</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>PRPD图重置</string>
+    </property>
+   </item>
+  </widget>
+  <widget class="QWidget" name="layoutWidget">
+   <property name="geometry">
+    <rect>
+     <x>220</x>
+     <y>60</y>
+     <width>120</width>
+     <height>72</height>
+    </rect>
+   </property>
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <item>
+     <widget class="QLabel" name="label_val">
+      <property name="minimumSize">
+       <size>
+        <width>90</width>
+        <height>0</height>
+       </size>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QLabel {font-family:WenQuanYi Micro Hei;font-size:60px;color:green}</string>
+      </property>
+      <property name="text">
+       <string>-10</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <item>
+       <spacer name="verticalSpacer">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>40</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QLabel" name="label_8">
+        <property name="styleSheet">
+         <string notr="true">QLabel {color:white;}</string>
+        </property>
+        <property name="text">
+         <string>dB</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignBottom|Qt::AlignRight|Qt::AlignTrailing</set>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="verticalSpacer_2">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>5</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QWidget" name="widget" native="true">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>30</y>
+     <width>211</width>
+     <height>151</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QWidget" name="layoutWidget1">
+   <property name="geometry">
+    <rect>
+     <x>350</x>
+     <y>52</y>
+     <width>102</width>
+     <height>83</height>
+    </rect>
+   </property>
+   <layout class="QVBoxLayout" name="verticalLayout_2">
+    <item>
+     <widget class="QLabel" name="label_max">
+      <property name="minimumSize">
+       <size>
+        <width>100</width>
+        <height>0</height>
+       </size>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QLabel {color:white;}</string>
+      </property>
+      <property name="text">
+       <string>最大值</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLabel" name="label_pluse">
+      <property name="styleSheet">
+       <string notr="true">QLabel {color:white;}</string>
+      </property>
+      <property name="text">
+       <string>脉冲数</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLabel" name="label_degree">
+      <property name="styleSheet">
+       <string notr="true">QLabel {color:white;}</string>
+      </property>
+      <property name="text">
+       <string>严重度</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

@@ -1,27 +1,5 @@
 <RCC>
     <qresource prefix="/">
-        <file>widgetphoto/bk.png</file>
-        <file>widgetphoto/mainmenu/m10.png</file>
-        <file>widgetphoto/mainmenu/m11.png</file>
-        <file>widgetphoto/mainmenu/m12.png</file>
-        <file>widgetphoto/mainmenu/m20.png</file>
-        <file>widgetphoto/mainmenu/m21.png</file>
-        <file>widgetphoto/mainmenu/m22.png</file>
-        <file>widgetphoto/mainmenu/m30.png</file>
-        <file>widgetphoto/mainmenu/m31.png</file>
-        <file>widgetphoto/mainmenu/m32.png</file>
-        <file>widgetphoto/mainmenu/m40.png</file>
-        <file>widgetphoto/mainmenu/m41.png</file>
-        <file>widgetphoto/mainmenu/m42.png</file>
-        <file>widgetphoto/mainmenu/m50.png</file>
-        <file>widgetphoto/mainmenu/m51.png</file>
-        <file>widgetphoto/mainmenu/m52.png</file>
-        <file>widgetphoto/mainmenu/m60.png</file>
-        <file>widgetphoto/mainmenu/m61.png</file>
-        <file>widgetphoto/mainmenu/m62.png</file>
-        <file>widgetphoto/mainmenu/m70.png</file>
-        <file>widgetphoto/mainmenu/m71.png</file>
-        <file>widgetphoto/mainmenu/m72.png</file>
         <file>widgetphoto/pwr/pwr10.png</file>
         <file>widgetphoto/pwr/pwr20.png</file>
         <file>widgetphoto/pwr/pwr30.png</file>
@@ -32,23 +10,40 @@
         <file>widgetphoto/pwr/pwr80.png</file>
         <file>widgetphoto/pwr/pwr90.png</file>
         <file>widgetphoto/pwr/pwr100.png</file>
-        <file>widgetphoto/mainmenu/tab1.png</file>
-        <file>widgetphoto/mainmenu/tab2.png</file>
-        <file>widgetphoto/mainmenu/tab3.png</file>
-        <file>widgetphoto/mainmenu/tab4.png</file>
-        <file>widgetphoto/mainmenu/tab5.png</file>
-        <file>widgetphoto/mainmenu/tab6.png</file>
-        <file>widgetphoto/mainmenu/tab7.png</file>
-        <file>widgetphoto/mainmenu/bk2.png</file>
         <file>widgetphoto/pwr/pwr0.png</file>
-        <file>../trans/en.qm</file>
-        <file>widgetphoto/ohv_low.png</file>
-        <file>widgetphoto/mainmenu/para_child.png</file>
-        <file>widgetphoto/mainmenu/grade2_bk.png</file>
-        <file>widgetphoto/mainmenu/para0.png</file>
-        <file>widgetphoto/mainmenu/para1.png</file>
-        <file>widgetphoto/mainmenu/para2.png</file>
-        <file>widgetphoto/ohv_gary.png</file>
-        <file>widgetphoto/powersystem.png</file>
+        <file>widgetphoto/menu/UHF_2.png</file>
+        <file>widgetphoto/menu/UHF_1.png</file>
+        <file>widgetphoto/menu/UHF_0.png</file>
+        <file>widgetphoto/menu/TEV2_2.png</file>
+        <file>widgetphoto/menu/TEV2_1.png</file>
+        <file>widgetphoto/menu/TEV2_0.png</file>
+        <file>widgetphoto/menu/TEV1_2.png</file>
+        <file>widgetphoto/menu/TEV1_1.png</file>
+        <file>widgetphoto/menu/TEV1_0.png</file>
+        <file>widgetphoto/menu/Option_2.png</file>
+        <file>widgetphoto/menu/Option_1.png</file>
+        <file>widgetphoto/menu/Option_0.png</file>
+        <file>widgetphoto/menu/HFCT2_2.png</file>
+        <file>widgetphoto/menu/HFCT2_1.png</file>
+        <file>widgetphoto/menu/HFCT2_0.png</file>
+        <file>widgetphoto/menu/HFCT1_2.png</file>
+        <file>widgetphoto/menu/HFCT1_1.png</file>
+        <file>widgetphoto/menu/HFCT1_0.png</file>
+        <file>widgetphoto/menu/Double_2.png</file>
+        <file>widgetphoto/menu/Double_1.png</file>
+        <file>widgetphoto/menu/Double_0.png</file>
+        <file>widgetphoto/menu/AE_2.png</file>
+        <file>widgetphoto/menu/AE_1.png</file>
+        <file>widgetphoto/menu/AE_0.png</file>
+        <file>widgetphoto/menu/AA_2.png</file>
+        <file>widgetphoto/menu/AA_1.png</file>
+        <file>widgetphoto/menu/AA_0.png</file>
+        <file>widgetphoto/bk/powersystem.png</file>
+        <file>widgetphoto/bk/ohv_low.png</file>
+        <file>widgetphoto/bk/ohv_gary.png</file>
+        <file>widgetphoto/bk/bk2.png</file>
+        <file>widgetphoto/bk/bk.png</file>
+        <file>widgetphoto/bk/grade2_bk.png</file>
+        <file>widgetphoto/bk/para_child.png</file>
     </qresource>
 </RCC>

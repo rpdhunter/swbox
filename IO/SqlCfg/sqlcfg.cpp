@@ -91,28 +91,53 @@ SQL_PARA *SqlCfg::get_para(void)
 
 SQL_PARA *SqlCfg::default_config(void)
 {
-    /* amplitude mode */
+    /* TEV mode */
     sql_para.tev1_sql.mode = continuous;					//default series
-    sql_para.tev1_sql.mode_chart = PRPS;
+    sql_para.tev1_sql.mode_chart = BASIC;
     sql_para.tev1_sql.high = TEV_HIGH;						//default high
     sql_para.tev1_sql.low = TEV_LOW;						//default low
-    sql_para.tev1_sql.tev_offset1 = 0;						//TEV偏置1
-    sql_para.tev1_sql.tev_offset2 = 0;						//TEV偏置2
     sql_para.tev1_sql.gain = 1.0;							//TEV增益
     sql_para.tev1_sql.fpga_zero = 0;
     sql_para.tev1_sql.fpga_threshold = FPGA_THRESHOLD;
     sql_para.tev1_sql.auto_rec = false;						//自动录波默认关闭
+    sql_para.tev1_sql.time = 5;
+    sql_para.tev1_sql.tev_offset1 = 0;						//TEV偏置1
+    sql_para.tev1_sql.tev_offset2 = 0;						//TEV偏置2
 
     sql_para.tev2_sql.mode = continuous;					//default series
-    sql_para.tev2_sql.mode_chart = PRPS;
+    sql_para.tev2_sql.mode_chart = BASIC;
     sql_para.tev2_sql.high = TEV_HIGH;						//default high
     sql_para.tev2_sql.low = TEV_LOW;						//default low
-    sql_para.tev2_sql.tev_offset1 = 0;						//TEV偏置1
-    sql_para.tev2_sql.tev_offset2 = 0;						//TEV偏置2
     sql_para.tev2_sql.gain = 1.0;							//TEV增益
     sql_para.tev2_sql.fpga_zero = 0;
     sql_para.tev2_sql.fpga_threshold = FPGA_THRESHOLD;
     sql_para.tev2_sql.auto_rec = false;						//自动录波默认关闭
+    sql_para.tev2_sql.time = 5;
+    sql_para.tev2_sql.tev_offset1 = 0;						//TEV偏置1
+    sql_para.tev2_sql.tev_offset2 = 0;						//TEV偏置2
+
+    /* HFCT mode */
+    sql_para.hfct1_sql.mode = continuous;
+    sql_para.hfct1_sql.mode_chart = BASIC;
+    sql_para.hfct1_sql.high = HFCT_HIGH;					//default high
+    sql_para.hfct1_sql.low = HFCT_LOW;						//default low
+    sql_para.hfct1_sql.gain = 1.0;
+    sql_para.hfct1_sql.fpga_zero = 0;
+    sql_para.hfct1_sql.fpga_threshold = FPGA_THRESHOLD;
+    sql_para.hfct1_sql.auto_rec = false;
+    sql_para.hfct1_sql.time = 5;                            //录波时长
+    sql_para.hfct1_sql.filter = NONE;
+
+    sql_para.hfct2_sql.mode = continuous;
+    sql_para.hfct2_sql.mode_chart = BASIC;
+    sql_para.hfct2_sql.high = HFCT_HIGH;					//default high
+    sql_para.hfct2_sql.low = HFCT_LOW;						//default low
+    sql_para.hfct2_sql.gain = 1.0;
+    sql_para.hfct2_sql.fpga_zero = 0;
+    sql_para.hfct2_sql.fpga_threshold = FPGA_THRESHOLD;
+    sql_para.hfct2_sql.auto_rec = false;
+    sql_para.hfct2_sql.time = 5;                            //录波时长
+    sql_para.hfct2_sql.filter = NONE;
 
     /* location mode */
     sql_para.location_sql.mode = single;
@@ -131,19 +156,17 @@ SQL_PARA *SqlCfg::default_config(void)
     sql_para.aaultra_sql.aa_step = 2;
     sql_para.aaultra_sql.aa_offset = 0;
 
-    sql_para.rfct_sql.mode = continuous;
-    sql_para.rfct_sql.gain = 1.0;
-    sql_para.rfct_sql.high = RFCT_HIGH;					//default high
-    sql_para.rfct_sql.low = RFCT_LOW;						//default low
-    sql_para.rfct_sql.mode_chart = PRPS;
-    sql_para.rfct_sql.filter = NONE;
-    sql_para.rfct_sql.time = 5;                 //录波时长
+
 
     /* setting para */
     sql_para.freq_val = SYSTEM_FREQ;						//default 50Hz
 
     /* setting backlight */
     sql_para.backlight = BACK_LIGTH;						//backlight 0~7
+
+    sql_para.key_backlight = 0;                             //默认键盘背光关闭
+
+    sql_para.screen_close_time = 4;
 
     sql_para.close_time = SHUT_DOWN_TIME;
 
@@ -152,9 +175,71 @@ SQL_PARA *SqlCfg::default_config(void)
 
     sql_para.max_rec_num = MAX_REC_NUM;
 
-    sql_para.full_featured = 0;
+    sql_para.full_featured = true;
+
+    sql_para.menu_h1 = TEV1;
+    sql_para.menu_h2 = TEV2;
+    sql_para.menu_double = Double_Channel;
+    sql_para.menu_aa = AA_Ultrasonic;
+    sql_para.menu_ae = AE_Ultrasonic;
 
     return &sql_para;
+}
+
+/*
+0：物理1——TEV1，物理2——TEV2
+1：物理1——TEV1，物理2——HFCT1
+2：物理1——TEV1，物理2——HFCT2
+3：物理1——TEV2，物理2——TEV1
+4：物理1——TEV2，物理2——HFCT1
+5：物理1——TEV2，物理2——HFCT2
+6：物理1——HFCT1，物理2——TEV1
+7：物理1——HFCT1，物理2——TEV2
+8：物理1——HFCT1，物理2——HFCT2
+9：物理1——HFCT2，物理2——TEV1
+10：物理1——HFCT2，物理2——TEV2
+11：物理1——HFCT2，物理2——HFCT1
+*/
+uint SqlCfg::get_working_mode(MODE a, MODE b)
+{
+    uint temp;
+    if((a == TEV1 && b == TEV2) || (a == TEV1 && b == Disable) || (a == Disable && b == TEV2) || (a == Disable && b == Disable)){
+        temp = 0;
+    }
+    if((a == TEV1 && b == HFCT1) || (a == Disable && b == HFCT1)){
+        temp = 1;
+    }
+    if((a == TEV1 && b == HFCT2) || (a == Disable && b == HFCT2)){
+        temp = 2;
+    }
+    if((a == TEV2 && b == TEV1) || (a == TEV2 && b == Disable) || (a == Disable && b == TEV1)){
+        temp = 3;
+    }
+    if(a == TEV2 && b == HFCT1){
+        temp = 4;
+    }
+    if(a == TEV2 && b == HFCT2){
+        temp = 5;
+    }
+    if((a == HFCT1 && b == TEV1) || (a == HFCT1 && b == Disable)){
+        temp = 6;
+    }
+    if(a == HFCT1 && b == TEV2){
+        temp = 7;
+    }
+    if(a == HFCT1 && b == HFCT2){
+        temp = 8;
+    }
+    if((a == HFCT2 && b == TEV1) || (a == HFCT2 && b == Disable)){
+        temp = 9;
+    }
+    if(a == HFCT2 && b == TEV2){
+        temp = 10;
+    }
+    if(a == HFCT2 && b == HFCT1){
+        temp = 11;
+    }
+    return temp;
 }
 
 void sqlite3_init(void)

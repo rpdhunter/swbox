@@ -35,7 +35,10 @@ public slots:
 
 
 private:
-    G_PARA *tdata;
+    void h_channel_rec_core();      //高速录波核心逻辑
+    void l_channel_rec_core();      //高速录波核心逻辑
+
+    G_PARA *data;
     int groupNum;       //组号
     VectorList _data;    //录波数据
     int time;           //录波时长

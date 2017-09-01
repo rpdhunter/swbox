@@ -102,8 +102,4 @@ union CURRENT_KEY_VALUE {
         unsigned char val0;
     } grade;
 };
-
-/* grade menu range */
-#define GRADE0_MENU_MIN_NUM         0
-#define GRADE0_MENU_MAX_NUM         6
 #endif // KEY_H

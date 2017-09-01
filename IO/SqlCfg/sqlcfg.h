@@ -6,12 +6,9 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <string.h>
+#include "IO/Data/data.h"
 
-#ifdef ARM
 #define SQL_PATH    "/root/sql.db"
-#else
-#define SQL_PATH    "./sql.db"
-#endif
 
 #define TEV_HIGH			40
 #define TEV_LOW				20
@@ -21,11 +18,11 @@
 #define AA_HIGH				40
 #define AA_LOW				20
 
-#define RFCT_HIGH				40
-#define RFCT_LOW				20
+#define HFCT_HIGH				40
+#define HFCT_LOW				20
 
 #define SYSTEM_FREQ			50
-#define BACK_LIGTH			4
+#define BACK_LIGTH			3
 #define SHUT_DOWN_TIME		5
 #define LANGUAGE_DEF		CN
 #define MAX_REC_NUM			200
@@ -35,14 +32,13 @@ enum LANGUAGE {
     EN = 1,
 };
 
-/* amplitude mode */
 enum TRIGGER_MODE {
     single = 0,
     continuous = 1,
 };
 
 enum DISPLAY {
-    PRPS = 0,
+    BASIC = 0,
     PRPD = 1,
     Histogram = 2,
 };
@@ -66,23 +62,37 @@ enum LOCATION_CHART_MODE {
 
 typedef struct TEV_SQL {
     bool mode;                      //检测模式
-    DISPLAY mode_chart;          //图形显示模式
+    DISPLAY mode_chart;             //图形显示模式
     int high;                       //红色报警阈值
     int low;                        //黄色报警阈值
-    int tev_offset1;                //TEV偏置1，目前用作噪声偏置
-    int tev_offset2;                //TEV偏置2，目前未使用，备用
     double gain;                    //TEV增益
     int fpga_zero;                  //TEV零点（需要FPGA同步）
     uint fpga_threshold;            //TEV阈值（需要FPGA同步）
     bool auto_rec;                  //自动录波（需要FPGA同步）
+    int time;                       //录波时长
+    int tev_offset1;                //TEV偏置1，目前用作噪声偏置
+    int tev_offset2;                //TEV偏置2，目前未使用，备用
 } TEV_SQL;
 
-typedef struct TEV_LOCATION_SQL {
+typedef struct HFCT_SQL {
+    bool mode;                      //检测模式
+    DISPLAY mode_chart;             //图形显示模式
+    int high;                       //红色报警阈值
+    int low;                        //黄色报警阈值
+    double gain;                    //增益
+    int fpga_zero;                  //HFCT零点（需要FPGA同步）
+    uint fpga_threshold;            //HFCT阈值（需要FPGA同步）
+    bool auto_rec;                  //自动录波（需要FPGA同步）
+    int time;                       //录波时长
+    FILTER filter;                  //滤波器
+} HFCT_SQL;
+
+typedef struct LOCATION_SQL {
     bool mode;                      //检测模式
     int time;                       //触发时长
     LOCATION_TRIGGER_CHANNEL channel;   //触发通道
     LOCATION_CHART_MODE chart_mode;      //图形显示模式
-} TEV_LOCATION_SQL;
+} LOCATION_SQL;
 
 #define TIME_MAX                60
 #define TIME_MIN                1
@@ -101,31 +111,24 @@ typedef struct AAULTRA_SQL {
     int aa_offset;                  //AA超声偏置值
 } AAULTRA_SQL;
 
-/* rfct mode */
-typedef struct RFCT_SQL {
-    bool mode;                      //检测模式
-    DISPLAY mode_chart;      //图形显示模式
-    int high;                       //红色报警阈值
-    int low;                        //黄色报警阈值
-    double gain;                    //增益
-    FILTER filter;                  //滤波器
-    int time;                       //录波时长
-} RFCT_SQL;
-
 
 /* Sql para */
 typedef struct SQL_PARA {
     TEV_SQL tev1_sql, tev2_sql;     //地电波设置(通道1和2)
-    TEV_LOCATION_SQL location_sql;      //定位模式设置
+    HFCT_SQL hfct1_sql, hfct2_sql;  //高频CT模式
+    LOCATION_SQL location_sql;      //定位模式设置
     AAULTRA_SQL aaultra_sql;        //AA超声设置
-    RFCT_SQL rfct_sql;              //高频CT模式
 
     bool language;                  //语言设置
     int freq_val;                   //频率（需要FPGA同步）
     int backlight;                  //背光（需要FPGA同步）
+    int key_backlight;              //键盘背光（需要FPGA同步）
+    int screen_close_time;          //屏幕自动关闭时间，暂时没有使用，预留
     int close_time;                 //自动关机时间
     int max_rec_num;                //录波文件保存个数
-    bool full_featured;              //是否开启全功能
+    bool full_featured;             //是否开启全功能
+    MODE menu_h1, menu_h2;              //高速通道模式（需要FPGA同步）
+    MODE menu_double, menu_aa, menu_ae;       //其他菜单模式
 
 } SQL_PARA;
 
@@ -136,6 +139,7 @@ public:
     SQL_PARA *get_para();
     void sql_save(SQL_PARA *sql_para);
     SQL_PARA *default_config(void);      //初始设置
+    uint get_working_mode(MODE a, MODE b);   //计算工作模式
 
 private:
     SQL_PARA sql_para;

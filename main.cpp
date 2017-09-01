@@ -1,55 +1,35 @@
-#include <QSplashScreen>
-#include <QDesktopWidget>
-#include <QFontDatabase>
 #include <QApplication>
-#include <QTextCodec>
-#include <QThread>
+#include <QFontDatabase>
 #include <QTranslator>
+#include <QSplashScreen>
+
 #include "Gui/mainwindow.h"
 #include "IO/SqlCfg/sqlcfg.h"
-#include "IO/Data/data.h"
-#include <QSplashScreen>
 
 
-void print(void);
-void print_centor(void);
+void print_centor();
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 
-    //开机画面
-    QPixmap pixmap(":/widgetphoto/powersystem.png");
+    QPixmap pixmap(":/widgetphoto/bk/powersystem.png");
     pixmap.scaled(480,272);
     QSplashScreen *splash = new QSplashScreen(pixmap);
-//    splash.resize(480,272);
     splash->show();
 
     splash->showMessage(QObject::tr("正在载入数据库模块..."),Qt::AlignBottom|Qt::AlignLeft);
-    /* System print */
     print_centor();
-    /* Sqlite3 init */
     sqlite3_init();
 
-//    splash->showMessage(QObject::tr("正在初始化字体"), Qt::AlignBottom|Qt::AlignRight);
     splash->showMessage(QObject::tr("正在初始化字体"),Qt::AlignBottom|Qt::AlignLeft);
-//定义字体
-#ifdef ARM
-    int fontid = QFontDatabase::addApplicationFont("/usr/local/QtEmbedded-5.6.0/lib/fonts/wenquanyi_10pt.bdf");
-//    fontid = QFontDatabase::addApplicationFont("/home/zdit/prog/work/swbox/resource/wenquanyi.ttf");
-#else
-    fontid = QFontDatabase::addApplicationFont("/usr/local/Qt-5.6.0/lib/fonts/wenquanyi_10pt.bdf");
-#endif
+    int fontid = QFontDatabase::addApplicationFont("/usr/local/QtEmbedded-5.9.1/lib/fonts/wenquanyi_10pt.bdf");
     QString myfont = QFontDatabase::applicationFontFamilies(fontid).at(0);
     QFont font(myfont,10);
     QApplication::setFont(font);
 
-//    qDebug()<<QFontDatabase::applicationFontFamilies(fontid);
-
-    //语言切换模块
     splash->showMessage(QObject::tr("正在载入语言模块..."),Qt::AlignBottom|Qt::AlignLeft);
     qDebug("language = %s", sqlcfg->get_para()->language == EN ? "EN" : "CN");
-
     if(sqlcfg->get_para()->language == LANGUAGE::EN){
         QTranslator *translator = new QTranslator(qApp);
         bool flag = translator->load(QString("/root/trans/en.qm"));
@@ -59,7 +39,6 @@ int main(int argc, char *argv[])
 
     splash->showMessage(QObject::tr("正在初始化主窗体..."),Qt::AlignBottom|Qt::AlignLeft);
     MainWindow w(splash);
-//    QObject::connect(w,SIGNAL(),splash,SLOT());
     w.show();
 
     splash->finish(&w);
@@ -68,13 +47,9 @@ int main(int argc, char *argv[])
     return a.exec();
 }
 
-void print_centor(void)
+void print_centor()
 {
-#ifdef ARM
     const static char *str = "ARM";
-#else
-    const static char *str = "PC";
-#endif
     printf("\n=================================================\n");
     printf("\t\tQT PROJ : swbox\n");
     printf("\t     QT version : %d.%d.%d\n", QT_VERSION >> 16,
