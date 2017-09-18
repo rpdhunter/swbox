@@ -49,7 +49,7 @@
 #define BAT_PWR_PER_NUM			10
 
 #define DELT_VOL				0.02			/* 电量调整电压 */
-#define SHUTDOWN_VOL			6.5				/* 强制关机电压 */
+#define SHUTDOWN_VOL			6.6				/* 强制关机电压 */
 
 
 //class Battery : public QObject
@@ -59,6 +59,7 @@ public:
     explicit Battery();
 
     int battValue();        //返回当前电量
+    bool is_low_power();    //返回是否低电量
 
 
 private:

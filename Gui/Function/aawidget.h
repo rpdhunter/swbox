@@ -21,24 +21,22 @@ class BarChart;
 class AAWidget : public QFrame
 {
     Q_OBJECT
-
 public:
     explicit AAWidget( G_PARA *data, CURRENT_KEY_VALUE *val, int menu_index, QWidget *parent = 0);
     ~AAWidget();
 
+public slots:
+    void reload(int index);
+    void trans_key(quint8 key_code);
     void showWaveData(VectorList buf, MODE mod);
 
 signals:
     void send_key(quint8);
     void fresh_parent();
-    void aa_modbus_data(int);
     void startRecWave(MODE, int);        //开始录播
-    void offset_suggest(int);
     void aa_log_data(double,int,double);
 
-public slots:
-    void working(CURRENT_KEY_VALUE *val);
-    void trans_key(quint8 key_code);
+private slots:
     void fresh(bool f); //刷新数据核
     void fresh_1();
     void fresh_2();
@@ -47,6 +45,8 @@ private:
     void fresh_setting();
     void maxReset();
     void calc_aa_value (double * aa_val, double * aa_db, int * offset);
+    void do_key_up_down(int d);
+    void do_key_left_right(int d);
 
     int db;         //每秒的最大值，用于给图形传递参数
     double max_db;  //最大值
@@ -57,6 +57,7 @@ private:
     G_PARA *data;
     int menu_index;
     SQL_PARA sql_para;
+    AAULTRA_SQL *aaultra_sql;
 
     QTimer *timer1 , *timer2;    
     BarChart *chart;

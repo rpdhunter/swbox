@@ -44,9 +44,9 @@ enum DISPLAY {
 };
 
 enum FILTER {
+    NONE = 0,
     HP_500K = 1,
     HP_1800K = 2,
-    NONE = 3,
 };
 
 enum LOCATION_TRIGGER_CHANNEL {
@@ -62,7 +62,7 @@ enum LOCATION_CHART_MODE {
 
 typedef struct TEV_SQL {
     bool mode;                      //检测模式
-    DISPLAY mode_chart;             //图形显示模式
+    int mode_chart;             //图形显示模式
     int high;                       //红色报警阈值
     int low;                        //黄色报警阈值
     double gain;                    //TEV增益
@@ -76,7 +76,7 @@ typedef struct TEV_SQL {
 
 typedef struct HFCT_SQL {
     bool mode;                      //检测模式
-    DISPLAY mode_chart;             //图形显示模式
+    int mode_chart;             //图形显示模式
     int high;                       //红色报警阈值
     int low;                        //黄色报警阈值
     double gain;                    //增益
@@ -84,14 +84,14 @@ typedef struct HFCT_SQL {
     uint fpga_threshold;            //HFCT阈值（需要FPGA同步）
     bool auto_rec;                  //自动录波（需要FPGA同步）
     int time;                       //录波时长
-    FILTER filter;                  //滤波器
+    int filter;                  //滤波器
 } HFCT_SQL;
 
 typedef struct LOCATION_SQL {
     bool mode;                      //检测模式
     int time;                       //触发时长
-    LOCATION_TRIGGER_CHANNEL channel;   //触发通道
-    LOCATION_CHART_MODE chart_mode;      //图形显示模式
+    int channel;   //触发通道
+    int chart_mode;      //图形显示模式
 } LOCATION_SQL;
 
 #define TIME_MAX                60
@@ -126,9 +126,10 @@ typedef struct SQL_PARA {
     int screen_close_time;          //屏幕自动关闭时间，暂时没有使用，预留
     int close_time;                 //自动关机时间
     int max_rec_num;                //录波文件保存个数
-    bool full_featured;             //是否开启全功能
-    MODE menu_h1, menu_h2;              //高速通道模式（需要FPGA同步）
-    MODE menu_double, menu_aa, menu_ae;       //其他菜单模式
+    bool file_copy_to_SD;             //是否保存文件到SD卡
+    int auto_rec_interval;          //自动录波间隔
+    int menu_h1, menu_h2;              //高速通道模式（需要FPGA同步）
+    int menu_double, menu_aa, menu_ae;       //其他菜单模式
 
 } SQL_PARA;
 

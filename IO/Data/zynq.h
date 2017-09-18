@@ -7,8 +7,8 @@
 #define AXI_STREAM_BASE2		0x43c20000  //超声1（写）
 #define AXI_STREAM_BASE3		0x43c30000  //超声2（写）
 #define AXI_STREAM_BASE4		0x83c00000  //预留（写）
-#define AXI_STREAM_BASE5		0x43c40000  //HFCT1（读）
-#define AXI_STREAM_BASE6		0x43c50000  //HFCT2（读）
+#define AXI_STREAM_BASE6		0x43c40000  //HFCT1（读）
+#define AXI_STREAM_BASE5		0x43c50000  //HFCT2（读）
 #define AXI_STREAM_BASE7		0x43c60000  //PRPD1（读）
 #define AXI_STREAM_BASE8		0x43c80000  //PRPD2（读）
 #define AXI_STREAM_BASE9		0x43c70000  //录波（读）
@@ -30,6 +30,7 @@
 #define FREQ_REG				0x0002          //频率（目前只有50,60两个值，以后可能要扩展成浮点数频率）
 #define BACKLIGHT_REG			0x0003          //背光（0-7变化，7为最亮，8为全黑）
 #define KEYBOARD_BACKLIGHT      0x0004          //0熄灭键盘灯，1打开键盘灯
+#define SLEEPING                0x0005          //FPGA休眠(0为休眠,1为唤醒)
 
 #define WORKING_MODE            0x0008          //工作模式，对应表格如下
 /*
@@ -73,7 +74,7 @@
 //组号，录波时用于数据组标志，范围(0-15)+通道编号(0x100-TEV1,0x200-TEV2,0x400-HFCT1,0x800-HFCT2,0x1000-AA1,0x2000-AA2)
 #define GROUP_NUM				0x002a
 
-#define TEV_AUTO_REC			0x002b          //自动录波标志位（0为关闭所有自动录波，1为1通道自动，2为2通道自动，3为双通道自动，12为1通道触发同步，20为2通道触发同步，28为双通道触发同步）
+#define AUTO_REC			0x002b          //自动录波标志位（0为关闭所有自动录波，1为1通道自动，2为2通道自动，3为双通道自动，12为1通道触发同步，20为2通道触发同步，28为双通道触发同步）
 
 //要通道数据信号
 #define READ_FPGA_NOMAL         0x0030          //普通
@@ -89,6 +90,7 @@ enum send_params {
     sp_freq_reg,
     sp_backlight_reg,
     sp_keyboard_backlight,
+    sp_sleeping,
     sp_working_mode,
     sp_filter_mode,
 
@@ -111,9 +113,9 @@ enum send_params {
     sp_rec_start_aa1,
     sp_rec_start_aa2,
     sp_group_num,
-    sp_tev_auto_rec,
+    sp_auto_rec,
     //要通道数据信号
-    sp_read_fpga_nomal,
+    sp_read_fpga_normal,
     sp_read_fpga_rec,
     sp_read_fpga_prpd1,
     sp_read_fpga_prpd2,

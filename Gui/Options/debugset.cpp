@@ -3,47 +3,58 @@
 #include <QButtonGroup>
 #include <QDir>
 #include "../Common/common.h"
+#include "IO/rdb/rdb.h"
 
-#define SETTING_NUM             5           //设置菜单条目数
+#define SETTING_NUM             4           //设置菜单条目数
 #define SETTING_NUM_TEV         6
 #define SETTING_NUM_HFCT        4
 #define SETTING_NUM_AA          2
 #define SETTING_NUM_CHANNEL     5
-#define SETTING_NUM_ADVANCED    1
+#define THRESHOLD_STEP          10
 
 DebugSet::DebugSet(G_PARA *g_data,QWidget *parent) : QFrame(parent),ui(new Ui::DebugUi)
 {
     key_val = NULL;
-
     data = g_data;
-
     sql_para = *sqlcfg->get_para();
 
     this->resize(CHANNEL_X, CHANNEL_Y);
     this->move(3, 3);
     ui->setupUi(this);
 
-    ui->tabWidget->setStyleSheet("QTabBar::tab {border: 0px solid white; min-width: 0ex;padding: 1px; }"
+    timer = new QTimer;
+    timer->start(1000);
+    connect(timer, SIGNAL(timeout()), this, SLOT(fresh_rdb_data()) );
+
+    iniUi();
+    reload();
+    iniPasswordUi();            //密码部件
+
+    ui->tabWidget->setCurrentIndex(0);
+
+    this->hide();
+}
+
+void DebugSet::iniUi()
+{
+    ui->tabWidget->setStyleSheet("QTabBar::tab {border: 0px solid white; min-width: 0ex;padding: 2px 0px 2px 8px; }"
                                  "QTabBar::tab:selected{ background:lightGray;  }"
                                  "QTabBar::tab:!selected{ background:transparent;   }"
                                  "QTabWidget::pane{border-width:0px;}"
                                  );
-    QLabel *menu_icon0 = new QLabel(tr("地电波"),ui->tabWidget->tabBar());
-    Common::setTab(menu_icon0);
-    QLabel *menu_icon1 = new QLabel(tr("高频CT"),ui->tabWidget->tabBar());
-    Common::setTab(menu_icon1);
-    QLabel *menu_icon2 = new QLabel(tr("超声波"),ui->tabWidget->tabBar());
-    Common::setTab(menu_icon2);
-    QLabel *menu_icon3 = new QLabel(tr("通道设置"),ui->tabWidget->tabBar());
-    Common::setTab(menu_icon3);
-    QLabel *menu_icon4 = new QLabel(tr("高级"),ui->tabWidget->tabBar());
-    Common::setTab(menu_icon4);
+    tab0 = new QLabel(tr("地电波"),ui->tabWidget->tabBar());
+    Common::setTab(tab0);
+    tab1 = new QLabel(tr("高频CT"),ui->tabWidget->tabBar());
+    Common::setTab(tab1);
+    tab2 = new QLabel(tr("超声波"),ui->tabWidget->tabBar());
+    Common::setTab(tab2);
+    tab3 = new QLabel(tr("通道设置"),ui->tabWidget->tabBar());
+    Common::setTab(tab3);
 
-    ui->tabWidget->tabBar()->setTabButton(0,QTabBar::LeftSide,menu_icon0);
-    ui->tabWidget->tabBar()->setTabButton(1,QTabBar::LeftSide,menu_icon1);
-    ui->tabWidget->tabBar()->setTabButton(2,QTabBar::LeftSide,menu_icon2);
-    ui->tabWidget->tabBar()->setTabButton(3,QTabBar::LeftSide,menu_icon3);
-    ui->tabWidget->tabBar()->setTabButton(4,QTabBar::LeftSide,menu_icon4);
+    ui->tabWidget->tabBar()->setTabButton(0,QTabBar::LeftSide,tab0);
+    ui->tabWidget->tabBar()->setTabButton(1,QTabBar::LeftSide,tab1);
+    ui->tabWidget->tabBar()->setTabButton(2,QTabBar::LeftSide,tab2);
+    ui->tabWidget->tabBar()->setTabButton(3,QTabBar::LeftSide,tab3);
 
     for (int i = 0; i < ui->tabWidget->count(); ++i) {
         ui->tabWidget->widget(i)->setStyleSheet("QWidget {background-color:lightGray;}");
@@ -67,11 +78,10 @@ DebugSet::DebugSet(G_PARA *g_data,QWidget *parent) : QFrame(parent),ui(new Ui::D
     group3->addButton( ui->rb_LC1_Disable );
     group4->addButton( ui->rb_LC2_AE );
     group4->addButton( ui->rb_LC2_Disable );
+}
 
-
-    iniUi();
-
-    //密码部件
+void DebugSet::iniPasswordUi()
+{
     widget_password = new QWidget(this);
     widget_password->setStyleSheet("QWidget {background-color:lightGray;}");
     widget_password->resize(455, 185);
@@ -91,33 +101,6 @@ DebugSet::DebugSet(G_PARA *g_data,QWidget *parent) : QFrame(parent),ui(new Ui::D
     password_set = "UDLR";  //默认密码
 
     resetPassword();
-
-    this->hide();
-}
-
-
-
-void DebugSet::set_offset_suggest1(int a, int b)
-{
-    ui->lab_offset1->setText(QString("%1").arg(a));
-    ui->lab_offset2->setText(QString("%1").arg(b));
-}
-
-void DebugSet::set_offset_suggest2(int a, int b)
-{
-    ui->lab_offset3->setText(QString("%1").arg(a));
-    ui->lab_offset4->setText(QString("%1").arg(b));
-}
-
-void DebugSet::set_AA_offset_suggest(int a)
-{
-    ui->label_AA_offset->setText(QString("%1").arg(a));
-}
-
-void DebugSet::iniUi()
-{
-    ui->tabWidget->setCurrentIndex(0);
-    readSql();
 }
 
 void DebugSet::resetPassword()
@@ -146,7 +129,12 @@ void DebugSet::saveSql()
     data->set_send_para (sp_tev2_zero, 0x8000 - sql_para.tev2_sql.fpga_zero);
     data->set_send_para (sp_tev2_threshold, sql_para.tev2_sql.fpga_threshold);
 
-    uint temp = sqlcfg->get_working_mode(sql_para.menu_h1, sql_para.menu_h2);
+    data->set_send_para (sp_hfct1_zero, 0x8000 - sql_para.hfct1_sql.fpga_zero);
+    data->set_send_para (sp_hfct1_threshold, sql_para.hfct1_sql.fpga_threshold);
+    data->set_send_para (sp_hfct2_zero, 0x8000 - sql_para.hfct2_sql.fpga_zero);
+    data->set_send_para (sp_hfct2_threshold, sql_para.hfct2_sql.fpga_threshold);
+
+    uint temp = sqlcfg->get_working_mode((MODE)sql_para.menu_h1, (MODE)sql_para.menu_h2);
     data->set_send_para (sp_working_mode, temp);
     qDebug()<<"current working mode code is: " << temp;
     qDebug()<<"debug para saved!";
@@ -156,23 +144,27 @@ void DebugSet::saveSql()
     }
 }
 
-void DebugSet::readSql()
+void DebugSet::reload()
 {
     //TEV
-    ui->lineEdit_TEV1_THRESHOLD->setText(QString("%1").arg(sql_para.tev1_sql.fpga_threshold) );
+    ui->lineEdit_TEV1_THRESHOLD->setText(QString("%1 mV").arg((int)Common::physical_value(sql_para.tev1_sql.fpga_threshold, TEV1) ) );
     ui->lineEdit_TEV1_ZERO->setText(QString("%1").arg(sql_para.tev1_sql.fpga_zero) );
     ui->lineEdit_TEV1_NOISE->setText(QString("%1").arg(sql_para.tev1_sql.tev_offset1) );
 
-    ui->lineEdit_TEV2_THRESHOLD->setText(QString("%1").arg(sql_para.tev2_sql.fpga_threshold) );
+    ui->lineEdit_TEV2_THRESHOLD->setText(QString("%1 mV").arg((int)Common::physical_value(sql_para.tev2_sql.fpga_threshold, TEV2) ) );
     ui->lineEdit_TEV2_ZERO->setText(QString("%1").arg(sql_para.tev2_sql.fpga_zero) );
     ui->lineEdit_TEV2_NOISE->setText(QString("%1").arg(sql_para.tev2_sql.tev_offset1) );
+
+    //HFCT
+    ui->lineEdit_HFCT1_THRESHOLD->setText(QString("%1 mV").arg((int)Common::physical_value(sql_para.hfct1_sql.fpga_threshold, HFCT1) ) );
+    ui->lineEdit_HFCT1_ZERO->setText(QString("%1").arg(sql_para.hfct1_sql.fpga_zero) );
+
+    ui->lineEdit_HFCT2_THRESHOLD->setText(QString("%1 mV").arg((int)Common::physical_value(sql_para.hfct2_sql.fpga_threshold, HFCT2) ) );
+    ui->lineEdit_HFCT2_ZERO->setText(QString("%1").arg(sql_para.hfct2_sql.fpga_zero) );
 
     //AA
     ui->lineEdit_AA_Step->setText(QString("%1").arg(sql_para.aaultra_sql.aa_step));
     ui->lineEdit_AA_offset->setText(QString("%1").arg(sql_para.aaultra_sql.aa_offset));
-
-    //高级
-    ui->lineEdit_MaxRecNum->setText(QString("%1").arg(sql_para.max_rec_num));
 
     //通道选择
     switch (sql_para.menu_h1) {
@@ -290,7 +282,7 @@ void DebugSet::trans_key(quint8 key_code)
                 pass = true;
                 sql_para = *sqlcfg->get_para();     //重新初始化数值显示
 
-                iniUi();
+                reload();
                 key_val->grade.val3 = 1;
             }
             else{
@@ -304,7 +296,6 @@ void DebugSet::trans_key(quint8 key_code)
                 }
             }
         }
-
         break;
     case KEY_CANCEL:
         if(key_val->grade.val4 == 0){   //退出Debug设置
@@ -312,7 +303,6 @@ void DebugSet::trans_key(quint8 key_code)
             key_val->grade.val2 = 0;
 
             this->hide();
-
             resetPassword();
             fresh_parent();
         }
@@ -323,61 +313,7 @@ void DebugSet::trans_key(quint8 key_code)
         break;
     case KEY_UP:
         if(pass){
-            if(key_val->grade.val4 == 0){   //判断在二级菜单
-                if(key_val->grade.val3>1){
-                    key_val->grade.val3 --;
-                }
-                else{
-                    key_val->grade.val3 = SETTING_NUM;
-                }
-                iniUi();        //刷新列表
-            }
-            else{                           //判断在三级菜单
-                switch (key_val->grade.val3) {
-                case 1:                 //TEV
-                    if(key_val->grade.val4 >1 ){
-                        key_val->grade.val4 --;
-                    }
-                    else{
-                        key_val->grade.val4 = SETTING_NUM_TEV;
-                    }
-                    break;
-                case 2:                 //HFCT
-                    if(key_val->grade.val4 >1 ){
-                        key_val->grade.val4 --;
-                    }
-                    else{
-                        key_val->grade.val4 = SETTING_NUM_HFCT;
-                    }
-                    break;
-                case 3:                 //AA
-                    if(key_val->grade.val4 >1 ){
-                        key_val->grade.val4 --;
-                    }
-                    else{
-                        key_val->grade.val4 = SETTING_NUM_AA;
-                    }
-                    break;
-                case 4:                 //通道设置
-                    if(key_val->grade.val4 >1 ){
-                        key_val->grade.val4 --;
-                    }
-                    else{
-                        key_val->grade.val4 = SETTING_NUM_CHANNEL;
-                    }
-                    break;
-                case 5:                 //高级
-                    if(key_val->grade.val4 >1){
-                        key_val->grade.val4 --;
-                    }
-                    else{
-                        key_val->grade.val4 = SETTING_NUM_ADVANCED;
-                    }
-                    break;
-                default:
-                    break;
-                }
-            }
+            do_key_up_down(-1);
         }
         else{
             password.append("U");
@@ -386,62 +322,7 @@ void DebugSet::trans_key(quint8 key_code)
         break;
     case KEY_DOWN:
         if(pass){
-            if(key_val->grade.val4 == 0){   //判断在二级菜单
-                if(key_val->grade.val3 < SETTING_NUM){
-
-                    key_val->grade.val3 ++;
-                }
-                else{
-                    key_val->grade.val3 = 1;
-                }
-                iniUi();
-            }
-            else{                           //判断在三级菜单
-                switch (key_val->grade.val3) {
-                case 1:                     //TEV
-                    if(key_val->grade.val4 < SETTING_NUM_TEV){
-                        key_val->grade.val4 ++;
-                    }
-                    else{
-                        key_val->grade.val4 = 1;
-                    }
-                    break;
-                case 2:                     //HFCT
-                    if(key_val->grade.val4 < SETTING_NUM_HFCT){
-                        key_val->grade.val4 ++;
-                    }
-                    else{
-                        key_val->grade.val4 = 1;
-                    }
-                    break;
-                case 3:                     //AA
-                    if(key_val->grade.val4 < SETTING_NUM_AA){
-                        key_val->grade.val4 ++;
-                    }
-                    else{
-                        key_val->grade.val4 = 1;
-                    }
-                    break;
-                case 4:                     //通道
-                    if(key_val->grade.val4 < SETTING_NUM_CHANNEL){
-                        key_val->grade.val4 ++;
-                    }
-                    else{
-                        key_val->grade.val4 = 1;
-                    }
-                    break;
-                case 5:                     //高级
-                    if(key_val->grade.val4 < SETTING_NUM_ADVANCED){
-                        key_val->grade.val4 ++;
-                    }
-                    else{
-                        key_val->grade.val4 = 1;
-                    }
-                    break;
-                default:
-                    break;
-                }
-            }
+            do_key_up_down(1);
         }
         else{
             password.append("D");
@@ -450,374 +331,21 @@ void DebugSet::trans_key(quint8 key_code)
         break;
     case KEY_LEFT:
         if(pass){
-            if(key_val->grade.val4 == 0){
-            }
-            else{
-                switch (key_val->grade.val3) {
-                case 1:         //TEV
-                    switch (key_val->grade.val4) {
-                    case 1:
-                        sql_para.tev1_sql.fpga_threshold--;
-                        break;
-                    case 2:
-                        sql_para.tev1_sql.fpga_zero--;
-                        break;
-                    case 3:
-                        sql_para.tev1_sql.tev_offset1--;
-                        break;
-                    case 4:
-                        sql_para.tev2_sql.fpga_threshold--;
-                        break;
-                    case 5:
-                        sql_para.tev2_sql.fpga_zero--;
-                        break;
-                    case 6:
-                        sql_para.tev2_sql.tev_offset1--;
-                        break;
-                    default:
-                        break;
-                    }
-                    break;
-                case 2:         //HFCT
-                    switch (key_val->grade.val4) {
-                    case 1:
-                        sql_para.hfct1_sql.fpga_threshold--;
-                        break;
-                    case 2:
-                        sql_para.hfct1_sql.fpga_zero--;
-                        break;
-                    case 3:
-                        sql_para.hfct2_sql.fpga_threshold--;
-                        break;
-                    case 4:
-                        sql_para.hfct2_sql.fpga_zero--;
-                        break;
-                    default:
-                        break;
-                    }
-                    break;
-                case 3:     //AA
-                    if(key_val->grade.val4 == 1){
-                        if(sql_para.aaultra_sql.aa_step > 0.25)
-                            sql_para.aaultra_sql.aa_step -= 0.5;
-                    }
-                    else if(key_val->grade.val4 == 2){
-                        sql_para.aaultra_sql.aa_offset --;
-                    }
-                    break;
-                case 4:     //通道
-                    switch (key_val->grade.val4) {
-                    case 1:
-                        switch (sql_para.menu_h1) {
-                        case TEV1:
-                            sql_para.menu_h1 = Disable;
-                            break;
-                        case TEV2:
-                            if(sql_para.menu_h2 == TEV1){
-                                sql_para.menu_h1 = Disable;
-                            }
-                            else{
-                                sql_para.menu_h1 = TEV1;
-                            }
-                            break;
-                        case HFCT1:
-                            if(sql_para.menu_h2 == TEV2){
-                                sql_para.menu_h1 = TEV1;
-                            }
-                            else{
-                                sql_para.menu_h1 = TEV2;
-                            }
-                            break;
-                        case HFCT2:
-                            if(sql_para.menu_h2 == HFCT1){
-                                sql_para.menu_h1 = TEV2;
-                            }
-                            else{
-                                sql_para.menu_h1 = HFCT1;
-                            }
-                            break;
-                        case Disable:
-                            if(sql_para.menu_h2 == HFCT2){
-                                sql_para.menu_h1 = HFCT1;
-                            }
-                            else{
-                                sql_para.menu_h1 = HFCT2;
-                            }
-                            break;
-                        default:
-                            break;
-                        }
-                        break;
-                    case 2:
-                        switch (sql_para.menu_h2) {
-                        case TEV1:
-                            sql_para.menu_h2 = Disable;
-                            break;
-                        case TEV2:
-                            if(sql_para.menu_h1 == TEV1){
-                                sql_para.menu_h2 = Disable;
-                            }
-                            else{
-                                sql_para.menu_h2 = TEV1;
-                            }
-                            break;
-                        case HFCT1:
-                            if(sql_para.menu_h1 == TEV2){
-                                sql_para.menu_h2 = TEV1;
-                            }
-                            else{
-                                sql_para.menu_h2 = TEV2;
-                            }
-                            break;
-                        case HFCT2:
-                            if(sql_para.menu_h1 == HFCT1){
-                                sql_para.menu_h2 = TEV2;
-                            }
-                            else{
-                                sql_para.menu_h2 = HFCT1;
-                            }
-                            break;
-                        case Disable:
-                            if(sql_para.menu_h1 == HFCT2){
-                                sql_para.menu_h2 = HFCT1;
-                            }
-                            else{
-                                sql_para.menu_h2 = HFCT2;
-                            }
-                            break;
-                        default:
-                            break;
-                        }
-                        break;
-                    case 3:
-                        if(sql_para.menu_aa == AA_Ultrasonic){
-                            sql_para.menu_aa = Disable;
-                        }
-                        else if(sql_para.menu_aa == Disable && ui->rb_LC1_AA->isEnabled()){       //判断AA是否可用
-                            sql_para.menu_aa = AA_Ultrasonic;
-                        }
-
-                        break;
-                    case 4:
-                        if(sql_para.menu_ae == AE_Ultrasonic){
-                            sql_para.menu_ae = Disable;
-                        }
-                        else if(sql_para.menu_ae == Disable && ui->rb_LC2_AE->isEnabled()){       //判断AE是否可用
-                            sql_para.menu_ae = AE_Ultrasonic;
-                        }
-                        break;
-                    case 5:
-                        if(sql_para.menu_double == Double_Channel){
-                            sql_para.menu_double = Disable;
-                        }
-                        else if(sql_para.menu_double == Disable && ui->rb_Double_Enable->isEnabled()){       //判断双通道是否可用
-                            sql_para.menu_double = Double_Channel;
-                        }
-                        break;
-                    default:
-                        break;
-                    }
-                    break;
-                case 5:     //高级
-                    if(sql_para.max_rec_num >20)
-                        sql_para.max_rec_num -= 10;
-                    break;
-                default:
-                    break;
-                }
-            }
+            do_key_left_right(-1);
         }
         else{
             password.append("L");
             passwordEdit->setText(passwordEdit->text()+"*");
         }
-
         break;
     case KEY_RIGHT:
         if(pass){
-            if(key_val->grade.val4 == 0 && key_val->grade.val3 != 0){   //必须第三层处于工作状态
-                key_val->grade.val4 =1;
-            }
-            else{
-                switch (key_val->grade.val3) {
-                case 1:     //TEV
-                    switch (key_val->grade.val4) {
-                    case 1:
-                        sql_para.tev1_sql.fpga_threshold++;
-                        break;
-                    case 2:
-                        sql_para.tev1_sql.fpga_zero++;
-                        break;
-                    case 3:
-                        sql_para.tev1_sql.tev_offset1++;
-                        break;
-                    case 4:
-                        sql_para.tev2_sql.fpga_threshold++;
-                        break;
-                    case 5:
-                        sql_para.tev2_sql.fpga_zero++;
-                        break;
-                    case 6:
-                        sql_para.tev2_sql.tev_offset1++;
-                        break;
-                    default:
-                        break;
-                    }
-                    break;
-                case 2:     //HFCT
-                    switch (key_val->grade.val4) {
-                    case 1:
-                        sql_para.hfct1_sql.fpga_threshold++;
-                        break;
-                    case 2:
-                        sql_para.hfct1_sql.fpga_zero++;
-                        break;
-                    case 3:
-                        sql_para.hfct2_sql.fpga_threshold++;
-                        break;
-                    case 4:
-                        sql_para.hfct2_sql.fpga_zero++;
-                        break;
-                    default:
-                        break;
-                    }
-                    break;
-                case 3:     //AA
-                    if(key_val->grade.val4 == 1){
-                        sql_para.aaultra_sql.aa_step += 0.5;
-                    }
-                    else if(key_val->grade.val4 == 2){
-                        sql_para.aaultra_sql.aa_offset ++;
-                    }
-                    break;
-                case 4:     //通道
-                    switch (key_val->grade.val4) {
-                    case 1:
-                        switch (sql_para.menu_h1) {
-                        case TEV1:
-                            if(sql_para.menu_h2 == TEV2){
-                                sql_para.menu_h1 = HFCT1;
-                            }
-                            else{
-                                sql_para.menu_h1 = TEV2;
-                            }
-                            break;
-                        case TEV2:
-                            if(sql_para.menu_h2 == HFCT1){
-                                sql_para.menu_h1 = HFCT2;
-                            }
-                            else{
-                                sql_para.menu_h1 = HFCT1;
-                            }
-                            break;
-                        case HFCT1:
-                            if(sql_para.menu_h2 == HFCT2){
-                                sql_para.menu_h1 = Disable;
-                            }
-                            else{
-                                sql_para.menu_h1 = HFCT2;
-                            }
-                            break;
-                        case HFCT2:
-                            sql_para.menu_h1 = Disable;
-                            break;
-                        case Disable:
-                            if(sql_para.menu_h2 == TEV1){
-                                sql_para.menu_h1 = TEV2;
-                            }
-                            else{
-                                sql_para.menu_h1 = TEV1;
-                            }
-                            break;
-                        default:
-                            break;
-                        }
-                        break;
-                    case 2:
-                        switch (sql_para.menu_h2) {
-                        case TEV1:
-                            if(sql_para.menu_h1 == TEV2){
-                                sql_para.menu_h2 = HFCT1;
-                            }
-                            else{
-                                sql_para.menu_h2 = TEV2;
-                            }
-                            break;
-                        case TEV2:
-                            if(sql_para.menu_h1 == HFCT1){
-                                sql_para.menu_h2 = HFCT2;
-                            }
-                            else{
-                                sql_para.menu_h2 = HFCT1;
-                            }
-                            break;
-                        case HFCT1:
-                            if(sql_para.menu_h1 == HFCT2){
-                                sql_para.menu_h2 = Disable;
-                            }
-                            else{
-                                sql_para.menu_h2 = HFCT2;
-                            }
-                            break;
-                        case HFCT2:
-                            sql_para.menu_h2 = Disable;
-                            break;
-                        case Disable:
-                            if(sql_para.menu_h1 == TEV1){
-                                sql_para.menu_h2 = TEV2;
-                            }
-                            else{
-                                sql_para.menu_h2 = TEV1;
-                            }
-                            break;
-                        default:
-                            break;
-                        }
-                        break;
-                    case 3:
-                        if(sql_para.menu_aa == AA_Ultrasonic){
-                            sql_para.menu_aa = Disable;
-                        }
-                        else if(sql_para.menu_aa == Disable && ui->rb_LC1_AA->isEnabled()){       //判断AA是否可用
-                            sql_para.menu_aa = AA_Ultrasonic;
-                        }
-
-                        break;
-                    case 4:
-                        if(sql_para.menu_ae == AE_Ultrasonic){
-                            sql_para.menu_ae = Disable;
-                        }
-                        else if(sql_para.menu_ae == Disable && ui->rb_LC2_AE->isEnabled()){       //判断AE是否可用
-                            sql_para.menu_ae = AE_Ultrasonic;
-                        }
-                        break;
-                    case 5:
-                        if(sql_para.menu_double == Double_Channel){
-                            sql_para.menu_double = Disable;
-                        }
-                        else if(sql_para.menu_double == Disable && ui->rb_Double_Enable->isEnabled()){       //判断双通道是否可用
-                            sql_para.menu_double = Double_Channel;
-                        }
-                        break;
-                    default:
-                        break;
-                    }
-                    break;
-                case 5:     //高级
-                    if(key_val->grade.val4 == 3){
-                        sql_para.max_rec_num += 10;
-                    }
-                    break;
-                default:
-                    break;
-                }
-            }
+            do_key_left_right(1);
         }
         else{
             password.append("R");
             passwordEdit->setText(passwordEdit->text()+"*");
         }
-
         break;
     default:
         break;
@@ -827,21 +355,182 @@ void DebugSet::trans_key(quint8 key_code)
 
 }
 
+void DebugSet::do_key_left_right(int d)
+{
+    if(key_val->grade.val4 == 0 && key_val->grade.val3 != 0 && d > 0){   //必须第三层处于工作状态
+        key_val->grade.val4 =1;
+    }
+    else{
+        switch (key_val->grade.val3) {
+        case 1:         //TEV
+            switch (key_val->grade.val4) {
+            case 1:
+                sql_para.tev1_sql.fpga_threshold += Common::code_value(1,TEV1) * d;
+                break;
+            case 2:
+                sql_para.tev1_sql.fpga_zero += d;
+                break;
+            case 3:
+                sql_para.tev1_sql.tev_offset1 += d;
+                break;
+            case 4:
+                sql_para.tev2_sql.fpga_threshold += Common::code_value(1,TEV2) * d;
+                break;
+            case 5:
+                sql_para.tev2_sql.fpga_zero += d;
+                break;
+            case 6:
+                sql_para.tev2_sql.tev_offset1 += d;
+                break;
+            default:
+                break;
+            }
+            break;
+        case 2:         //HFCT
+            switch (key_val->grade.val4) {
+            case 1:
+                sql_para.hfct1_sql.fpga_threshold += Common::code_value(1,HFCT1) * d;
+                break;
+            case 2:
+                sql_para.hfct1_sql.fpga_zero += d;
+                break;
+            case 3:
+                sql_para.hfct2_sql.fpga_threshold += Common::code_value(1,HFCT1) * d;
+                break;
+            case 4:
+                sql_para.hfct2_sql.fpga_zero += d;
+                break;
+            default:
+                break;
+            }
+            break;
+        case 3:     //AA
+            switch (key_val->grade.val4) {
+            case 1:
+                Common::change_index(sql_para.aaultra_sql.aa_step, 0.5 * d, 10, 0.5);
+                break;
+            case 2:
+                sql_para.aaultra_sql.aa_offset += d;
+                break;
+            default:
+                break;
+            }
+            break;
+        case 4:     //通道
+            switch (key_val->grade.val4) {
+            case 1:     //高频通道1
+                Common::change_index(sql_para.menu_h1, d, HFCT2, Disable);
+                if(sql_para.menu_h1 == sql_para.menu_h2){       //如果冲突,再执行一次
+                    Common::change_index(sql_para.menu_h1, d, HFCT2, Disable);
+                }
+                break;
+            case 2:
+                Common::change_index(sql_para.menu_h2, d, HFCT2, Disable);
+                if(sql_para.menu_h2 == sql_para.menu_h1){
+                    Common::change_index(sql_para.menu_h2, d, HFCT2, Disable);
+                }
+                break;
+            case 3:
+                if(sql_para.menu_aa == AA_Ultrasonic){
+                    sql_para.menu_aa = Disable;
+                }
+                else if(sql_para.menu_aa == Disable && ui->rb_LC1_AA->isEnabled()){       //判断AA是否可用
+                    sql_para.menu_aa = AA_Ultrasonic;
+                }
+
+                break;
+            case 4:
+                if(sql_para.menu_ae == AE_Ultrasonic){
+                    sql_para.menu_ae = Disable;
+                }
+                else if(sql_para.menu_ae == Disable && ui->rb_LC2_AE->isEnabled()){       //判断AE是否可用
+                    sql_para.menu_ae = AE_Ultrasonic;
+                }
+                break;
+            case 5:
+                if(sql_para.menu_double == Double_Channel){
+                    sql_para.menu_double = Disable;
+                }
+                else if(sql_para.menu_double == Disable && ui->rb_Double_Enable->isEnabled()){       //判断双通道是否可用
+                    sql_para.menu_double = Double_Channel;
+                }
+                break;
+            default:
+                break;
+            }
+            break;
+        default:
+            break;
+        }
+    }
+}
+
+void DebugSet::do_key_up_down(int d)
+{
+    if(key_val->grade.val4 == 0){   //判断在二级菜单
+        Common::change_index(key_val->grade.val3, d, SETTING_NUM, 1);
+    }
+    else{                           //判断在三级菜单
+        switch (key_val->grade.val3) {
+        case 1:                     //TEV
+            Common::change_index(key_val->grade.val4, d, SETTING_NUM_TEV, 1);
+            break;
+        case 2:                     //HFCT
+            Common::change_index(key_val->grade.val4, d, SETTING_NUM_HFCT, 1);
+            break;
+        case 3:                     //AA
+            Common::change_index(key_val->grade.val4, d, SETTING_NUM_AA, 1);
+            break;
+        case 4:                     //通道
+            Common::change_index(key_val->grade.val4, d, SETTING_NUM_CHANNEL, 1);
+            break;
+        default:
+            break;
+        }
+    }
+}
+
+void DebugSet::fresh_rdb_data()
+{
+    yc_data_type temp_data;
+    unsigned char a[1],b[1];
+
+    yc_get_value(0,TEV1_center_biased_adv,1, &temp_data, b, a);
+    ui->lab_offset_zero_tev1->setText(QString("%1").arg(temp_data.f_val));
+    yc_get_value(0,TEV1_noise_biased_adv,1, &temp_data, b, a);
+    ui->lab_offset_noise_tev1->setText(QString("%1").arg(temp_data.f_val));;
+
+    yc_get_value(0,TEV2_center_biased_adv,1, &temp_data, b, a);
+    ui->lab_offset_zero_tev2->setText(QString("%1").arg(temp_data.f_val));
+    yc_get_value(0,TEV2_noise_biased_adv,1, &temp_data, b, a);
+    ui->lab_offset_noise_tev2->setText(QString("%1").arg(temp_data.f_val));;
+
+    yc_get_value(0,HFCT1_center_biased_adv,1, &temp_data, b, a);
+    ui->lab_offset_zero_hfct1->setText(QString("%1").arg(temp_data.f_val));
+
+    yc_get_value(0,HFCT2_center_biased_adv,1, &temp_data, b, a);
+    ui->lab_offset_zero_hfct2->setText(QString("%1").arg(temp_data.f_val));
+
+    yc_get_value(0,AA_biased_adv,1, &temp_data, b, a);
+    ui->lab_offset_noise_aa->setText(QString("%1").arg(temp_data.f_val));
+}
+
 void DebugSet::fresh()
 {
-    //    printf("\nkey_val->grade.val2 is : %d",key_val->grade.val2);
-    //    printf("\tkey_val->grade.val3 is : %d",key_val->grade.val3);
-    //    printf("\tkey_val->grade.val3 is : %d \n",key_val->grade.val3);
-
     if(pass){
         if(key_val->grade.val3){
             ui->tabWidget->setCurrentIndex(key_val->grade.val3-1);
         }
 
         //刷新数据
-        readSql();
+        reload();
 
         //刷新组件状态
+        tab0->setStyleSheet("QLabel{border: 0px solid darkGray;}");
+        tab1->setStyleSheet("QLabel{border: 0px solid darkGray;}");
+        tab2->setStyleSheet("QLabel{border: 0px solid darkGray;}");
+        tab3->setStyleSheet("QLabel{border: 0px solid darkGray;}");
+
         switch (key_val->grade.val3) {
         case 1:         //TEV
             ui->lineEdit_TEV1_THRESHOLD->deselect();
@@ -851,6 +540,12 @@ void DebugSet::fresh()
             ui->lineEdit_TEV2_ZERO->deselect();
             ui->lineEdit_TEV2_NOISE->deselect();
             switch (key_val->grade.val4) {
+            case 0:
+                tab0->setStyleSheet("QLabel{border: 1px solid darkGray;}");
+                tab1->setStyleSheet("QLabel{border: 0px solid darkGray;}");
+                tab2->setStyleSheet("QLabel{border: 0px solid darkGray;}");
+                tab3->setStyleSheet("QLabel{border: 0px solid darkGray;}");
+                break;
             case 1:
                 ui->lineEdit_TEV1_THRESHOLD->selectAll();
                 break;
@@ -879,6 +574,12 @@ void DebugSet::fresh()
             ui->lineEdit_HFCT2_THRESHOLD->deselect();
             ui->lineEdit_HFCT2_ZERO->deselect();
             switch (key_val->grade.val4) {
+            case 0:
+                tab0->setStyleSheet("QLabel{border: 0px solid darkGray;}");
+                tab1->setStyleSheet("QLabel{border: 1px solid darkGray;}");
+                tab2->setStyleSheet("QLabel{border: 0px solid darkGray;}");
+                tab3->setStyleSheet("QLabel{border: 0px solid darkGray;}");
+                break;
             case 1:
                 ui->lineEdit_HFCT1_THRESHOLD->selectAll();
                 break;
@@ -896,57 +597,56 @@ void DebugSet::fresh()
             }
             break;
         case 3:         //AA
-            if(key_val->grade.val4 == 0){
-                ui->lineEdit_AA_Step->deselect();
-                ui->lineEdit_AA_offset->deselect();
-            }
-            else if(key_val->grade.val4 == 1){
-                ui->lineEdit_AA_Step->selectAll();
-                ui->lineEdit_AA_offset->deselect();
-            }
-            else if(key_val->grade.val4 == 2){
-                ui->lineEdit_AA_Step->deselect();
-                ui->lineEdit_AA_offset->selectAll();
-            }
-            break;
-        case 4:         //通道
-//            ui->pbt_HC1->setStyleSheet("QPushButton {color:black;}");
-            ui->pbt_HC1->setChecked(false);
-//            ui->pbt_HC2->setStyleSheet("QPushButton {color:black;}");
-            ui->pbt_HC2->setChecked(false);
-//            ui->pbt_LC1->setStyleSheet("QPushButton {color:black;}");
-            ui->pbt_LC1->setChecked(false);
-//            ui->pbt_LC2->setStyleSheet("QPushButton {color:black;}");
-            ui->pbt_LC2->setChecked(false);
-//            ui->pbt_Double->setStyleSheet("QPushButton {color:black;}");
-            ui->pbt_Double->setChecked(false);
+            ui->lineEdit_AA_Step->deselect();
+            ui->lineEdit_AA_offset->deselect();
             switch (key_val->grade.val4) {
+            case 0:
+                tab0->setStyleSheet("QLabel{border: 0px solid darkGray;}");
+                tab1->setStyleSheet("QLabel{border: 0px solid darkGray;}");
+                tab2->setStyleSheet("QLabel{border: 1px solid darkGray;}");
+                tab3->setStyleSheet("QLabel{border: 0px solid darkGray;}");
+                break;
             case 1:
-//                ui->pbt_HC1->setStyleSheet("QPushButton {color:white;}");
-                ui->pbt_HC1->setChecked(true);
+                ui->lineEdit_AA_Step->selectAll();
                 break;
             case 2:
-//                ui->pbt_HC2->setStyleSheet("QPushButton {color:white;}");
-                ui->pbt_HC2->setChecked(true);
-                break;
-            case 3:
-//                ui->pbt_LC1->setStyleSheet("QPushButton {color:white;}");
-                ui->pbt_LC1->setChecked(true);
-                break;
-            case 4:
-//                ui->pbt_LC2->setStyleSheet("QPushButton {color:white;}");
-                ui->pbt_LC2->setChecked(true);
-                break;
-            case 5:
-//                ui->pbt_Double->setStyleSheet("QPushButton {color:white;}");
-                ui->pbt_Double->setChecked(true);
+                ui->lineEdit_AA_offset->selectAll();
                 break;
             default:
                 break;
             }
             break;
-        case 5:         //高级
-            ui->lineEdit_MaxRecNum->selectAll();
+        case 4:         //通道
+            ui->pbt_HC1->setChecked(false);
+            ui->pbt_HC2->setChecked(false);
+            ui->pbt_LC1->setChecked(false);
+            ui->pbt_LC2->setChecked(false);
+            ui->pbt_Double->setChecked(false);
+            switch (key_val->grade.val4) {
+            case 0:
+                tab0->setStyleSheet("QLabel{border: 0px solid darkGray;}");
+                tab1->setStyleSheet("QLabel{border: 0px solid darkGray;}");
+                tab2->setStyleSheet("QLabel{border: 0px solid darkGray;}");
+                tab3->setStyleSheet("QLabel{border: 1px solid darkGray;}");
+                break;
+            case 1:
+                ui->pbt_HC1->setChecked(true);
+                break;
+            case 2:
+                ui->pbt_HC2->setChecked(true);
+                break;
+            case 3:
+                ui->pbt_LC1->setChecked(true);
+                break;
+            case 4:
+                ui->pbt_LC2->setChecked(true);
+                break;
+            case 5:
+                ui->pbt_Double->setChecked(true);
+                break;
+            default:
+                break;
+            }
             break;
         default:
             break;

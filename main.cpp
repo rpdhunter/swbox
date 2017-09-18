@@ -13,7 +13,14 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 
+#ifdef OHV
+    QPixmap pixmap(":/widgetphoto/bk/ohv.png");
+#elif AMG
+    QPixmap pixmap(":/widgetphoto/bk/amg.png");
+#else
     QPixmap pixmap(":/widgetphoto/bk/powersystem.png");
+#endif
+
     pixmap.scaled(480,272);
     QSplashScreen *splash = new QSplashScreen(pixmap);
     splash->show();

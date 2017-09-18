@@ -85,47 +85,40 @@ class HFCTWidget : public QFrame
 public:
     explicit HFCTWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu_index, QWidget *parent = 0);
     ~HFCTWidget();
+
+public slots:
+    void reload(int index);   //重新装载设置
+    void trans_key(quint8 key_code);
     void showWaveData(VectorList buf, MODE mod);
 
 signals:
     void send_key(quint8);
-//    void aa_modbus_data(int);
     void startRecWave(MODE, int);        //开始录播
-//    void offset_suggest(int);
     void fresh_parent();
     void hfct_log_data(double,int,double);
     void hfct_PRPD_data(QVector<QwtPoint3D>);
 
-public slots:
-    void working(CURRENT_KEY_VALUE *val);
-    void trans_key(quint8 key_code);
-//    void fresh(bool f); //刷新数据核
-//    void fresh_1();
-//    void fresh_2();
-
-    void doHfctData();
-
 private slots:
     void fresh_plot();
     void fresh_PRPD();
-    void rec_wave();
-    void rec_wave_continuous_complete();     //连续录波结束
-
+    void doHfctData();
 
 private:
     void fresh_setting(void);
-//    void data_init();   //用于延时加载
-    void PRPS_inti();
+
+    void BarChart_inti();
     void PRPD_inti();
 
     void maxReset();
     void PRPDReset();
 
-    void rec_wave_continuous();     //连续录波
+    void do_key_up_down(int d);
+    void do_key_left_right(int d);
 
-//    void calc_aa_value (double * aa_val, double * aa_db, int * offset);
 
     SQL_PARA sql_para;
+    HFCT_SQL *hfct_sql;
+    bool manual;        //手动录波标志
 
     QwtPlot *plot_PRPS, *plot_PRPD, *plot_Histogram;
     BarChart *d_PRPS;              //PRPS图
@@ -147,11 +140,12 @@ private:
 
     int db;         //每秒的最大值，用于给图形传递参数
     double max_db;  //最大值
+    int low, high;
 //    double temp_db; //显示值缓冲区，用于减缓刷新
 
 
     CURRENT_KEY_VALUE *key_val;
-    QTimer *timer, *timer1 , *timer2, *timer3, *timer_rec, *timer_rec_interval;
+    QTimer *timer, *timer1 , *timer2, *timer3, *timer_freeze;
     G_PARA *data;
     int menu_index;
     quint32 group;
@@ -165,9 +159,7 @@ private:
     RecWaveForm *recWaveForm;
     LogTools *logtools;
 
-    VectorList hfct_continuous_buf;     //保存收到的连续录波数据
-
-    MODE mode;
+    MODE mode, mode_continuous;
     G_RECV_PARA_HFCT *hfct_data;
 
     Ui::HFCTWidget *ui;

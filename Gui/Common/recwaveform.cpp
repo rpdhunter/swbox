@@ -7,10 +7,14 @@
 #include <qwt_scale_widget.h>
 #include <qwt_plot_layout.h>
 #include <qwt_legend.h>
+#include <qwt_plot_marker.h>
 
 #include "IO/SqlCfg/sqlcfg.h"
+#include "common.h"
 
 #define SHOW_FACTOR 4.0     //保存默认的也是最小的纵轴间距
+#define PEAK_JUDGE  4.0     //脉冲阈值阈值
+
 
 RecWaveForm::RecWaveForm(int menu_index, QWidget *parent) :
     QWidget(parent)
@@ -20,8 +24,6 @@ RecWaveForm::RecWaveForm(int menu_index, QWidget *parent) :
 
     this->menu_index = menu_index;
     plot = new QwtPlot(this);
-
-
     plot->resize(CHANNEL_X,CHANNEL_Y);
 
 //    plot->insertLegend( new QwtLegend(),  QwtPlot::RightLegend, -2 );
@@ -39,6 +41,29 @@ RecWaveForm::RecWaveForm(int menu_index, QWidget *parent) :
     curve2->setRenderHint(QwtPlotItem::RenderAntialiased, true);
     curve2->setTitle("Channel 2");
     curve2->attach(plot);
+
+    d_marker_peak = new QwtPlotMarker();
+    d_marker_peak->setValue( 0.0, 0.0 );
+    d_marker_peak->setLineStyle( QwtPlotMarker::VLine);
+    d_marker_peak->setLabelAlignment( Qt::AlignRight | Qt::AlignBottom );
+    d_marker_peak->setLinePen( Qt::green, 0, Qt::DashDotLine );
+    d_marker_peak->attach(plot);
+
+
+    d_marker_threshold1 = new QwtPlotMarker();
+    d_marker_threshold1->setValue( 0.0, PEAK_JUDGE );
+    d_marker_threshold1->setLineStyle( QwtPlotMarker::HLine);
+    d_marker_threshold1->setLabelAlignment( Qt::AlignRight | Qt::AlignTop );
+    d_marker_threshold1->setLinePen( Qt::green, 0, Qt::DashDotLine );
+    d_marker_threshold1->attach(plot);
+
+
+    d_marker_threshold2 = new QwtPlotMarker();
+    d_marker_threshold2->setValue( 0.0, -PEAK_JUDGE );
+    d_marker_threshold2->setLineStyle( QwtPlotMarker::HLine);
+    d_marker_threshold2->setLabelAlignment( Qt::AlignRight | Qt::AlignTop );
+    d_marker_threshold2->setLinePen( Qt::green, 0, Qt::DashDotLine );
+    d_marker_threshold2->attach(plot);
 
 
     x = 0;
@@ -101,7 +126,7 @@ void RecWaveForm::trans_key(quint8 key_code)
 
     switch (key_code) {
     case KEY_OK:
-
+        find_peaks();
         break;
     case KEY_CANCEL:
         this->hide();
@@ -151,34 +176,32 @@ void RecWaveForm::setData(QString str)
 {
     if(str.contains("TEV1_")){
         mode = TEV1;
-//        qDebug()<<"tev1";
     }
     else if(str.contains("TEV2_")){
         mode = TEV2;
-//        qDebug()<<"tev2";
     }
     else if(str.contains("AAUltrasonic_")){
         mode = AA_Ultrasonic;
-//        qDebug()<<"aa";
     }
-    else if(str.contains("TEVDouble_")){
+    else if(str.contains("Double_")){
         mode = Double_Channel;
-//        qDebug()<<"tev_double";
         plot->insertLegend( new QwtLegend(),  QwtPlot::RightLegend, -2 );
     }
     else if(str.contains("HFCT1_")){
         mode = HFCT1;
-//        qDebug()<<"HFCT";
+    }
+    else if(str.contains("HFCT2_")){
+        mode = HFCT2;
     }
 
 
     QFile file;
-//    if(str.contains("(SDCard)")){
-//        file.setFileName("/mmc/sdcard/WaveForm/"+str.remove("(SDCard)")+".DAT");
-//    }
-//    else{
-    file.setFileName(WAVE_DIR"/"+str+".DAT");
-//    }
+    if(str.contains(QString("☆") )){
+        file.setFileName(FAVORITE_DIR"/" + str.remove(QString("☆") ) + ".DAT");        //收藏夹
+    }
+    else{
+        file.setFileName(WAVE_DIR"/"+str+".DAT");
+    }
 
     if (!file.open(QIODevice::ReadOnly)){
         qDebug()<<"file open failed!";
@@ -201,20 +224,25 @@ void RecWaveForm::setData(QString str)
 
     while (!in.atEnd()) {
         in >> t1 >> t2 >> v;
+//        简化写法,待完善
+//        v_real = Common::physical_value(v,mode);
+//        if(mode == )
 
         switch (mode) {
-        case TEV1:     //TEV1
+        case TEV1:
+        case TEV1_CONTINUOUS:
             v_real = v * sqlcfg->get_para()->tev1_sql.gain * TEV_FACTOR;
             p = QPointF(i*0.01,v_real);
             wave1.append(p);
             break;
-        case TEV2:     //TEV2
+        case TEV2:
+        case TEV2_CONTINUOUS:
             v_real = v * sqlcfg->get_para()->tev2_sql.gain * TEV_FACTOR;
             p = QPointF(i*0.01,v_real);
             wave1.append(p);
             break;
-        case AA_Ultrasonic:     //AA超声
-            v_real = (v * 4) * sqlcfg->get_para()->aaultra_sql.gain * AA_FACTOR;
+        case AA_Ultrasonic:
+            v_real = (v * 4) * sqlcfg->get_para()->aaultra_sql.gain * AA_FACTOR;        //为啥×4?
             p = QPointF(i/320.0,v_real);
             wave1.append(p);
             break;
@@ -229,12 +257,17 @@ void RecWaveForm::setData(QString str)
             curve2->attach(plot);
             v_real = MAX(v_real,temp);
             break;
-        case HFCT1:     //HFCT
-        case HFCT_CONTINUOUS:
+        case HFCT1:        
+        case HFCT1_CONTINUOUS:        
             v_real = v * sqlcfg->get_para()->hfct1_sql.gain * TEV_FACTOR;
             p = QPointF(i*0.01,v_real);
             wave1.append(p);
             break;
+        case HFCT2:
+        case HFCT2_CONTINUOUS:
+            v_real = v * sqlcfg->get_para()->hfct2_sql.gain * TEV_FACTOR;
+            p = QPointF(i*0.01,v_real);
+            wave1.append(p);
         default:
             break;
         }
@@ -249,36 +282,10 @@ void RecWaveForm::setData(QString str)
         i++;
     }
 
-    if(min > -SHOW_FACTOR){
-        min = -SHOW_FACTOR;
-    }
-    if(max < SHOW_FACTOR){
-        max = SHOW_FACTOR;
-    }
-
-    plot->setAxisScale(QwtPlot::yLeft, min, max);
-    /* remove gap */
-    plot->axisWidget(QwtPlot::xBottom)->setMargin(0);
-    plot->axisWidget(QwtPlot::yLeft)->setMargin(0);
-    plot->axisWidget(QwtPlot::yLeft)->setSpacing(10);
-    if(mode == TEV1 || mode == TEV2 || mode == Double_Channel || mode == HFCT1 || mode == HFCT_CONTINUOUS){
-        plot->axisWidget(QwtPlot::xBottom)->setTitle("us");
-        plot->axisWidget(QwtPlot::yLeft)->setTitle("V m");
-    }
-    else if(mode == AA_Ultrasonic){
-        plot->axisWidget(QwtPlot::xBottom)->setTitle("ms");
-        plot->axisWidget(QwtPlot::yLeft)->setTitle("V u");
-    }
-
-    plot->setTitle(str);
-
-    x = 0;   //开始显示最左边数据
-    scale = 1.0;    //纵坐标拉伸因子为1
-
+    set_canvas();
+    plot->setTitle(str + tr("\n按OK键寻找峰值"));
     fresh();
-
     file.close();
-
 }
 
 void RecWaveForm::setData(VectorList buf, MODE mod)
@@ -292,22 +299,29 @@ void RecWaveForm::setData(VectorList buf, MODE mod)
     for (int i = 0; i < buf.length(); ++i) {
 
         switch (mode) {
-        case TEV1:     //TEV1
+        case TEV1:
+        case TEV1_CONTINUOUS:
             v_real = sqlcfg->get_para()->tev1_sql.gain * TEV_FACTOR * buf.at(i);
             p = QPointF(i*0.01, v_real);
-//            p = QPointF(i*0.01, buf.at(i));
             break;
-        case TEV2:     //TEV2
-        case HFCT1:
-        case HFCT_CONTINUOUS:
+        case TEV2:
+        case TEV2_CONTINUOUS:
             v_real = sqlcfg->get_para()->tev2_sql.gain * TEV_FACTOR * buf.at(i);
             p = QPointF(i*0.01, v_real);
-//            p = QPointF(i*0.01, buf.at(i));
+            break;
+        case HFCT1:
+        case HFCT1_CONTINUOUS:
+            v_real = sqlcfg->get_para()->hfct1_sql.gain * TEV_FACTOR * buf.at(i);
+            p = QPointF(i*0.01, v_real);
+            break;
+        case HFCT2:
+        case HFCT2_CONTINUOUS:
+            v_real = sqlcfg->get_para()->hfct2_sql.gain * TEV_FACTOR * buf.at(i);
+            p = QPointF(i*0.01, v_real);
             break;
         case AA_Ultrasonic:     //AA超声
-            v_real = (buf.at(i) <<  2 ) * sqlcfg->get_para()->aaultra_sql.gain * AA_FACTOR;
+            v_real = (buf.at(i) * 4 ) * sqlcfg->get_para()->aaultra_sql.gain * AA_FACTOR;
             p = QPointF(i/320.0, v_real);
-//            p = QPointF(i/320.0, buf.at(i));
             break;
         default:
             break;
@@ -323,6 +337,13 @@ void RecWaveForm::setData(VectorList buf, MODE mod)
         wave1.append(p);
     }
 
+    set_canvas();
+    plot->setTitle(tr("\n按OK键寻找峰值"));
+    fresh();
+}
+
+void RecWaveForm::set_canvas()
+{
     if(min > -SHOW_FACTOR){
         min = -SHOW_FACTOR;
     }
@@ -335,18 +356,75 @@ void RecWaveForm::setData(VectorList buf, MODE mod)
     plot->axisWidget(QwtPlot::xBottom)->setMargin(0);
     plot->axisWidget(QwtPlot::yLeft)->setMargin(0);
     plot->axisWidget(QwtPlot::yLeft)->setSpacing(10);
-    if(mode == TEV1 || mode == TEV2 || mode == Double_Channel || mode == HFCT1 || mode == HFCT_CONTINUOUS){
-        plot->axisWidget(QwtPlot::xBottom)->setTitle("us");
-        plot->axisWidget(QwtPlot::yLeft)->setTitle("V m");
-    }
-    else if(mode == AA_Ultrasonic){
+    if(mode == AA_Ultrasonic){
         plot->axisWidget(QwtPlot::xBottom)->setTitle("ms");
         plot->axisWidget(QwtPlot::yLeft)->setTitle("V u");
     }
+    else{
+        plot->axisWidget(QwtPlot::xBottom)->setTitle("us");
+        plot->axisWidget(QwtPlot::yLeft)->setTitle("V m");
+    }
+
+    if(mode != AA_Ultrasonic){
+        d_marker_threshold1->setValue(0.0, Common::physical_threshold(mode));
+        d_marker_threshold2->setValue(0.0, -Common::physical_threshold(mode));
+    }
+    d_marker_peak->hide();    
+    d_marker_threshold1->hide();    
+    d_marker_threshold2->hide();
 
     x = 0;   //开始显示最左边数据
     scale = 1.0;    //纵坐标拉伸因子为1
+}
 
+void RecWaveForm::find_peaks()
+{
+//    if(x +101 > wave1.length()){        //循环搜索
+//        x = 0;
+//    }
+
+    d_marker_threshold1->show();
+    d_marker_threshold2->show();
+
+    int j, j1, j2;
+    bool a,b;
+
+    for (int i = 0; i < wave1.length(); ++i) {
+        j = i + x + 101;
+        j1 = j - 1;
+        j2 = j + 1;
+        if( j2 > wave1.length()){
+            j -= wave1.length();        //循环搜索
+            j1 -= wave1.length();
+            j2 -= wave1.length();
+            if(j1 < 0 || j2 < 0){
+                continue;
+            }
+        }
+        a = (wave1.at(j).y() > d_marker_threshold1->yValue())
+                && (wave1.at(j).y() > wave1.at(j1).y())
+                && (wave1.at(j).y() > wave1.at(j2).y());
+        b = (wave1.at(j).y() < d_marker_threshold2->yValue())
+                && (wave1.at(j).y() < wave1.at(j1).y())
+                && (wave1.at(j).y() < wave1.at(j2).y());
+
+        if( a || b){
+            x = j-100;
+            if(x < 0){
+                x = 0;
+            }
+            d_marker_peak->setValue(wave1.at(j));
+            QString label;
+            label.sprintf( " peak = %.3g", wave1.at(j).y() );
+            QwtText text( label );
+            text.setColor( Qt::darkGreen );
+            d_marker_peak->setLabel( text );
+            qDebug()<<"find peaks!"<<wave1.at(j);
+            d_marker_peak->show();
+            break;
+
+        }
+    }
     fresh();
 }
 

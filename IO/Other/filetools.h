@@ -36,13 +36,13 @@ private:
     VectorList _data;
     MODE _mode;
     WaveFormat *wfh1;
-    QString filepath;
+    QString filepath, filepath_SD;
     QString filename;
 
 //    bool work;       //0为立刻执行
 
     void saveDataFile();        //保存录波文件
-    QString getFilePath();      //返回保存波形文件的目录
+    void getFilePath();      //返回保存波形文件的目录
     void saveCfgFile();         //生成配置文件
     void saveWavFile();         //保存声音文件
     void wavToMp3();

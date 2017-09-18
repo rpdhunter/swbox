@@ -122,7 +122,7 @@ int Modbus::init_modbus_dev(Modbus::modbus_dev_t *ndp)
     ndp->com_fd = -1;
     ndp->rs485_rw_pin = -1;
     ndp->dev_addr = 1;
-    ndp->baundrate = 9600;
+    ndp->baundrate = 115200;
     ndp->recv_len = 0;
     ndp->recv_to_cnt = 0;
     ndp->recv_to_flag = 0;

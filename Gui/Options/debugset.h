@@ -4,6 +4,7 @@
 #include <QFrame>
 #include <QLabel>
 #include <QLineEdit>
+#include <QTimer>
 
 #include "IO/Key/key.h"
 #include "IO/Data/data.h"
@@ -19,11 +20,7 @@ class DebugSet : public QFrame
     Q_OBJECT
 public:
     DebugSet(G_PARA *g_data = NULL, QWidget *parent = NULL);
-
     void working(CURRENT_KEY_VALUE *val);
-    void set_offset_suggest1(int a,int b);
-    void set_offset_suggest2(int a,int b);
-    void set_AA_offset_suggest(int a);
 
 public slots:
     void trans_key(quint8 key_code);
@@ -35,17 +32,24 @@ signals:
     void update_statusBar(QString);
 
 private slots:
+    void fresh_rdb_data();
 
 private:
-    void fresh();       //刷新界面
     void iniUi();
+    void iniPasswordUi();
+    void fresh();       //刷新界面
     void resetPassword();
     void saveSql();
-    void readSql(); //从SQL读取数据至UI
+    void reload(); //从SQL读取数据至UI
+    void do_key_left_right(int d);
+    void do_key_up_down(int d);
+
 
     CURRENT_KEY_VALUE *key_val;
     G_PARA *data;
     SQL_PARA sql_para;
+    QTimer *timer;
+    QLabel *tab0, *tab1, *tab2, *tab3;  //tab标签
 
     QWidget *widget_password;        //密码窗口
     QLabel *lab1, *lab2;

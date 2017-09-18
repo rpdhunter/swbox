@@ -8,7 +8,6 @@ QT       += core gui widgets network
 
 QT += serialport sql
 #QT += opengl
-#QT += datavisualization
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -16,8 +15,9 @@ TARGET = swbox
 TEMPLATE = app
 
 #DEFINES += QT_NO_DEBUG_OUTPUT
-#DEFINES += ARM
 #DEFINES += PRINTSCREEN     #截屏
+DEFINES += AMG          #OEM
+#DEFINES += OHV          #OEM
 
 TRANSLATIONS += trans/en.ts
 
@@ -57,7 +57,9 @@ SOURCES += \
     IO/Other/logtools.cpp \
     IO/Other/filetools.cpp \
     IO/Data/reccontrol.cpp \
-    IO/Data/fifocontrol.cpp
+    IO/Data/fifocontrol.cpp \
+    IO/Other/wifi.cpp \
+    Gui/Common/wifitools.cpp
 
 
 HEADERS  += \
@@ -95,7 +97,9 @@ HEADERS  += \
     IO/Other/logtools.h \
     IO/Other/filetools.h \
     IO/Data/reccontrol.h \
-    IO/Data/fifocontrol.h
+    IO/Data/fifocontrol.h \
+    IO/Other/wifi.h \
+    Gui/Common/wifitools.h
 
 
 RESOURCES += \

@@ -3,13 +3,21 @@
 
 SystemInfo::SystemInfo(QWidget *parent) : QFrame(parent),ui(new Ui::SystemInfoUi)
 {
-    key_val = NULL;
-
+    ui->setupUi(this);
+    this->setStyleSheet("SystemInfo {background-color:lightGray;}");
     this->resize(CHANNEL_X, CHANNEL_Y);
     this->move(3, 3);
 
-    ui->setupUi(this);
-    this->setStyleSheet("SystemInfo {background-color:lightGray;}");
+    key_val = NULL;
+
+#ifdef OHV
+
+#elif AMG
+    ui->label_logo_text->setText("copyright © 2016-2017 Australian Microgrid Technology Pty Lte\nAll rights reserved.");
+    ui->label_logo->setPixmap(QPixmap(":/widgetphoto/bk/amg_low.png"));
+#else
+    ui->label_logo->hide();
+#endif
 
     this->hide();
 }

@@ -174,14 +174,14 @@ SQL_PARA *SqlCfg::default_config(void)
     sql_para.language = LANGUAGE_DEF;
 
     sql_para.max_rec_num = MAX_REC_NUM;
-
-    sql_para.full_featured = true;
+    sql_para.file_copy_to_SD = false;
+    sql_para.auto_rec_interval = 1;
 
     sql_para.menu_h1 = TEV1;
     sql_para.menu_h2 = TEV2;
     sql_para.menu_double = Double_Channel;
     sql_para.menu_aa = AA_Ultrasonic;
-    sql_para.menu_ae = AE_Ultrasonic;
+    sql_para.menu_ae = Disable;
 
     return &sql_para;
 }
@@ -239,6 +239,8 @@ uint SqlCfg::get_working_mode(MODE a, MODE b)
     if(a == HFCT2 && b == HFCT1){
         temp = 11;
     }
+
+    qDebug()<<"current working mode is:"<<temp;
     return temp;
 }
 

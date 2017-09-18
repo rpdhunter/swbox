@@ -1,15 +1,16 @@
 #include "battery.h"
+#include <QtDebug>
 
 /* 5%一个电压 */
 static float bat_pwr_percent [BAT_PWR_PER_NUM] = {
     //4.12f * 2 - DELT_VOL,		/* 95% */
-    4.08f * 2 - DELT_VOL ,		/* 90% */
+    4.04f * 2 - DELT_VOL ,		/* 90% */
     //4.03f * 2 - DELT_VOL,		/* 85% */
-    3.97f * 2 - DELT_VOL,		/* 80% */
+    3.95f * 2 - DELT_VOL,		/* 80% */
     //3.93f * 2 - DELT_VOL,		/* 75% */
-    3.90f * 2 - DELT_VOL,		/* 70% */
+    3.88f * 2 - DELT_VOL,		/* 70% */
     //3.87f * 2 - DELT_VOL,		/* 65% */
-    3.84f * 2 - DELT_VOL,		/* 60% */
+    3.83f * 2 - DELT_VOL,		/* 60% */
     //3.81f * 2 - DELT_VOL,		/* 55% */
     3.79f * 2 - DELT_VOL,		/* 50% */
     //3.77f * 2 - DELT_VOL,		/* 45% */
@@ -34,11 +35,18 @@ int Battery::battValue()
 {
     check_battery_power (&battery_power);
 
-//    低电量自动关机
-    if (battery_power.force_pwr_off) {
-        system ("reboot");
-    }
+////    低电量自动关机
+//    if (battery_power.force_pwr_off) {
+//        qDebug()<<"is batt!!!! batt = "<< battery_power.power;
+//        system ("reboot");
+//    }
     return battery_power.power;
+}
+
+bool Battery::is_low_power()
+{
+    check_battery_power (&battery_power);
+    return battery_power.force_pwr_off;
 }
 
 int Battery::adm1191_conv_init()

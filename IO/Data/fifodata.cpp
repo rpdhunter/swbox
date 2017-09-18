@@ -1,26 +1,42 @@
 #include "fifodata.h"
 #include <QThreadPool>
+#include <QtDebug>
+//#include <QTime>
+#include "zynq.h"
+
+#define DELAY_TIME_LONG     200000
+#define DELAY_TIME_MID      5000
+#define DELAY_TIME_SHORT    100
 
 //建立数据连接，完成线程的初始化工作
 FifoData::FifoData(G_PARA *g_data)
 {
-
-    tdata = g_data;     //与外部交互的数据指针
+    data = g_data;     //与外部交互的数据指针
 
     fifocontrol = new FifoControl(g_data, this);
     reccontrol = new RecControl(g_data, this);    //完成录波、声音播放等功能
+
+    timer_slow = new QTimer;
+    timer_slow->start(200);
+    connect(timer_slow,SIGNAL(timeout()),this,SLOT(do_slow()) );
+
+    //录波功能
     connect(reccontrol,SIGNAL(waveData(VectorList,MODE)), this,SIGNAL(waveData(VectorList,MODE)) );
+    connect(this,SIGNAL(startRecWave(MODE,int)), reccontrol,SLOT(startRecWave(MODE,int)) );
+
+    //播放声音
     connect(this,SIGNAL(playVoiceData(VectorList)), fifocontrol, SLOT(playVoiceData(VectorList)) );
     connect(this,SIGNAL(stop_play_voice()), fifocontrol, SLOT(stop_play_voice()) );
     connect(fifocontrol, SIGNAL(playVoiceProgress(int,int,bool)), this, SIGNAL(playVoiceProgress(int,int,bool)) );
 
     /* Start qthread */
     this->start();
+    this->setPriority(QThread::TimeCriticalPriority);
 }
 
-void FifoData::startRecWave(MODE mode, int time)
+void FifoData::do_slow()
 {
-    reccontrol->startRecWave(mode,time);
+    read_slow = true;
 }
 
 void FifoData::run(void)
@@ -28,69 +44,64 @@ void FifoData::run(void)
     int ret = 0;
     int delay_time = DELAY_TIME_LONG;
 
+//    QTime t1 = QTime::currentTime(), t2;
+
     while (true) {
-        fifocontrol->read_nomal_data();
-        fifocontrol->read_prpd1_data();
-        fifocontrol->read_prpd2_data();
-        ret = fifocontrol->read_hfct1_data();
-        ret = fifocontrol->read_hfct2_data();
+        //慢速数据
+        if(read_slow){
+            fifocontrol->read_fpga(sp_read_fpga_normal);
+            fifocontrol->read_normal_data();
+//            fifocontrol->read_fpga(sp_read_fpga_prpd1);
+//            fifocontrol->read_prpd1_data();
+//            fifocontrol->read_fpga(sp_read_fpga_prpd2);
+//            fifocontrol->read_prpd2_data();
+//            fifocontrol->read_fpga(sp_read_fpga_hfct1);
+//            fifocontrol->read_hfct1_data();
+//            fifocontrol->read_fpga(sp_read_fpga_hfct2);
+//            fifocontrol->read_hfct2_data();
+            read_slow = false;
+        }
+
+        //录波数据
+        fifocontrol->read_fpga(sp_read_fpga_rec);
+        usleep(delay_time);
         ret = fifocontrol->read_rec_data();
 
-        if(tdata->recv_para_rec.recComplete > 0 && tdata->recv_para_rec.recComplete < 255){
-//            qDebug()<<"fpga rec complete!";
-//            tdata->set_send_para(sp_rec_start_tev1, 2);
+//        qDebug()<<"tdata->recv_para_rec.recComplete = "<<data->recv_para_rec.recComplete;
+//        qDebug()<<"ret = "<<ret;
+
+        if(data->recv_para_rec.recComplete > 0 && data->recv_para_rec.recComplete < 255){
+//            qDebug()<<"tdata->recv_para_rec.recComplete = "<<data->recv_para_rec.recComplete;
             reccontrol->recvRecData();
-        }
-        if(ret > 200){
-            delay_time = DELAY_TIME_SHORT;     //录波存在不同延迟控制可能性？
         }
 
         fifocontrol->playVoiceData();
-//        qDebug()<<"delay_time:  "<< delay_time;
-        //休眠
-        msleep(delay_time);
 
+        fifocontrol->send_para();
 
-/*
-        if(hfct_mode && !isRecording){  //高频CT模式
-            ret = recv_data (vbase_hfct1, tdata->recv_para_nomal.hfctData);       //接收数据
-            send_para ();
-            read_fpga_mode1 ();
-            if (ret > 250) {
-                tdata->recv_para_nomal.groupNum ++;
-                if(tdata->recv_para_nomal.groupNum == 16){
-                    tdata->recv_para_nomal.groupNum = 0;
-                }
-                msleep(2);
-            }
-            else {
-                msleep(180);         //没数据，休息18ms
-            }
+        if(data->recv_para_rec.recComplete == 16){
+            delay_time = DELAY_TIME_MID;
         }
-        else{       //普通模式和录波模式
-            ret = recv_data (vbase_nomal, (unsigned int *)&(tdata->recv_para_nomal));       //接收数据
-            //录波
-            if (ret) {
-    //                        qDebug()<<"recv recComplete = "<<tdata->recv_para.recComplete;      //打印收到的录播完成标志位
-                if( tdata->recv_para_nomal.recComplete >0 && tdata->recv_para_nomal.recComplete <=15){       //录波完成可能值为0-15
-                    recvRecData();  //开始接收数据(暂时禁用)
-                }
-            }
-
-            send_para ();
-            read_fpga(sp_read_fpga_nomal);
-            if(playVoice){          //播放声音
-                playVoiceData();
-            }
-
-            if(tdata->recv_para_nomal.recComplete >0 && tdata->recv_para_nomal.recComplete <=16){
-                usleep(1);          //上传录波数据时，休眠时间较短
-            }
-            else{
-                msleep(45);        //空闲时，休眠时间较长
-            }
+        else if(reccontrol->mode() == Disable){
+            delay_time = DELAY_TIME_LONG;
         }
-        */
+        else {
+            delay_time = DELAY_TIME_SHORT;
+//            qDebug()<<"free time"<<reccontrol->free_time();
+            if(reccontrol->free_time()>10){
+                reccontrol->re_send_rec_continuous();
+            }
+
+        }
+//        t2 = QTime::currentTime();
+//        int temp = t1.msecsTo(t2);
+//        if(temp > 1000){
+//            qDebug()<<"time-------------------------------------------------------->"<<temp;
+//        }
+//        t1 = t2;
+
+//        qDebug()<<n << "\tdelay_time = "<< delay_time;
+
     }
     exit(0);        //跳出循环，理论上永远不会执行此句？
 }

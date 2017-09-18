@@ -8,6 +8,8 @@
 #include <QScreen>
 #endif
 
+#define LOW_POWER_TIMES     3
+
 
 MainWindow::MainWindow(QSplashScreen *sp, QWidget *parent ) :
     QFrame(parent),
@@ -29,14 +31,14 @@ MainWindow::MainWindow(QSplashScreen *sp, QWidget *parent ) :
     sp->showMessage(tr("正在初始化实时数据库..."),Qt::AlignBottom|Qt::AlignLeft);
     init_rdb();
 
-    sp->showMessage(tr("正在设置FPGA..."),Qt::AlignBottom|Qt::AlignLeft);
-    fifodata = new FifoData(data);
-
     sp->showMessage(tr("正在初始化按键..."),Qt::AlignBottom|Qt::AlignLeft);
     keydetect = new KeyDetect(this);
 
+    sp->showMessage(tr("正在设置FPGA..."),Qt::AlignBottom|Qt::AlignLeft);
+    fifodata = new FifoData(data);
+
     sp->showMessage(tr("正在初始化通信..."),Qt::AlignBottom|Qt::AlignLeft);
-    modbus = new Modbus(this,data);
+//    modbus = new Modbus(this,data);
 
     //注册两个自定义类型
     qRegisterMetaType<VectorList>("VectorList");
@@ -51,18 +53,28 @@ MainWindow::MainWindow(QSplashScreen *sp, QWidget *parent ) :
     //modbus相关
 //    connect(mainmenu,SIGNAL(tev_modbus_data(int,int)),modbus,SLOT(tev_modbus_data(int,int)));
 //    connect(mainmenu,SIGNAL(aa_modbus_data(int)),modbus,SLOT(aa_modbus_data(int)));
-    connect(modbus,SIGNAL(closeTimeChanged(int)),this,SLOT(set_reboot_time()) );
+//    connect(modbus,SIGNAL(closeTimeChanged(int)),this,SLOT(set_reboot_time()) );
 //    connect(mainmenu,SIGNAL(modbus_tev_offset_suggest(int,int)),modbus,SLOT(tev_modbus_suggest(int,int)) );
 //    connect(mainmenu,SIGNAL(modbus_aa_offset_suggest(int)),modbus,SLOT(aa_modbus_suggest(int)) );
 
 
     sp->showMessage(tr("正在初始化主菜单..."),Qt::AlignBottom|Qt::AlignLeft);
+
     menu_init();
     statusbar_init();
     function_init(sp);
     options_init();
 
-    ui->tabWidget->setCurrentIndex(0);
+    for (int i = 0; i < mode_list.count(); ++i) {
+        if(mode_list.at(i) != Disable){
+            key_val.grade.val0 = i;
+            ui->tabWidget->setCurrentIndex(i);
+            fresh_menu_icon();
+            break;
+        }
+    }
+
+//    fifodata->startRecWave(HFCT1_CONTINUOUS,3);
 }
 
 MainWindow::~MainWindow()
@@ -72,11 +84,12 @@ MainWindow::~MainWindow()
 
 void MainWindow::menu_init()
 {
-    ui->tabWidget->setStyleSheet("QTabBar::tab {border: 0px solid white; min-width: 0ex;padding: 1px; }"
+    ui->tabWidget->setStyleSheet("QTabBar::tab {border: 0px solid white; min-width: 0ex;padding: 5px 1px 0px 1px; }"
                                  "QTabBar::tab:selected{ background:rgb(46, 52, 54);  }"
                                  "QTabBar::tab:!selected{ background:transparent;   }"
                                  "QTabWidget::pane{border-width:0px;}"
                                  );
+    ui->tabWidget->setFocusPolicy(Qt::NoFocus);
     menu_icon0 = new QLabel(this);
     menu_icon0->resize(41, 24);
     menu_icon1 = new QLabel(this);
@@ -109,6 +122,7 @@ void MainWindow::menu_init()
 void MainWindow::statusbar_init()
 {
     battery = new Battery;
+    low_power = LOW_POWER_TIMES;
 
     timer_time = new QTimer();
     timer_time->setInterval(1000);   //1秒1跳
@@ -122,13 +136,20 @@ void MainWindow::statusbar_init()
     timer_reboot->setSingleShot(true);
     set_reboot_time();
 
-    connect(timer_time, SIGNAL(timeout()), this, SLOT(fresh_time()) );
+    connect(timer_time, SIGNAL(timeout()), this, SLOT(fresh_status()) );
     connect(timer_batt, SIGNAL(timeout()), this, SLOT(fresh_batt()) );
     connect(timer_reboot, SIGNAL(timeout()), this, SLOT(system_reboot()) );
 
-    fresh_batt();       //立刻显示一次电量
+//    fresh_batt();       //立刻显示一次电量
 
+#ifdef OHV
     ui->lab_logo->setPixmap(QPixmap(":/widgetphoto/bk/ohv_gary.png").scaled(ui->lab_logo->size()));     //logo
+#elif AMG
+    ui->lab_logo->hide();
+#else
+    ui->label_logo->hide();
+#endif
+
 }
 
 void MainWindow::function_init(QSplashScreen *sp)
@@ -142,39 +163,66 @@ void MainWindow::function_init(QSplashScreen *sp)
     ae_widget = NULL;
 
     sp->showMessage(tr("正在初始化高频通道..."),Qt::AlignBottom|Qt::AlignLeft);
-    channel_init(sqlcfg->get_para()->menu_h1,0);
-    channel_init(sqlcfg->get_para()->menu_h2,1);
-    channel_init(sqlcfg->get_para()->menu_double,2);
+    channel_init((MODE)sqlcfg->get_para()->menu_h1,0);
+    channel_init((MODE)sqlcfg->get_para()->menu_h2,1);
+    channel_init((MODE)sqlcfg->get_para()->menu_double,2);
     sp->showMessage(tr("正在初始化低频通道..."),Qt::AlignBottom|Qt::AlignLeft);
-    channel_init(sqlcfg->get_para()->menu_aa,3);
-    channel_init(sqlcfg->get_para()->menu_ae,4);
+    channel_init((MODE)sqlcfg->get_para()->menu_aa,3);
+    channel_init((MODE)sqlcfg->get_para()->menu_ae,4);
     mode_list.append(Options_Mode);
 
     if(tev1_widget != NULL){
         connect(this, SIGNAL(send_key(quint8)), tev1_widget, SLOT(trans_key(quint8)) );
         connect(tev1_widget,SIGNAL(fresh_parent()), this, SLOT(fresh_menu_icon()) );
-        connect(tev1_widget,SIGNAL(startRecWave(MODE,int)),fifodata,SLOT(startRecWave(MODE,int)) );
+        //录波
+        connect(tev1_widget,SIGNAL(startRecWave(MODE,int)),fifodata,SIGNAL(startRecWave(MODE,int)) );
         connect(fifodata,SIGNAL(waveData(VectorList,MODE)),tev1_widget,SLOT(showWaveData(VectorList,MODE)) );
+        //重载数据
+        connect(ui->tabWidget,SIGNAL(currentChanged(int)), tev1_widget, SLOT(reload(int)) );
     }
     if(tev2_widget != NULL){
         connect(this, SIGNAL(send_key(quint8)), tev2_widget, SLOT(trans_key(quint8)) );
         connect(tev2_widget,SIGNAL(fresh_parent()), this, SLOT(fresh_menu_icon()) );
+        //录波
+        connect(tev2_widget,SIGNAL(startRecWave(MODE,int)),fifodata,SIGNAL(startRecWave(MODE,int)) );
+        connect(fifodata,SIGNAL(waveData(VectorList,MODE)),tev2_widget,SLOT(showWaveData(VectorList,MODE)) );
+        //重载数据
+        connect(ui->tabWidget,SIGNAL(currentChanged(int)), tev2_widget, SLOT(reload(int)) );
     }
     if(hfct1_widget != NULL){
         connect(this, SIGNAL(send_key(quint8)), hfct1_widget, SLOT(trans_key(quint8)) );
         connect(hfct1_widget,SIGNAL(fresh_parent()), this, SLOT(fresh_menu_icon()) );
+        //录波
+        connect(hfct1_widget,SIGNAL(startRecWave(MODE,int)),fifodata,SIGNAL(startRecWave(MODE,int)) );
+        connect(fifodata,SIGNAL(waveData(VectorList,MODE)),hfct1_widget,SLOT(showWaveData(VectorList,MODE)) );
+        //重载数据
+        connect(ui->tabWidget,SIGNAL(currentChanged(int)), hfct1_widget, SLOT(reload(int)) );
     }
     if(hfct2_widget != NULL){
         connect(this, SIGNAL(send_key(quint8)), hfct2_widget, SLOT(trans_key(quint8)) );
         connect(hfct2_widget,SIGNAL(fresh_parent()), this, SLOT(fresh_menu_icon()) );
+        //录波
+        connect(hfct2_widget,SIGNAL(startRecWave(MODE,int)),fifodata,SIGNAL(startRecWave(MODE,int)) );
+        connect(fifodata,SIGNAL(waveData(VectorList,MODE)),hfct2_widget,SLOT(showWaveData(VectorList,MODE)) );
+        //重载数据
+        connect(ui->tabWidget,SIGNAL(currentChanged(int)), hfct2_widget, SLOT(reload(int)) );
     }
     if(double_widget != NULL){
         connect(this, SIGNAL(send_key(quint8)), double_widget, SLOT(trans_key(quint8)) );
         connect(double_widget,SIGNAL(fresh_parent()), this, SLOT(fresh_menu_icon()) );
+        //录波
+        connect(fifodata,SIGNAL(waveData(VectorList,MODE)),double_widget,SLOT(showWaveData(VectorList,MODE)) );
+        //重载数据
+        connect(ui->tabWidget,SIGNAL(currentChanged(int)), double_widget, SLOT(reload(int)) );
     }
     if(aa_widget != NULL){
         connect(this, SIGNAL(send_key(quint8)), aa_widget, SLOT(trans_key(quint8)) );
         connect(aa_widget,SIGNAL(fresh_parent()), this, SLOT(fresh_menu_icon()) );
+        //录波
+        connect(aa_widget,SIGNAL(startRecWave(MODE,int)),fifodata,SIGNAL(startRecWave(MODE,int)) );
+        connect(fifodata,SIGNAL(waveData(VectorList,MODE)),aa_widget,SLOT(showWaveData(VectorList,MODE)) );
+        //重载数据
+        connect(ui->tabWidget,SIGNAL(currentChanged(int)), aa_widget, SLOT(reload(int)) );
     }
     if(ae_widget != NULL){
         connect(this, SIGNAL(send_key(quint8)), ae_widget, SLOT(trans_key(quint8)) );
@@ -225,7 +273,7 @@ void MainWindow::channel_init(MODE mode, int index)
         break;
     case 2:
         if(mode == Double_Channel){
-            double_widget = new FaultLocation(data,&key_val,2,ui->Double_Channel);
+            double_widget = new FaultLocation(data,&key_val,mode_list,2,ui->Double_Channel);
         }
         else{
             mode = Disable;
@@ -275,6 +323,7 @@ void MainWindow::options_init()
     //显示信息
     connect(options,SIGNAL(update_statusBar(QString)), this, SLOT(show_message(QString)) );
     connect(options, SIGNAL(closeTimeChanged(int)), this, SLOT(set_reboot_time()) );
+    connect(options,SIGNAL(fregChanged(int)),this,SLOT(fresh_status()) );
     connect(debugset,SIGNAL(update_statusBar(QString)), this, SLOT(show_message(QString)) );
     //播放声音
     connect(recwavemanage,SIGNAL(play_voice(VectorList)),fifodata,SIGNAL(playVoiceData(VectorList)));
@@ -292,10 +341,7 @@ void MainWindow::trans_key(quint8 key_code)
         emit send_key(key_code);
         return;
     }
-    if(key_val.grade.val0 != 5 && key_val.grade.val1 !=0 ){
-        emit send_key(key_code);
-        return;
-    }
+
 
     switch (key_code) {
     case KEY_LEFT:
@@ -349,19 +395,19 @@ void MainWindow::trans_key(quint8 key_code)
         if (key_val.grade.val0 == 5) {
             Common::change_index(key_val.grade.val1,-1,5,1);
         }
-        else{
-            key_val.grade.val1 = 1;
-            emit send_key(key_code);
-        }
+//        else{
+//            key_val.grade.val1 = 1;
+//            emit send_key(key_code);
+//        }
         break;
     case KEY_DOWN:
         if (key_val.grade.val0 == 5) {
             Common::change_index(key_val.grade.val1,1,5,1);
         }
-        else{
-            key_val.grade.val1 = 1;
-            emit send_key(key_code);
-        }
+//        else{
+//            key_val.grade.val1 = 1;
+//            emit send_key(key_code);
+//        }
         break;
     case KEY_CANCEL:
         if (key_val.grade.val1 > 0){
@@ -375,6 +421,10 @@ void MainWindow::trans_key(quint8 key_code)
 
     fresh_grade1();
     fresh_menu_icon();
+    if(key_val.grade.val0 != 5 /*&& key_val.grade.val1 !=0*/ ){
+        emit send_key(key_code);
+        return;
+    }
 }
 
 void MainWindow::fresh_menu_icon()
@@ -641,7 +691,7 @@ void MainWindow::set_reboot_time()
     if(m != 0){
         timer_reboot->setInterval(m*60 *1000);
         timer_reboot->start();
-        //        qDebug()<<"reboot timer started!  interval is :"<<m*60<<"sec";
+//        qDebug()<<"reboot timer started!  interval is :"<<m*60<<"sec";
     }
     else if(timer_reboot->isActive()){
         timer_reboot->stop();
@@ -649,7 +699,7 @@ void MainWindow::set_reboot_time()
     }
 }
 
-void MainWindow::fresh_time()
+void MainWindow::fresh_status()
 {
     ui->lab_time->setText(QDate::currentDate().toString("yyyy年M月d日")
                           + " "
@@ -659,6 +709,7 @@ void MainWindow::fresh_time()
     if(timer_reboot->isActive() && s < 60){
         ui->lab_imformation->setText(tr("再过%1秒将自动关机，按任意键取消").arg(s));
     }
+    ui->lab_freq->setText(QString("%1Hz").arg(sqlcfg->get_para()->freq_val));
 }
 
 void MainWindow::fresh_batt()
@@ -666,6 +717,19 @@ void MainWindow::fresh_batt()
     int batt_val;
 
     batt_val = battery->battValue();
+
+    //自动关机
+    if(battery->is_low_power()){
+        low_power--;
+        if(low_power == 0){
+            system_reboot();
+        }
+    }
+    else{
+        low_power = LOW_POWER_TIMES;      //检测错误,重置
+    }
+
+    //UI
     ui->lab_pwr_num->setText(QString("%1%").arg(batt_val));
     if(batt_val>25){
         ui->lab_pwr_num->setStyleSheet("QLabel {color:white;}");

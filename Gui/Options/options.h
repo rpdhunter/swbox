@@ -7,6 +7,8 @@
 #include "IO/Key/key.h"
 #include "IO/SqlCfg/sqlcfg.h"
 #include "IO/Data/data.h"
+#include "IO/Other/wifi.h"
+#include "../Common/wifitools.h"
 
 
 namespace Ui {
@@ -32,24 +34,28 @@ signals:
     void closeTimeChanged(int);
     void update_statusBar(QString);
 
+private slots:
+    void refresh_wifilist(QStringList list);
+
 private:
     Ui::OptionUi *ui;
 
     CURRENT_KEY_VALUE *key_val;
     SQL_PARA sql_para;
     G_PARA *data;
-
-    int _freq;      //频率
-    int _backlight; //背光
     QDateTime _datetime;
+    WifiConfig *wifi_config;
+    QLabel *tab0, *tab1, *tab2;
+
+    WifiTools *tools;
 
     void optionIni();
-    void updateCheckBox();
+    void wifiIni();
     void saveOptions();
-    void saveFreq();
     void saveDatetime();
-    void setBacklight();
-    void saveAutoRec();
+    void do_key_left_right(int d);
+    void do_key_up_down(int d);
+
     void refresh();
 };
 

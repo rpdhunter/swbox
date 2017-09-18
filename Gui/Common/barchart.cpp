@@ -14,6 +14,12 @@ BarChart::BarChart(QwtPlot *parent, int *p, int *high, int *low)
     this->low = low;
 
     barchart_data = new BARCHART_DATA[CHART_NUM];
+
+    for (int i = 0; i < CHART_NUM; ++i) {
+        barchart_data[i].color = Qt::green;
+        barchart_data[i].height = 0;
+    }
+
     attach(parent);
 }
 
@@ -57,6 +63,7 @@ void BarChart::fresh(void)
         samples += barchart_data[i].height;                                     //fit data
         addDistro(barchart_data[i].color);                                      //update color
     }
+
     setSpacing(4);
     setSamples(samples);                                                        //update
 }

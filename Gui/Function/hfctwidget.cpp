@@ -2,12 +2,11 @@
 #include "ui_hfctwidget.h"
 #include <QLineEdit>
 #include <QTimer>
-#include <QThreadPool>
-#include "IO/Other/filetools.h"
 #include "IO/rdb/rdb.h"
 
-#define VALUE_MAX  3000           //RPPD最大值
-#define SETTING_NUM 8           //设置菜单条目数
+#define VALUE_MAX       3000           //RPPD最大值
+#define PC_MAX          VALUE_MAX/10
+#define SETTING_NUM     9           //设置菜单条目数
 
 
 HFCTWidget::HFCTWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu_index, QWidget *parent) :
@@ -15,71 +14,54 @@ HFCTWidget::HFCTWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu
     ui(new Ui::HFCTWidget)
 {
     ui->setupUi(this);
-
-
     this->resize(CHANNEL_X, CHANNEL_Y);
     this->move(3, 3);
     this->setStyleSheet("HFCTWidget {border-image: url(:/widgetphoto/bk/bk2.png);}");
-
-
-    key_val = val;
-    this->data = data;
-    this->menu_index = menu_index;
-    sql_para = *sqlcfg->get_para();
-    pulse_number = 0;
-    max_db = 0;
-
     Common::set_comboBox_style(ui->comboBox);
 
-    //每隔1秒，刷新一次主界面
+    this->data = data;
+    this->key_val = val;
+    this->mode = mode;
+    this->menu_index = menu_index;
+
+    reload(-1);
+
+    low = PC_MAX / 3.0;
+    high = low * 2;
+    pulse_number = 0;
+    max_db = 0;
+    manual = false;
+
     timer1 = new QTimer(this);
-    timer1->setInterval(1000);
-    timer1->start();
+    timer1->setInterval(1000);      //每隔1秒，刷新一次主界面
     connect(timer1, SIGNAL(timeout()), this, SLOT(fresh_plot()));
 
-    //1ms读取一次数据
     timer2 = new QTimer(this);
-    timer2->setInterval(1);
-    timer2->start();
+    timer2->setInterval(1);         //1ms读取一次数据
     connect(timer2, SIGNAL(timeout()), this, SLOT(doHfctData()));
 
-    //200ms刷新一次PRPD图
     timer3 = new QTimer(this);
-    timer3->setInterval(200);
-    timer3->start();
+    timer3->setInterval(200);       //200ms刷新一次PRPD图
     connect(timer3, SIGNAL(timeout()), this, SLOT(fresh_PRPD()));
 
-    PRPS_inti();
+    timer_freeze = new QTimer(this);            //timer_freeze设置了一个界面手动退出后的锁定期,便于操作
+    timer_freeze->setInterval(FREEZE_TIME);      //5秒内不出现新录波界面
+    timer_freeze->setSingleShot(true);
+
+    BarChart_inti();
     PRPD_inti();
 
     recWaveForm = new RecWaveForm(menu_index,this);
     connect(this, SIGNAL(send_key(quint8)), recWaveForm, SLOT(trans_key(quint8)));
     connect(recWaveForm,SIGNAL(fresh_parent()),this,SIGNAL(fresh_parent()));
+    connect(recWaveForm, SIGNAL(fresh_parent()), timer_freeze, SLOT(start()) );
 
-    logtools = new LogTools(mode);      //日志保存模块
+    //日志保存模块
+    logtools = new LogTools(mode);
     connect(this,SIGNAL(hfct_log_data(double,int,double)),logtools,SLOT(dealLog(double,int,double)));
     connect(this,SIGNAL(hfct_PRPD_data(QVector<QwtPoint3D>)),logtools,SLOT(dealRPRDLog(QVector<QwtPoint3D>)));
 
-    //20ms发送一次短录波信号
-    timer_rec_interval = new QTimer(this);
-    timer_rec_interval->setSingleShot(true);
-    timer_rec_interval->setInterval(1);
-    connect(timer_rec_interval, SIGNAL(timeout()), this, SLOT(rec_wave()));
-
-    timer_rec = new QTimer(this);
-    timer_rec->setSingleShot(true);
-    connect(timer_rec, SIGNAL(timeout()), this, SLOT(rec_wave_continuous_complete()));
-
-    this->mode = mode;    //当前模式为HFCT
-    if(mode == HFCT1){
-        hfct_data = &data->recv_para_hfct1;
-    }
-    else if(mode == HFCT2){
-        hfct_data = &data->recv_para_hfct2;
-    }
-
-    plot_PRPD->hide();
-//    fresh_setting();
+    reload(menu_index);
 }
 
 HFCTWidget::~HFCTWidget()
@@ -87,36 +69,151 @@ HFCTWidget::~HFCTWidget()
     delete ui;
 }
 
-void HFCTWidget::showWaveData(VectorList buf, MODE mod)
+void HFCTWidget::reload(int index)
 {
-    if( key_val->grade.val0 == menu_index){
-        if(mode == HFCT_CONTINUOUS){
-            hfct_continuous_buf.append(buf);
-            if(timer_rec->isActive()){
-                timer_rec_interval->start();
-            }
+    //基本sql内容的初始化
+    sql_para = *sqlcfg->get_para();     //重置SQL
+    if(mode == HFCT1){
+        hfct_data = &data->recv_para_hfct1;
+        hfct_sql = &sql_para.hfct1_sql;
+        mode_continuous = HFCT1_CONTINUOUS;
+    }
+    else if(mode == HFCT2){
+        hfct_data = &data->recv_para_hfct2;
+        hfct_sql = &sql_para.hfct2_sql;
+        mode_continuous = HFCT2_CONTINUOUS;
+    }
+
+    //仅切换到此界面的初始化
+    if(index == menu_index){
+        //条件启动计时器
+        if(!timer1->isActive()){
+            timer1->start();
         }
-        else if(mode == Disable){
-            mode = HFCT1;
+        if(!timer2->isActive()){
+            timer2->start();
         }
-        else if(mode == HFCT1){
-            key_val->grade.val1 = 1;        //为了锁住主界面，防止左右键切换通道
-            key_val->grade.val5 = 1;
-            recWaveForm->working(key_val,buf,mod);
-            FileTools *filetools = new FileTools(buf,HFCT1);      //开一个线程，为了不影响数据接口性能
-            QThreadPool::globalInstance()->start(filetools);
+        if(!timer3->isActive()){
+            timer3->start();
         }
+        //设置自动录波
+        if( hfct_sql->auto_rec == true ){
+            data->set_send_para(sp_auto_rec, menu_index + 1);
+        }
+        else{
+            data->set_send_para(sp_auto_rec, 0);
+        }
+        //设置滤波器
+        data->set_send_para (sp_filter_mode, hfct_sql->filter);
     }
 }
 
-void HFCTWidget::PRPS_inti()
+void HFCTWidget::trans_key(quint8 key_code)
+{
+    if (key_val == NULL || key_val->grade.val0 != menu_index) {
+        return;
+    }
+
+    if(key_val->grade.val5 != 0){
+        emit send_key(key_code);
+        return;
+    }
+
+    switch (key_code) {
+    case KEY_OK:
+        sqlcfg->sql_save(&sql_para);        //保存SQL
+        reload(menu_index);                 //重置默认数据
+        switch (key_val->grade.val2) {
+        case 5:
+            emit startRecWave(mode_continuous,hfct_sql->time);     //开始连续录波
+            return;
+        case 7:
+            emit startRecWave(mode,0);     //开始录波
+            manual = true;
+            break;
+        case 8:
+            maxReset();
+            break;
+        case 9:
+            PRPDReset();
+            break;
+        default:
+            break;
+        }
+        key_val->grade.val1 = 0;
+        key_val->grade.val2 = 0;
+        break;
+    case KEY_CANCEL:
+        reload(menu_index);
+        key_val->grade.val1 = 0;
+        key_val->grade.val2 = 0;
+        break;
+    case KEY_UP:
+        do_key_up_down(-1);
+        break;
+    case KEY_DOWN:
+        do_key_up_down(1);
+        break;
+    case KEY_LEFT:
+        do_key_left_right(-1);
+        break;
+    case KEY_RIGHT:
+        do_key_left_right(1);
+        break;
+    }
+    emit fresh_parent();
+    fresh_setting();
+}
+
+void HFCTWidget::do_key_up_down(int d)
+{
+    key_val->grade.val1 = 1;
+    Common::change_index(key_val->grade.val2,d,SETTING_NUM,1);
+}
+
+void HFCTWidget::do_key_left_right(int d)
+{
+    switch (key_val->grade.val2) {
+    case 1:
+        hfct_sql->mode = !hfct_sql->mode;
+        break;
+    case 2:
+        Common::change_index(hfct_sql->mode_chart,d,PRPD,BASIC);
+        break;
+    case 3:
+        Common::change_index(hfct_sql->gain, d * 0.1, 20, 0.1 );
+        break;
+    case 4:
+        Common::change_index(hfct_sql->filter, d, HP_1800K, NONE );
+        break;
+    case 5:
+        Common::change_index(hfct_sql->time, d, 20, 1 );
+        break;
+    case 6:
+        hfct_sql->auto_rec = !hfct_sql->auto_rec;
+        break;
+    default:
+        break;
+    }
+}
+
+void HFCTWidget::showWaveData(VectorList buf, MODE mod)
+{
+    if( (key_val->grade.val0 == menu_index ) && ( !timer_freeze->isActive() || !hfct_sql->auto_rec || manual == true) ){
+        key_val->grade.val1 = 1;        //为了锁住主界面，防止左右键切换通道
+        key_val->grade.val5 = 1;
+        emit fresh_parent();
+        ui->comboBox->hidePopup();
+        manual = false;
+        recWaveForm->working(key_val,buf,mod);
+    }
+}
+
+void HFCTWidget::BarChart_inti()
 {
     plot_PRPS = new QwtPlot(ui->widget);
     plot_PRPS->resize(200, 140);
-    Common::set_barchart_style(plot_PRPS);
-
-    int low = VALUE_MAX / 3;
-    int high = low * 2;
+    Common::set_barchart_style(plot_PRPS,PC_MAX);
     d_PRPS = new BarChart(plot_PRPS, &db, &high, &low);
     connect(timer1, SIGNAL(timeout()), d_PRPS, SLOT(fresh()) );
 }
@@ -128,6 +225,7 @@ void HFCTWidget::PRPD_inti()
     d_PRPD = new QwtPlotSpectroCurve;
     Common::set_PRPD_style(plot_PRPD,d_PRPD,VALUE_MAX);
     PRPDReset();
+    plot_PRPD->hide();
 }
 
 void HFCTWidget::maxReset()
@@ -144,65 +242,8 @@ void HFCTWidget::PRPDReset()
     fresh_PRPD();
 }
 
-//发送录波信号
-//第一个参数是通道号，这里固定为1通道
-//第二个参数是时间，高频通道默认为0
-void HFCTWidget::rec_wave()
-{
-    emit startRecWave(HFCT1,0);
-}
-
-void HFCTWidget::rec_wave_continuous()
-{
-    qDebug()<<"continuous rec begin! time = "<< sql_para.hfct1_sql.time;
-    hfct_continuous_buf.clear();
-    mode = HFCT_CONTINUOUS;     //标志位存放在本地
-
-    rec_wave();
-
-    timer_rec->setInterval(sql_para.hfct1_sql.time * 1000);
-    timer_rec->start();
-    timer_rec_interval->start();    //开启定时发送信号
-    key_val->grade.val1 = 1;        //为了锁住主界面，防止左右键切换通道
-    key_val->grade.val5 = 1;
-
-}
-
-
-void HFCTWidget::rec_wave_continuous_complete()
-{
-    timer_rec_interval->stop();    //关闭定时发送信号
-    qDebug()<<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!continuous rec complete! points :"<<hfct_continuous_buf.length();
-    key_val->grade.val1 = 1;        //为了锁住主界面，防止左右键切换通道
-    key_val->grade.val5 = 1;
-    recWaveForm->working(key_val,hfct_continuous_buf,HFCT_CONTINUOUS);  //显示数据
-    FileTools *filetools = new FileTools(hfct_continuous_buf,HFCT_CONTINUOUS);      //开一个线程，为了不影响数据接口性能
-    QThreadPool::globalInstance()->start(filetools);
-    mode = Disable;        //用Disable做一个缓冲，处理可能出现的结尾多一包情况
-
-}
-
 void HFCTWidget::fresh_PRPD()
 {
-
-//    points_origin.clear();
-
-//    len = data->recv_para.recData[1];
-//    if(len == 0){       //无脉冲时，只读2数据
-
-//    }
-//    else{               //有脉冲时，不读底噪
-//        for(int i=0;i<len;i++){
-//            x = (int)data->recv_para.recData[2*i+4];
-//            y = (int)data->recv_para.recData[2*i+5];
-
-//            transData(x,y);
-//        }
-//    }
-//    d_PRPD->setSamples(points);
-
-//    plot_PRPD->replot();
-
     MyKey key;
     foreach (QPoint point, points_origin) {
         if(sql_para.freq_val == 50){            //x坐标变换
@@ -234,8 +275,6 @@ void HFCTWidget::fresh_PRPD()
 
 }
 
-
-
 //返回极值点的index数组
 QVector<int> HFCTWidget::compute_pulse_number(QVector<double> list)
 {
@@ -264,7 +303,7 @@ QVector<int> HFCTWidget::compute_pulse_number(QVector<double> list)
             max_flag = false;
         }
     }
-//    qDebug()<<"n = "<< number;
+    //    qDebug()<<"n = "<< number;
 
     return index;
 }
@@ -295,7 +334,7 @@ double HFCTWidget::compute_pC(QVector<double> list , int x_origin)
         pC.append(compute_one_pC(list) );
     }
 
-//    qDebug()<<"divide:"<<pC;
+    //    qDebug()<<"divide:"<<pC;
 
     //计算原始脉冲点
     QVector<int> index = compute_pulse_number(pC);
@@ -316,7 +355,7 @@ double HFCTWidget::compute_pC(QVector<double> list , int x_origin)
 
 double HFCTWidget::compute_one_pC(QVector<double> list)
 {
-//    qDebug()<<list;
+    //    qDebug()<<list;
     if(list.length() < 2 )
         return 0;
 
@@ -335,7 +374,7 @@ double HFCTWidget::compute_one_pC(QVector<double> list)
 
     s = simpson(list.mid(first,last - first + 1));
 
-//    qDebug()<<"t1="<<t1<<"\ts="<<s<<"\tt2="<<t2<<"\t"<<list << "simpson :"<<list.mid(first,last - first + 1);
+    //    qDebug()<<"t1="<<t1<<"\ts="<<s<<"\tt2="<<t2<<"\t"<<list << "simpson :"<<list.mid(first,last - first + 1);
 
     return t1 + s + t2 ;
 }
@@ -383,29 +422,28 @@ void HFCTWidget::doHfctData()
                 }
                 else{
                     list.append(((double)hfct_data->data[i] - 0x8000));
-//                    list.append(data->recv_para.recData[i]);
+                    //                    list.append(data->recv_para.recData[i]);
                 }
             }
 
             //计算一次数据的脉冲数
-//            double max = 0;
-//            foreach (double l, list) {
-//                max = MAX(qAbs(l),max);
-//            }
-//            qDebug()<<"one pluse data number: "<< list.length() << "\t first = "<<list.first()<<"\tlast = "<<list.last()
-//                      <<"\tmax = "<<max;
+            //            double max = 0;
+            //            foreach (double l, list) {
+            //                max = MAX(qAbs(l),max);
+            //            }
+            //            qDebug()<<"one pluse data number: "<< list.length() << "\t first = "<<list.first()<<"\tlast = "<<list.last()
+            //                      <<"\tmax = "<<max;
 
-//            qDebug()<<list;
+            //            qDebug()<<list;
             pCList.append(compute_pC(list,hfct_data->time ) );
         }
     }
 }
 
-
 void HFCTWidget::fresh_plot()
 {
     if(pCList.isEmpty()){
-//        qDebug()<<"pC is : 0 ";
+        //        qDebug()<<"pC is : 0 ";
         db = 0;
     }
     else{
@@ -413,9 +451,9 @@ void HFCTWidget::fresh_plot()
         foreach (double l, pCList) {
             max = MAX(qAbs(l),max);
         }
-//        qDebug()<<pCList;
-//        qDebug()<<"pC is : "<< max <<"\tpC number: " << pCList.count() << "\tpulse_number : "<< pulse_number;
-        db = max * TEV_FACTOR * sql_para.hfct1_sql.gain;
+        //        qDebug()<<pCList;
+        //        qDebug()<<"pC is : "<< max <<"\tpC number: " << pCList.count() << "\tpulse_number : "<< pulse_number;
+        db = max * TEV_FACTOR * hfct_sql->gain;
 
         //临时加入一个坏值判定
         if(db > 5000){
@@ -434,15 +472,42 @@ void HFCTWidget::fresh_plot()
     ui->label_degree->setText(tr("严重度: %1").arg(degree));
 
     yc_data_type temp_data;
-    temp_data.f_val = db;
-    yc_set_value(HFCT1_amplitude, &temp_data, 0, NULL,0);
-    temp_data.f_val = pulse_number;
-    yc_set_value(HFCT1_num, &temp_data, 0, NULL,0);
-    temp_data.f_val = degree;
-    yc_set_value(HFCT1_severity, &temp_data, 0, NULL,0);
-    temp_data.f_val = sql_para.hfct1_sql.gain;
-    yc_set_value(HFCT1_gain, &temp_data, 0, NULL,0);
-
+    if(mode == HFCT1){
+        temp_data.f_val = db;
+        yc_set_value(HFCT1_amplitude, &temp_data, 0, NULL,0);
+        temp_data.f_val = pulse_number;
+        yc_set_value(HFCT1_num, &temp_data, 0, NULL,0);
+        temp_data.f_val = degree;
+        yc_set_value(HFCT1_severity, &temp_data, 0, NULL,0);
+        temp_data.f_val = hfct_sql->gain;
+        yc_set_value(HFCT1_gain, &temp_data, 0, NULL,0);
+        temp_data.f_val = 0;
+        yc_set_value(HFCT1_center_biased, &temp_data, 0, NULL,0);
+        temp_data.f_val = 0;
+        yc_set_value(HFCT1_center_biased_adv, &temp_data, 0, NULL,0);
+        temp_data.f_val = 0;
+        yc_set_value(HFCT1_noise_biased, &temp_data, 0, NULL,0);
+        temp_data.f_val = 0;
+        yc_set_value(HFCT1_noise_biased_adv, &temp_data, 0, NULL,0);
+    }
+    else{
+        temp_data.f_val = db;
+        yc_set_value(HFCT2_amplitude, &temp_data, 0, NULL,0);
+        temp_data.f_val = pulse_number;
+        yc_set_value(HFCT2_num, &temp_data, 0, NULL,0);
+        temp_data.f_val = degree;
+        yc_set_value(HFCT2_severity, &temp_data, 0, NULL,0);
+        temp_data.f_val = hfct_sql->gain;
+        yc_set_value(HFCT2_gain, &temp_data, 0, NULL,0);
+        temp_data.f_val = 0;
+        yc_set_value(HFCT2_center_biased, &temp_data, 0, NULL,0);
+        temp_data.f_val = 0;
+        yc_set_value(HFCT2_center_biased_adv, &temp_data, 0, NULL,0);
+        temp_data.f_val = 0;
+        yc_set_value(HFCT2_noise_biased, &temp_data, 0, NULL,0);
+        temp_data.f_val = 0;
+        yc_set_value(HFCT2_noise_biased_adv, &temp_data, 0, NULL,0);
+    }
 
     if (max_db < db) {
         max_db = db;
@@ -455,218 +520,50 @@ void HFCTWidget::fresh_plot()
     plot_PRPS->replot();
 }
 
-
-void HFCTWidget::working(CURRENT_KEY_VALUE *val)
-{
-    if (val == NULL) {
-        return;
-    }
-    key_val = val;
-
-    sql_para = *sqlcfg->get_para();
-
-    this->show();
-}
-
-void HFCTWidget::trans_key(quint8 key_code)
-{
-    if (key_val == NULL) {
-        return;
-    }
-
-    if (key_val->grade.val0 != menu_index) {
-        return;
-    }
-//    qDebug()<<"HFCT\tval0 = "<<key_val->grade.val0 <<"\tval1 = "<<key_val->grade.val1 <<"\tval2 = "<<key_val->grade.val2 ;
-
-    if(key_val->grade.val5 != 0){
-        emit send_key(key_code);
-        return;
-    }
-
-
-    switch (key_code) {
-    case KEY_OK:
-        sqlcfg->sql_save(&sql_para);        //保存SQL
-        timer1->start();                                                         //and timer no stop
-        if(key_val->grade.val2 == 5){
-            rec_wave_continuous();     //开始连续录波
-            break;
-        }
-        else if(key_val->grade.val2 == 6){
-            mode = HFCT1;
-            emit startRecWave(HFCT1,0);     //开始录波
-        }
-        else if(key_val->grade.val2 == 7){
-            maxReset();
-        }
-        else if(key_val->grade.val2 == 8){
-            PRPDReset();
-        }
-        key_val->grade.val1 = 0;
-        key_val->grade.val2 = 0;
-        break;
-    case KEY_CANCEL:
-        sql_para = *sqlcfg->get_para();     //重置SQL
-        key_val->grade.val1 = 0;
-        key_val->grade.val2 = 0;        
-        break;
-    case KEY_UP:
-        if (key_val->grade.val2 < 2) {
-            key_val->grade.val2 = SETTING_NUM;
-        } else {
-            key_val->grade.val2--;
-        }
-        break;
-    case KEY_DOWN:
-        if (key_val->grade.val2 >= SETTING_NUM) {
-            key_val->grade.val2 = 1;
-        } else {
-            key_val->grade.val2++;
-        }
-        break;
-    case KEY_LEFT:
-        switch (key_val->grade.val2) {
-        case 1:
-            if (sql_para.hfct1_sql.mode == single) {
-                sql_para.hfct1_sql.mode = continuous;
-            } else {
-                sql_para.hfct1_sql.mode = single;
-            }
-            break;
-        case 2:
-            if (sql_para.hfct1_sql.mode_chart == BASIC) {
-                sql_para.hfct1_sql.mode_chart = Histogram;
-                break;
-            } else if(sql_para.hfct1_sql.mode_chart == Histogram){
-                sql_para.hfct1_sql.mode_chart = PRPD;
-                break;
-            } else if(sql_para.hfct1_sql.mode_chart == PRPD){
-                sql_para.hfct1_sql.mode_chart = BASIC;
-                break;
-            }
-        case 3:
-            if (sql_para.hfct1_sql.gain > 0.15) {
-                sql_para.hfct1_sql.gain -= 0.1;
-            }
-            break;
-        case 4:
-            if (sql_para.hfct1_sql.filter == NONE) {
-                sql_para.hfct1_sql.filter = HP_1800K;
-                data->set_send_para (sp_filter_mode, 2);
-                break;
-            } else if(sql_para.hfct1_sql.filter == HP_1800K){
-                sql_para.hfct1_sql.filter = HP_500K;
-                data->set_send_para (sp_filter_mode, 1);
-                break;
-            } else if(sql_para.hfct1_sql.filter == HP_500K){
-                sql_para.hfct1_sql.filter = NONE;
-                data->set_send_para (sp_filter_mode, 0);
-                break;
-            }
-        case 5:
-            if (sql_para.hfct1_sql.time > 0) {
-                sql_para.hfct1_sql.time --;
-            }
-            break;
-        default:
-            break;
-        }
-        break;
-
-    case KEY_RIGHT:
-        switch (key_val->grade.val2) {
-        case 1:
-            if (sql_para.hfct1_sql.mode == single) {
-                sql_para.hfct1_sql.mode = continuous;
-            } else {
-                sql_para.hfct1_sql.mode = single;
-            }
-            break;
-        case 2:
-            if (sql_para.hfct1_sql.mode_chart == Histogram) {
-                sql_para.hfct1_sql.mode_chart = BASIC;
-                break;
-            } else if (sql_para.hfct1_sql.mode_chart == BASIC) {
-                sql_para.hfct1_sql.mode_chart = PRPD;
-                break;
-            } else if(sql_para.hfct1_sql.mode_chart == PRPD){
-                sql_para.hfct1_sql.mode_chart = Histogram;
-                break;
-            }
-        case 3:
-            if (sql_para.hfct1_sql.gain < 9.95) {
-                sql_para.hfct1_sql.gain += 0.1;
-            }
-            break;
-        case 4:
-            if (sql_para.hfct1_sql.filter == HP_1800K) {
-                sql_para.hfct1_sql.filter = NONE;
-                data->set_send_para (sp_filter_mode, 0);
-                break;
-            }  else if(sql_para.hfct1_sql.filter == NONE){
-                sql_para.hfct1_sql.filter = HP_500K;
-                data->set_send_para (sp_filter_mode, 1);
-                break;
-            } else if(sql_para.hfct1_sql.filter == HP_500K){
-                sql_para.hfct1_sql.filter = HP_1800K;
-                data->set_send_para (sp_filter_mode, 2);
-                break;
-            }
-        case 5:
-            if (sql_para.hfct1_sql.time < 300) {
-                sql_para.hfct1_sql.time ++;
-            }
-            break;
-        default:
-            break;
-        }
-        break;
-    default:
-        break;
-    }
-    emit fresh_parent();
-    fresh_setting();
-}
-
 void HFCTWidget::fresh_setting()
 {
-    if (sql_para.hfct1_sql.mode == single) {
+    if (hfct_sql->mode == single) {
         timer1->setSingleShot(true);
-        ui->comboBox->setItemText(0,tr("检测模式    [单次]"));
+        ui->comboBox->setItemText(0,tr("检测模式\t[单次]"));
     } else {
         timer1->setSingleShot(false);
-        ui->comboBox->setItemText(0,tr("检测模式    [连续]"));
+        ui->comboBox->setItemText(0,tr("检测模式\t[连续]"));
     }
-    if (sql_para.hfct1_sql.mode_chart == PRPD) {
-        ui->comboBox->setItemText(1,tr("图形显示    [PRPD]"));
+    if (hfct_sql->mode_chart == PRPD) {
+        ui->comboBox->setItemText(1,tr("图形显示\t[PRPD]"));
         plot_PRPD->show();
         plot_PRPS->hide();
-//        plot_Histogram->hide();
-    } else if(sql_para.hfct1_sql.mode_chart == BASIC){
-        ui->comboBox->setItemText(1,tr("图形显示  [时序图]"));
+        //        plot_Histogram->hide();
+    } else if(hfct_sql->mode_chart == BASIC){
+        ui->comboBox->setItemText(1,tr("图形显示 \t[时序图]"));
         plot_PRPD->hide();
         plot_PRPS->show();
-//        plot_Histogram->hide();
-    } else if(sql_para.hfct1_sql.mode_chart == Histogram){
-        ui->comboBox->setItemText(1,tr("图形显示  [柱状图]"));
+        //        plot_Histogram->hide();
+    } else if(hfct_sql->mode_chart == Histogram){
+        ui->comboBox->setItemText(1,tr("图形显示 \t[柱状图]"));
         plot_PRPD->hide();
         plot_PRPS->hide();
-//        plot_Histogram->show();
+        //        plot_Histogram->show();
     }
-    ui->comboBox->setItemText(2,tr("增益调节    [×%1]").arg(QString::number(sql_para.hfct1_sql.gain, 'f', 1)));
+    ui->comboBox->setItemText(2,tr("增益调节\t[×%1]").arg(QString::number(hfct_sql->gain, 'f', 1)));
 
-    if(sql_para.hfct1_sql.filter == NONE){
-        ui->comboBox->setItemText(3,tr("滤波器   [无]"));        
+    if(hfct_sql->filter == NONE){
+        ui->comboBox->setItemText(3,tr("滤波器\t[无]"));
     }
-    else if(sql_para.hfct1_sql.filter == HP_500K){
-        ui->comboBox->setItemText(3,tr("滤波器[高通500K]"));        
+    else if(hfct_sql->filter == HP_500K){
+        ui->comboBox->setItemText(3,tr("滤波器   [高通500K]"));
     }
-    else if(sql_para.hfct1_sql.filter == HP_1800K){
-        ui->comboBox->setItemText(3,tr("滤波器[高通1.8M]"));        
+    else if(hfct_sql->filter == HP_1800K){
+        ui->comboBox->setItemText(3,tr("滤波器   [高通1.8M]"));
     }
 
-    ui->comboBox->setItemText(4,tr("连续录波[%1]s").arg(QString::number(sql_para.hfct1_sql.time)));
+    ui->comboBox->setItemText(4,tr("连续录波\t[%1]s").arg(QString::number(hfct_sql->time)));
+    if(hfct_sql->auto_rec == true){
+        ui->comboBox->setItemText(5,tr("自动录波\t[开启]") );
+    }
+    else{
+        ui->comboBox->setItemText(5,tr("自动录波\t[关闭]") );
+    }
 
     ui->comboBox->setCurrentIndex(key_val->grade.val2-1);
 
@@ -678,7 +575,7 @@ void HFCTWidget::fresh_setting()
     }
 
     ui->comboBox->lineEdit()->setText(tr(" 参 数 设 置"));
-
 }
+
 
 

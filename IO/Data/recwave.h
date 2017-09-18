@@ -3,10 +3,8 @@
 
 #include <QObject>
 #include "data.h"
-#include <QTime>
+//#include <QTime>
 #include <QTimer>
-
-#define GROUP_NUM_MAX           16              //组号最大值
 
 
 class RecWave : public QObject
@@ -41,8 +39,8 @@ private:
     G_PARA *data;
     int groupNum;       //组号
     VectorList _data;    //录波数据
-    int time;           //录波时长
-    QTime time_start;         //时标
+//    int time;           //录波时长
+//    QTime time_start;         //时标
     QTimer *timer;       //计时器（超声波使用）
     MODE mode;          //工作模式
     int groupNum_Offset;         //组号偏置

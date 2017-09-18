@@ -47,7 +47,7 @@ signals:
 
 private slots:
     void fresh_menu_icon();
-    void fresh_time();
+    void fresh_status();
     void fresh_batt();
     void system_reboot();
     void set_reboot_time();
@@ -92,6 +92,7 @@ private:
     QTimer *timer_batt;                 //电池电量监视
     QTimer *timer_reboot;               //系统关机计时器
     Battery *battery;
+    int low_power;                      //自动关机计数
 
     void menu_init();
     void statusbar_init();

@@ -8,6 +8,7 @@
 
 class QwtPlot;
 class QwtPlotCurve;
+class QwtPlotMarker;
 
 class RecWaveForm : public QWidget
 {
@@ -32,9 +33,13 @@ private:
     QwtPlot *plot;
     QVector<QPointF> wave1, wave2;
     QwtPlotCurve *curve1, *curve2;
+    QwtPlotMarker *d_marker_peak, *d_marker_threshold1, *d_marker_threshold2;
 
     void setData(QString str);
     void setData(VectorList buf, MODE mod);
+    void set_canvas();
+
+    void find_peaks();      //寻找峰值
 
     void setScroll(int value);      //根据数值不同，改变显示内容
 

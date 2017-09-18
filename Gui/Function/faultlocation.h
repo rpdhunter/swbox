@@ -22,19 +22,15 @@ class FaultLocation : public QFrame
     Q_OBJECT
 
 public:
-    explicit FaultLocation(G_PARA *data, CURRENT_KEY_VALUE *val, int menu_index, QWidget *parent = 0);
+    explicit FaultLocation(G_PARA *data, CURRENT_KEY_VALUE *val, QList<MODE> mode_list, int menu_index, QWidget *parent = 0);
     ~FaultLocation();
 
     void get_origin_points(QVector<QPoint> p,int group);
-    void showLeftData(int db,int p);
-    void showRightData(int db,int p);
-
-    void showWaveData(VectorList buf, MODE);
 
 public slots:
-    void working(CURRENT_KEY_VALUE *val);
+    void reload(int index);
     void trans_key(quint8 key_code);
-
+    void showWaveData(VectorList buf, MODE);
 
 signals:
     void fresh_parent();
@@ -48,14 +44,19 @@ private slots:
     void startANewScan();    //一次新的扫描
     void showProgress();    //进度条滚动，用于触发时间可视化
 
+    void do_key_up_down(int d);
+    void do_key_left_right(int d);
+
 private:
     Ui::FaultLocation *ui;
 
     G_PARA *data;
     CURRENT_KEY_VALUE *key_val;
     int menu_index;
+    QList<MODE> mode_list;
 
     SQL_PARA sql_para;
+    LOCATION_SQL *location_sql;
 
     QTimer *timer, *timer1, *timer2;
 
@@ -83,6 +84,8 @@ private:
     void setData(VectorList buf);     //设置一次显示数据
     void setScroll(int value);      //根据数值不同，改变显示内容
     void fresh();
+    void compass_init();
+    void plot_init();
 
 //    QTimer *timer;
 };

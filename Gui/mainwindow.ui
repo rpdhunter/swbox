@@ -29,16 +29,16 @@
    <property name="geometry">
     <rect>
      <x>8</x>
-     <y>25</y>
+     <y>23</y>
      <width>464</width>
-     <height>225</height>
+     <height>227</height>
     </rect>
    </property>
    <property name="styleSheet">
     <string notr="true"/>
    </property>
    <property name="currentIndex">
-    <number>1</number>
+    <number>0</number>
    </property>
    <property name="iconSize">
     <size>
@@ -279,7 +279,7 @@ background:transparent;
   <widget class="QLabel" name="lab_freq">
    <property name="geometry">
     <rect>
-     <x>365</x>
+     <x>370</x>
      <y>10</y>
      <width>41</width>
      <height>17</height>
@@ -358,6 +358,22 @@ background:transparent;
    </property>
    <property name="text">
     <string>90%</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="lab_wifi">
+   <property name="geometry">
+    <rect>
+     <x>330</x>
+     <y>10</y>
+     <width>30</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QLabel {color:white;}</string>
+   </property>
+   <property name="text">
+    <string/>
    </property>
   </widget>
  </widget>

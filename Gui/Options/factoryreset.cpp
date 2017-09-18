@@ -8,7 +8,6 @@ FactoryReset::FactoryReset(QWidget *parent) : QFrame(parent)
     key_val = NULL;
 
     this->resize(274,100);
-//    this->move(100,65);
     this->move(90, 35);
     this->setStyleSheet("FactoryReset {background-color:lightGray;}");
 

@@ -45,5 +45,13 @@
         <file>widgetphoto/bk/bk.png</file>
         <file>widgetphoto/bk/grade2_bk.png</file>
         <file>widgetphoto/bk/para_child.png</file>
+        <file>widgetphoto/wifi/wifi_hot.png</file>
+        <file>widgetphoto/wifi/wifi3.png</file>
+        <file>widgetphoto/wifi/wifi2.png</file>
+        <file>widgetphoto/wifi/wifi1.png</file>
+        <file>widgetphoto/wifi/wifi0.png</file>
+        <file>widgetphoto/bk/ohv.png</file>
+        <file>widgetphoto/bk/amg.png</file>
+        <file>widgetphoto/bk/amg_low.png</file>
     </qresource>
 </RCC>

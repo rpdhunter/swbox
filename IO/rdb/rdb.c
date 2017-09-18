@@ -240,10 +240,10 @@ int init_rdb ()
 	if (init_rdb_event_pool () < 0) {                           //前向生成链表rdb_event_pool
 		return -1;
 	}
-	if (init_rdb_task () < 0) {                                 //创建线程check_yx_event_list ();check_yc_event_list();check_yk_list();
-		printf("init_rdb_task fail\n");
-		return -1;
-	}
+    if (init_rdb_task () < 0) {                                 //创建线程check_yx_event_list ();check_yc_event_list();check_yk_list();
+        printf("init_rdb_task fail\n");
+        return -1;
+    }
     printf("init_rdb_task success\n");
 
 	return 0;

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>485</width>
-    <height>193</height>
+    <width>610</width>
+    <height>240</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -80,7 +80,7 @@
             <number>0</number>
            </property>
            <property name="text">
-            <string>电 网 频 率</string>
+            <string>电网频率</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignCenter</set>
@@ -111,7 +111,7 @@
             <number>2</number>
            </property>
            <property name="text">
-            <string>背 光 设 置</string>
+            <string>屏幕背光</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignCenter</set>
@@ -125,7 +125,7 @@
           <widget class="QLabel" name="lab_datetime">
            <property name="minimumSize">
             <size>
-             <width>0</width>
+             <width>80</width>
              <height>25</height>
             </size>
            </property>
@@ -145,15 +145,21 @@
             <number>2</number>
            </property>
            <property name="text">
-            <string>时 间 设 置</string>
+            <string>时间设置</string>
+           </property>
+           <property name="scaledContents">
+            <bool>false</bool>
            </property>
            <property name="alignment">
             <set>Qt::AlignCenter</set>
            </property>
+           <property name="margin">
+            <number>0</number>
+           </property>
           </widget>
          </item>
          <item>
-          <widget class="QLabel" name="lab_auot_rec">
+          <widget class="QLabel" name="lab_key_back">
            <property name="minimumSize">
             <size>
              <width>0</width>
@@ -176,7 +182,7 @@
             <number>2</number>
            </property>
            <property name="text">
-            <string>自 动 录 波</string>
+            <string>键盘背光</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignCenter</set>
@@ -207,7 +213,7 @@
             <number>2</number>
            </property>
            <property name="text">
-            <string>自动关机时间</string>
+            <string>自动关机</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignCenter</set>
@@ -451,13 +457,9 @@
             </spacer>
            </item>
            <item>
-            <widget class="QCheckBox" name="checkBox_1">
-             <property name="styleSheet">
-              <string notr="true">border-color: rgb(46, 52, 54);
-</string>
-             </property>
+            <widget class="QRadioButton" name="rbt_key_on">
              <property name="text">
-              <string>通道1</string>
+              <string>开</string>
              </property>
             </widget>
            </item>
@@ -478,9 +480,9 @@
             </spacer>
            </item>
            <item>
-            <widget class="QCheckBox" name="checkBox_2">
+            <widget class="QRadioButton" name="rbt_key_off">
              <property name="text">
-              <string>通道2</string>
+              <string>关</string>
              </property>
             </widget>
            </item>
@@ -687,6 +689,110 @@
       <attribute name="title">
        <string/>
       </attribute>
+      <layout class="QFormLayout" name="formLayout">
+       <item row="0" column="0">
+        <layout class="QGridLayout" name="gridLayout">
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_7">
+           <property name="text">
+            <string>录波文件保存上限</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLineEdit" name="lineEdit_MaxFileNum">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>200</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_8">
+           <property name="text">
+            <string>录波文件复制到SD卡</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <layout class="QHBoxLayout" name="horizontalLayout_9">
+           <item>
+            <widget class="QRadioButton" name="rbt_sd_on">
+             <property name="text">
+              <string>开启</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="rbt_sd_off">
+             <property name="text">
+              <string>关闭</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_9">
+           <property name="text">
+            <string>自动录波触发间隔</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QLineEdit" name="lineEdit_interval">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>1</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="2">
+          <widget class="QLabel" name="label_10">
+           <property name="text">
+            <string>s</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="0" column="1">
+        <spacer name="horizontalSpacer_14">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>239</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="1" column="0">
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>103</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
      </widget>
     </widget>
    </item>
@@ -707,22 +813,6 @@
     <hint type="destinationlabel">
      <x>372</x>
      <y>70</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>lineEdit_CloseTime</sender>
-   <signal>textChanged(QString)</signal>
-   <receiver>lineEdit_CloseTime</receiver>
-   <slot>selectAll()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>257</x>
-     <y>161</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>257</x>
-     <y>161</y>
     </hint>
    </hints>
   </connection>

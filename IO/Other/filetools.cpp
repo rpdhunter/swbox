@@ -17,32 +17,97 @@ FileTools::FileTools(VectorList data, MODE mode)
 
 FileTools::~FileTools()
 {
-//    qDebug()<<"new thread save completed! mode="<<_mode;
+    //    qDebug()<<"new thread save completed! mode="<<_mode;
 }
 
 void FileTools::run()
 {
-    filepath = getFilePath();       //得到文件保存的路径
-    qDebug()<<filepath;
-
-    saveDataFile();     //保存数据文件
-    saveCfgFile();      //生成对应的配置文件
+    getFilePath();          //得到文件保存的路径
+    saveDataFile();         //保存数据文件
+    saveCfgFile();          //生成对应的配置文件
 
     if(_mode == AA_Ultrasonic){
         saveWavFile();      //生成声音文件
-        //这里插入mp3转换代码
-        wavToMp3();
+        wavToMp3();         //mp3转换
     }
 
     //空间管理
-    spaceControl(WAVE_DIR"/");
-    spaceControl("/mmc/sdcard/WaveForm/");
+    spaceControl(WAVE_DIR"/");              //内存空间管理
+    spaceControl("/mmc/sdcard/WaveForm/");  //SD卡空间管理
 
     system ("sync");
 
 }
 
+//实现优先在SD卡建立波形存储文件夹
+//如果SD卡未插入，则在内存当前文件夹下建立波形文件夹
+//返回波形文件夹路径
+void FileTools::getFilePath()
+{
+    filename = QString("%1").arg(QDateTime::currentDateTime().toString("yyyy-MM-dd-HH-mm-ss-zzz"));
 
+    switch (_mode) {
+    case TEV1:
+        filename.prepend("TEV1_");
+        break;
+    case TEV2:
+        filename.prepend("TEV2_");
+        break;
+    case Double_Channel:
+        filename.prepend("Double_");
+        break;
+    case AA_Ultrasonic:
+        filename.prepend("AAUltrasonic_");
+        break;
+    case AE_Ultrasonic:
+        filename.prepend("AEUltrasonic_");
+        break;
+    case HFCT1:
+        filename.prepend("HFCT1_");
+        break;
+    case HFCT2:
+        filename.prepend("HFCT2_");
+        break;
+    case TEV1_CONTINUOUS:
+        filename.prepend("TEV1_CONTINUOUS_");
+        break;
+    case TEV2_CONTINUOUS:
+        filename.prepend("TEV2_CONTINUOUS_");
+        break;
+    case HFCT1_CONTINUOUS:
+        filename.prepend("HFCT1_CONTINUOUS_");
+        break;
+    case HFCT2_CONTINUOUS:
+        filename.prepend("HFCT2_CONTINUOUS_");
+        break;
+    default:
+        break;
+    }
+
+    //文件夹操作
+    QDir dir;
+    //创建文件夹
+    if(!dir.exists("/mmc/sdcard/WaveForm/")){
+        dir.mkdir("/mmc/sdcard/WaveForm/");
+    }
+
+    if(!dir.exists("/mmc/sdcard/WaveForm/favorite")){
+        dir.mkdir("/mmc/sdcard/WaveForm/favorite");
+    }
+
+    if(!dir.exists(WAVE_DIR"/") ){
+        dir.mkdir(WAVE_DIR"/");
+    }
+
+    if(!dir.exists(WAVE_DIR"/favorite") ){
+        dir.mkdir(WAVE_DIR"/favorite");
+    }
+
+    filepath = QString(WAVE_DIR"/" + filename);
+    filepath_SD = QString("/mmc/sdcard/WaveForm/" + filename);
+//    qDebug()<<filepath;
+//    qDebug()<<filepath_SD;
+}
 
 void FileTools::saveDataFile()
 {
@@ -92,80 +157,22 @@ void FileTools::saveDataFile()
             }
         }
 
-
-        if(file.copy("/mmc/sdcard/WaveForm/" + filename + ".DAT")){
-//            qDebug()<<"copy " + filename + ".DAT to SDCard succeed!";
+        //拷贝到SD卡
+        if(sqlcfg->get_para()->file_copy_to_SD){
+            if(file.copy(filepath_SD + ".DAT")){
+                qDebug()<<"copy " + filename + ".DAT to SDCard succeed!";
+            }
+            else{
+                qDebug()<<"copy " + filename + ".DAT to SDCard failed!";
+            }
         }
-        else{
-            qDebug()<<"copy " + filename + ".DAT to SDCard failed!";
-        }
-
         file.close();
     }
-    else
-        qDebug()<<"file open failed!";
-
-
-
-}
-
-//实现优先在SD卡建立波形存储文件夹
-//如果SD卡未插入，则在内存当前文件夹下建立波形文件夹
-//返回波形文件夹路径
-QString FileTools::getFilePath()
-{
-//    QString filename;
-    filename = QString("%1").arg(QDateTime::currentDateTime().toString("yyyy-MM-dd-HH-mm-ss-zzz"));
-
-    switch (_mode) {
-    case TEV1:     //TEV1
-        filename.prepend("TEV1_");
-        break;
-    case TEV2:     //TEV2
-        filename.prepend("TEV2_");
-        break;
-    case Double_Channel:     //TEV_Double
-        filename.prepend("TEVDouble_");
-        break;
-    case AA_Ultrasonic:     //AA超声
-        filename.prepend("AAUltrasonic_");
-        break;
-    case HFCT1:
-        filename.prepend("HFCT1_");
-        break;
-    case HFCT_CONTINUOUS:
-        filename.prepend("HFCT_CONTINUOUS_");
-    default:
-        break;
-    }
-
-    //文件夹操作
-    QDir dir;
-    //创建文件夹
-    if(!dir.exists("/mmc/sdcard/WaveForm/")){
-        dir.mkdir("/mmc/sdcard/WaveForm/");
-    }
-
-
-    //    if(dir.exists("/mmc/sdcard/WaveForm/")){
-    //        return QString("/mmc/sdcard/WaveForm/" + filename);
-    //    }
-    //    else if(dir.mkdir("/mmc/sdcard/WaveForm/") ){
-    //        return QString("/mmc/sdcard/WaveForm/" + filename);
-    //    }
-    //    else
-    if(dir.exists(WAVE_DIR"/") ){
-        //        qDebug()<< "SD card failed!";
-        return QString(WAVE_DIR"/" + filename);
-    }
-    else if(dir.mkdir(WAVE_DIR"/")){
-        //        qDebug()<< "SD card failed!";
-        return QString(WAVE_DIR"/" + filename);
-    }
     else{
-        return QString();       //全失败不太可能
+        qDebug()<<"file open failed!";
     }
 }
+
 
 void FileTools::saveCfgFile()
 {
@@ -195,34 +202,30 @@ void FileTools::saveCfgFile()
     out << QDateTime::currentDateTime().toString() << "\n";
     out << "BINARY" << "\n";
 
-    if(file.copy("/mmc/sdcard/WaveForm/" + filename + ".CFG")){
-//        qDebug()<<"copy " + filename + ".CFG to SDCard succeed!";
-    }
-    else{
-        qDebug()<<"copy " + filename + ".CFG to SDCard failed!";
+    if(sqlcfg->get_para()->file_copy_to_SD){
+        if(file.copy(filepath_SD + ".CFG")){
+            //        qDebug()<<"copy " + filename + ".CFG to SDCard succeed!";
+        }
+        else{
+            qDebug()<<"copy " + filename + ".CFG to SDCard failed!";
+        }
     }
 
     file.close();
 }
 
-//保存wav文件
+//保存wav文件(至临时文件夹)
 void FileTools::saveWavFile()
 {
-	int i, size;
-	
+    int i, size;
+
     wfh1=(WaveFormat*)malloc(sizeof(WaveFormat));
-	if (wfh1 == NULL) {
-		return;
-	}
+    if (wfh1 == NULL) {
+        return;
+    }
     //    memset(wfh1,0,sizeof(wfh1));
 
     size = _data.length() * 2;
-    //    char *Data1 = (char*)malloc(size);
-    //    for(int i=0;i<size;i++){
-    //        Data1[i] = (char)_data.at(i);
-    //    }
-
-
 
     strcpy(wfh1->RIFF,"RIFF");
     wfh1->Filesize = size + sizeof(WaveFormat);
@@ -263,21 +266,16 @@ void FileTools::saveWavFile()
     out.writeRawData(wfh1->fact,4);
     out << (qint32)wfh1->Datasize;
 
-    qDebug()<<"wfh1->Datasize :"<< wfh1->Datasize;
+    //    qDebug()<<"wfh1->Datasize :"<< wfh1->Datasize;
 
-    //    char c;
-    //    int t;
     for(i=0;i<_data.length();i++){
-        out << qint16(_data.at(i) /** 32*/ << 5);
-        //        t = _data.at(i)>>2;
-        //        c = char(t);
-        //        out.writeRawData(&c,1);
+        out << qint16(_data.at(i)*64);
     }
-    qDebug()<<"i="<<i;
+    //    qDebug()<<"i="<<i;
 
     file.close();
 
-	free (wfh1);
+    free (wfh1);
 }
 
 void FileTools::wavToMp3()
@@ -285,16 +283,18 @@ void FileTools::wavToMp3()
     QString program = "/root/lame";
     QStringList arguments1,arguments2;
     arguments1 << "/tmp/out.wav" << filepath+".mp3";
-    arguments2 << "/tmp/out.wav" << "/mmc/sdcard/WaveForm/"+ filename +".mp3";
+    arguments2 << "/tmp/out.wav" << filepath_SD +".mp3";
 
     QProcess *myProcess1 = new QProcess;
     myProcess1->start(program, arguments1);
     QObject::connect(myProcess1,SIGNAL(finished(int)),myProcess1,SLOT(deleteLater()));
 
-    QProcess *myProcess2 = new QProcess;
-    myProcess2->start(program, arguments2);
+    if(sqlcfg->get_para()->file_copy_to_SD){
+        QProcess *myProcess2 = new QProcess;
+        myProcess2->start(program, arguments2);
+        QObject::connect(myProcess2,SIGNAL(finished(int)),myProcess2,SLOT(deleteLater()));
+    }
     qDebug()<<"mp3 file saved!";
-    QObject::connect(myProcess2,SIGNAL(finished(int)),myProcess2,SLOT(deleteLater()));
 }
 
 void FileTools::spaceControl(QString str)
@@ -312,7 +312,7 @@ void FileTools::spaceControl(QString str)
             }
         }
 
-//		system ("sync");
+//        system ("sync");
     }
 }
 

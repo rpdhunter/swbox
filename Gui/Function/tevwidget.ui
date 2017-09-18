@@ -67,6 +67,11 @@
    </item>
    <item>
     <property name="text">
+     <string>自动录波     [开启]</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
      <string>单次录波</string>
     </property>
    </item>
@@ -160,7 +165,7 @@
     <rect>
      <x>10</x>
      <y>30</y>
-     <width>211</width>
+     <width>221</width>
      <height>151</height>
     </rect>
    </property>
@@ -213,6 +218,10 @@
     </item>
    </layout>
   </widget>
+  <zorder>comboBox</zorder>
+  <zorder>layoutWidget</zorder>
+  <zorder>layoutWidget1</zorder>
+  <zorder>widget</zorder>
  </widget>
  <resources/>
  <connections/>

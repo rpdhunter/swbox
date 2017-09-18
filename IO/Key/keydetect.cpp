@@ -85,23 +85,15 @@ void KeyDetect::check_press_cont (int pin, enum KEY_VALUE key)
 //一旦按下某键，便发送对应信号
 void KeyDetect::run(void)
 {
-//    quint64 i=0;
-//    while(1){
-//        gpio_read_pin(PIN_OK);
-//        i++;
-//        if(i%1000000==0){
-//            qDebug()<<i/1000000;
-//        }
-//    }
     while (true) {
-		check_press_once (PIN_POWER, KEY_POWER);
-		check_press_once (PIN_OK, KEY_OK);
-		check_press_once (PIN_CANCEL, KEY_CANCEL);
+        check_press_once (PIN_POWER, KEY_POWER);
+        check_press_once (PIN_OK, KEY_OK);
+        check_press_once (PIN_CANCEL, KEY_CANCEL);
 
-		check_press_cont (PIN_UP, KEY_UP);
-		check_press_cont (PIN_DOWN, KEY_DOWN);
-		check_press_cont (PIN_LEFT, KEY_LEFT);
-		check_press_cont (PIN_RIGHT, KEY_RIGHT);
+        check_press_cont (PIN_UP, KEY_UP);
+        check_press_cont (PIN_DOWN, KEY_DOWN);
+        check_press_cont (PIN_LEFT, KEY_LEFT);
+        check_press_cont (PIN_RIGHT, KEY_RIGHT);
 
         usleep (KEY_MS_DLY);
     }

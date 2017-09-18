@@ -26,39 +26,142 @@ void FifoControl::stop_play_voice()
     qDebug()<<"voice play stopped";
 }
 
-int FifoControl::read_nomal_data()
+QString FifoControl::send_para_to_string(int val)
 {
-    read_fpga(sp_read_fpga_nomal);
-    return recv_data (vbase_nomal, (unsigned int *)&(tdata->recv_para_nomal));
+    QString tmp;
+    switch (val) {
+    case sp_ram_reset:
+        tmp = "ram_reset";
+        break;
+    case sp_freq_reg:
+        tmp = "freq_reg";
+        break;
+    case sp_backlight_reg:
+        tmp = "backlight_reg";
+        break;
+    case sp_keyboard_backlight:
+        tmp = "keyboard_backlight";
+        break;
+    case sp_sleeping:
+        tmp = "sleeping";
+        break;
+    case sp_working_mode:
+        tmp = "working_mode";
+        break;
+    case sp_filter_mode:
+        tmp = "filter_mode";
+        break;
+    case sp_tev1_zero:
+        tmp = "tev1_zero";
+        break;
+    case sp_tev1_threshold:
+        tmp = "tev1_threshold";
+        break;
+    case sp_tev2_zero:
+        tmp = "tev2_zero";
+        break;
+    case sp_tev2_threshold:
+        tmp = "tev2_threshold";
+        break;
+    case sp_hfct1_zero:
+        tmp = "hfct1_zero";
+        break;
+    case sp_hfct1_threshold:
+        tmp = "hfct1_threshold";
+        break;
+    case sp_hfct2_zero:
+        tmp = "hfct2_zero";
+        break;
+    case sp_hfct2_threshold:
+        tmp = "hfct2_threshold";
+        break;
+    case sp_aa_vol:
+        tmp = "aa_vol";
+        break;
+    case sp_aa_record_play:
+        tmp = "aa_record_play";
+        break;
+    case sp_rec_start_tev1:
+        tmp = "rec_start_tev1";
+        break;
+    case sp_rec_start_tev2:
+        tmp = "rec_start_tev2";
+        break;
+    case sp_rec_start_hfct1:
+        tmp = "rec_start_hfct1";
+        break;
+    case sp_rec_start_hfct2:
+        tmp = "rec_start_hfct2";
+        break;
+    case sp_rec_start_aa1:
+        tmp = "rec_start_aa1";
+        break;
+    case sp_rec_start_aa2:
+        tmp = "rec_start_aa2";
+        break;
+    case sp_group_num:
+        tmp = "group_num";
+        break;
+    case sp_auto_rec:
+        tmp = "auto_rec";
+        break;
+    case sp_read_fpga_normal:
+        tmp = "read_fpga_normal";
+        break;
+    case sp_read_fpga_rec:
+        tmp = "read_fpga_rec";
+        break;
+    case sp_read_fpga_prpd1:
+        tmp = "read_fpga_prpd1";
+        break;
+    case sp_read_fpga_prpd2:
+        tmp = "read_fpga_prpd2";
+        break;
+    case sp_read_fpga_hfct1:
+        tmp = "read_fpga_hfct1";
+        break;
+    case sp_read_fpga_hfct2:
+        tmp = "read_fpga_hfct2";
+        break;
+    default:
+        break;
+    }
+    return tmp.toUpper();
+}
+
+int FifoControl::read_normal_data()
+{
+//    read_fpga(sp_read_fpga_nomal);
+    return recv_data (vbase_normal, (unsigned int *)&(tdata->recv_para_normal));
 }
 
 int FifoControl::read_prpd1_data()
 {
-    read_fpga(sp_read_fpga_prpd1);
+//    read_fpga(sp_read_fpga_prpd1);
     return recv_data (vbase_prpd1, (unsigned int *)&(tdata->recv_para_prpd1));
 }
 
 int FifoControl::read_prpd2_data()
 {
-    read_fpga(sp_read_fpga_prpd2);
+//    read_fpga(sp_read_fpga_prpd2);
     return recv_data (vbase_prpd2, (unsigned int *)&(tdata->recv_para_prpd2));
 }
 
 int FifoControl::read_hfct1_data()
 {
-    read_fpga(sp_read_fpga_hfct1);
+//    read_fpga(sp_read_fpga_hfct1);
     return recv_data (vbase_hfct1, (unsigned int *)&(tdata->recv_para_hfct1));
 }
 
 int FifoControl::read_hfct2_data()
 {
-    read_fpga(sp_read_fpga_hfct2);
+//    read_fpga(sp_read_fpga_hfct2);
     return recv_data (vbase_hfct2, (unsigned int *)&(tdata->recv_para_hfct2));
 }
 
 int FifoControl::read_rec_data()
 {
-    read_fpga(sp_read_fpga_rec);
+//    read_fpga(sp_read_fpga_rec);
     return recv_data (vbase_rec, (unsigned int *)&(tdata->recv_para_rec));
 }
 
@@ -74,7 +177,7 @@ void FifoControl::base_init()
 
     int res = -1;
     do {
-        if ((vbase_nomal = init_vbase (fd, AXI_STREAM_BASE0, AXI_STREAM_SIZE)) == NULL) {
+        if ((vbase_normal = init_vbase (fd, AXI_STREAM_BASE0, AXI_STREAM_SIZE)) == NULL) {
             break;
         }
         if ((vbase_send = init_vbase (fd, AXI_STREAM_BASE1, AXI_STREAM_SIZE)) == NULL) {
@@ -149,24 +252,24 @@ void FifoControl::regs_init()
 
     tdata->set_send_para (sp_freq_reg, sqlcfg->get_para()->freq_val);
     tdata->set_send_para (sp_backlight_reg, sqlcfg->get_para()->backlight);
-    tdata->set_send_para (sp_keyboard_backlight, 0);//to be
+    tdata->set_send_para (sp_keyboard_backlight, sqlcfg->get_para()->key_backlight);
 
-    tdata->set_send_para (sp_working_mode, 0);//to be
+    tdata->set_send_para (sp_working_mode, sqlcfg->get_working_mode((MODE)sqlcfg->get_para()->menu_h1, (MODE)sqlcfg->get_para()->menu_h2) );
     tdata->set_send_para (sp_filter_mode, 0);//to be
 
     tdata->set_send_para (sp_tev1_zero, 0x8000 - sqlcfg->get_para()->tev1_sql.fpga_zero);
     tdata->set_send_para (sp_tev1_threshold, sqlcfg->get_para()->tev1_sql.fpga_threshold);
     tdata->set_send_para (sp_tev2_zero, 0x8000 - sqlcfg->get_para()->tev2_sql.fpga_zero);
     tdata->set_send_para (sp_tev2_threshold, sqlcfg->get_para()->tev2_sql.fpga_threshold);
-    tdata->set_send_para (sp_hfct1_zero, 0x8000 - sqlcfg->get_para()->tev1_sql.fpga_zero);//to be
-    tdata->set_send_para (sp_hfct1_threshold, sqlcfg->get_para()->tev1_sql.fpga_threshold);//to be
-    tdata->set_send_para (sp_hfct2_zero, 0x8000 - sqlcfg->get_para()->tev2_sql.fpga_zero);//to be
-    tdata->set_send_para (sp_hfct2_threshold, sqlcfg->get_para()->tev2_sql.fpga_threshold);//to be
+    tdata->set_send_para (sp_hfct1_zero, 0x8000 - sqlcfg->get_para()->hfct1_sql.fpga_zero);
+    tdata->set_send_para (sp_hfct1_threshold, sqlcfg->get_para()->hfct1_sql.fpga_threshold);
+    tdata->set_send_para (sp_hfct2_zero, 0x8000 - sqlcfg->get_para()->hfct2_sql.fpga_zero);
+    tdata->set_send_para (sp_hfct2_threshold, sqlcfg->get_para()->hfct2_sql.fpga_threshold);
 
     tdata->set_send_para (sp_aa_vol, sqlcfg->get_para ()->aaultra_sql.vol);
     tdata->set_send_para (sp_aa_record_play, 0);
 
-    tdata->set_send_para (sp_tev_auto_rec, sqlcfg->get_para()->tev1_sql.auto_rec + 2 * sqlcfg->get_para()->tev2_sql.auto_rec);
+    tdata->set_send_para (sp_auto_rec, 0);
 
     send_para();
 }
@@ -180,7 +283,7 @@ void FifoControl::send_para()
         return;
     }
     for (i = 0; i < sp_num; i++) {
-        check_send_param (tdata->send_para.send_params, i, spr_maps [i], vbase_send);
+        check_send_param (tdata->send_para.send_params, i, spr_maps [i]);
     }
     tdata->send_para.data_changed = false;
 }
@@ -191,17 +294,20 @@ void FifoControl::send_para()
  * 2.将值和地址合成一个发送数据
  * 3.打印相关信息
  * *************************************/
-void FifoControl::check_send_param(RPARA pp[], int index, unsigned int data_mask, volatile unsigned int *vbase)
+void FifoControl::check_send_param(RPARA pp[], int index, unsigned int data_mask)
 {
     unsigned int temp;
 
     if (pp[index].flag) {
         temp = (data_mask << 16) | pp[index].rval;
-        send_data (vbase, &temp, 1);
-        if(index != sp_read_fpga_nomal && index != sp_read_fpga_rec && index != sp_group_num
+        send_data (vbase_send, &temp, 1);
+        if(index != sp_read_fpga_normal && index != sp_read_fpga_rec && index != sp_group_num
+//                && index != sp_rec_start_tev1 && index != sp_rec_start_tev2
+//                && index != sp_rec_start_hfct1 && index != sp_rec_start_hfct2
                 && index != sp_read_fpga_prpd1 && index != sp_read_fpga_hfct1
                 && index != sp_read_fpga_prpd2 && index != sp_read_fpga_hfct2){
-            qDebug("WRITE_REG = 0x%08x", temp);
+//            qDebug("WRITE_REG = 0x%08x", temp);
+            qDebug().noquote() << QString("%1 = 0x%2").arg(send_para_to_string(index)).arg(temp,8,16, QLatin1Char('0'));
         }
         pp[index].flag = false;
     }
@@ -244,13 +350,14 @@ unsigned int FifoControl::recv_data(volatile unsigned int *vbase, unsigned int *
     return len;
 }
 
-void FifoControl::read_fpga(send_params sp_num)
+void FifoControl::read_fpga(send_params sp_n)
 {
-    tdata->set_send_para(sp_num, 1);
-    send_para();
-//    check_send_param (tdata->send_para.send_params,sp_num, spr_maps [sp_num], vbase_send);
-    tdata->set_send_para(sp_num, 0);
-    send_para();
+    tdata->set_send_para(sp_n, 1);
+//    send_para();
+    check_send_param (tdata->send_para.send_params,sp_n, spr_maps [sp_n]);
+    tdata->set_send_para(sp_n, 0);
+//    send_para();
+    check_send_param (tdata->send_para.send_params,sp_n, spr_maps [sp_n]);
 }
 
 //以下为声音控制函数

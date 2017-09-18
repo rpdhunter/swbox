@@ -8,12 +8,20 @@
 //定义一些全局数据类型，和一些全局宏
 #define PROGRAM_DIR     "/root"
 #define WAVE_DIR        PROGRAM_DIR "/WaveForm"
+#define FAVORITE_DIR    PROGRAM_DIR "/WaveForm/favorite"
 #define DATALOG_DIR     PROGRAM_DIR "/DataLog"
 #define PRPDLOG_DIR     PROGRAM_DIR "/PRPDLog"
 
+#define SDCARD_DIR          "/mmc/sdcard"
+#define WAVE_DIR_SD         SDCARD_DIR "/WaveForm"
+#define FAVORITE_DIR_SD     SDCARD_DIR "/WaveForm/favorite"
+#define DATALOG_DIR_SD      SDCARD_DIR "/DataLog"
+#define PRPDLOG_DIR_SD      SDCARD_DIR "/PRPDLog"
+
 #define AD_VAL(val, offset)		((val) >= offset ? (val) - offset : offset - (val))
 #define MAX(a, b)				((a) > (b) ? (a) : (b))
-#define BUFF_DATA_SIZE			259
+#define MIN(a, b)				((a) < (b) ? (a) : (b))
+#define BUFF_DATA_SIZE			1030
 
 #define AMP_FACTOR_J27_680P 22560.0f
 #define AMP_FACTOR_J27_1N   12200.0f
@@ -31,7 +39,7 @@
 
 //通道分辨率
 #define CHANNEL_X   458
-#define CHANNEL_Y   193
+#define CHANNEL_Y   192
 
 #pragma pack(1)     //以1字节为单位，设置内存对齐
 typedef union HDATA {
@@ -101,7 +109,7 @@ typedef struct G_SEND_PARA {
 
 /* total data */
 typedef struct G_PARA {
-    G_RECV_PARA_NOMAL recv_para_nomal;
+    G_RECV_PARA_NOMAL recv_para_normal;
     G_RECV_PARA_REC recv_para_rec;
     G_RECV_PARA_PRPD recv_para_prpd1;
     G_RECV_PARA_PRPD recv_para_prpd2;
@@ -129,16 +137,19 @@ public:
 #pragma pack()
 
 enum MODE{
-    TEV1 = 0,                    //0
-    TEV2 = 1,
-    AA_Ultrasonic = 2,          //1
-    AE_Ultrasonic = 3,
-    Double_Channel = 4,
-    HFCT1 = 5,
-    HFCT2 = 6,
-    HFCT_CONTINUOUS = 7,        //连续录波
-    Options_Mode = 8,
-    Disable
+    Disable,
+    TEV1,
+    TEV2,
+    HFCT1,
+    HFCT2,
+    AA_Ultrasonic,
+    AE_Ultrasonic,
+    Double_Channel,
+    TEV1_CONTINUOUS,        //连续录波
+    TEV2_CONTINUOUS,        //连续录波
+    HFCT1_CONTINUOUS,        //连续录波
+    HFCT2_CONTINUOUS,        //连续录波
+    Options_Mode,
 };
 
 
@@ -146,3 +157,7 @@ typedef QVector<qint32> VectorList;
 
 
 #endif // DATA_H
+
+
+
+

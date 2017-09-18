@@ -4,6 +4,7 @@
 #include <QFrame>
 #include <IO/Key/key.h>
 #include <QListWidget>
+#include <QTableWidget>
 #include "../Common/recwaveform.h"
 #include <QDir>
 //#include "voiceplayer.h"
@@ -36,15 +37,16 @@ signals:
 private:
     CURRENT_KEY_VALUE *key_val;
 
-    QListWidget *listWidget;
+    QTableWidget *tableWidget;
     RecWaveForm *recWaveForm;
 
     QListWidget *contextMenu;
 
     QFrame *player;
 
-    void listWdigetIni();
+    void reload_tablewidget();
     void refresh();
+    void do_favorite();
 
     void deleteAll();
     void deleteCurrent();
@@ -54,7 +56,7 @@ private:
     int contextMenu_num;
     int reset_flag;     //0为隐藏，1为取消，2为确认
 
-    QDir dir, dir_sd;
+    QDir dir, dir_favorite, dir_sd;
     QMessageBox *box;
 
     Ui::Form *ui;

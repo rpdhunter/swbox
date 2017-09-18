@@ -16,14 +16,17 @@ class FifoControl : public QObject
     Q_OBJECT
 public:
     explicit FifoControl(G_PARA *g_data, QObject *parent = 0);
+    void read_fpga(send_params sp_n);     //从FPGA读取数据的前置步骤
 
-    int read_nomal_data();
+    int read_normal_data();
     int read_prpd1_data();
     int read_prpd2_data();
     int read_hfct1_data();
     int read_hfct2_data();
     int read_rec_data();
     void playVoiceData();
+
+    void send_para();       //将所有寄存器数据发送至FPGA
 
 public slots:
     void playVoiceData(VectorList wave);            //向FPGA发送声音数据
@@ -40,6 +43,7 @@ private:
         FREQ_REG,
         BACKLIGHT_REG,
         KEYBOARD_BACKLIGHT,
+        SLEEPING,
         WORKING_MODE,
         FILTER_MODE,
         //通道参数
@@ -61,7 +65,7 @@ private:
         REC_START_AA1,
         REC_START_AA2,
         GROUP_NUM,
-        TEV_AUTO_REC,
+        AUTO_REC,
         //要通道数据信号
         READ_FPGA_NOMAL,
         READ_FPGA_REC,
@@ -70,19 +74,22 @@ private:
         READ_FPGA_HFCT1,
         READ_FPGA_HFCT2
     };
+
+    QString send_para_to_string(int val);
+
     //初始化函数
     void base_init();       //基地址初始化
     volatile unsigned int *init_vbase(int vmem_fd, unsigned int base, unsigned int size);
     void regs_init();       //寄存器初始化
 
     //发送数据
-    void send_para();       //将所有寄存器数据发送至FPGA
-    void check_send_param(RPARA pp [], int index, unsigned int data_mask, volatile unsigned int *vbase);
+
+    void check_send_param(RPARA pp [], int index, unsigned int data_mask);
     void send_data(volatile unsigned int * vbase, unsigned int data [], unsigned int data_size);
 
     //接收数据
     unsigned int recv_data(volatile unsigned int * vbase, unsigned int * buff);    //从FPGA读取数据
-    void read_fpga(send_params sp_num);     //从FPGA读取数据的前置步骤
+
 
     //声音播放
 
@@ -91,7 +98,7 @@ private:
     G_PARA * tdata;
 
     //基地址群
-    volatile quint32 *vbase_nomal, *vbase_send;
+    volatile quint32 *vbase_normal, *vbase_send;
     volatile quint32 *vbase_play_voice_1, *vbase_play_voice_2;
     volatile quint32 *vbase4;
     volatile quint32 *vbase_hfct1, *vbase_hfct2;

@@ -38,8 +38,59 @@ void Common::change_index(unsigned char &index, int d_index, int max_index, int 
     index = (unsigned char)t;
 }
 
+void Common::change_index(double &index, double d_index, double max_index, double min_index)
+{
+    if(max_index <= min_index){
+        qDebug()<<"warning in Common::change_index()";
+    }
+
+    index += d_index;
+    if(index > max_index) {
+        index = min_index;
+    }
+    else if(index < min_index){
+        index = max_index;
+    }
+}
+
+void Common::change_index(int &index, int d_index, int max_index, int min_index)
+{
+    if(max_index <= min_index){
+        qDebug()<<"warning in Common::change_index()";
+    }
+
+    index += d_index;
+    if(index > max_index) {
+        index = min_index;
+    }
+    else if(index < min_index){
+        index = max_index;
+    }
+}
+
+void Common::change_value(int &value, int value_a, int value_b)
+{
+    if(value == value_a){
+        value = value_b;
+    }
+    else{
+        value = value_a;
+    }
+}
+
+void Common::change_value(bool &value, bool value_a, bool value_b)
+{
+    if(value == value_a){
+        value = value_b;
+    }
+    else{
+        value = value_a;
+    }
+}
+
 void Common::set_comboBox_style(QComboBox *comboBox)
 {
+    comboBox->resize(145,25);
     QLineEdit *lineEdit = new QLineEdit;
     comboBox->setStyleSheet("QComboBox {border-image: url(:/widgetphoto/bk/para_child.png);color:gray; }");
     comboBox->setLineEdit(lineEdit);
@@ -51,11 +102,11 @@ void Common::set_comboBox_style(QComboBox *comboBox)
     comboBox->setFrame(false);
 }
 
-void Common::set_barchart_style(QwtPlot *plot)
+void Common::set_barchart_style(QwtPlot *plot, int v_max)
 {
     plot->setStyleSheet("background:transparent;color:gray;");
     plot->setAxisScale(QwtPlot::xBottom, 0, 13);
-    plot->setAxisScale(QwtPlot::yLeft, 0, 60, 20);
+    plot->setAxisScale(QwtPlot::yLeft, 0, v_max, v_max/3);
 
     plot->axisScaleDraw(QwtPlot::yLeft)->enableComponent(QwtAbstractScaleDraw::Backbone, true);
     plot->axisScaleDraw(QwtPlot::yLeft)->enableComponent(QwtAbstractScaleDraw::Ticks, false);
@@ -161,6 +212,139 @@ void Common::set_histogram_style(QwtPlot *plot, QwtPlotHistogram *d_histogram)
 
 void Common::setTab(QLabel *label)
 {
-    label->resize(70, 30);
+    label->resize(70, 28);
     label->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+}
+
+double Common::physical_value(int code_value, MODE mode)
+{
+    double v_real=0;
+    switch (mode) {
+    case TEV1:
+    case TEV1_CONTINUOUS:
+        v_real = code_value * sqlcfg->get_para()->tev1_sql.gain * TEV_FACTOR;
+        break;
+    case TEV2:
+    case TEV2_CONTINUOUS:
+        v_real = code_value * sqlcfg->get_para()->tev2_sql.gain * TEV_FACTOR;
+        break;
+    case AA_Ultrasonic:
+        v_real = (code_value * 4) * sqlcfg->get_para()->aaultra_sql.gain * AA_FACTOR;
+        break;
+    case HFCT1:
+    case HFCT1_CONTINUOUS:
+        v_real = code_value * sqlcfg->get_para()->hfct1_sql.gain * TEV_FACTOR;
+        break;
+    case HFCT2:
+    case HFCT2_CONTINUOUS:
+        v_real = code_value * sqlcfg->get_para()->hfct2_sql.gain * TEV_FACTOR;
+        break;
+    default:
+        break;
+    }
+    return v_real;
+}
+
+int Common::code_value(double physical_value, MODE mode)
+{
+    int v_code=0;
+    switch (mode) {
+    case TEV1:
+    case TEV1_CONTINUOUS:
+        v_code = physical_value / sqlcfg->get_para()->tev1_sql.gain / TEV_FACTOR;
+        break;
+    case TEV2:
+    case TEV2_CONTINUOUS:
+        v_code = physical_value / sqlcfg->get_para()->tev2_sql.gain / TEV_FACTOR;
+        break;
+    case AA_Ultrasonic:
+        v_code = physical_value / 4 / sqlcfg->get_para()->aaultra_sql.gain / AA_FACTOR;
+        break;
+    case HFCT1:
+    case HFCT1_CONTINUOUS:
+        v_code = physical_value / sqlcfg->get_para()->hfct1_sql.gain / TEV_FACTOR;
+        break;
+    case HFCT2:
+    case HFCT2_CONTINUOUS:
+        v_code = physical_value / sqlcfg->get_para()->hfct2_sql.gain / TEV_FACTOR;
+        break;
+    default:
+        break;
+    }
+    return v_code;
+}
+
+double Common::physical_threshold(MODE mode)
+{
+    double v_real=0;
+    switch (mode) {
+    case TEV1:
+    case TEV1_CONTINUOUS:
+        v_real = physical_value(sqlcfg->get_para()->tev1_sql.fpga_threshold, TEV1);
+        break;
+    case TEV2:
+    case TEV2_CONTINUOUS:
+        v_real = physical_value(sqlcfg->get_para()->tev2_sql.fpga_threshold, TEV2);
+        break;
+    case HFCT1:
+    case HFCT1_CONTINUOUS:
+        v_real = physical_value(sqlcfg->get_para()->hfct1_sql.fpga_threshold, HFCT1);
+        break;
+    case HFCT2:
+    case HFCT2_CONTINUOUS:
+        v_real = physical_value(sqlcfg->get_para()->hfct2_sql.fpga_threshold, HFCT2);
+        break;
+    default:
+        break;
+    }
+    return v_real;
+}
+
+QString Common::MODE_toString(MODE val)
+{
+    QString tmpStr;
+    switch (val) {
+    case Disable:
+        tmpStr = "Disable";
+        break;
+    case TEV1:
+        tmpStr = "TEV1";
+        break;
+    case TEV2:
+        tmpStr = "TEV2";
+        break;
+    case HFCT1:
+        tmpStr = "HFCT1";
+        break;
+    case HFCT2:
+        tmpStr = "HFCT2";
+        break;
+    case AA_Ultrasonic:
+        tmpStr = "AA_Ultrasonic";
+        break;
+    case AE_Ultrasonic:
+        tmpStr = "AE_Ultrasonic";
+        break;
+    case Double_Channel:
+        tmpStr = "Double_Channel";
+        break;
+    case TEV1_CONTINUOUS:
+        tmpStr = "TEV1_CONTINUOUS";
+        break;
+    case TEV2_CONTINUOUS:
+        tmpStr = "TEV2_CONTINUOUS";
+        break;
+    case HFCT1_CONTINUOUS:
+        tmpStr = "HFCT1_CONTINUOUS";
+        break;
+    case HFCT2_CONTINUOUS:
+        tmpStr = "HFCT2_CONTINUOUS";
+        break;
+    case Options_Mode:
+        tmpStr = "Options_Mode";
+        break;
+    default:
+        break;
+    }
+    return tmpStr;
 }

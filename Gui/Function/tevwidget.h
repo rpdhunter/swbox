@@ -32,19 +32,19 @@ public:
     ~TEVWidget();
 
 public slots:
-//    void working(CURRENT_KEY_VALUE *val);
-    void trans_key(quint8 key_code);
+    void reload(int index);   //重新装载设置
+    void trans_key(quint8 key_code);    
     void showWaveData(VectorList buf, MODE mod);
 
 signals:
     void fresh_parent();
     void send_key(quint8);
-    void offset_suggest(int,int);                               //中心点和噪声建议值
-    void tev_modbus_data(int,int);                              //为modbus提供原始数据
+    void startRecWave(MODE, int);
     void tev_log_data(double val, int pulse, double degree);    //发送日志数据
     void tev_PRPD_data(QVector<QwtPoint3D>);
+
     void origin_pluse_points(QVector<QPoint> p, int group);     //p是读取到的脉冲点，group是组号，目的是为故障定位提供原始数据
-    void startRecWave(MODE, int);
+
 
 private slots:
     void fresh_plot(void);
@@ -58,16 +58,21 @@ private:
     G_PARA *data;
     CURRENT_KEY_VALUE *key_val;
     int menu_index;     //位于主菜单的位置索引
+    MODE mode;
+    bool manual;        //手动录波标志
+    RecWaveForm *recWaveForm;
+    LogTools *logtools;
 
     int db;
     int max_db;
+    int db_last1, db_last2;
     quint32 pulse_cnt_last; //上一秒秒冲数
     SQL_PARA sql_para;
     TEV_SQL *tev_sql;
 
-    QTimer *timer1, *timer2 , *timer3;
+    QTimer *timer1, *timer2 , *timer_freeze;
     quint32 groupNum;   //用于判别PRPD图数据有效性的组号(0-3变化)
-    QwtPlot *plot_PRPS, *plot_PRPD, *plot_Histogram;
+    QwtPlot *plot_Barchart, *plot_PRPD, *plot_Histogram;
     BarChart *d_PRPS;              //PRPS图
     QwtPlotSpectroCurve *d_PRPD;   //PRPD图
     QwtPlotHistogram *d_histogram;   //Histogram图
@@ -82,22 +87,15 @@ private:
     QVector<QwtIntervalSample> histogram_data;
     G_RECV_PARA_PRPD *data_prpd;
 
-    void fresh_setting();
-    void PRPS_inti();
-    void PRPD_inti();
-    void histogram_init();
     void transData(int x, int y);
     void PRPDReset();
-    void rec_wave();
 	void calc_tev_value (double * tev_val, double * tev_db, int * sug_central_offset, int * sug_offset);
-    void reloadSql();   //重新装载设置
+    void do_key_up_down(int d);
+    void do_key_left_right(int d);
+    void chart_ini();
 
-//    int temp;
-    MODE mode;
-//    bool channel_flag;
+    void fresh_setting();
 
-    RecWaveForm *recWaveForm;
-    LogTools *logtools;
 };
 
 #endif // AMPLITUDE1_H
