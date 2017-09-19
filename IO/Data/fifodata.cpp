@@ -6,7 +6,8 @@
 
 #define DELAY_TIME_LONG     200000
 #define DELAY_TIME_MID      5000
-#define DELAY_TIME_SHORT    100
+#define DELAY_TIME_SHORT    50
+//#define DELAY_TIME_SHORT    200000
 
 //建立数据连接，完成线程的初始化工作
 FifoData::FifoData(G_PARA *g_data)
@@ -51,19 +52,21 @@ void FifoData::run(void)
         if(read_slow){
             fifocontrol->read_fpga(sp_read_fpga_normal);
             fifocontrol->read_normal_data();
-//            fifocontrol->read_fpga(sp_read_fpga_prpd1);
-//            fifocontrol->read_prpd1_data();
-//            fifocontrol->read_fpga(sp_read_fpga_prpd2);
-//            fifocontrol->read_prpd2_data();
-//            fifocontrol->read_fpga(sp_read_fpga_hfct1);
-//            fifocontrol->read_hfct1_data();
-//            fifocontrol->read_fpga(sp_read_fpga_hfct2);
-//            fifocontrol->read_hfct2_data();
+            fifocontrol->read_fpga(sp_read_fpga_prpd1);
+            fifocontrol->read_prpd1_data();
+            fifocontrol->read_fpga(sp_read_fpga_prpd2);
+            fifocontrol->read_prpd2_data();
+            fifocontrol->read_fpga(sp_read_fpga_hfct1);
+            fifocontrol->read_hfct1_data();
+            fifocontrol->read_fpga(sp_read_fpga_hfct2);
+            fifocontrol->read_hfct2_data();
             read_slow = false;
         }
 
         //录波数据
+
         fifocontrol->read_fpga(sp_read_fpga_rec);
+//        usleep(10);
         usleep(delay_time);
         ret = fifocontrol->read_rec_data();
 
@@ -78,6 +81,7 @@ void FifoData::run(void)
         fifocontrol->playVoiceData();
 
         fifocontrol->send_para();
+
 
         if(data->recv_para_rec.recComplete == 16){
             delay_time = DELAY_TIME_MID;

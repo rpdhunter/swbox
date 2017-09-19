@@ -310,22 +310,6 @@ void RecWaveManage::do_favorite()
     file.setFileName(filepath + ".mp3");
     file.rename(newpath + ".mp3");
 
-//    QString cmdline;
-//    cmdline = "mv " + filepath + ".DAT " + newpath + ".DAT";
-//    QByteArray ba = cmdline.toLatin1();
-//    char *mm = ba.data();
-//    system(mm);
-
-//    cmdline = "mv " + filepath + ".CFG " + newpath + ".CFG";
-//    ba = cmdline.toLatin1();
-//    mm = ba.data();
-//    system(mm);
-
-//    cmdline = "mv " + filepath + ".mp3 " + newpath + ".mp3";
-//    ba = cmdline.toLatin1();
-//    mm = ba.data();
-//    system(mm);
-
     system( "sync");
     reload_tablewidget();
 

@@ -74,7 +74,7 @@ MainWindow::MainWindow(QSplashScreen *sp, QWidget *parent ) :
         }
     }
 
-//    fifodata->startRecWave(HFCT1_CONTINUOUS,3);
+//    fifodata->startRecWave(TEV1,0);
 }
 
 MainWindow::~MainWindow()

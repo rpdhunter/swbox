@@ -56,6 +56,13 @@ TEVWidget::TEVWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu_i
     connect(this,SIGNAL(tev_PRPD_data(QVector<QwtPoint3D>)),logtools,SLOT(dealRPRDLog(QVector<QwtPoint3D>)));
 
     reload(menu_index);
+    //自动录波
+    if(tev_sql->auto_rec == true){
+        data->set_send_para(sp_auto_rec, menu_index + 1);
+    }
+    else{
+        data->set_send_para(sp_auto_rec, 0);
+    }
 }
 
 TEVWidget::~TEVWidget()
@@ -84,12 +91,12 @@ void TEVWidget::reload(int index)
             timer2->start();
         }
         //自动录波
-        if(tev_sql->auto_rec == true){
-            data->set_send_para(sp_auto_rec, menu_index + 1);
-        }
-        else{
-            data->set_send_para(sp_auto_rec, 0);
-        }
+//        if(tev_sql->auto_rec == true){
+//            data->set_send_para(sp_auto_rec, menu_index + 1);
+//        }
+//        else{
+//            data->set_send_para(sp_auto_rec, 0);
+//        }
     }
 }
 
@@ -110,6 +117,15 @@ void TEVWidget::trans_key(quint8 key_code)
         sqlcfg->sql_save(&sql_para);
         reload(menu_index);        //重置默认数据
         switch (key_val->grade.val2) {
+        case 6:
+            //自动录波
+            if(tev_sql->auto_rec == true){
+                data->set_send_para(sp_auto_rec, menu_index + 1);
+            }
+            else{
+                data->set_send_para(sp_auto_rec, 0);
+            }
+            break;
         case 7:
             emit startRecWave(mode,0);     //开始录波
             manual = true;

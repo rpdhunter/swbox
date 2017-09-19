@@ -89,7 +89,7 @@ void RecControl::recvRecData()
     MODE mode;
     int x = tdata->recv_para_rec.recComplete;
 
-    qDebug()<<"recComplete = "<< x;
+//    qDebug()<<"recComplete = "<< x;
     if (x == 3 || x == 65 || x == 66  || x == 129 || x == 130 || x == 192) {
         rec_double_flag = 2;  //同步录波模式
         qDebug()<<"rece rec_double_signal";

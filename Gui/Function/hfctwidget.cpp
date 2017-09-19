@@ -62,6 +62,15 @@ HFCTWidget::HFCTWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu
     connect(this,SIGNAL(hfct_PRPD_data(QVector<QwtPoint3D>)),logtools,SLOT(dealRPRDLog(QVector<QwtPoint3D>)));
 
     reload(menu_index);
+    //设置自动录波
+    if( hfct_sql->auto_rec == true ){
+        data->set_send_para(sp_auto_rec, menu_index + 1);
+    }
+    else{
+        data->set_send_para(sp_auto_rec, 0);
+    }
+    //设置滤波器
+    data->set_send_para (sp_filter_mode, hfct_sql->filter);
 }
 
 HFCTWidget::~HFCTWidget()
@@ -96,15 +105,15 @@ void HFCTWidget::reload(int index)
         if(!timer3->isActive()){
             timer3->start();
         }
-        //设置自动录波
-        if( hfct_sql->auto_rec == true ){
-            data->set_send_para(sp_auto_rec, menu_index + 1);
-        }
-        else{
-            data->set_send_para(sp_auto_rec, 0);
-        }
-        //设置滤波器
-        data->set_send_para (sp_filter_mode, hfct_sql->filter);
+//        //设置自动录波
+//        if( hfct_sql->auto_rec == true ){
+//            data->set_send_para(sp_auto_rec, menu_index + 1);
+//        }
+//        else{
+//            data->set_send_para(sp_auto_rec, 0);
+//        }
+//        //设置滤波器
+//        data->set_send_para (sp_filter_mode, hfct_sql->filter);
     }
 }
 
@@ -124,7 +133,20 @@ void HFCTWidget::trans_key(quint8 key_code)
         sqlcfg->sql_save(&sql_para);        //保存SQL
         reload(menu_index);                 //重置默认数据
         switch (key_val->grade.val2) {
+        case 4:
+            //设置滤波器
+            data->set_send_para (sp_filter_mode, hfct_sql->filter);
+            break;
         case 5:
+            //设置自动录波
+            if( hfct_sql->auto_rec == true ){
+                data->set_send_para(sp_auto_rec, menu_index + 1);
+            }
+            else{
+                data->set_send_para(sp_auto_rec, 0);
+            }
+            break;
+        case 6:
             emit startRecWave(mode_continuous,hfct_sql->time);     //开始连续录波
             return;
         case 7:
@@ -186,10 +208,10 @@ void HFCTWidget::do_key_left_right(int d)
     case 4:
         Common::change_index(hfct_sql->filter, d, HP_1800K, NONE );
         break;
-    case 5:
+    case 6:
         Common::change_index(hfct_sql->time, d, 20, 1 );
         break;
-    case 6:
+    case 5:
         hfct_sql->auto_rec = !hfct_sql->auto_rec;
         break;
     default:
@@ -557,12 +579,12 @@ void HFCTWidget::fresh_setting()
         ui->comboBox->setItemText(3,tr("滤波器   [高通1.8M]"));
     }
 
-    ui->comboBox->setItemText(4,tr("连续录波\t[%1]s").arg(QString::number(hfct_sql->time)));
+    ui->comboBox->setItemText(5,tr("连续录波\t[%1]s").arg(QString::number(hfct_sql->time)));
     if(hfct_sql->auto_rec == true){
-        ui->comboBox->setItemText(5,tr("自动录波\t[开启]") );
+        ui->comboBox->setItemText(4,tr("自动录波\t[开启]") );
     }
     else{
-        ui->comboBox->setItemText(5,tr("自动录波\t[关闭]") );
+        ui->comboBox->setItemText(4,tr("自动录波\t[关闭]") );
     }
 
     ui->comboBox->setCurrentIndex(key_val->grade.val2-1);
