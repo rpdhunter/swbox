@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Form</string>
+   <string notr="true">Form</string>
   </property>
   <layout class="QHBoxLayout" name="horizontalLayout">
    <property name="spacing">
@@ -38,7 +38,7 @@
       <enum>QTabWidget::Rounded</enum>
      </property>
      <property name="currentIndex">
-      <number>3</number>
+      <number>0</number>
      </property>
      <property name="elideMode">
       <enum>Qt::ElideRight</enum>
@@ -86,7 +86,7 @@
             </size>
            </property>
            <property name="text">
-            <string>200</string>
+            <string notr="true">200</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignCenter</set>
@@ -128,7 +128,7 @@
             <enum>QFrame::Sunken</enum>
            </property>
            <property name="text">
-            <string>0</string>
+            <string notr="true">0</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignCenter</set>
@@ -150,7 +150,7 @@
             </size>
            </property>
            <property name="text">
-            <string>0</string>
+            <string notr="true">0</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignCenter</set>
@@ -172,7 +172,7 @@
             </size>
            </property>
            <property name="text">
-            <string>0</string>
+            <string notr="true">0</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignCenter</set>
@@ -204,7 +204,7 @@
             <enum>QFrame::Sunken</enum>
            </property>
            <property name="text">
-            <string>0</string>
+            <string notr="true">0</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignCenter</set>
@@ -263,7 +263,7 @@
             </size>
            </property>
            <property name="text">
-            <string>0</string>
+            <string notr="true">0</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignCenter</set>
@@ -289,7 +289,7 @@
             <enum>QFrame::Sunken</enum>
            </property>
            <property name="text">
-            <string>0</string>
+            <string notr="true">0</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignCenter</set>
@@ -321,7 +321,7 @@
             </size>
            </property>
            <property name="text">
-            <string>0</string>
+            <string notr="true">0</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignCenter</set>
@@ -337,7 +337,7 @@
             <enum>QFrame::Sunken</enum>
            </property>
            <property name="text">
-            <string>0</string>
+            <string notr="true">0</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignCenter</set>
@@ -359,7 +359,7 @@
             </size>
            </property>
            <property name="text">
-            <string>200</string>
+            <string notr="true">200</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignCenter</set>
@@ -437,7 +437,7 @@
             <enum>QFrame::Sunken</enum>
            </property>
            <property name="text">
-            <string>0</string>
+            <string notr="true">0</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignCenter</set>
@@ -459,7 +459,7 @@
             </size>
            </property>
            <property name="text">
-            <string>200</string>
+            <string notr="true">200</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignCenter</set>
@@ -481,7 +481,7 @@
             </size>
            </property>
            <property name="text">
-            <string>0</string>
+            <string notr="true">0</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignCenter</set>
@@ -550,7 +550,7 @@
             </size>
            </property>
            <property name="text">
-            <string>0</string>
+            <string notr="true">0</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignCenter</set>
@@ -572,7 +572,7 @@
             </size>
            </property>
            <property name="text">
-            <string>200</string>
+            <string notr="true">200</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignCenter</set>
@@ -608,7 +608,7 @@
             <enum>QFrame::Sunken</enum>
            </property>
            <property name="text">
-            <string>0</string>
+            <string notr="true">0</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignCenter</set>
@@ -697,7 +697,7 @@
               <enum>QFrame::Sunken</enum>
              </property>
              <property name="text">
-              <string>0</string>
+              <string notr="true">0</string>
              </property>
             </widget>
            </item>
@@ -774,7 +774,7 @@
          <item row="1" column="4">
           <widget class="QRadioButton" name="rb_HC2_HFCT1">
            <property name="text">
-            <string>HF1</string>
+            <string notr="true">HF1</string>
            </property>
           </widget>
          </item>
@@ -788,14 +788,14 @@
          <item row="0" column="3">
           <widget class="QRadioButton" name="rb_HC1_TEV2">
            <property name="text">
-            <string>TEV2</string>
+            <string notr="true">TEV2</string>
            </property>
           </widget>
          </item>
          <item row="0" column="5">
           <widget class="QRadioButton" name="rb_HC1_HFCT2">
            <property name="text">
-            <string>HF2</string>
+            <string notr="true">HF2</string>
            </property>
           </widget>
          </item>
@@ -821,7 +821,7 @@
          <item row="0" column="2">
           <widget class="QRadioButton" name="rb_HC1_TEV1">
            <property name="text">
-            <string>TEV1</string>
+            <string notr="true">TEV1</string>
            </property>
           </widget>
          </item>
@@ -847,14 +847,14 @@
          <item row="0" column="4">
           <widget class="QRadioButton" name="rb_HC1_HFCT1">
            <property name="text">
-            <string>HF1</string>
+            <string notr="true">HF1</string>
            </property>
           </widget>
          </item>
          <item row="1" column="2">
           <widget class="QRadioButton" name="rb_HC2_TEV1">
            <property name="text">
-            <string>TEV1</string>
+            <string notr="true">TEV1</string>
            </property>
           </widget>
          </item>
@@ -880,14 +880,14 @@
          <item row="1" column="5">
           <widget class="QRadioButton" name="rb_HC2_HFCT2">
            <property name="text">
-            <string>HF2</string>
+            <string notr="true">HF2</string>
            </property>
           </widget>
          </item>
          <item row="3" column="2">
           <widget class="QRadioButton" name="rb_LC2_AE">
            <property name="text">
-            <string>AE</string>
+            <string notr="true">AE</string>
            </property>
            <property name="checked">
             <bool>false</bool>
@@ -904,7 +904,7 @@
          <item row="2" column="2">
           <widget class="QRadioButton" name="rb_LC1_AA">
            <property name="text">
-            <string>AA</string>
+            <string notr="true">AA</string>
            </property>
            <property name="checked">
             <bool>false</bool>
@@ -940,7 +940,7 @@
          <item row="1" column="3">
           <widget class="QRadioButton" name="rb_HC2_TEV2">
            <property name="text">
-            <string>TEV2</string>
+            <string notr="true">TEV2</string>
            </property>
           </widget>
          </item>

@@ -90,7 +90,7 @@ void Common::change_value(bool &value, bool value_a, bool value_b)
 
 void Common::set_comboBox_style(QComboBox *comboBox)
 {
-    comboBox->resize(145,25);
+    comboBox->resize(155,25);
     QLineEdit *lineEdit = new QLineEdit;
     comboBox->setStyleSheet("QComboBox {border-image: url(:/widgetphoto/bk/para_child.png);color:gray; }");
     comboBox->setLineEdit(lineEdit);

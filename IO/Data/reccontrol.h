@@ -29,7 +29,7 @@ private slots:
     void recContinuousComplete();
 
 private:
-    G_PARA *tdata;
+    G_PARA *data;
     RecWave *tev1, *tev2, *hfct1, *hfct2, *aa;
 
     QTimer *timer_long;     //连续录波计时器

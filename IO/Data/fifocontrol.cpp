@@ -269,7 +269,12 @@ void FifoControl::regs_init()
     tdata->set_send_para (sp_aa_vol, sqlcfg->get_para ()->aaultra_sql.vol);
     tdata->set_send_para (sp_aa_record_play, 0);
 
-    tdata->set_send_para (sp_auto_rec, 0);
+    tdata->set_send_para (sp_auto_rec, 0);//to be
+
+    tdata->set_send_para (sp_rec_start_tev1, 3);
+    tdata->set_send_para (sp_rec_start_tev2, 3);
+    tdata->set_send_para (sp_rec_start_hfct1, 3);
+    tdata->set_send_para (sp_rec_start_hfct2, 3);
 
     send_para();
 }
@@ -303,7 +308,7 @@ void FifoControl::check_send_param(RPARA pp[], int index, unsigned int data_mask
         send_data (vbase_send, &temp, 1);
         if(index != sp_read_fpga_normal && index != sp_read_fpga_rec && index != sp_group_num
 //                && index != sp_rec_start_tev1 && index != sp_rec_start_tev2
-                && index != sp_rec_start_hfct1 && index != sp_rec_start_hfct2
+//                && index != sp_rec_start_hfct1 && index != sp_rec_start_hfct2
                 && index != sp_read_fpga_prpd1 && index != sp_read_fpga_hfct1
                 && index != sp_read_fpga_prpd2 && index != sp_read_fpga_hfct2){
 //            qDebug("WRITE_REG = 0x%08x", temp);

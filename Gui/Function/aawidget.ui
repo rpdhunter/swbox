@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Form</string>
+   <string notr="true">Form</string>
   </property>
   <widget class="QComboBox" name="comboBox">
    <property name="geometry">
@@ -21,6 +21,9 @@
      <width>131</width>
      <height>25</height>
     </rect>
+   </property>
+   <property name="currentText">
+    <string>检测模式 [连续]</string>
    </property>
    <item>
     <property name="text">
@@ -92,7 +95,7 @@ QProgressBar::chunk{&quot;background-color:skyblue;&quot;}</string>
 background:transparent;color:gray;</string>
    </property>
    <property name="text">
-    <string>TextLabel</string>
+    <string notr="true">TextLabel</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_max">
@@ -108,7 +111,7 @@ background:transparent;color:gray;</string>
     <string notr="true">QLabel {color:white;}</string>
    </property>
    <property name="text">
-    <string>TextLabel</string>
+    <string notr="true">TextLabel</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_3">
@@ -124,7 +127,7 @@ background:transparent;color:gray;</string>
     <string notr="true">QLabel {color:white;}</string>
    </property>
    <property name="text">
-    <string>dBμV</string>
+    <string notr="true">dBμV</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_range">
@@ -140,7 +143,7 @@ background:transparent;color:gray;</string>
     <string notr="true">QLabel {color:white;}</string>
    </property>
    <property name="text">
-    <string>range</string>
+    <string notr="true">range</string>
    </property>
   </widget>
   <widget class="QwtPlot" name="qwtPlot">

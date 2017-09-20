@@ -16,6 +16,7 @@ SystemInfo::SystemInfo(QWidget *parent) : QFrame(parent),ui(new Ui::SystemInfoUi
     ui->label_logo_text->setText("copyright © 2016-2017 Australian Microgrid Technology Pty Lte\nAll rights reserved.");
     ui->label_logo->setPixmap(QPixmap(":/widgetphoto/bk/amg_low.png"));
 #else
+    ui->label_logo_text->setText("");
     ui->label_logo->hide();
 #endif
 

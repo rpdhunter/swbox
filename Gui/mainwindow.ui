@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Frame</string>
+   <string notr="true">Frame</string>
   </property>
   <property name="styleSheet">
    <string notr="true"/>
@@ -273,7 +273,7 @@ background:transparent;
 </string>
    </property>
    <property name="text">
-    <string>TextLabel</string>
+    <string notr="true">TextLabel</string>
    </property>
   </widget>
   <widget class="QLabel" name="lab_freq">
@@ -289,7 +289,7 @@ background:transparent;
     <string notr="true">QLabel {color:white;}</string>
    </property>
    <property name="text">
-    <string>50Hz</string>
+    <string notr="true">50Hz</string>
    </property>
   </widget>
   <widget class="QLabel" name="lab_logo">
@@ -328,7 +328,7 @@ background:transparent;
     <string notr="true">QLabel {color:white;}</string>
    </property>
    <property name="text">
-    <string>TextLabel</string>
+    <string notr="true">TextLabel</string>
    </property>
   </widget>
   <widget class="QLabel" name="lab_pwr">
@@ -357,7 +357,7 @@ background:transparent;
     <string notr="true">QLabel {color:white;}</string>
    </property>
    <property name="text">
-    <string>90%</string>
+    <string notr="true">90%</string>
    </property>
   </widget>
   <widget class="QLabel" name="lab_wifi">

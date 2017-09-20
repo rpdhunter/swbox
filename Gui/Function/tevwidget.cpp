@@ -9,7 +9,7 @@
 
 TEVWidget::TEVWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu_index, QWidget *parent) :
     QFrame(parent),
-    ui(new Ui::TevWidget)
+    ui(new Ui::TEVWidget)
 {
     ui->setupUi(this);
     this->resize(CHANNEL_X, CHANNEL_Y);
@@ -404,14 +404,24 @@ void TEVWidget::fresh_PRPD()
 
     if( groupNum != data_prpd->groupNum ){
         groupNum = data_prpd->groupNum;
+
+//        qDebug()<<"groupNum ="<<groupNum << "length =" <<data_prpd->totol;
         //处理数据
         points_origin.clear();
 
         for(quint32 i=0;i<data_prpd->totol;i++){
+
             x = (int)data_prpd->data[2*i  ];
             y = (int)data_prpd->data[2*i+1];
 
-            transData(x,y);
+            if( !(x==0 && y==0) ){
+                transData(x,y);
+            }
+
+            qDebug()<<"x0="<<data_prpd->data[2*i  ] <<"\ty0="<<data_prpd->data[2*i+1];
+                qDebug()<<"x1="<<x <<"\ty1="<<y;
+
+
         }
 
         d_PRPD->setSamples(points);
@@ -444,14 +454,6 @@ void TEVWidget::fresh_Histogram()
 
 void TEVWidget::transData(int x, int y)
 {
-    //    y = y - 0x8000;
-    //    if(y>0){
-    //        y = y - tev_sql->tev_offset1;
-    //    }
-    //    else{
-    //        y = y - tev_sql->tev_offset2;
-    //    }
-
     y = tev_sql->gain * TEV_FACTOR * (y - 0x8000 - tev_sql->fpga_zero) ; //注意，脉冲计算里，忽略了噪声偏置的影响
 
     //    y = (int)(((double)y * 1000) / 32768);

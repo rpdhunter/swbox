@@ -15,7 +15,7 @@
 #include "../Common/common.h"
 
 namespace Ui {
-class TevWidget;
+class TEVWidget;
 }
 
 class QTimer;
@@ -53,7 +53,7 @@ private slots:
     void maxReset();        //最大值清零
 
 private:
-    Ui::TevWidget *ui;
+    Ui::TEVWidget *ui;
 
     G_PARA *data;
     CURRENT_KEY_VALUE *key_val;

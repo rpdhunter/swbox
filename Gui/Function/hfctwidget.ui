@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Frame</string>
+   <string notr="true">Frame</string>
   </property>
   <property name="frameShape">
    <enum>QFrame::StyledPanel</enum>
@@ -99,7 +99,7 @@
        <string notr="true">QLabel {font-family:WenQuanYi Micro Hei;font-size:50px;color:green}</string>
       </property>
       <property name="text">
-       <string>  -10</string>
+       <string notr="true">  -10</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -127,7 +127,7 @@
          <string notr="true">QLabel {color:white;}</string>
         </property>
         <property name="text">
-         <string>pC</string>
+         <string notr="true">pC</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignBottom|Qt::AlignRight|Qt::AlignTrailing</set>

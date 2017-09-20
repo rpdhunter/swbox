@@ -4,9 +4,9 @@
 /* 5%一个电压 */
 static float bat_pwr_percent [BAT_PWR_PER_NUM] = {
     //4.12f * 2 - DELT_VOL,		/* 95% */
-    4.04f * 2 - DELT_VOL ,		/* 90% */
+    4.00f * 2 - DELT_VOL ,		/* 90% */
     //4.03f * 2 - DELT_VOL,		/* 85% */
-    3.95f * 2 - DELT_VOL,		/* 80% */
+    3.94f * 2 - DELT_VOL,		/* 80% */
     //3.93f * 2 - DELT_VOL,		/* 75% */
     3.88f * 2 - DELT_VOL,		/* 70% */
     //3.87f * 2 - DELT_VOL,		/* 65% */

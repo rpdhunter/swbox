@@ -16,7 +16,7 @@ TEMPLATE = app
 
 #DEFINES += QT_NO_DEBUG_OUTPUT
 #DEFINES += PRINTSCREEN     #截屏
-DEFINES += AMG          #OEM
+#DEFINES += AMG          #OEM
 #DEFINES += OHV          #OEM
 
 TRANSLATIONS += trans/en.ts

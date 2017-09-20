@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Form</string>
+   <string notr="true">Form</string>
   </property>
   <widget class="QComboBox" name="comboBox">
    <property name="geometry">
@@ -108,7 +108,7 @@
      <x>380</x>
      <y>83</y>
      <width>59</width>
-     <height>41</height>
+     <height>54</height>
     </rect>
    </property>
    <layout class="QGridLayout" name="gridLayout_3">
@@ -128,7 +128,7 @@
        <string notr="true">QLabel {color:white;}</string>
       </property>
       <property name="text">
-       <string>DB</string>
+       <string notr="true">DB</string>
       </property>
      </widget>
     </item>
@@ -148,7 +148,7 @@
        <string notr="true">QLabel {color:white;}</string>
       </property>
       <property name="text">
-       <string>0</string>
+       <string notr="true">0</string>
       </property>
      </widget>
     </item>
@@ -160,7 +160,7 @@
      <x>10</x>
      <y>83</y>
      <width>59</width>
-     <height>41</height>
+     <height>54</height>
     </rect>
    </property>
    <layout class="QGridLayout" name="gridLayout">
@@ -180,7 +180,7 @@
        <string notr="true">QLabel {color:white;}</string>
       </property>
       <property name="text">
-       <string>DB</string>
+       <string notr="true">DB</string>
       </property>
      </widget>
     </item>
@@ -200,7 +200,7 @@
        <string notr="true">QLabel {color:white;}</string>
       </property>
       <property name="text">
-       <string>0</string>
+       <string notr="true">0</string>
       </property>
      </widget>
     </item>

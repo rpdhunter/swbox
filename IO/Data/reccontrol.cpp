@@ -8,7 +8,7 @@ RecControl::RecControl(G_PARA *g_data, QObject *parent) : QObject(parent)
 {
     //双通道录波
     rec_double_flag = 0;
-    tdata = g_data;
+    data = g_data;
     _mode = Disable;
     timer_interval = NULL;
 
@@ -87,7 +87,7 @@ void RecControl::startRecWave(MODE mode, int time)
 void RecControl::recvRecData()
 {
     MODE mode;
-    int x = tdata->recv_para_rec.recComplete;
+    int x = data->recv_para_rec.recComplete;
 
 //    qDebug()<<"recComplete = "<< x;
     if (x == 3 || x == 65 || x == 66  || x == 129 || x == 130 || x == 192) {
@@ -128,6 +128,14 @@ void RecControl::recvRecData()
             }
             if(timer_interval->remainingTime() > 0){
                 qDebug()<<"tringer the interval! remain timer:"<<timer_interval->remainingTime();
+                data->set_send_para(sp_rec_start_tev1, 2);
+                data->set_send_para(sp_rec_start_tev1, 0);
+                data->set_send_para(sp_rec_start_tev2, 2);
+                data->set_send_para(sp_rec_start_tev2, 0);
+                data->set_send_para(sp_rec_start_hfct1, 2);
+                data->set_send_para(sp_rec_start_hfct1, 0);
+                data->set_send_para(sp_rec_start_hfct2, 2);
+                data->set_send_para(sp_rec_start_hfct2, 0);
                 return;
             }
             else{

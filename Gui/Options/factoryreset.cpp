@@ -67,7 +67,7 @@ void FactoryReset::trans_key(quint8 key_code)
         if(key_val->grade.val2 == 1){
             if(reset == 1){
                 sqlcfg->sql_save(sqlcfg->default_config());
-                qDebug()<<tr("Factory Reset!");
+                qDebug()<<"Factory Reset!";
                 QCoreApplication::quit();       //恢复出厂后，系统直接退出（配合脚本，自动重启）
             }
             key_val->grade.val2 = 0;

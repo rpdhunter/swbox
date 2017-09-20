@@ -147,7 +147,7 @@ void MainWindow::statusbar_init()
 #elif AMG
     ui->lab_logo->hide();
 #else
-    ui->label_logo->hide();
+    ui->lab_logo->hide();
 #endif
 
 }

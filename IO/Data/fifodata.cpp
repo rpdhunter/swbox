@@ -53,7 +53,8 @@ void FifoData::run(void)
             fifocontrol->read_fpga(sp_read_fpga_normal);
             fifocontrol->read_normal_data();
             fifocontrol->read_fpga(sp_read_fpga_prpd1);
-            fifocontrol->read_prpd1_data();
+            ret = fifocontrol->read_prpd1_data();
+//            qDebug()<<"ret = "<<ret;
             fifocontrol->read_fpga(sp_read_fpga_prpd2);
             fifocontrol->read_prpd2_data();
             fifocontrol->read_fpga(sp_read_fpga_hfct1);

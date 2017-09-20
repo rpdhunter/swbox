@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>TevWidget</class>
- <widget class="QWidget" name="TevWidget">
+ <class>TEVWidget</class>
+ <widget class="QWidget" name="TEVWidget">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -17,7 +17,7 @@
    </sizepolicy>
   </property>
   <property name="windowTitle">
-   <string>Form</string>
+   <string notr="true">Form</string>
   </property>
   <property name="styleSheet">
    <string notr="true"/>
@@ -108,7 +108,7 @@
        <string notr="true">QLabel {font-family:WenQuanYi Micro Hei;font-size:60px;color:green}</string>
       </property>
       <property name="text">
-       <string>-10</string>
+       <string notr="true">-10</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -136,7 +136,7 @@
          <string notr="true">QLabel {color:white;}</string>
         </property>
         <property name="text">
-         <string>dB</string>
+         <string notr="true">dB</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignBottom|Qt::AlignRight|Qt::AlignTrailing</set>
