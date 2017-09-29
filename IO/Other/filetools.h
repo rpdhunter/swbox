@@ -2,17 +2,29 @@
 #define FILETOOLS_H
 
 #include <QRunnable>
+#include <QObject>
 #include "IO/Data/data.h"
 
 
-class FileTools : public QRunnable
+class FileTools : public QObject, public QRunnable
 {
+    Q_OBJECT
 public:
-    FileTools(VectorList data, MODE mode);
+    enum FileMode {
+        Read,
+        Write
+    };
+
+
+    FileTools(VectorList data, MODE mode, FileMode filemode);
+    FileTools(QString str, FileMode filemode);
 
     ~FileTools();
 
     void run();
+
+signals:
+    void readFinished(VectorList, MODE);
 
 private:
     //wav文件头
@@ -38,11 +50,15 @@ private:
     WaveFormat *wfh1;
     QString filepath, filepath_SD;
     QString filename;
+    FileMode _fileMode;
 
 //    bool work;       //0为立刻执行
 
+    void getReadFilePath(QString str);      //获得待读取文件的全路径
+    void getWriteFilePath();                //给波形文件取名(包括路径)
+
     void saveDataFile();        //保存录波文件
-    void getFilePath();      //返回保存波形文件的目录
+
     void saveCfgFile();         //生成配置文件
     void saveWavFile();         //保存声音文件
     void wavToMp3();

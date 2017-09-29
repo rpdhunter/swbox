@@ -9,10 +9,17 @@
 
 
 //还没有开启冲突控制
-FileTools::FileTools(VectorList data, MODE mode)
+FileTools::FileTools(VectorList data, MODE mode, FileMode filemode)
 {
     _data = data;
     _mode = mode;
+    _fileMode = filemode;
+}
+
+FileTools::FileTools(QString str,FileTools::FileMode filemode)
+{
+    getReadFilePath(str);
+    _fileMode = filemode;
 }
 
 FileTools::~FileTools()
@@ -22,27 +29,86 @@ FileTools::~FileTools()
 
 void FileTools::run()
 {
-    getFilePath();          //得到文件保存的路径
-    saveDataFile();         //保存数据文件
-    saveCfgFile();          //生成对应的配置文件
+    if(_fileMode == Write){
+        getWriteFilePath();          //得到文件保存的路径
+        saveDataFile();         //保存数据文件
+        saveCfgFile();          //生成对应的配置文件
 
-    if(_mode == AA_Ultrasonic){
-        saveWavFile();      //生成声音文件
-        wavToMp3();         //mp3转换
+        if(_mode == AA_Ultrasonic){
+            saveWavFile();      //生成声音文件
+            wavToMp3();         //mp3转换
+        }
+
+        //空间管理
+        spaceControl(WAVE_DIR"/");              //内存空间管理
+        spaceControl("/mmc/sdcard/WaveForm/");  //SD卡空间管理
+
+        system ("sync");
+    }
+    else if(_fileMode == Read){
+        QFile file;
+        file.setFileName(filepath);
+
+        if (!file.open(QIODevice::ReadOnly)){
+            qDebug()<<"file open failed!";
+            return;
+        }
+
+        QDataStream in(&file);
+        in.setByteOrder(QDataStream::LittleEndian);
+
+        quint32 t1,t2;
+        qint16 v;
+        _data.clear();
+
+        while (!in.atEnd()) {
+            in >> t1 >> t2 >> v;
+            _data.append(v);
+            if( _mode == Double_Channel){
+                in >> v;
+                _data.append(v);
+            }
+        }
+        emit readFinished(_data, _mode);
     }
 
-    //空间管理
-    spaceControl(WAVE_DIR"/");              //内存空间管理
-    spaceControl("/mmc/sdcard/WaveForm/");  //SD卡空间管理
 
-    system ("sync");
+}
 
+void FileTools::getReadFilePath(QString str)
+{
+    if(str.contains("TEV1_")){
+        _mode = TEV1;
+    }
+    else if(str.contains("TEV2_")){
+        _mode = TEV2;
+    }
+    else if(str.contains("AAUltrasonic_")){
+        _mode = AA_Ultrasonic;
+    }
+    else if(str.contains("Double_")){
+        _mode = Double_Channel;
+    }
+    else if(str.contains("HFCT1_")){
+        _mode = HFCT1;
+    }
+    else if(str.contains("HFCT2_")){
+        _mode = HFCT2;
+    }
+
+
+    if(str.contains(QString("☆") )){
+        filepath = QString(FAVORITE_DIR"/" + str.remove(QString("☆") ) + ".DAT");        //收藏夹
+    }
+    else{
+        filepath = QString(WAVE_DIR"/"+str+".DAT");
+    }
 }
 
 //实现优先在SD卡建立波形存储文件夹
 //如果SD卡未插入，则在内存当前文件夹下建立波形文件夹
 //返回波形文件夹路径
-void FileTools::getFilePath()
+void FileTools::getWriteFilePath()
 {
     filename = QString("%1").arg(QDateTime::currentDateTime().toString("yyyy-MM-dd-HH-mm-ss-zzz"));
 

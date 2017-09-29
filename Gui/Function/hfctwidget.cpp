@@ -31,6 +31,7 @@ HFCTWidget::HFCTWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu
     pulse_number = 0;
     max_db = 0;
     manual = false;
+    isBusy = false;
 
     timer1 = new QTimer(this);
     timer1->setInterval(1000);      //每隔1秒，刷新一次主界面
@@ -123,6 +124,10 @@ void HFCTWidget::trans_key(quint8 key_code)
         return;
     }
 
+    if(isBusy){
+        return;
+    }
+
     if(key_val->grade.val5 != 0){
         emit send_key(key_code);
         return;
@@ -148,6 +153,8 @@ void HFCTWidget::trans_key(quint8 key_code)
             break;
         case 6:
             emit startRecWave(mode_continuous,hfct_sql->time);     //开始连续录波
+            emit show_indicator(true);
+            isBusy = true;
             return;
         case 7:
             emit startRecWave(mode,0);     //开始录波
@@ -222,6 +229,8 @@ void HFCTWidget::do_key_left_right(int d)
 void HFCTWidget::showWaveData(VectorList buf, MODE mod)
 {
     if( (key_val->grade.val0 == menu_index ) && ( !timer_freeze->isActive() || !hfct_sql->auto_rec || manual == true) ){
+        isBusy = false;
+        emit show_indicator(false);
         key_val->grade.val1 = 1;        //为了锁住主界面，防止左右键切换通道
         key_val->grade.val5 = 1;
         emit fresh_parent();

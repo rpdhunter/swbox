@@ -2,6 +2,8 @@
 #include <QtDebug>
 #include <QFile>
 #include <QScrollBar>
+#include "IO/Other/filetools.h"
+#include <QThreadPool>
 
 #include <qwt_plot_curve.h>
 #include <qwt_scale_widget.h>
@@ -25,10 +27,6 @@ RecWaveForm::RecWaveForm(int menu_index, QWidget *parent) :
     this->menu_index = menu_index;
     plot = new QwtPlot(this);
     plot->resize(CHANNEL_X,CHANNEL_Y);
-
-//    plot->insertLegend( new QwtLegend(),  QwtPlot::RightLegend, -2 );
-//    plot->legend()->deleteLater();
-
 
     curve1 = new QwtPlotCurve();
     curve1->setPen(QPen(Qt::darkBlue, 0, Qt::SolidLine, Qt::RoundCap));
@@ -90,8 +88,12 @@ void RecWaveForm::working(CURRENT_KEY_VALUE *val, QString str)
         return;
     }
 
-    setData(str);
-    this->show();
+    emit show_indicator(true);
+    plot->setTitle(str + tr("\n按OK键寻找峰值"));
+
+    FileTools *filetools = new FileTools(str,FileTools::Read);      //开一个线程，为了不影响数据接口性能
+    QThreadPool::globalInstance()->start(filetools);
+    connect(filetools,SIGNAL(readFinished(VectorList,MODE)),this,SLOT(start_work(VectorList,MODE)) );
 }
 
 void RecWaveForm::working(CURRENT_KEY_VALUE *val,VectorList buf, MODE mod)
@@ -105,8 +107,16 @@ void RecWaveForm::working(CURRENT_KEY_VALUE *val,VectorList buf, MODE mod)
     if(key_val->grade.val0 != menu_index){
         return;
     }
+    mode = mod;
+    plot->setTitle(tr("按OK键寻找峰值"));
 
-    setData(buf,mod);
+    start_work(buf,mod);
+}
+
+void RecWaveForm::start_work(VectorList buf, MODE mode)
+{
+    setData(buf, mode);
+    emit show_indicator(false);
     this->show();
 }
 
@@ -172,156 +182,62 @@ void RecWaveForm::trans_key(quint8 key_code)
     fresh();
 }
 
-void RecWaveForm::setData(QString str)
+void RecWaveForm::setData(VectorList buf, MODE mod)
 {
-    if(str.contains("TEV1_")){
-        mode = TEV1;
-    }
-    else if(str.contains("TEV2_")){
-        mode = TEV2;
-    }
-    else if(str.contains("AAUltrasonic_")){
-        mode = AA_Ultrasonic;
-    }
-    else if(str.contains("Double_")){
-        mode = Double_Channel;
-        plot->insertLegend( new QwtLegend(),  QwtPlot::RightLegend, -2 );
-    }
-    else if(str.contains("HFCT1_")){
-        mode = HFCT1;
-    }
-    else if(str.contains("HFCT2_")){
-        mode = HFCT2;
-    }
-
-
-    QFile file;
-    if(str.contains(QString("☆") )){
-        file.setFileName(FAVORITE_DIR"/" + str.remove(QString("☆") ) + ".DAT");        //收藏夹
-    }
-    else{
-        file.setFileName(WAVE_DIR"/"+str+".DAT");
-    }
-
-    if (!file.open(QIODevice::ReadOnly)){
-        qDebug()<<"file open failed!";
-        return;
-    }
-
-    QDataStream in(&file);
-    in.setByteOrder(QDataStream::LittleEndian);
-
+    mode = mod;
     QPointF p;
-    int i = 0;
-    quint32 t1,t2;
-    qint16 v;
     curve2->detach();
     wave1.clear();
     wave2.clear();
     max=0;
     min=0;
-    double v_real = 0, temp;
-
-    while (!in.atEnd()) {
-        in >> t1 >> t2 >> v;
-//        简化写法,待完善
-//        v_real = Common::physical_value(v,mode);
-//        if(mode == )
-
-        switch (mode) {
-        case TEV1:
-        case TEV1_CONTINUOUS:
-            v_real = v * sqlcfg->get_para()->tev1_sql.gain * TEV_FACTOR;
-            p = QPointF(i*0.01,v_real);
-            wave1.append(p);
-            break;
-        case TEV2:
-        case TEV2_CONTINUOUS:
-            v_real = v * sqlcfg->get_para()->tev2_sql.gain * TEV_FACTOR;
-            p = QPointF(i*0.01,v_real);
-            wave1.append(p);
-            break;
-        case AA_Ultrasonic:
-            v_real = (v * 4) * sqlcfg->get_para()->aaultra_sql.gain * AA_FACTOR;        //为啥×4?
-            p = QPointF(i/320.0,v_real);
-            wave1.append(p);
-            break;
-        case Double_Channel:
-            v_real = v * sqlcfg->get_para()->tev1_sql.gain * TEV_FACTOR;
-            p = QPointF(i*0.01,v_real);
-            wave1.append(p);
-            in >> v;
-            temp = v * sqlcfg->get_para()->tev2_sql.gain * TEV_FACTOR;
-            p = QPointF(i*0.01,temp);
-            wave2.append(p);
-            curve2->attach(plot);
-            v_real = MAX(v_real,temp);
-            break;
-        case HFCT1:        
-        case HFCT1_CONTINUOUS:        
-            v_real = v * sqlcfg->get_para()->hfct1_sql.gain * TEV_FACTOR;
-            p = QPointF(i*0.01,v_real);
-            wave1.append(p);
-            break;
-        case HFCT2:
-        case HFCT2_CONTINUOUS:
-            v_real = v * sqlcfg->get_para()->hfct2_sql.gain * TEV_FACTOR;
-            p = QPointF(i*0.01,v_real);
-            wave1.append(p);
-        default:
-            break;
-        }
-
-        if(v_real>max){
-            max = v_real;
-        }
-        else if(v_real<min){
-            min = v_real;
-        }
-
-        i++;
+    double v_real = 0, temp = 0;
+    int length = buf.length();
+    if( mode == Double_Channel){
+        length = buf.length() / 2;
+        curve2->attach(plot);
+        plot->insertLegend( new QwtLegend(),  QwtPlot::RightLegend, -2 );
     }
-
-    set_canvas();
-    plot->setTitle(str + tr("\n按OK键寻找峰值"));
-    fresh();
-    file.close();
-}
-
-void RecWaveForm::setData(VectorList buf, MODE mod)
-{
-    mode = mod;
-    QPointF p;
-    wave1.clear();
-    max=0;
-    min=0;
-    double v_real = 0;
-    for (int i = 0; i < buf.length(); ++i) {
-
+    for (int i = 0; i < length; ++i) {
         switch (mode) {
         case TEV1:
         case TEV1_CONTINUOUS:
             v_real = sqlcfg->get_para()->tev1_sql.gain * TEV_FACTOR * buf.at(i);
             p = QPointF(i*0.01, v_real);
+            wave1.append(p);
             break;
         case TEV2:
         case TEV2_CONTINUOUS:
             v_real = sqlcfg->get_para()->tev2_sql.gain * TEV_FACTOR * buf.at(i);
             p = QPointF(i*0.01, v_real);
+            wave1.append(p);
             break;
         case HFCT1:
         case HFCT1_CONTINUOUS:
             v_real = sqlcfg->get_para()->hfct1_sql.gain * TEV_FACTOR * buf.at(i);
             p = QPointF(i*0.01, v_real);
+            wave1.append(p);
             break;
         case HFCT2:
         case HFCT2_CONTINUOUS:
             v_real = sqlcfg->get_para()->hfct2_sql.gain * TEV_FACTOR * buf.at(i);
             p = QPointF(i*0.01, v_real);
+            wave1.append(p);
             break;
         case AA_Ultrasonic:     //AA超声
             v_real = (buf.at(i) * 4 ) * sqlcfg->get_para()->aaultra_sql.gain * AA_FACTOR;
             p = QPointF(i/320.0, v_real);
+            wave1.append(p);
+            break;
+        case Double_Channel:
+            v_real = buf.at(i * 2) * sqlcfg->get_para()->tev1_sql.gain * TEV_FACTOR;
+            p = QPointF(i*0.01,v_real);
+            wave1.append(p);
+            temp = buf.at(i * 2 + 1) * sqlcfg->get_para()->tev2_sql.gain * TEV_FACTOR;
+            p = QPointF(i*0.01,temp);
+            wave2.append(p);
+//            curve2->attach(plot);
+            v_real = MAX(v_real,temp);
             break;
         default:
             break;
@@ -334,11 +250,10 @@ void RecWaveForm::setData(VectorList buf, MODE mod)
             min = v_real;
         }
 
-        wave1.append(p);
     }
 
     set_canvas();
-    plot->setTitle(tr("\n按OK键寻找峰值"));
+//    plot->setTitle(tr("\n按OK键寻找峰值"));
     fresh();
 }
 
@@ -379,10 +294,6 @@ void RecWaveForm::set_canvas()
 
 void RecWaveForm::find_peaks()
 {
-//    if(x +101 > wave1.length()){        //循环搜索
-//        x = 0;
-//    }
-
     d_marker_threshold1->show();
     d_marker_threshold2->show();
 

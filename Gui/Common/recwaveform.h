@@ -20,11 +20,13 @@ public:
 
 signals:
     void fresh_parent();
+    void show_indicator(bool);      //显示菊花
 
 public slots:
     void working(CURRENT_KEY_VALUE *val,QString str);
     void working(CURRENT_KEY_VALUE *val,VectorList buf, MODE mod);     //重载
     void trans_key(quint8 key_code);
+    void start_work(VectorList buf, MODE mode);
 
 private:
     CURRENT_KEY_VALUE *key_val;
@@ -35,8 +37,8 @@ private:
     QwtPlotCurve *curve1, *curve2;
     QwtPlotMarker *d_marker_peak, *d_marker_threshold1, *d_marker_threshold2;
 
-    void setData(QString str);
     void setData(VectorList buf, MODE mod);
+
     void set_canvas();
 
     void find_peaks();      //寻找峰值

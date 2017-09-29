@@ -3,9 +3,8 @@
 
 #include "../Common/common.h"
 #include <QPalette>
-//#include "IO/Other/wifi.h"
 #include <QThreadPool>
-//#include "../Common/wifitools.h"
+
 
 #define GRADE_1             3
 #define GRADE_2_NORMAL      6
@@ -27,6 +26,21 @@ Options::Options(QWidget *parent, G_PARA *g_data) : QFrame(parent),ui(new Ui::Op
 
     sql_para = *sqlcfg->get_para();
     _datetime = QDateTime::currentDateTime();
+    inputStatus = false;
+    isBusy = false;
+
+    contextMenu = new QListWidget(this);        //右键菜单
+    contextMenu->setStyleSheet("QListWidget {border-image: url(:/widgetphoto/bk/para_child.png);color:gray;outline: none;}");
+    QStringList list;
+    list << tr("连接/断开连接") << tr("查看连接信息") ;
+    contextMenu->addItems(list);
+    contextMenu->resize(100, 40);
+    contextMenu->move(250,80);
+    contextMenu->setSpacing(2);
+    contextMenu->hide();
+
+    contextMenu_num = 2;        //显示菜单条目
+
     refresh();
 
     this->hide();
@@ -77,6 +91,9 @@ void Options::wifiIni()
 
 void Options::refresh_wifilist(QStringList list)
 {
+    emit show_indicator(false);
+    isBusy = false;
+    ui->listWidget->clear();
     ui->listWidget->addItems(list);
 }
 
@@ -103,11 +120,33 @@ void Options::trans_key(quint8 key_code)
         return;
     }
 
+    if(inputStatus){        //文字输入状态
+        emit send_input_key(key_code);
+        return;
+    }
+
+    if(isBusy){
+        return;
+    }
+
     switch (key_code) {
     case KEY_OK:
-        if(key_val->grade.val3 != 0){   //保存退出状态
-            saveOptions();
-//            wifiIni();
+        if(key_val->grade.val3 != 0){
+            if(key_val->grade.val2 == 2){
+                if(key_val->grade.val3 == 1){
+                    emit show_indicator(true);
+                    isBusy = true;
+                    wifiIni();      //刷新列表
+                }
+                else{
+                    emit show_input();      //开启软键盘
+                    inputStatus = true;
+
+                }
+            }
+            else{
+                saveOptions();      //保存退出状态
+            }
         }
         break;
     case KEY_CANCEL:
@@ -116,6 +155,7 @@ void Options::trans_key(quint8 key_code)
         }
         else if(key_val->grade.val3 != 0){  //退出次级菜单
             key_val->grade.val3 = 0;
+//            view->hide();
         }
         else{
             key_val->grade.val2 = 0;    //其他模式下就全退出了
@@ -141,6 +181,13 @@ void Options::trans_key(quint8 key_code)
         break;
     }
     refresh();
+}
+
+void Options::input_finished(QString str)
+{
+    inputStatus = false;
+    qDebug() << "Option recv str:"<<str;
+
 }
 
 void Options::do_key_up_down(int d)
@@ -182,7 +229,7 @@ void Options::do_key_up_down(int d)
             }
             break;
         case 2:     //wifi
-
+            Common::change_index(key_val->grade.val3, d, ui->listWidget->count() + 1 , 1);
             break;
         case 3:     //高级
             Common::change_index(key_val->grade.val3, d, GRADE_2_ADVANCED , 1);
@@ -236,7 +283,23 @@ void Options::do_key_left_right(int d)
         }
         break;
     case 2:         //wifi
-
+        switch (key_val->grade.val3) {
+        case 0:         //进入菜单
+            if(d > 0){
+                key_val->grade.val3 = 1;
+            }
+            break;
+        case 1:
+            if(d < 0){
+                key_val->grade.val3 = 0;
+            }
+            break;
+        default:
+            if(key_val->grade.val3 > 1 && d > 0){
+                contextMenu->show();
+            }
+            break;
+        }
         break;
     case 3:         //高级
         switch (key_val->grade.val3) {
@@ -405,8 +468,21 @@ void Options::refresh()
                 tab0->setStyleSheet("QLabel{border: 0px solid darkGray;}");
                 tab1->setStyleSheet("QLabel{border: 1px solid darkGray;}");
                 tab2->setStyleSheet("QLabel{border: 0px solid darkGray;}");
+//                ui->pushButton->setChecked(false);
+                ui->pushButton->setStyleSheet("");
+                ui->listWidget->setCurrentRow(-1);
+                break;
+            case 1:         //刷新
+//                ui->pushButton->setChecked(true);
+                ui->pushButton->setStyleSheet("QPushButton{background-color:darkGray;}");
+                ui->listWidget->setCurrentRow(-1);
+
+
                 break;
             default:
+//                ui->pushButton->setChecked(false);
+                ui->pushButton->setStyleSheet("");
+                ui->listWidget->setCurrentRow(key_val->grade.val3 - 2);
                 break;
             }
             break;

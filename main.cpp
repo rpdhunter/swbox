@@ -2,15 +2,18 @@
 #include <QFontDatabase>
 #include <QTranslator>
 #include <QSplashScreen>
+#include <QQmlContext>
 
 #include "Gui/mainwindow.h"
 #include "IO/SqlCfg/sqlcfg.h"
+#include "Gui/Qml/quickview.h"
 
 
 void print_centor();
 
 int main(int argc, char *argv[])
 {
+    qputenv("QT_IM_MODULE", QByteArray("qtvirtualkeyboard"));
     QApplication a(argc, argv);
 
 #ifdef OHV
@@ -25,15 +28,8 @@ int main(int argc, char *argv[])
     QSplashScreen *splash = new QSplashScreen(pixmap);
     splash->show();
 
-    splash->showMessage(QObject::tr("正在载入数据库模块..."),Qt::AlignBottom|Qt::AlignLeft);
     print_centor();
     sqlite3_init();
-
-    splash->showMessage(QObject::tr("正在初始化字体"),Qt::AlignBottom|Qt::AlignLeft);
-    int fontid = QFontDatabase::addApplicationFont("/usr/local/QtEmbedded-5.9.1/lib/fonts/wenquanyi_10pt.bdf");
-    QString myfont = QFontDatabase::applicationFontFamilies(fontid).at(0);
-    QFont font(myfont,10);
-    QApplication::setFont(font);
 
     splash->showMessage(QObject::tr("正在载入语言模块..."),Qt::AlignBottom|Qt::AlignLeft);
     qDebug("language = %s", sqlcfg->get_para()->language == EN ? "EN" : "CN");
@@ -44,9 +40,29 @@ int main(int argc, char *argv[])
         qApp->installTranslator(translator);
     }
 
+    splash->showMessage(QObject::tr("正在初始化字体"),Qt::AlignBottom|Qt::AlignLeft);
+    int fontid = QFontDatabase::addApplicationFont("/usr/local/QtEmbedded-5.9.1/lib/fonts/wenquanyi_10pt.bdf");
+    QString myfont = QFontDatabase::applicationFontFamilies(fontid).at(0);
+    QFont font(myfont,10);
+    QApplication::setFont(font);
+
     splash->showMessage(QObject::tr("正在初始化主窗体..."),Qt::AlignBottom|Qt::AlignLeft);
     MainWindow w(splash);
     w.show();
+
+    splash->showMessage(QObject::tr("正在初始化QML..."),Qt::AlignBottom|Qt::AlignLeft);
+    QuickView view;
+    view.rootContext()->setContextProperty("dt",&view);
+    view.setSource(QString("qrc:/Input.qml"));
+    view.hide();
+    QObject::connect(&w,SIGNAL(show_input()), &view, SLOT(show_input()) );
+    QObject::connect(&w,SIGNAL(send_input_key(quint8)), &view, SLOT(trans_input_key(quint8)) );
+    QObject::connect(&view,SIGNAL(input_str(QString)), &w, SIGNAL(input_str(QString)) );
+
+//    QQuickView busy;
+//    busy.setSource(QString("qrc:/Busy.qml"));
+//    busy.setColor(QColor(0,0,0,0));
+//    busy.show();
 
     splash->finish(&w);
     delete splash;

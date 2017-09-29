@@ -26,6 +26,7 @@ AAWidget::AAWidget(G_PARA *data, CURRENT_KEY_VALUE *val, int menu_index, QWidget
 
     temp_db = 0;
     db = 0;
+    isBusy = false;
 
     //图形设置
     Common::set_barchart_style(ui->qwtPlot, VALUE_MAX);
@@ -46,6 +47,8 @@ AAWidget::AAWidget(G_PARA *data, CURRENT_KEY_VALUE *val, int menu_index, QWidget
 
     logtools = new LogTools(MODE::AA_Ultrasonic);      //日志保存模块
     connect(this,SIGNAL(aa_log_data(double,int,double)),logtools,SLOT(dealLog(double,int,double)));
+
+
 
     reload(menu_index);
 }
@@ -80,6 +83,10 @@ void AAWidget::trans_key(quint8 key_code)
         return;
     }
 
+    if(isBusy){
+        return;
+    }
+
     if(key_val->grade.val5 != 0){
         emit send_key(key_code);
         return;
@@ -93,6 +100,8 @@ void AAWidget::trans_key(quint8 key_code)
         case 6:
             key_val->grade.val1 = 1;        //为了锁住主界面，防止左右键切换通道
             emit startRecWave(AA_Ultrasonic, aaultra_sql->time);        //发送录波信号
+            emit show_indicator(true);
+            isBusy = true;
             return;
         case 7:
             this->maxReset();
@@ -162,6 +171,8 @@ void AAWidget::do_key_left_right(int d)
 void AAWidget::showWaveData(VectorList buf, MODE mod)
 {
     if(key_val->grade.val0 == menu_index){       //在超声界面，可以显示
+        isBusy = false;
+        emit show_indicator(false);
         ui->comboBox->hidePopup();
         key_val->grade.val1 = 1;        //为了锁住主界面，防止左右键切换通道
         key_val->grade.val5 = 1;

@@ -21,17 +21,17 @@
 WifiConfig::WifiConfig()
 {
     if (init_wifi_dev (&wifi_at_cmd, UART_BAUNDRATE) != 0) {
-        printf ("failed to init modbus device\n");
+        //printf ("failed to init modbus device\n");
     }
 }
 
 void WifiConfig::wifi_server()
 {
     if (wifi_enter_cmd_mode (&wifi_at_cmd) == 0) {
-        printf ("enter cmd mode\n");
+        //printf ("enter cmd mode\n");
     }
     else {
-        printf ("error: enter cmd mode\n");
+        //printf ("error: enter cmd mode\n");
     }
 
     wifi_config_ap_tcp_server (AP_SSID, AP_AUTH, AP_ENCRY, AP_KEY, AP_IP, AP_PORT);
@@ -41,22 +41,22 @@ void WifiConfig::wifi_server()
 void WifiConfig::wifi_client()
 {
     if (wifi_enter_cmd_mode (&wifi_at_cmd) == 0) {
-        printf ("enter cmd mode\n");
+        //printf ("enter cmd mode\n");
     }
     else {
-        printf ("error: enter cmd mode\n");
+        //printf ("error: enter cmd mode\n");
     }
 
     ap_item_t ap_list [WSCAN_NUM];
     int i, ap_num = wifi_get_ap_list (ap_list);
     if (ap_num > 0) {
-        printf (" AP Number: %d\n", ap_num);
+        //printf (" AP Number: %d\n", ap_num);
         for (i = 0; i < ap_num; i++) {
-            printf (" AP %d: %s, %s/%s\n", i, ap_list [i].ssid, ap_list [i].auth, ap_list [i].encry);
+            //printf (" AP %d: %s, %s/%s\n", i, ap_list [i].ssid, ap_list [i].auth, ap_list [i].encry);
         }
     }
     else {
-        printf ("NO AP\n");
+        //printf ("NO AP\n");
     }
     for (i = 0; i < ap_num; i++) {
         if (strcmp (ap_list [i].ssid, "zdit") == 0) {
@@ -73,10 +73,10 @@ void WifiConfig::wifi_client()
 void WifiConfig::wifi_sync()
 {
     if (wifi_enter_cmd_mode (&wifi_at_cmd) == 0) {
-        printf ("enter cmd mode\n");
+        //printf ("enter cmd mode\n");
     }
     else {
-        printf ("error: enter cmd mode\n");
+        //printf ("error: enter cmd mode\n");
     }
 
     wifi_config_sta_tcp_client (AP_SSID_DST, AP_AUTH_DST, AP_ENCRY_DST, AP_KEY_DST,
@@ -87,10 +87,10 @@ void WifiConfig::wifi_sync()
 void WifiConfig::wifi_info()
 {
     if (wifi_enter_cmd_mode (&wifi_at_cmd) == 0) {
-        printf ("enter cmd mode\n");
+        //printf ("enter cmd mode\n");
     }
     else {
-        printf ("error: enter cmd mode\n");
+        //printf ("error: enter cmd mode\n");
     }
 
     unsigned int ip, net_mask, gateway;
@@ -99,41 +99,41 @@ void WifiConfig::wifi_info()
     char mac_addr [6];
 
     wifi_get_sta_net_status (&ip, &net_mask, &gateway);
-    printf ("sta ip %d.%d.%d.%d, mask %d.%d.%d.%d, gateway %d.%d.%d.%d\n",
-            (ip >> 24) & 0xff, (ip >> 16) & 0xff, (ip >> 8) & 0xff, ip & 0xff,
-            (net_mask >> 24) & 0xff, (net_mask >> 16) & 0xff, (net_mask >> 8) & 0xff, net_mask & 0xff,
-            (gateway >> 24) & 0xff, (gateway >> 16) & 0xff, (gateway >> 8) & 0xff, gateway & 0xff);
+    //printf ("sta ip %d.%d.%d.%d, mask %d.%d.%d.%d, gateway %d.%d.%d.%d\n",
+//            (ip >> 24) & 0xff, (ip >> 16) & 0xff, (ip >> 8) & 0xff, ip & 0xff,
+//            (net_mask >> 24) & 0xff, (net_mask >> 16) & 0xff, (net_mask >> 8) & 0xff, net_mask & 0xff,
+//            (gateway >> 24) & 0xff, (gateway >> 16) & 0xff, (gateway >> 8) & 0xff, gateway & 0xff);
     wifi_get_sta_link_status (ap_name, mac_addr, &ind);
-    printf ("ap ssid %s, mac_addr %02x:%02x:%02x:%02x:%02x:%02x, indicator %d\n",
-            ap_name,
-            mac_addr [0], mac_addr [1], mac_addr [2], mac_addr [3], mac_addr [4], mac_addr [5],
-            ind);
+    //printf ("ap ssid %s, mac_addr %02x:%02x:%02x:%02x:%02x:%02x, indicator %d\n",
+//            ap_name,
+//            mac_addr [0], mac_addr [1], mac_addr [2], mac_addr [3], mac_addr [4], mac_addr [5],
+//            ind);
 
     wifi_exit_cmd_mode (&wifi_at_cmd);
-    printf ("exit cmd mode\n");
+    //printf ("exit cmd mode\n");
 
 }
 
 QStringList WifiConfig::wifi_get_list()
 {
     if (wifi_enter_cmd_mode (&wifi_at_cmd) == 0) {
-        printf ("enter cmd mode\n");
+        //printf ("enter cmd mode\n");
     }
     else {
-        printf ("error: enter cmd mode\n");
+        //printf ("error: enter cmd mode\n");
     }
 
     ap_item_t ap_list [WSCAN_NUM];
     int ap_num = wifi_get_ap_list (ap_list);
 
 //    if (ap_num > 0) {
-//        printf (" AP Number: %d\n", ap_num);
+//        //printf (" AP Number: %d\n", ap_num);
 //        for (i = 0; i < ap_num; i++) {
-//            printf (" AP %d: %s, %s/%s\n", i, ap_list [i].ssid, ap_list [i].auth, ap_list [i].encry);
+//            //printf (" AP %d: %s, %s/%s\n", i, ap_list [i].ssid, ap_list [i].auth, ap_list [i].encry);
 //        }
 //    }
 //    else {
-//        printf ("NO AP\n");
+//        //printf ("NO AP\n");
 //    }
 
     QStringList list;
@@ -230,7 +230,7 @@ int WifiConfig::wifi_config_ap_tcp_server(WifiConfig::string_32_t ssid, char *au
     unsigned int ipaddr;
 
     if (check_ap_auth_encry (auth, encry) != 0) {
-        printf ("auth: %s, encry: %s is invalid\n", auth, encry);
+        //printf ("auth: %s, encry: %s is invalid\n", auth, encry);
         return -1;
     }
     ipaddr = ntohl (inet_addr (ip));
@@ -240,7 +240,7 @@ int WifiConfig::wifi_config_ap_tcp_server(WifiConfig::string_32_t ssid, char *au
         strcpy (wmode.mode, WMODE_AP);
         wifi_do_cmd (&wifi_at_cmd, WCMD_WMODE, 1, &wmode);
         wifi_do_cmd (&wifi_at_cmd, WCMD_WMODE, 0, NULL);
-        printf (" set wmode: %s\n", wifi_at_cmd.wmode.mode);
+        //printf (" set wmode: %s\n", wifi_at_cmd.wmode.mode);
     }
 
     wifi_do_cmd (&wifi_at_cmd, WCMD_WAP, 0, NULL);
@@ -249,7 +249,7 @@ int WifiConfig::wifi_config_ap_tcp_server(WifiConfig::string_32_t ssid, char *au
         strcpy (wap.ssid, ssid);
         wifi_do_cmd (&wifi_at_cmd, WCMD_WAP, 1, &wap);
         wifi_do_cmd (&wifi_at_cmd, WCMD_WAP, 0, NULL);
-        printf (" set wifi_mode: %s, ssid: %s, channel: %s\n", wifi_at_cmd.wap.wifi_mode, wifi_at_cmd.wap.ssid, wifi_at_cmd.wap.channel);
+        //printf (" set wifi_mode: %s, ssid: %s, channel: %s\n", wifi_at_cmd.wap.wifi_mode, wifi_at_cmd.wap.ssid, wifi_at_cmd.wap.channel);
     }
 
     wifi_do_cmd (&wifi_at_cmd, WCMD_WAKEY, 0, NULL);
@@ -262,7 +262,7 @@ int WifiConfig::wifi_config_ap_tcp_server(WifiConfig::string_32_t ssid, char *au
         strcpy (wakey.key, key);
         wifi_do_cmd (&wifi_at_cmd, WCMD_WAKEY, 1, &wakey);
         wifi_do_cmd (&wifi_at_cmd, WCMD_WAKEY, 0, NULL);
-        printf (" set auth: %s, encry: %s, key: %s\n", wifi_at_cmd.wakey.auth, wifi_at_cmd.wakey.encry, wifi_at_cmd.wakey.key);
+        //printf (" set auth: %s, encry: %s, key: %s\n", wifi_at_cmd.wakey.auth, wifi_at_cmd.wakey.encry, wifi_at_cmd.wakey.key);
     }
 
     wifi_do_cmd (&wifi_at_cmd, WCMD_LANN, 0, NULL);
@@ -271,7 +271,7 @@ int WifiConfig::wifi_config_ap_tcp_server(WifiConfig::string_32_t ssid, char *au
         lann.mask = 0xffffff00;
         wifi_do_cmd (&wifi_at_cmd, WCMD_LANN, 1, &lann);
         wifi_do_cmd (&wifi_at_cmd, WCMD_LANN, 0, NULL);
-        printf (" set ipaddress: 0x%08x, mask: 0x%08x\n", wifi_at_cmd.lann.ipaddress, wifi_at_cmd.lann.mask);
+        //printf (" set ipaddress: 0x%08x, mask: 0x%08x\n", wifi_at_cmd.lann.ipaddress, wifi_at_cmd.lann.mask);
     }
 
     wifi_do_cmd (&wifi_at_cmd, WCMD_NETP, 0, NULL);
@@ -284,7 +284,7 @@ int WifiConfig::wifi_config_ap_tcp_server(WifiConfig::string_32_t ssid, char *au
         netp.ip = ntohl (inet_addr (AP_IP));
         wifi_do_cmd (&wifi_at_cmd, WCMD_NETP, 1, &netp);
         wifi_do_cmd (&wifi_at_cmd, WCMD_NETP, 0, NULL);
-        printf (" set tcp server port: %d\n", wifi_at_cmd.netp.port);
+        //printf (" set tcp server port: %d\n", wifi_at_cmd.netp.port);
     }
 
     return 0;
@@ -299,7 +299,7 @@ int WifiConfig::wifi_config_sta_tcp_server(WifiConfig::string_32_t ssid_dst, cha
     netp_t netp;
 
     if (check_sta_auth_encry (auth, encry) != 0) {
-        printf ("auth: %s, encry: %s is invalid\n", auth, encry);
+        //printf ("auth: %s, encry: %s is invalid\n", auth, encry);
         return -1;
     }
 
@@ -308,7 +308,7 @@ int WifiConfig::wifi_config_sta_tcp_server(WifiConfig::string_32_t ssid_dst, cha
         strcpy (wmode.mode, WMODE_STA);
         wifi_do_cmd (&wifi_at_cmd, WCMD_WMODE, 1, &wmode);
         wifi_do_cmd (&wifi_at_cmd, WCMD_WMODE, 0, NULL);
-        printf (" set wmode: %s\n", wifi_at_cmd.wmode.mode);
+        //printf (" set wmode: %s\n", wifi_at_cmd.wmode.mode);
     }
 
     wifi_do_cmd (&wifi_at_cmd, WCMD_WSSSID, 0, NULL);
@@ -316,7 +316,7 @@ int WifiConfig::wifi_config_sta_tcp_server(WifiConfig::string_32_t ssid_dst, cha
         strcpy (wsssid.ssid, ssid_dst);
         wifi_do_cmd (&wifi_at_cmd, WCMD_WSSSID, 1, &wsssid);
         wifi_do_cmd (&wifi_at_cmd, WCMD_WSSSID, 0, NULL);
-        printf (" set wsssid: %s\n", wifi_at_cmd.wsssid.ssid);
+        //printf (" set wsssid: %s\n", wifi_at_cmd.wsssid.ssid);
     }
 
     wifi_do_cmd (&wifi_at_cmd, WCMD_WSKEY, 0, NULL);
@@ -328,10 +328,10 @@ int WifiConfig::wifi_config_sta_tcp_server(WifiConfig::string_32_t ssid_dst, cha
         strcpy (wskey.key, key);
         wifi_do_cmd (&wifi_at_cmd, WCMD_WSKEY, 1, &wskey);
         wifi_do_cmd (&wifi_at_cmd, WCMD_WSKEY, 0, NULL);
-        printf (" set sta auth: %s, encry: %s, key: %s\n",
-                wifi_at_cmd.wskey.auth,
-                wifi_at_cmd.wskey.encry,
-                wifi_at_cmd.wskey.key);
+        //printf (" set sta auth: %s, encry: %s, key: %s\n",
+//                wifi_at_cmd.wskey.auth,
+//                wifi_at_cmd.wskey.encry,
+//                wifi_at_cmd.wskey.key);
     }
 
     wifi_do_cmd (&wifi_at_cmd, WCMD_WANN, 0, NULL);
@@ -340,7 +340,7 @@ int WifiConfig::wifi_config_sta_tcp_server(WifiConfig::string_32_t ssid_dst, cha
         strcpy (wann.mode, MODE_DHCP);
         wifi_do_cmd (&wifi_at_cmd, WCMD_WANN, 1, &wann);
         wifi_do_cmd (&wifi_at_cmd, WCMD_WANN, 0, NULL);
-        printf (" set sta wann mode: %s\n", wifi_at_cmd.wann.mode);
+        //printf (" set sta wann mode: %s\n", wifi_at_cmd.wann.mode);
     }
 
     wifi_do_cmd (&wifi_at_cmd, WCMD_NETP, 0, NULL);
@@ -353,7 +353,7 @@ int WifiConfig::wifi_config_sta_tcp_server(WifiConfig::string_32_t ssid_dst, cha
         netp.ip = ntohl (inet_addr (AP_IP));
         wifi_do_cmd (&wifi_at_cmd, WCMD_NETP, 1, &netp);
         wifi_do_cmd (&wifi_at_cmd, WCMD_NETP, 0, NULL);
-        printf (" set tcp server port: %d\n", wifi_at_cmd.netp.port);
+        //printf (" set tcp server port: %d\n", wifi_at_cmd.netp.port);
     }
 
     return 0;
@@ -369,7 +369,7 @@ int WifiConfig::wifi_config_sta_tcp_client(WifiConfig::string_32_t ssid_dst, cha
     unsigned int ipaddr;
 
     if (check_sta_auth_encry (auth, encry) != 0) {
-        printf ("auth: %s, encry: %s is invalid\n", auth, encry);
+        //printf ("auth: %s, encry: %s is invalid\n", auth, encry);
         return -1;
     }
     ipaddr = ntohl (inet_addr (ip_dst));
@@ -379,7 +379,7 @@ int WifiConfig::wifi_config_sta_tcp_client(WifiConfig::string_32_t ssid_dst, cha
         strcpy (wmode.mode, WMODE_STA);
         wifi_do_cmd (&wifi_at_cmd, WCMD_WMODE, 1, &wmode);
         wifi_do_cmd (&wifi_at_cmd, WCMD_WMODE, 0, NULL);
-        printf (" set wmode: %s\n", wifi_at_cmd.wmode.mode);
+        //printf (" set wmode: %s\n", wifi_at_cmd.wmode.mode);
     }
 
     wifi_do_cmd (&wifi_at_cmd, WCMD_WSSSID, 0, NULL);
@@ -387,7 +387,7 @@ int WifiConfig::wifi_config_sta_tcp_client(WifiConfig::string_32_t ssid_dst, cha
         strcpy (wsssid.ssid, ssid_dst);
         wifi_do_cmd (&wifi_at_cmd, WCMD_WSSSID, 1, &wsssid);
         wifi_do_cmd (&wifi_at_cmd, WCMD_WSSSID, 0, NULL);
-        printf (" set wsssid: %s\n", wifi_at_cmd.wsssid.ssid);
+        //printf (" set wsssid: %s\n", wifi_at_cmd.wsssid.ssid);
     }
 
     wifi_do_cmd (&wifi_at_cmd, WCMD_WSKEY, 0, NULL);
@@ -399,10 +399,10 @@ int WifiConfig::wifi_config_sta_tcp_client(WifiConfig::string_32_t ssid_dst, cha
         strcpy (wskey.key, key);
         wifi_do_cmd (&wifi_at_cmd, WCMD_WSKEY, 1, &wskey);
         wifi_do_cmd (&wifi_at_cmd, WCMD_WSKEY, 0, NULL);
-        printf (" set sta auth: %s, encry: %s, key: %s\n",
-                wifi_at_cmd.wskey.auth,
-                wifi_at_cmd.wskey.encry,
-                wifi_at_cmd.wskey.key);
+        //printf (" set sta auth: %s, encry: %s, key: %s\n",
+//                wifi_at_cmd.wskey.auth,
+//                wifi_at_cmd.wskey.encry,
+//                wifi_at_cmd.wskey.key);
     }
 
     wifi_do_cmd (&wifi_at_cmd, WCMD_WANN, 0, NULL);
@@ -411,7 +411,7 @@ int WifiConfig::wifi_config_sta_tcp_client(WifiConfig::string_32_t ssid_dst, cha
         strcpy (wann.mode, MODE_DHCP);
         wifi_do_cmd (&wifi_at_cmd, WCMD_WANN, 1, &wann);
         wifi_do_cmd (&wifi_at_cmd, WCMD_WANN, 0, NULL);
-        printf (" set sta wann mode: %s\n", wifi_at_cmd.wann.mode);
+        //printf (" set sta wann mode: %s\n", wifi_at_cmd.wann.mode);
     }
 
     wifi_do_cmd (&wifi_at_cmd, WCMD_NETP, 0, NULL);
@@ -425,7 +425,7 @@ int WifiConfig::wifi_config_sta_tcp_client(WifiConfig::string_32_t ssid_dst, cha
         netp.ip = ipaddr;
         wifi_do_cmd (&wifi_at_cmd, WCMD_NETP, 1, &netp);
         wifi_do_cmd (&wifi_at_cmd, WCMD_NETP, 0, NULL);
-        printf (" set tcp client ip_dst: 0x%08x, port_dst: %d\n", wifi_at_cmd.netp.ip, wifi_at_cmd.netp.port);
+        //printf (" set tcp client ip_dst: 0x%08x, port_dst: %d\n", wifi_at_cmd.netp.ip, wifi_at_cmd.netp.port);
     }
 
     return 0;
@@ -436,7 +436,7 @@ int WifiConfig::init_wifi_dev(WifiConfig::wifi_at_cmd_t *wa, int baundrate)
     /* open uart */
     wa->com_fd = uart_open (UART_PORT, baundrate, 0, 8, 1, 'N'); //打开串口，返回文件描述符
     if (wa->com_fd < 0) {
-        printf ("failed to open port %s\n", UART_PORT);
+        //printf ("failed to open port %s\n", UART_PORT);
         return -1;
     }
 
@@ -463,7 +463,7 @@ int WifiConfig::wifi_recv_msg(WifiConfig::wifi_at_cmd_t *wa)
     } while (len != 0);
     wa->recv_buf [wa->recv_len] = 0;
 #if PRINT_MSG
-    printf ("--recv msg:\n%s\n--recv over\n", wa->recv_buf);
+    //printf ("--recv msg:\n%s\n--recv over\n", wa->recv_buf);
 #endif
 
     return wa->recv_len;
@@ -475,7 +475,7 @@ int WifiConfig::wifi_send_msg(WifiConfig::wifi_at_cmd_t *wa)
 
     sent_len = uart_send (wa->com_fd, (unsigned char *)wa->send_buf, wa->send_len);
 #if PRINT_MSG
-    printf ("--send msg:\n%s\n--send over\n", wa->send_buf);
+    //printf ("--send msg:\n%s\n--send over\n", wa->send_buf);
 #endif
 
     return sent_len;
@@ -542,12 +542,12 @@ int WifiConfig::build_cmd_req(WifiConfig::wifi_at_cmd_t *wa, int cmd, int b_set,
             pnetp = (netp_t *)set_data;
 
             strcat (wa->send_buf, "NETP=");
-            sprintf (temp_buf, "%s,%s,%d,%d.%d.%d.%d",
-                     pnetp->proto, pnetp->cs, pnetp->port,
-                     (pnetp->ip >> 24) & 0xff,
-                     (pnetp->ip >> 16) & 0xff,
-                     (pnetp->ip >> 8) & 0xff,
-                     pnetp->ip & 0xff);
+//            sprintf (temp_buf, "%s,%s,%d,%d.%d.%d.%d",
+//                     pnetp->proto, pnetp->cs, pnetp->port,
+//                     (pnetp->ip >> 24) & 0xff,
+//                     (pnetp->ip >> 16) & 0xff,
+//                     (pnetp->ip >> 8) & 0xff,
+//                     pnetp->ip & 0xff);
             strcat (wa->send_buf, temp_buf);
         }
         else {
@@ -570,8 +570,8 @@ int WifiConfig::build_cmd_req(WifiConfig::wifi_at_cmd_t *wa, int cmd, int b_set,
             pwskey = (wskey_t *)set_data;
 
             strcat (wa->send_buf, "WSKEY=");
-            sprintf (temp_buf, "%s,%s,%s",
-                     pwskey->auth, pwskey->encry, pwskey->key);
+            //sprintf (temp_buf, "%s,%s,%s",
+//                     pwskey->auth, pwskey->encry, pwskey->key);
             strcat (wa->send_buf, temp_buf);
         }
         else {
@@ -583,20 +583,20 @@ int WifiConfig::build_cmd_req(WifiConfig::wifi_at_cmd_t *wa, int cmd, int b_set,
             pwann = (wann_t *)set_data;
 
             strcat (wa->send_buf, "WANN=");
-            sprintf (temp_buf, "%s,%d.%d.%d.%d,%d.%d.%d.%d,%d.%d.%d.%d",
-                     pwann->mode,
-                     (pwann->address >> 24) & 0xff,
-                     (pwann->address >> 16) & 0xff,
-                     (pwann->address >> 8) & 0xff,
-                     pwann->address & 0xff,
-                     (pwann->mask>> 24) & 0xff,
-                     (pwann->mask>> 16) & 0xff,
-                     (pwann->mask>> 8) & 0xff,
-                     pwann->mask & 0xff,
-                     (pwann->gateway >> 24) & 0xff,
-                     (pwann->gateway >> 16) & 0xff,
-                     (pwann->gateway >> 8) & 0xff,
-                     pwann->gateway & 0xff);
+//            sprintf (temp_buf, "%s,%d.%d.%d.%d,%d.%d.%d.%d,%d.%d.%d.%d",
+//                     pwann->mode,
+//                     (pwann->address >> 24) & 0xff,
+//                     (pwann->address >> 16) & 0xff,
+//                     (pwann->address >> 8) & 0xff,
+//                     pwann->address & 0xff,
+//                     (pwann->mask>> 24) & 0xff,
+//                     (pwann->mask>> 16) & 0xff,
+//                     (pwann->mask>> 8) & 0xff,
+//                     pwann->mask & 0xff,
+//                     (pwann->gateway >> 24) & 0xff,
+//                     (pwann->gateway >> 16) & 0xff,
+//                     (pwann->gateway >> 8) & 0xff,
+//                     pwann->gateway & 0xff);
         }
         else {
             strcat (wa->send_buf, "WANN");
@@ -615,15 +615,15 @@ int WifiConfig::build_cmd_req(WifiConfig::wifi_at_cmd_t *wa, int cmd, int b_set,
         if (b_set) {
             plann = (lann_t *)set_data;
 
-            sprintf (temp_buf, "%d.%d.%d.%d,%d.%d.%d.%d",
-                     (plann->ipaddress >> 24) & 0xff,
-                     (plann->ipaddress >> 16) & 0xff,
-                     (plann->ipaddress >> 8) & 0xff,
-                     plann->ipaddress & 0xff,
-                     (plann->mask >> 24) & 0xff,
-                     (plann->mask >> 16) & 0xff,
-                     (plann->mask >> 8) & 0xff,
-                     plann->mask & 0xff);
+//            sprintf (temp_buf, "%d.%d.%d.%d,%d.%d.%d.%d",
+//                     (plann->ipaddress >> 24) & 0xff,
+//                     (plann->ipaddress >> 16) & 0xff,
+//                     (plann->ipaddress >> 8) & 0xff,
+//                     plann->ipaddress & 0xff,
+//                     (plann->mask >> 24) & 0xff,
+//                     (plann->mask >> 16) & 0xff,
+//                     (plann->mask >> 8) & 0xff,
+//                     plann->mask & 0xff);
 
             strcat (wa->send_buf, "LANN=");
             strcat (wa->send_buf, temp_buf);
@@ -636,7 +636,7 @@ int WifiConfig::build_cmd_req(WifiConfig::wifi_at_cmd_t *wa, int cmd, int b_set,
         if (b_set) {
             pwap = (wap_t *)set_data;
 
-            sprintf (temp_buf, "%s,%s,%s", pwap->wifi_mode, pwap->ssid, pwap->channel);
+//            sprintf (temp_buf, "%s,%s,%s", pwap->wifi_mode, pwap->ssid, pwap->channel);
 
             strcat (wa->send_buf, "WAP=");
             strcat (wa->send_buf, temp_buf);
@@ -649,7 +649,7 @@ int WifiConfig::build_cmd_req(WifiConfig::wifi_at_cmd_t *wa, int cmd, int b_set,
         if (b_set) {
             pwakey = (wakey_t *)set_data;
 
-            sprintf (temp_buf, "%s,%s,%s", pwakey->auth, pwakey->encry, pwakey->key);
+//            sprintf (temp_buf, "%s,%s,%s", pwakey->auth, pwakey->encry, pwakey->key);
 
             strcat (wa->send_buf, "WAKEY=");
             strcat (wa->send_buf, temp_buf);
@@ -758,7 +758,7 @@ int WifiConfig::wifi_enter_cmd_mode(WifiConfig::wifi_at_cmd_t *wa)
     wifi_send_msg (wa);
     wifi_recv_msg (wa);
     if ((wa->recv_len == 0) || (strncasecmp (wa->recv_buf, "a", 1) != 0)) {
-        printf ("error: enter cmd mode step1\n");
+        //printf ("error: enter cmd mode step1\n");
         return -1;
     }
 
@@ -766,7 +766,7 @@ int WifiConfig::wifi_enter_cmd_mode(WifiConfig::wifi_at_cmd_t *wa)
     wifi_send_msg (wa);
     wifi_recv_msg (wa);
     if ((wa->recv_len == 0) || ((ret = check_cmd_resp (wa)) != 1)) {
-        printf ("error: enter cmd mode step2, ret %d, err_code %d", ret, wa->err_code);
+        //printf ("error: enter cmd mode step2, ret %d, err_code %d", ret, wa->err_code);
         return -1;
     }
 
@@ -774,7 +774,7 @@ int WifiConfig::wifi_enter_cmd_mode(WifiConfig::wifi_at_cmd_t *wa)
     wifi_send_msg (wa);
     wifi_recv_msg (wa);
     if ((wa->recv_len == 0) || (check_cmd_resp (wa) != 1)) {
-        printf ("error: enter cmd mode step3, ret %d, err_code %d", ret, wa->err_code);
+        //printf ("error: enter cmd mode step3, ret %d, err_code %d", ret, wa->err_code);
         return -1;
     }
 
@@ -790,7 +790,7 @@ int WifiConfig::wifi_exit_cmd_mode(WifiConfig::wifi_at_cmd_t *wa)
 
     wifi_recv_msg (wa);
     if ((wa->recv_len == 0) || ((ret = check_cmd_resp (wa)) != 1)) {
-        printf ("error: exit cmd mode step3, ret %d, err_code %d", ret, wa->err_code);
+        //printf ("error: exit cmd mode step3, ret %d, err_code %d", ret, wa->err_code);
     }
 
     build_cmd_req (wa, WCMD_ENTM, 0, NULL);
@@ -798,7 +798,7 @@ int WifiConfig::wifi_exit_cmd_mode(WifiConfig::wifi_at_cmd_t *wa)
 
     wifi_recv_msg (wa);
     if ((wa->recv_len == 0) || ((ret = check_cmd_resp (wa)) != 1)) {
-        printf ("error: exit cmd mode step3, ret %d, err_code %d", ret, wa->err_code);
+        //printf ("error: exit cmd mode step3, ret %d, err_code %d", ret, wa->err_code);
     }
 
     return 0;
@@ -822,12 +822,12 @@ int WifiConfig::wifi_do_cmd(WifiConfig::wifi_at_cmd_t *wa, int cmd, int b_set, v
 
     wifi_recv_msg (wa);
     if ((wa->recv_len == 0) || ((ret = check_cmd_resp (&wifi_at_cmd)) != 1)) {
-        printf ("cmd %d ret %d, err_code %d\n", cmd, ret, wifi_at_cmd.err_code);
+        //printf ("cmd %d ret %d, err_code %d\n", cmd, ret, wifi_at_cmd.err_code);
         return -1;
     }
     else {
 #if PRINT_MSG
-        printf ("cmd %d resp paras: %s\n", cmd, wa->resp_paras);
+        //printf ("cmd %d resp paras: %s\n", cmd, wa->resp_paras);
 #endif
     }
 

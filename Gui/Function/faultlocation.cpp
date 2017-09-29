@@ -296,7 +296,7 @@ void FaultLocation::get_origin_points(QVector<QPoint> p, int group)
 void FaultLocation::saveCurrentData()
 {
     qDebug()<<"save current graph!";
-    filetools = new FileTools(currentData,Double_Channel);      //开一个线程，为了不影响数据接口性能
+    filetools = new FileTools(currentData,Double_Channel,FileTools::Write);      //开一个线程，为了不影响数据接口性能
     QThreadPool::globalInstance()->start(filetools);
 }
 

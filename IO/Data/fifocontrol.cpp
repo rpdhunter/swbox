@@ -308,7 +308,7 @@ void FifoControl::check_send_param(RPARA pp[], int index, unsigned int data_mask
         send_data (vbase_send, &temp, 1);
         if(index != sp_read_fpga_normal && index != sp_read_fpga_rec && index != sp_group_num
 //                && index != sp_rec_start_tev1 && index != sp_rec_start_tev2
-//                && index != sp_rec_start_hfct1 && index != sp_rec_start_hfct2
+                && index != sp_rec_start_hfct1 && index != sp_rec_start_hfct2
                 && index != sp_read_fpga_prpd1 && index != sp_read_fpga_hfct1
                 && index != sp_read_fpga_prpd2 && index != sp_read_fpga_hfct2){
 //            qDebug("WRITE_REG = 0x%08x", temp);

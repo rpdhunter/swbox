@@ -53,5 +53,8 @@
         <file>widgetphoto/bk/ohv.png</file>
         <file>widgetphoto/bk/amg.png</file>
         <file>widgetphoto/bk/amg_low.png</file>
+        <file>Input.qml</file>
+        <file>widgetphoto/wifi/pointer.png</file>
+        <file>Busy.qml</file>
     </qresource>
 </RCC>

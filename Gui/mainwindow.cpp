@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <QtDebug>
+#include <QQuickItem>
 
 #ifdef PRINTSCREEN
 #include <QPixmap>
@@ -61,6 +62,7 @@ MainWindow::MainWindow(QSplashScreen *sp, QWidget *parent ) :
     sp->showMessage(tr("正在初始化主菜单..."),Qt::AlignBottom|Qt::AlignLeft);
 
     menu_init();
+    qml_init();
     statusbar_init();
     function_init(sp);
     options_init();
@@ -142,6 +144,8 @@ void MainWindow::statusbar_init()
 
 //    fresh_batt();       //立刻显示一次电量
 
+
+
 #ifdef OHV
     ui->lab_logo->setPixmap(QPixmap(":/widgetphoto/bk/ohv_gary.png").scaled(ui->lab_logo->size()));     //logo
 #elif AMG
@@ -197,6 +201,8 @@ void MainWindow::function_init(QSplashScreen *sp)
         connect(fifodata,SIGNAL(waveData(VectorList,MODE)),hfct1_widget,SLOT(showWaveData(VectorList,MODE)) );
         //重载数据
         connect(ui->tabWidget,SIGNAL(currentChanged(int)), hfct1_widget, SLOT(reload(int)) );
+        //菊花
+        connect(hfct1_widget,SIGNAL(show_indicator(bool)), this, SLOT(show_busy(bool)) );
     }
     if(hfct2_widget != NULL){
         connect(this, SIGNAL(send_key(quint8)), hfct2_widget, SLOT(trans_key(quint8)) );
@@ -206,6 +212,8 @@ void MainWindow::function_init(QSplashScreen *sp)
         connect(fifodata,SIGNAL(waveData(VectorList,MODE)),hfct2_widget,SLOT(showWaveData(VectorList,MODE)) );
         //重载数据
         connect(ui->tabWidget,SIGNAL(currentChanged(int)), hfct2_widget, SLOT(reload(int)) );
+        //菊花
+        connect(hfct2_widget,SIGNAL(show_indicator(bool)), this, SLOT(show_busy(bool)) );
     }
     if(double_widget != NULL){
         connect(this, SIGNAL(send_key(quint8)), double_widget, SLOT(trans_key(quint8)) );
@@ -223,6 +231,8 @@ void MainWindow::function_init(QSplashScreen *sp)
         connect(fifodata,SIGNAL(waveData(VectorList,MODE)),aa_widget,SLOT(showWaveData(VectorList,MODE)) );
         //重载数据
         connect(ui->tabWidget,SIGNAL(currentChanged(int)), aa_widget, SLOT(reload(int)) );
+        //菊花
+        connect(aa_widget,SIGNAL(show_indicator(bool)), this, SLOT(show_busy(bool)) );
     }
     if(ae_widget != NULL){
         connect(this, SIGNAL(send_key(quint8)), ae_widget, SLOT(trans_key(quint8)) );
@@ -329,6 +339,28 @@ void MainWindow::options_init()
     connect(recwavemanage,SIGNAL(play_voice(VectorList)),fifodata,SIGNAL(playVoiceData(VectorList)));
     connect(recwavemanage,SIGNAL(stop_play_voice()),fifodata,SIGNAL(stop_play_voice()));
     connect(fifodata,SIGNAL(playVoiceProgress(int,int,bool)),recwavemanage,SLOT(playVoiceProgress(int,int,bool)));
+    //键盘
+    connect(options,SIGNAL(show_input()),this,SIGNAL(show_input()));
+    connect(options,SIGNAL(send_input_key(quint8)),this,SIGNAL(send_input_key(quint8)) );
+    connect(this, SIGNAL(input_str(QString)), options, SLOT(input_finished(QString)) );
+    //菊花
+    connect(options,SIGNAL(show_indicator(bool)), this, SLOT(show_busy(bool)) );
+    connect(recwavemanage,SIGNAL(show_indicator(bool)), this, SLOT(show_busy(bool)) );
+}
+
+void MainWindow::qml_init()
+{
+    busyIndicator = new QQuickWidget(this);
+//    busyIndicator->setAttribute(Qt::WA_AlwaysStackOnTop);
+//    busyIndicator->setAttribute(Qt::WA_TranslucentBackground,true);
+//    busyIndicator->setStyleSheet("background: transparent;");
+//    busyIndicator->setAttribute(Qt::WA_OpaquePaintEvent);
+
+    busyIndicator->setClearColor(QColor(Qt::transparent));
+    busyIndicator->setSource(QUrl(QStringLiteral("qrc:/Busy.qml")));
+
+
+//    busyIndicator->hide();
 }
 
 void MainWindow::trans_key(quint8 key_code)
@@ -786,6 +818,12 @@ void MainWindow::system_reboot()
 void MainWindow::show_message(QString str)
 {
     ui->lab_imformation->setText(str);
+}
+
+void MainWindow::show_busy(bool f)
+{
+    QObject *busy = busyIndicator->rootObject()->findChild<QObject*>("busy");
+    busy->setProperty("running",f);
 }
 
 #ifdef PRINTSCREEN

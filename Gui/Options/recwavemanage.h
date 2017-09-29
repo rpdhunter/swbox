@@ -34,6 +34,11 @@ signals:
     void play_voice(VectorList);        //发送播放声音的指令
     void stop_play_voice();             //终止播放
 
+    void show_indicator(bool);      //显示菊花
+
+private slots:
+    void start_play(VectorList list,MODE);
+
 private:
     CURRENT_KEY_VALUE *key_val;
 

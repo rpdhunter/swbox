@@ -294,6 +294,8 @@ double Common::physical_threshold(MODE mode)
     case HFCT2_CONTINUOUS:
         v_real = physical_value(sqlcfg->get_para()->hfct2_sql.fpga_threshold, HFCT2);
         break;
+    case Double_Channel:        //to be
+        v_real = physical_value(sqlcfg->get_para()->tev1_sql.fpga_threshold, TEV1);
     default:
         break;
     }

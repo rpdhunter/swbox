@@ -9,6 +9,7 @@
 #include "IO/Data/data.h"
 #include "IO/Other/wifi.h"
 #include "../Common/wifitools.h"
+#include <QListWidget>
 
 
 namespace Ui {
@@ -27,12 +28,18 @@ public:
 
 public slots:    
     void trans_key(quint8);
+    void input_finished(QString str);
 
 signals:
     void fresh_parent();
     void fregChanged(int );
     void closeTimeChanged(int);
     void update_statusBar(QString);
+
+    void show_input();
+    void send_input_key(quint8);    //专门的虚拟键盘事件
+
+    void show_indicator(bool);      //显示菊花
 
 private slots:
     void refresh_wifilist(QStringList list);
@@ -49,13 +56,18 @@ private:
 
     WifiTools *tools;
 
+    QListWidget *contextMenu;
+
+    bool inputStatus;       //记录当前是否在虚拟键盘输入状态
+    bool isBusy;            //菊花状态
+    int contextMenu_num;
+
     void optionIni();
     void wifiIni();
     void saveOptions();
     void saveDatetime();
-    void do_key_left_right(int d);
     void do_key_up_down(int d);
-
+    void do_key_left_right(int d);    
     void refresh();
 };
 

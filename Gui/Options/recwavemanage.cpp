@@ -3,6 +3,8 @@
 #include <QtDebug>
 #include <QMessageBox>
 #include <QAbstractButton>
+#include "IO/Other/filetools.h"
+#include <QThreadPool>
 
 RecWaveManage::RecWaveManage(QWidget *parent) : QFrame(parent), ui(new Ui::Form)
 {
@@ -27,6 +29,7 @@ RecWaveManage::RecWaveManage(QWidget *parent) : QFrame(parent), ui(new Ui::Form)
 
     recWaveForm = new RecWaveForm(5,this);
     connect(this, SIGNAL(send_key(quint8)), recWaveForm, SLOT(trans_key(quint8)));
+    connect(recWaveForm,SIGNAL(show_indicator(bool)),this,SIGNAL(show_indicator(bool)) );
 
     contextMenu = new QListWidget(this);        //右键菜单
     contextMenu->setStyleSheet("QListWidget {border-image: url(:/widgetphoto/bk/para_child.png);color:gray;outline: none;}");
@@ -332,6 +335,7 @@ void RecWaveManage::deleteAll()
     foreach (QString l, list) {
         dir_sd.remove(l);
     }
+    key_val->grade.val3 = 0;
 
     system( "sync");
 }
@@ -352,36 +356,26 @@ void RecWaveManage::deleteCurrent()
         dir_favorite.remove(tableWidget->currentItem()->text().remove(QString("☆")) + ".mp3");
     }
 
+    if(key_val->grade.val3 > 0){
+        key_val->grade.val3--;
+    }
+
     system( "sync");
     reload_tablewidget();
 }
 
 void RecWaveManage::readVoiceData()
 {
-    QFile file;
-    file.setFileName(WAVE_DIR"/"+tableWidget->currentItem()->text()+".DAT");
+    emit show_indicator(true);
+    FileTools *filetools = new FileTools(tableWidget->currentItem()->text(),FileTools::Read);      //开一个线程，为了不影响数据接口性能
+    QThreadPool::globalInstance()->start(filetools);
+    connect(filetools,SIGNAL(readFinished(VectorList,MODE)),this,SLOT(start_play(VectorList,MODE)) );
+}
 
-    if (!file.open(QIODevice::ReadOnly)){
-        qDebug()<<"file open failed!";
-        return;
-    }
-
-    QDataStream in(&file);
-    in.setByteOrder(QDataStream::LittleEndian);
-
-    quint32 t1,t2;
-    qint16 v;
-    VectorList list;
-    while (!in.atEnd()) {
-        in >> t1 >> t2 >> v;
-        list.append((qint32)(v));
-    }
-
+void RecWaveManage::start_play(VectorList list,MODE)
+{
+    emit show_indicator(false);
     emit play_voice(list);
-
-
-    file.close();
-
 }
 
 void RecWaveManage::refresh()

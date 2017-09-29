@@ -41,7 +41,7 @@
       <enum>QTabWidget::West</enum>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
@@ -658,6 +658,9 @@
             <property name="text">
              <string>刷新wifi列表</string>
             </property>
+            <property name="checkable">
+             <bool>true</bool>
+            </property>
            </widget>
           </item>
           <item>
@@ -685,7 +688,14 @@
            <number>0</number>
           </property>
           <item>
-           <widget class="QListWidget" name="listWidget_2"/>
+           <widget class="QPushButton" name="pushButton_hot">
+            <property name="text">
+             <string>刷新当前连接的设备</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QListWidget" name="listWidget_hot"/>
           </item>
          </layout>
         </widget>

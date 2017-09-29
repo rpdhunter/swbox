@@ -35,6 +35,7 @@ signals:
     void fresh_parent();
     void startRecWave(MODE, int);        //开始录播
     void aa_log_data(double,int,double);
+    void show_indicator(bool);      //显示菊花
 
 private slots:
     void fresh(bool f); //刷新数据核
@@ -63,6 +64,7 @@ private:
     BarChart *chart;
     RecWaveForm *recWaveForm;
     LogTools *logtools;
+    bool isBusy;            //菊花状态
 
 };
 

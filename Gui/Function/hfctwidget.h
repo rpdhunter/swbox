@@ -97,6 +97,7 @@ signals:
     void fresh_parent();
     void hfct_log_data(double,int,double);
     void hfct_PRPD_data(QVector<QwtPoint3D>);
+    void show_indicator(bool);      //显示菊花
 
 private slots:
     void fresh_plot();
@@ -161,6 +162,8 @@ private:
 
     MODE mode, mode_continuous;
     G_RECV_PARA_HFCT *hfct_data;
+
+    bool isBusy;            //菊花状态
 
     Ui::HFCTWidget *ui;
 };

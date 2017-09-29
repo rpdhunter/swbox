@@ -4,12 +4,9 @@
 #
 #-------------------------------------------------
 
-QT       += core gui widgets network
-
-QT += serialport sql
+QT  += core gui widgets network
+QT  += serialport sql qml quick quickwidgets
 #QT += opengl
-
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = swbox
 TEMPLATE = app
@@ -17,7 +14,7 @@ TEMPLATE = app
 #DEFINES += QT_NO_DEBUG_OUTPUT
 #DEFINES += PRINTSCREEN     #截屏
 #DEFINES += AMG          #OEM
-#DEFINES += OHV          #OEM
+DEFINES += OHV          #OEM
 
 TRANSLATIONS += trans/en.ts
 
@@ -59,7 +56,8 @@ SOURCES += \
     IO/Data/reccontrol.cpp \
     IO/Data/fifocontrol.cpp \
     IO/Other/wifi.cpp \
-    Gui/Common/wifitools.cpp
+    Gui/Common/wifitools.cpp \
+    Gui/Qml/quickview.cpp
 
 
 HEADERS  += \
@@ -99,7 +97,8 @@ HEADERS  += \
     IO/Data/reccontrol.h \
     IO/Data/fifocontrol.h \
     IO/Other/wifi.h \
-    Gui/Common/wifitools.h
+    Gui/Common/wifitools.h \
+    Gui/Qml/quickview.h
 
 
 RESOURCES += \
@@ -136,10 +135,10 @@ FORMS += \
     Gui/Function/hfctwidget.ui \
     Gui/Function/faultlocation.ui \
     Gui/Function/aawidget.ui \
+    Gui/Function/aewidget.ui \
     Gui/Options/voiceplayer.ui \
     Gui/Options/systeminfo.ui \
     Gui/Options/optionui.ui \
     Gui/Options/debugui.ui \
-    Gui/Function/aewidget.ui \
     Gui/mainwindow.ui
 

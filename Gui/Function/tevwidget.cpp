@@ -411,15 +411,15 @@ void TEVWidget::fresh_PRPD()
 
         for(quint32 i=0;i<data_prpd->totol;i++){
 
-            x = (int)data_prpd->data[2*i  ];
-            y = (int)data_prpd->data[2*i+1];
+            x = (int)data_prpd->data[2*i+2];    /* FPGA要求数据对齐 */
+            y = (int)data_prpd->data[2*i+3];    /* FPGA要求数据对齐 */
 
-            if( !(x==0 && y==0) ){
+//            if( !(x==0 && y==0) ){
                 transData(x,y);
-            }
+//            }
 
-            qDebug()<<"x0="<<data_prpd->data[2*i  ] <<"\ty0="<<data_prpd->data[2*i+1];
-                qDebug()<<"x1="<<x <<"\ty1="<<y;
+//            qDebug()<<"x0="<<data_prpd->data[2*i  ] <<"\ty0="<<data_prpd->data[2*i+1];
+//                qDebug()<<"x1="<<x <<"\ty1="<<y;
 
 
         }

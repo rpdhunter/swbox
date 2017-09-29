@@ -309,7 +309,7 @@ void RecControl::recWaveComplete(VectorList wave, MODE mode)
     else if(this->_mode != Disable){
         emit waveData(wave,mode);
         this->_mode = Disable;
-        FileTools *filetools = new FileTools(wave,mode);      //开一个线程，为了不影响数据接口性能
+        FileTools *filetools = new FileTools(wave,mode,FileTools::Write);      //开一个线程，为了不影响数据接口性能
         QThreadPool::globalInstance()->start(filetools);
     }
 }
@@ -318,7 +318,7 @@ void RecControl::recContinuousComplete()
 {
     emit waveData(rec_continuous, _mode);
     qDebug()<<"rec continuous complete, times ============================================================== "<< rec_continuous.length()/4000;
-    FileTools *filetools = new FileTools(rec_continuous,_mode);      //开一个线程，为了不影响数据接口性能
+    FileTools *filetools = new FileTools(rec_continuous,_mode,FileTools::Write);      //开一个线程，为了不影响数据接口性能
     _mode = Disable;         //Disable为去掉最后一次连续录波数据
     QThreadPool::globalInstance()->start(filetools);
 }

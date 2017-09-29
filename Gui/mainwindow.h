@@ -5,6 +5,7 @@
 #include <QLabel>
 #include <QTimer>
 #include <QSplashScreen>
+#include <QQuickWidget>
 
 #include "IO/Data/fifodata.h"
 #include "IO/Modbus/modbus.h"
@@ -44,6 +45,9 @@ public slots:
 
 signals:
     void send_key(quint8);
+    void show_input();
+    void send_input_key(quint8);
+    void input_str(QString str);
 
 private slots:
     void fresh_menu_icon();
@@ -52,6 +56,7 @@ private slots:
     void system_reboot();
     void set_reboot_time();
     void show_message(QString str);
+    void show_busy(bool f);
 
 #ifdef PRINTSCREEN
     void printSc(); //截屏
@@ -94,11 +99,14 @@ private:
     Battery *battery;
     int low_power;                      //自动关机计数
 
+    QQuickWidget *busyIndicator;
+
     void menu_init();
     void statusbar_init();
     void function_init(QSplashScreen *sp);
     void channel_init(MODE mode, int index);
     void options_init();
+    void qml_init();
     void set_non_current_menu_icon();       //设置非活动菜单图标
     void set_disable_menu_icon();           //设置禁用动菜单图标
     void fresh_grade1(void);                //刷新设置子选项
