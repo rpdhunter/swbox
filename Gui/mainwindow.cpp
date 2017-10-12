@@ -39,28 +39,20 @@ MainWindow::MainWindow(QSplashScreen *sp, QWidget *parent ) :
     fifodata = new FifoData(data);
 
     sp->showMessage(tr("正在初始化通信..."),Qt::AlignBottom|Qt::AlignLeft);
-//    modbus = new Modbus(this,data);
+    modbus = new Modbus(this,data);
 
     //注册两个自定义类型
     qRegisterMetaType<VectorList>("VectorList");
     qRegisterMetaType<MODE>("MODE");
 
     connect(keydetect, &KeyDetect::sendkey, this, &MainWindow::trans_key);
+    connect(modbus,SIGNAL(closeTimeChanged(int)),this,SLOT(set_reboot_time()) );
 
 #ifdef PRINTSCREEN
     connect(timer_time,SIGNAL(timeout()),this,SLOT(printSc()));  //截屏
 #endif
 
-    //modbus相关
-//    connect(mainmenu,SIGNAL(tev_modbus_data(int,int)),modbus,SLOT(tev_modbus_data(int,int)));
-//    connect(mainmenu,SIGNAL(aa_modbus_data(int)),modbus,SLOT(aa_modbus_data(int)));
-//    connect(modbus,SIGNAL(closeTimeChanged(int)),this,SLOT(set_reboot_time()) );
-//    connect(mainmenu,SIGNAL(modbus_tev_offset_suggest(int,int)),modbus,SLOT(tev_modbus_suggest(int,int)) );
-//    connect(mainmenu,SIGNAL(modbus_aa_offset_suggest(int)),modbus,SLOT(aa_modbus_suggest(int)) );
-
-
     sp->showMessage(tr("正在初始化主菜单..."),Qt::AlignBottom|Qt::AlignLeft);
-
     menu_init();
     qml_init();
     statusbar_init();
@@ -75,8 +67,6 @@ MainWindow::MainWindow(QSplashScreen *sp, QWidget *parent ) :
             break;
         }
     }
-
-//    fifodata->startRecWave(TEV1,0);
 }
 
 MainWindow::~MainWindow()
@@ -142,8 +132,7 @@ void MainWindow::statusbar_init()
     connect(timer_batt, SIGNAL(timeout()), this, SLOT(fresh_batt()) );
     connect(timer_reboot, SIGNAL(timeout()), this, SLOT(system_reboot()) );
 
-//    fresh_batt();       //立刻显示一次电量
-
+    fresh_batt();       //立刻显示一次电量
 
 
 #ifdef OHV
@@ -340,12 +329,14 @@ void MainWindow::options_init()
     connect(recwavemanage,SIGNAL(stop_play_voice()),fifodata,SIGNAL(stop_play_voice()));
     connect(fifodata,SIGNAL(playVoiceProgress(int,int,bool)),recwavemanage,SLOT(playVoiceProgress(int,int,bool)));
     //键盘
-    connect(options,SIGNAL(show_input()),this,SIGNAL(show_input()));
+    connect(options,SIGNAL(show_input(QString)),this,SIGNAL(show_input(QString)));
     connect(options,SIGNAL(send_input_key(quint8)),this,SIGNAL(send_input_key(quint8)) );
     connect(this, SIGNAL(input_str(QString)), options, SLOT(input_finished(QString)) );
     //菊花
     connect(options,SIGNAL(show_indicator(bool)), this, SLOT(show_busy(bool)) );
     connect(recwavemanage,SIGNAL(show_indicator(bool)), this, SLOT(show_busy(bool)) );
+    //状态栏
+    connect(options,SIGNAL(show_wifi_icon(int)), this, SLOT(set_wifi_icon(int)) );
 }
 
 void MainWindow::qml_init()
@@ -742,6 +733,7 @@ void MainWindow::fresh_status()
         ui->lab_imformation->setText(tr("再过%1秒将自动关机，按任意键取消").arg(s));
     }
     ui->lab_freq->setText(QString("%1Hz").arg(sqlcfg->get_para()->freq_val));
+
 }
 
 void MainWindow::fresh_batt()
@@ -824,6 +816,25 @@ void MainWindow::show_busy(bool f)
 {
     QObject *busy = busyIndicator->rootObject()->findChild<QObject*>("busy");
     busy->setProperty("running",f);
+}
+
+void MainWindow::set_wifi_icon(int w)
+{
+    switch (w) {
+    case WIFI_AP:
+        ui->lab_wifi->setPixmap(QPixmap(":/widgetphoto/wifi/wifi3.png").scaled(ui->lab_wifi->size()));
+        break;
+    case WIFI_HOTPOT:
+        ui->lab_wifi->setPixmap(QPixmap(":/widgetphoto/wifi/wifi_hot.png").scaled(ui->lab_wifi->size()));
+//        ui->lab_wifi->setPixmap(QPixmap(":/widgetphoto/wifi/wifi_hot.png") );
+        break;
+    case WIFI_SYNC:
+
+        break;
+    default:
+        ui->lab_wifi->setPixmap(QPixmap(":/widgetphoto/wifi/wifi0.png").scaled(ui->lab_wifi->size()));
+        break;
+    }
 }
 
 #ifdef PRINTSCREEN

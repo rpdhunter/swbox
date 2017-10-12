@@ -45,7 +45,7 @@ public slots:
 
 signals:
     void send_key(quint8);
-    void show_input();
+    void show_input(QString);
     void send_input_key(quint8);
     void input_str(QString str);
 
@@ -57,6 +57,7 @@ private slots:
     void set_reboot_time();
     void show_message(QString str);
     void show_busy(bool f);
+    void set_wifi_icon(int w);
 
 #ifdef PRINTSCREEN
     void printSc(); //截屏

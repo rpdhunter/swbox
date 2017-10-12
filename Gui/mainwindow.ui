@@ -279,7 +279,7 @@ background:transparent;
   <widget class="QLabel" name="lab_freq">
    <property name="geometry">
     <rect>
-     <x>370</x>
+     <x>375</x>
      <y>10</y>
      <width>41</width>
      <height>17</height>
@@ -334,7 +334,7 @@ background:transparent;
   <widget class="QLabel" name="lab_pwr">
    <property name="geometry">
     <rect>
-     <x>410</x>
+     <x>412</x>
      <y>14</y>
      <width>25</width>
      <height>9</height>
@@ -363,10 +363,10 @@ background:transparent;
   <widget class="QLabel" name="lab_wifi">
    <property name="geometry">
     <rect>
-     <x>330</x>
+     <x>343</x>
      <y>10</y>
-     <width>30</width>
-     <height>20</height>
+     <width>25</width>
+     <height>15</height>
     </rect>
    </property>
    <property name="styleSheet">

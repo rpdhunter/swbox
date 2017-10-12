@@ -5,7 +5,7 @@
 #include "../Common/common.h"
 #include "IO/rdb/rdb.h"
 
-#define SETTING_NUM             4           //设置菜单条目数
+#define SETTING_NUM             5           //设置菜单条目数
 #define SETTING_NUM_TEV         6
 #define SETTING_NUM_HFCT        4
 #define SETTING_NUM_AA          2
@@ -22,9 +22,15 @@ DebugSet::DebugSet(G_PARA *g_data,QWidget *parent) : QFrame(parent),ui(new Ui::D
     this->move(3, 3);
     ui->setupUi(this);
 
-    timer = new QTimer;
-    timer->start(1000);
-    connect(timer, SIGNAL(timeout()), this, SLOT(fresh_rdb_data()) );
+    cpu_status = new CPUStatus;
+    battery = new Battery;
+    timer_rdb = new QTimer;
+    timer_rdb->start(1000);
+    connect(timer_rdb, SIGNAL(timeout()), this, SLOT(fresh_rdb_data()) );
+
+    timer_hardware = new QTimer;
+    timer_hardware->start(5000);
+    connect(timer_hardware, SIGNAL(timeout()), this, SLOT(fresh_hardware_status()) );
 
     iniUi();
     reload();
@@ -50,11 +56,14 @@ void DebugSet::iniUi()
     Common::setTab(tab2);
     tab3 = new QLabel(tr("通道设置"),ui->tabWidget->tabBar());
     Common::setTab(tab3);
+    tab4 = new QLabel(tr("硬件监测"),ui->tabWidget->tabBar());
+    Common::setTab(tab4);
 
     ui->tabWidget->tabBar()->setTabButton(0,QTabBar::LeftSide,tab0);
     ui->tabWidget->tabBar()->setTabButton(1,QTabBar::LeftSide,tab1);
     ui->tabWidget->tabBar()->setTabButton(2,QTabBar::LeftSide,tab2);
     ui->tabWidget->tabBar()->setTabButton(3,QTabBar::LeftSide,tab3);
+    ui->tabWidget->tabBar()->setTabButton(4,QTabBar::LeftSide,tab4);
 
     for (int i = 0; i < ui->tabWidget->count(); ++i) {
         ui->tabWidget->widget(i)->setStyleSheet("QWidget {background-color:lightGray;}");
@@ -515,6 +524,19 @@ void DebugSet::fresh_rdb_data()
     ui->lab_offset_noise_aa->setText(QString("%1").arg(temp_data.f_val));
 }
 
+void DebugSet::fresh_hardware_status()
+{
+    float temp, vcc;
+    cpu_status->get_cpu_temp(&temp);
+    cpu_status->get_cpu_vcc(&vcc);
+    ui->lineEdit_CPU_TEMP->setText(QString("%1").arg(temp) );
+    ui->lineEdit_CPU_VCC->setText(QString("%1").arg(vcc) );
+    float v = battery->battVcc(), c = battery->battCur();
+    ui->lineEdit_BATT_VCC->setText(QString("%1").arg(v) );
+    ui->lineEdit_BATT_CUR->setText(QString("%1").arg(c) );
+    ui->lineEdit_BATT_P->setText(QString("%1").arg(v*c/1000) );
+}
+
 void DebugSet::fresh()
 {
     if(pass){
@@ -530,6 +552,7 @@ void DebugSet::fresh()
         tab1->setStyleSheet("QLabel{border: 0px solid darkGray;}");
         tab2->setStyleSheet("QLabel{border: 0px solid darkGray;}");
         tab3->setStyleSheet("QLabel{border: 0px solid darkGray;}");
+        tab4->setStyleSheet("QLabel{border: 0px solid darkGray;}");
 
         switch (key_val->grade.val3) {
         case 1:         //TEV
@@ -545,6 +568,7 @@ void DebugSet::fresh()
                 tab1->setStyleSheet("QLabel{border: 0px solid darkGray;}");
                 tab2->setStyleSheet("QLabel{border: 0px solid darkGray;}");
                 tab3->setStyleSheet("QLabel{border: 0px solid darkGray;}");
+                tab4->setStyleSheet("QLabel{border: 0px solid darkGray;}");
                 break;
             case 1:
                 ui->lineEdit_TEV1_THRESHOLD->selectAll();
@@ -579,6 +603,8 @@ void DebugSet::fresh()
                 tab1->setStyleSheet("QLabel{border: 1px solid darkGray;}");
                 tab2->setStyleSheet("QLabel{border: 0px solid darkGray;}");
                 tab3->setStyleSheet("QLabel{border: 0px solid darkGray;}");
+                tab4->setStyleSheet("QLabel{border: 0px solid darkGray;}");
+                tab4->setStyleSheet("QLabel{border: 0px solid darkGray;}");
                 break;
             case 1:
                 ui->lineEdit_HFCT1_THRESHOLD->selectAll();
@@ -605,6 +631,7 @@ void DebugSet::fresh()
                 tab1->setStyleSheet("QLabel{border: 0px solid darkGray;}");
                 tab2->setStyleSheet("QLabel{border: 1px solid darkGray;}");
                 tab3->setStyleSheet("QLabel{border: 0px solid darkGray;}");
+                tab4->setStyleSheet("QLabel{border: 0px solid darkGray;}");
                 break;
             case 1:
                 ui->lineEdit_AA_Step->selectAll();
@@ -628,6 +655,7 @@ void DebugSet::fresh()
                 tab1->setStyleSheet("QLabel{border: 0px solid darkGray;}");
                 tab2->setStyleSheet("QLabel{border: 0px solid darkGray;}");
                 tab3->setStyleSheet("QLabel{border: 1px solid darkGray;}");
+                tab4->setStyleSheet("QLabel{border: 0px solid darkGray;}");
                 break;
             case 1:
                 ui->pbt_HC1->setChecked(true);
@@ -647,6 +675,13 @@ void DebugSet::fresh()
             default:
                 break;
             }
+            break;
+        case 5:         //状态监测
+            tab0->setStyleSheet("QLabel{border: 0px solid darkGray;}");
+            tab1->setStyleSheet("QLabel{border: 0px solid darkGray;}");
+            tab2->setStyleSheet("QLabel{border: 0px solid darkGray;}");
+            tab3->setStyleSheet("QLabel{border: 0px solid darkGray;}");
+            tab4->setStyleSheet("QLabel{border: 1px solid darkGray;}");
             break;
         default:
             break;

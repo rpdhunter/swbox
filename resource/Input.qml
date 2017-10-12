@@ -52,7 +52,9 @@ Rectangle {
         focus: true
         font.pixelSize: 30
 
-        inputMethodHints: Qt.ImhNoAutoUppercase | Qt.ImhPreferLowercase | Qt.ImhSensitiveData | Qt.ImhNoPredictiveText
+//        echoMode: TextInput.Password
+
+        inputMethodHints: Qt.ImhNoAutoUppercase | Qt.ImhPreferLowercase/* | Qt.ImhSensitiveData | Qt.ImhNoPredictiveText*/
 
         onTextChanged: {
             preText.visible = false
@@ -77,7 +79,7 @@ Rectangle {
 //            console.log("recv:\t" + pointer.x + '\t' + pointer.y)
         }
         onInputClear: {
-            textInput.text = ""
+            textInput.text = str
             preText.visible = true
         }
     }

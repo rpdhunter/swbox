@@ -16,6 +16,7 @@
 
 #include "gpio_oper.c"
 #include "uart_oper.c"
+#include "IO/rdb/rdb.h"
 
 
 
@@ -87,6 +88,7 @@ void Modbus::run()
         else {
             modbus_com_recv_to (&pd_dev);
         }
+//        msleep(500);
     }
 
     close_modbus_dev (&pd_dev);
@@ -123,6 +125,7 @@ int Modbus::init_modbus_dev(Modbus::modbus_dev_t *ndp)
     ndp->rs485_rw_pin = -1;
     ndp->dev_addr = 1;
     ndp->baundrate = 115200;
+//    ndp->baundrate = 9600;
     ndp->recv_len = 0;
     ndp->recv_to_cnt = 0;
     ndp->recv_to_flag = 0;
@@ -257,6 +260,8 @@ int Modbus::modbus_deal_msg(Modbus::modbus_dev_t *ndp)
         return -1;
     }
 
+
+
     /* 功能码 */
     func_code = ndp->recv_buf [1];
     switch(func_code) {
@@ -280,7 +285,7 @@ int Modbus::modbus_deal_msg(Modbus::modbus_dev_t *ndp)
     }
 
     if (ret != 0) {
-        printf ("modbus_deal_msg error\n");
+//        printf ("modbus_deal_msg error\n");
     }
 
     return ret;
@@ -332,6 +337,8 @@ int Modbus::modbus_deal_read_reg(Modbus::modbus_dev_t *ndp)
 //            printf ("failed to get reg %x value\n", start_add + i);
 //            reg_val = 0xeeee;	/* invalid value */
 //        }
+
+        qDebug()<<"val="<<reg_val;
         ndp->send_buf [3 + (i << 1)] = reg_val >> 8;
         ndp->send_buf [4 + (i << 1)] = reg_val & 0xff;
     }
@@ -438,10 +445,6 @@ int Modbus::get_reg_value(unsigned short reg, unsigned short *val)
         return -1;
     }
 
-//    transData();
-
-//    * val = data_stand[reg];
-
     return 0;
 }
 
@@ -497,10 +500,33 @@ int Modbus::set_reg_value(unsigned short reg, unsigned short val)
 
 void Modbus::transData()
 {
-    sql_para = sqlcfg->get_para();
-
     data_stand[md_rd_reg_dev_st] = (VERSION_MAJOR<<12) + (VERSION_MINOR<<8);        //存储版本号
 
+    //从rdb中取数据(易变量)
+    yc_data_type temp_data;
+    unsigned char a[1],b[1];
+
+    yc_get_value(0,TEV1_amplitude,1, &temp_data, b, a);
+    data_stand[md_rd_reg_tev_mag] = temp_data.f_val;
+    qDebug()<<"tev_ap" << temp_data.f_val;
+
+    yc_get_value(0,TEV1_num,1, &temp_data, b, a);
+    data_stand[md_rd_reg_tev_cnt] = temp_data.f_val;
+
+    yc_get_value(0,AA_amplitude,1, &temp_data, b, a);
+    data_stand[md_rd_reg_aa_mag] = temp_data.f_val;
+
+    yc_get_value(0,TEV1_center_biased_adv,1, &temp_data, b, a);
+    data_stand[md_rd_reg_tev_zero_sug] = temp_data.f_val;
+
+    yc_get_value(0,TEV1_noise_biased_adv,1, &temp_data, b, a);
+    data_stand[md_rd_reg_tev_noise_sug] = temp_data.f_val;
+
+    yc_get_value(0,AA_biased_adv,1, &temp_data, b, a);
+    data_stand[md_rd_reg_aa_bias_sug] = temp_data.f_val;
+
+    //逻辑判断
+    sql_para = sqlcfg->get_para();
     unsigned short val = data_stand[md_rd_reg_tev_mag];
     if(val < sql_para->tev1_sql.low){
         data_stand[md_rd_reg_tev_severity] = 0;
@@ -523,12 +549,13 @@ void Modbus::transData()
         data_stand[md_rd_reg_aa_severity] = 2;
     }
 
-
-
-
+    //从SQL中读取
     data_stand[md_rw_reg_tev_gain] = sql_para->tev1_sql.gain;
     data_stand[md_rw_reg_tev_noise_bias] = sql_para->tev1_sql.tev_offset1;
     data_stand[md_rw_reg_tev_zero_bias] = sql_para->tev1_sql.tev_offset2;
+
+    data_stand[md_rw_reg_aa_gain] = sql_para->aaultra_sql.gain;
+    data_stand[md_rw_reg_aa_bias] = sql_para->aaultra_sql.aa_offset;
 
 }
 

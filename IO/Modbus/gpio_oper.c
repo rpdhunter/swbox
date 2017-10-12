@@ -35,25 +35,28 @@ int gpio_open (unsigned int gpio_pin /* 0 - 53, mio, 54 - 117, emio */, char * g
 	/* export gpio */
 	fd = open (GPIO_EXPORT, O_WRONLY);
 	if (fd < 0) {
-        return -1;
+		printf("open failed\n");
+		return -1;
 	}
 	sprintf (value, "%d", gpio_pin);
 	ret = write (fd, value, strlen (value));
 	close (fd);
 	if (ret < 0) {
-//		return -1;
+		printf("write failed\n");
+		return -1;
 	}
 
 	/* set direction */
 	sprintf (dir_file, GPIO_DIR_FMT, gpio_pin);
 	fd = open (dir_file, O_WRONLY);
 	if (fd < 0) {
+		printf("open failed\n");
 		return -1;
 	}
 	ret = write (fd, gpio_dir, strlen (gpio_dir));
 	close (fd);
 	if (ret < 0) {
-//		return -1;
+		return -1;
 	}
 
 	return 0;

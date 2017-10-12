@@ -9,16 +9,27 @@ class WifiTools : public QObject, public QRunnable
 {
     Q_OBJECT
 public:
-    WifiTools(WifiConfig *wifi_config);
+    enum WorkMode{
+        Init,
+        Connect,
+        Hotpot,
+        Info
+    };
+
+    WifiTools(WifiConfig *wifi_config, WorkMode m);
+    WifiTools(WifiConfig *wifi_config, WorkMode m, QString name, QString password);
     ~WifiTools();
 
     void run();
 
 signals:
-    void wifi_list(QStringList);
+    void wifi_list(QStringList, WifiConfig*);
+    void wifi_hotpot_finished();        //热点已成功
 
 private:
     WifiConfig *wifi_config;
+    WorkMode mode;
+    QString name, password;
 
 };
 

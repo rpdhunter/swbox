@@ -226,7 +226,8 @@ static int sem_timed_p(int semid, int timeout_s)
 	
 	timeout.tv_sec = timeout_s;
 	timeout.tv_nsec = 0;
-	return (semtimedop(semid, &sops, 1, &timeout));
+	return 0;
+	//return (semtimedop(semid, &sops, 1, &timeout));
 }
 
 static int sem_v(int semid)

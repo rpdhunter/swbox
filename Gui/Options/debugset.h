@@ -9,6 +9,8 @@
 #include "IO/Key/key.h"
 #include "IO/Data/data.h"
 #include "IO/SqlCfg/sqlcfg.h"
+#include "IO/Other/CPU/cpustatus.h"
+#include "IO/Other/battery.h"
 
 
 namespace Ui {
@@ -33,6 +35,7 @@ signals:
 
 private slots:
     void fresh_rdb_data();
+    void fresh_hardware_status();
 
 private:
     void iniUi();
@@ -48,8 +51,10 @@ private:
     CURRENT_KEY_VALUE *key_val;
     G_PARA *data;
     SQL_PARA sql_para;
-    QTimer *timer;
-    QLabel *tab0, *tab1, *tab2, *tab3;  //tab标签
+    QTimer *timer_rdb, *timer_hardware;
+    CPUStatus *cpu_status;
+    Battery *battery;
+    QLabel *tab0, *tab1, *tab2, *tab3, *tab4;  //tab标签
 
     QWidget *widget_password;        //密码窗口
     QLabel *lab1, *lab2;

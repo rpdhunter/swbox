@@ -36,13 +36,15 @@ signals:
     void closeTimeChanged(int);
     void update_statusBar(QString);
 
-    void show_input();
+    void show_input(QString);
     void send_input_key(quint8);    //专门的虚拟键盘事件
 
     void show_indicator(bool);      //显示菊花
+    void show_wifi_icon(int);
 
 private slots:
-    void refresh_wifilist(QStringList list);
+    void refresh_wifilist(QStringList list, WifiConfig *con);
+    void wifi_hotpot_finished();
 
 private:
     Ui::OptionUi *ui;
@@ -52,7 +54,7 @@ private:
     G_PARA *data;
     QDateTime _datetime;
     WifiConfig *wifi_config;
-    QLabel *tab0, *tab1, *tab2;
+    QLabel *tab0, *tab1, *tab2, *tab3;
 
     WifiTools *tools;
 
@@ -63,7 +65,8 @@ private:
     int contextMenu_num;
 
     void optionIni();
-    void wifiIni();
+    void wifi_connect();
+    void wifi_connect(QString name, QString password);
     void saveOptions();
     void saveDatetime();
     void do_key_up_down(int d);

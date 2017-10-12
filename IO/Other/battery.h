@@ -61,6 +61,8 @@ public:
     int battValue();        //返回当前电量
     bool is_low_power();    //返回是否低电量
 
+    float battVcc();        //返回电池电压
+    float battCur();        //返回电池电流
 
 private:
     typedef struct battery_power_s {

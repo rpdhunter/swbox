@@ -11,6 +11,10 @@
 #ifndef _GPIO_OPER_H_
 #define _GPIO_OPER_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define GPIO_DIR				"/sys/class/gpio"
 #define GPIO_EXPORT				GPIO_DIR"/export"
 #define GPIO_UNEXPORT			GPIO_DIR"/unexport"
@@ -28,5 +32,9 @@ int gpio_close (unsigned int gpio_pin /* 0 - 53, mio, 54 - 117, emio */);
 int gpio_set (unsigned int gpio_pin, unsigned int val);
 int gpio_get (unsigned int gpio_pin, unsigned int * val);
 int gpio_edge (unsigned int gpio_pin, char * edge /* none, rising, falling, both */);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* _GPIO_OPER_H_ */

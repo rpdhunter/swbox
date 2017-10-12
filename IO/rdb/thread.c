@@ -74,9 +74,18 @@ pthread_t thread_create (char * name, int ss, int prio, void (f)(void *), void *
 	if (pthread_attr_init (&attribs)) {
 		return -1;
 	}
-
+	/*
+	函数传入值：attr:线程属性。
+	函数返回值：成功： 0
+	失败： -1
+	成功时返回0，if为假，不做return
+	*/
 	ss += PTHREAD_STACK_MIN;
-	pthread_attr_setstacksize (&attribs, ss);
+	if (ret=pthread_attr_setstacksize(&attribs, ss)) {
+		printf("pthread_attr_setstacksize failed %d\n", ret);
+		printf("stacksize %d kB\n", ss/1024);
+		return -1;
+	}
 
 	/* set schedule policy first */
 	if (prio == 0) {

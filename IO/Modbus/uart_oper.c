@@ -136,7 +136,8 @@ int uart_set (int fd, int speed, int flow_ctrl, int databits, int stopbits, char
 	//options.c_lflag &= ~(ISIG | ICANON);
 
 	//防止串口把回车和换行当成同一个字符
-	options.c_iflag &= ~(INLCR | ICRNL | IGNCR);
+//	options.c_iflag &= ~(INLCR | ICRNL | IGNCR);
+    options.c_iflag &= ~(INLCR | ICRNL | IGNCR | BRKINT | INPCK | ISTRIP | IXON);
 	options.c_oflag &= ~(ONLCR | OCRNL);
 	
 	//设置等待时间和最小接收字符

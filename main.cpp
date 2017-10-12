@@ -55,14 +55,9 @@ int main(int argc, char *argv[])
     view.rootContext()->setContextProperty("dt",&view);
     view.setSource(QString("qrc:/Input.qml"));
     view.hide();
-    QObject::connect(&w,SIGNAL(show_input()), &view, SLOT(show_input()) );
+    QObject::connect(&w,SIGNAL(show_input(QString)), &view, SLOT(show_input(QString)) );
     QObject::connect(&w,SIGNAL(send_input_key(quint8)), &view, SLOT(trans_input_key(quint8)) );
     QObject::connect(&view,SIGNAL(input_str(QString)), &w, SIGNAL(input_str(QString)) );
-
-//    QQuickView busy;
-//    busy.setSource(QString("qrc:/Busy.qml"));
-//    busy.setColor(QColor(0,0,0,0));
-//    busy.show();
 
     splash->finish(&w);
     delete splash;

@@ -18,7 +18,13 @@
 #include "thread.h"
 #include "ipcs.h"
 
+//#include "global_define.h"
+//#include "base_functions.h"
 #include "rdb.h"
+//#include "params_settings.h"
+//#include "bin_out.h"
+//#include "monitor_status.h"
+//#include "record_log.h"
 
 #define RDB_APP_ID			5
 
@@ -59,9 +65,9 @@ static int init_rdb_task ()
 {
 	pthread_t tid;
 	tid = thread_create ("rdb task", 1024 * 8, 1, rdb_task, NULL);//DEF_TASK_STACK_SIZE=1000;PRIO_RDB=1
-    if (tid < 0) {
-        return -1;
-    }
+	if (tid < 0) {
+		return -1;
+	}
 
 	return 0;
 }
@@ -71,9 +77,9 @@ int init_rdb_table ()
 	int i;
 	
 	for (i = 0; i < YX_NUMBER; i++) {		//yx点表初始化，默认值为DP_OPEN | DIQ_IV;
-		memset (&yx_lst [i], 0, sizeof (yx_t));
-		yx_lst [i].cur_val = DP_OPEN | DIQ_IV;
-		if (sem_init (&yx_lst [i].mutex, 0, 1) < 0) {
+		memset (&yx_lst [i], 0, sizeof (yx_t));		//内存初始化
+		yx_lst [i].cur_val = DP_OPEN | DIQ_IV;		//设置cur_val
+		if (sem_init (&yx_lst [i].mutex, 0, 1) < 0) {	//信号量初始化
 			return -1;
 		}
 	}
@@ -212,6 +218,7 @@ int init_rdb ()
 创建线程rdb_task,该线程不停的调 用函数check_yx_event_list ();check_yc_event_list();check_yk_list();
 */
 {
+	/*动态分配四遥点表*/
 	yx_lst = (yx_t *)malloc (sizeof (yx_t) * YX_NUMBER);		//yx点表
 	if (yx_lst == NULL) {
 		return -1;
@@ -257,7 +264,7 @@ static int init_rdb_event_pool ()
 	if (sem_init (&rdb_event_pool_mutex, 0, 1) < 0) {
 		return -1;
 	}
-	for (i = 0; i < MAX_RDB_EVENT_NO; i++) {
+	for (i = 0; i < MAX_RDB_EVENT_NO; i++) {	//循环加入单链表Node
 		p_event = (rdb_event_t *)malloc (sizeof (rdb_event_t));
 		if (p_event == NULL) {
 			return -1;

@@ -60,6 +60,19 @@ enum LOCATION_CHART_MODE {
     COMPASS = 1,
 };
 
+enum SYNC_MODE {
+    SYNC_NONE = 0,
+    SYNC_INTERNAL = 1,
+    SYNC_EXTERNAL = 2,
+};
+
+enum WIFI_MODE {
+    WIFI_NONE = 0,
+    WIFI_HOTPOT = 1,
+    WIFI_AP = 2,
+    WIFI_SYNC = 4,
+};
+
 typedef struct TEV_SQL {
     bool mode;                      //检测模式
     int mode_chart;             //图形显示模式
@@ -111,6 +124,13 @@ typedef struct AAULTRA_SQL {
     int aa_offset;                  //AA超声偏置值
 } AAULTRA_SQL;
 
+//typedef struct SYNCMODE_SQL {
+//    bool mode;                      //检测模式
+//    int time;                       //触发时长
+//    int channel;   //触发通道
+//    int chart_mode;      //图形显示模式
+//} SYNCMODE_SQL;
+
 
 /* Sql para */
 typedef struct SQL_PARA {
@@ -126,10 +146,13 @@ typedef struct SQL_PARA {
     int screen_close_time;          //屏幕自动关闭时间，暂时没有使用，预留
     int close_time;                 //自动关机时间
     int max_rec_num;                //录波文件保存个数
-    bool file_copy_to_SD;             //是否保存文件到SD卡
+    bool file_copy_to_SD;           //是否保存文件到SD卡
     int auto_rec_interval;          //自动录波间隔
-    int menu_h1, menu_h2;              //高速通道模式（需要FPGA同步）
+    int menu_h1, menu_h2;           //高速通道模式（需要FPGA同步）
     int menu_double, menu_aa, menu_ae;       //其他菜单模式
+    int sync_mode;                  //同步模式
+    int sync_internal_val;          //内同步时间
+    int sync_external_val;          //外同步时间
 
 } SQL_PARA;
 

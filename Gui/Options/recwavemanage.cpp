@@ -260,9 +260,6 @@ void RecWaveManage::trans_key(quint8 key_code)
         else if(reset_flag == 2){
             reset_flag = 1;
         }
-        else{
-            contextMenu->hide();
-        }
         break;
     case KEY_RIGHT:
         if(reset_flag == 1){

@@ -52,18 +52,29 @@
 #define MODE_STATIC				"static"
 #define MODE_DHCP				"DHCP"
 
+#define WIFI_STAT_START			"UP"
+#define WIFI_STAT_DOWN			"DOWN"
+
 
 class WifiConfig
 {
 public:
     WifiConfig();
+    ~WifiConfig();
 
-    void wifi_server();     //热点
-    void wifi_client();     //接入热点
-    void wifi_sync();       //连接同步
-    void wifi_info();       //查看信息
+    QStringList wifi_get_list();            //获取列表
+    int wifi_connect(QString name, QString password);   //用户名密码连接
 
-    QStringList wifi_get_list();
+    int wifi_hotpot(QString name, QString password);    //用户名密码建立热点
+
+    void wifi_infomation(QString &str_ip, QString &str_netmask, QString &str_gateway,
+                         QString &str_name, QString &str_mac, int &indicator);       //查看信息
+
+    void wifi_set_enable(bool enable);      //wifi开关
+
+
+
+    int wifi_ap_num();      //test
 
 
 private:
@@ -200,6 +211,10 @@ private:
         char	channel [8];
     } wap_t;
 
+    typedef struct wifi_stat_s {
+        int		status;
+    } wifi_stat_t;
+
     typedef wskey_t wakey_t;
 
     typedef struct wifi_at_cmd_s {
@@ -222,14 +237,21 @@ private:
         lann_t	lann;
         wap_t	wap;
         wakey_t	wakey;
+        wifi_stat_t wifi;
     } wifi_at_cmd_t;
 
     typedef struct ap_item_s {
-        string_32_t		ssid;
-        char			auth [32];
-        char			encry [8];
-        int             indicator;
+        string_32_t		ssid;           //名称
+        char			auth [32];      //认证方式
+        char			encry [8];      //加密方式
+        int             indicator;      //强度
     } ap_item_t;
+
+
+    void wifi_server();     //热点
+    void wifi_client();     //接入热点
+    void wifi_sync();       //连接同步
+    void wifi_info();       //查看信息
 
     /* WIFI模块重启 */
     int wifi_reboot ();
@@ -237,11 +259,17 @@ private:
     /* 获取AP列表 */
     int wifi_get_ap_list (ap_item_t ap_lst []);
 
+    /* 开启关闭WIFI */
+    int wifi_start (int start);
+
+    /* 获取WIFI开启状态 */
+    int wifi_get_status (int * stat);
+
     /* 查询STA状态下的IP地址 */
     int wifi_get_sta_net_status (unsigned int * ip, unsigned int * net_mask, unsigned int * gateway);
 
     /* 查询wifi无线连接状态 */
-    int wifi_get_sta_link_status (string_32_t ssid, char ap_mac [], int * indicator);
+    int wifi_get_sta_link_status (string_32_t ssid/*网络名*/, char ap_mac [], int * indicator);
 
     /* 建立AP热点，启动服务器，可进行IEC101,MODBUS通信 */
     int wifi_config_ap_tcp_server (string_32_t ssid, char * auth, char * encry, char * key, char * ip, unsigned short port);
@@ -253,6 +281,8 @@ private:
     int wifi_config_sta_tcp_client (string_32_t ssid_dst, char * auth, char * encry, char * key, char * ip_dst, unsigned short port_dst);
 
     wifi_at_cmd_t wifi_at_cmd;
+    ap_item_t ap_list [WSCAN_NUM];
+    int ap_num;
 
     int init_wifi_dev (wifi_at_cmd_t * wa, int baundrate);
     int close_wifi_dev (wifi_at_cmd_t * wa);

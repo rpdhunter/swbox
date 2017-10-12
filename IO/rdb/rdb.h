@@ -81,11 +81,11 @@ extern "C" {
 #define RDB_TYPE_YC		0x02
 #define RDB_TYPE_YM		0x03
 
-#define MAX_RDB_EVENT_NO	600
+#define MAX_RDB_EVENT_NO	600		/*最大事件数*/
 
 #define MAX_RDB_REGED_APP	5
 
-#define MAX_MSG_LEN					512
+#define MAX_MSG_LEN					512 		/*消息最大长度*/
 
 #define INTERNAL_MSG_HEAD_LEN		(sizeof (internal_msg_t) - 4 /* sizeof (internal_msg_t.content)*/)
 
@@ -95,7 +95,7 @@ extern "C" {
 #define MSG_CHK_EVENT				0x12
 #define		MSG_SUB_YX				0x01
 #define		MSG_SUB_YC				0x02
-
+/*事件链表添加*/
 #define ADD_EVENT_TO_TAIL(PENTRY,PEVENT) \
 { \
 	if ((PENTRY)->p_event_tail != NULL) { \
@@ -107,7 +107,7 @@ extern "C" {
 		(PENTRY)->p_event_head = (PEVENT); \
 	} \
 }
-
+/*事件链表移除*/
 #define GET_EVENT_FROM_HEAD(PENTRY,PEVENT) \
 { \
 	if ((PENTRY)->p_event_head != NULL) { \
@@ -133,7 +133,7 @@ do { \
 #define _DPRINTF(fmt, args...)
 
 #endif /* __DBUG__ */
-
+/* 遥测数据类型*/
 typedef union {
 	Int32		i_val;
 	float32		f_val;
@@ -238,7 +238,6 @@ typedef struct {
 } internal_msg_t;
 
 int init_rdb ();
-
 
 int reg_rdb_hook (
 	int app_id,

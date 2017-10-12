@@ -57,7 +57,15 @@ SOURCES += \
     IO/Data/fifocontrol.cpp \
     IO/Other/wifi.cpp \
     Gui/Common/wifitools.cpp \
-    Gui/Qml/quickview.cpp
+    Gui/Qml/quickview.cpp \
+    IO/rtu/uart_driver.c \
+    IO/rtu/setting_value.c \
+    IO/rtu/io.c \
+    IO/rtu/iec104.c \
+    IO/rtu/iec101.c \
+    IO/rtu/rtu.cpp \
+    IO/Other/CPU/xadc_core.c \
+    IO/Other/CPU/cpustatus.cpp
 
 
 HEADERS  += \
@@ -98,7 +106,19 @@ HEADERS  += \
     IO/Data/fifocontrol.h \
     IO/Other/wifi.h \
     Gui/Common/wifitools.h \
-    Gui/Qml/quickview.h
+    Gui/Qml/quickview.h \
+    IO/rtu/uart_driver.h \
+    IO/rtu/setting_table.h \
+    IO/rtu/protocol.h \
+    IO/rtu/io.h \
+    IO/rtu/iec104.h \
+    IO/rtu/iec101.h \
+    IO/rtu/rtu.h \
+    IO/Other/CPU/xadc_core_if.h \
+    IO/Other/CPU/xadc_core.h \
+    IO/Other/CPU/types.h \
+    IO/Other/CPU/events.h \
+    IO/Other/CPU/cpustatus.h
 
 
 RESOURCES += \
@@ -128,7 +148,8 @@ unix:!macx: PRE_TARGETDEPS += $$PWD/../../../../pub/toolchain/arm-xilinx-linux-g
 
 DISTFILES += \
     BOOT.bin \
-    trans/en.ts
+    trans/en.ts \
+    PDTEV操作指南_V1.1.docx
 
 FORMS += \    
     Gui/Function/tevwidget.ui \

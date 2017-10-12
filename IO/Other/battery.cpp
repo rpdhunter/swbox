@@ -46,7 +46,24 @@ int Battery::battValue()
 bool Battery::is_low_power()
 {
     check_battery_power (&battery_power);
-    return battery_power.force_pwr_off;
+    if (battery_power.force_pwr_off) {
+        qDebug()<<"is batt!!!! batt = "<< battery_power.power;
+        return true;
+    }
+    return false;
+    //    return battery_power.force_pwr_off;
+}
+
+float Battery::battVcc()
+{
+    check_battery_power (&battery_power);
+    return battery_power.vol;
+}
+
+float Battery::battCur()
+{
+    check_battery_power (&battery_power);
+    return battery_power.cur;
 }
 
 int Battery::adm1191_conv_init()

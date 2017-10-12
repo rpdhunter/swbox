@@ -183,6 +183,10 @@ SQL_PARA *SqlCfg::default_config(void)
     sql_para.menu_aa = AA_Ultrasonic;
     sql_para.menu_ae = Disable;
 
+    sql_para.sync_mode = SYNC_NONE;
+    sql_para.sync_internal_val = 0;
+    sql_para.sync_external_val = 0;
+
     return &sql_para;
 }
 

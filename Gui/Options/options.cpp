@@ -6,10 +6,11 @@
 #include <QThreadPool>
 
 
+
 #define GRADE_1             3
 #define GRADE_2_NORMAL      6
 #define GRADE_2_WIFI        2
-#define GRADE_2_ADVANCED    3
+#define GRADE_2_ADVANCED    6
 
 
 Options::Options(QWidget *parent, G_PARA *g_data) : QFrame(parent),ui(new Ui::OptionUi)
@@ -28,6 +29,8 @@ Options::Options(QWidget *parent, G_PARA *g_data) : QFrame(parent),ui(new Ui::Op
     _datetime = QDateTime::currentDateTime();
     inputStatus = false;
     isBusy = false;
+    wifi_config = NULL;
+
 
     contextMenu = new QListWidget(this);        //右键菜单
     contextMenu->setStyleSheet("QListWidget {border-image: url(:/widgetphoto/bk/para_child.png);color:gray;outline: none;}");
@@ -64,10 +67,13 @@ void Options::optionIni()
     Common::setTab(tab1);
     tab2 = new QLabel(tr("高级设置"),ui->tabWidget->tabBar());
     Common::setTab(tab2);
+//    tab3 = new QLabel(tr("硬件监测"),ui->tabWidget->tabBar());
+//    Common::setTab(tab3);
 
     ui->tabWidget->tabBar()->setTabButton(0,QTabBar::RightSide,tab0);
     ui->tabWidget->tabBar()->setTabButton(1,QTabBar::RightSide,tab1);
     ui->tabWidget->tabBar()->setTabButton(2,QTabBar::RightSide,tab2);
+//    ui->tabWidget->tabBar()->setTabButton(3,QTabBar::RightSide,tab3);
 
     for (int i = 0; i < ui->tabWidget->count(); ++i) {
         ui->tabWidget->widget(i)->setStyleSheet("QWidget {background-color:lightGray;}");
@@ -82,19 +88,63 @@ void Options::optionIni()
     group2->addButton(ui->rbt_key_on);
 }
 
-void Options::wifiIni()
+void Options::wifi_connect()
 {
-    tools = new WifiTools(wifi_config);
-    connect(tools, SIGNAL(wifi_list(QStringList)), this, SLOT(refresh_wifilist(QStringList)) );
+    QString name = ui->listWidget->currentItem()->text();
+    QString password = "";
+    //通过密码本查找密码(to be)
+
+    if(password.isEmpty()){     //没找到,开启虚拟键盘
+        emit show_input("");
+        inputStatus = true;
+    }
+    else{
+        wifi_connect(name, password);
+    }
+}
+
+void Options::input_finished(QString str)
+{
+    inputStatus = false;
+    if(key_val->grade.val2 == 2 && key_val->grade.val3 == 1){       //wifi设置
+//    wifi_connect(ui->listWidget->currentItem()->text(),str);
+        wifi_connect(ui->listWidget->currentItem()->text(),"zdit.com.cn");
+    }
+    else if(key_val->grade.val2 == 2 && key_val->grade.val3 == 2 && !str.isEmpty()){
+        if(key_val->grade.val4 == 1){
+            ui->lineEdit_wifi_hot_name->setText(str);
+            ui->lineEdit_wifi_hot_name->selectAll();
+        }
+        else if(key_val->grade.val4 == 2){
+            ui->lineEdit_wifi_hot_password->setText(str);
+            ui->lineEdit_wifi_hot_password->selectAll();
+        }
+
+    }
+    refresh();
+
+}
+
+void Options::wifi_connect(QString name, QString password)
+{
+    tools = new WifiTools(wifi_config,WifiTools::WorkMode::Connect,name,password);
     QThreadPool::globalInstance()->start(tools);
 }
 
-void Options::refresh_wifilist(QStringList list)
+void Options::refresh_wifilist(QStringList list,WifiConfig *con)
 {
     emit show_indicator(false);
+    wifi_config = con;
     isBusy = false;
     ui->listWidget->clear();
     ui->listWidget->addItems(list);
+}
+
+void Options::wifi_hotpot_finished()
+{
+    emit show_indicator(false);
+    emit show_wifi_icon(WIFI_HOTPOT);
+    isBusy = false;
 }
 
 void Options::working(CURRENT_KEY_VALUE *val)
@@ -112,11 +162,7 @@ void Options::working(CURRENT_KEY_VALUE *val)
 
 void Options::trans_key(quint8 key_code)
 {
-    if (key_val == NULL) {
-        return;
-    }
-
-    if (key_val->grade.val0 != 5 || key_val->grade.val1 != 1) {
+    if (key_val == NULL || key_val->grade.val0 != 5 || key_val->grade.val1 != 1) {
         return;
     }
 
@@ -133,15 +179,53 @@ void Options::trans_key(quint8 key_code)
     case KEY_OK:
         if(key_val->grade.val3 != 0){
             if(key_val->grade.val2 == 2){
-                if(key_val->grade.val3 == 1){
-                    emit show_indicator(true);
-                    isBusy = true;
-                    wifiIni();      //刷新列表
+                if(key_val->grade.val3 == 1){       //wifi设置
+                    if(key_val->grade.val4 == 0){
+                        emit show_indicator(true);
+                        isBusy = true;
+                        //刷新列表
+                        tools = new WifiTools(wifi_config,WifiTools::WorkMode::Init);
+                        connect(tools, SIGNAL(wifi_list(QStringList,WifiConfig*)), this, SLOT(refresh_wifilist(QStringList,WifiConfig*)) );
+                        QThreadPool::globalInstance()->start(tools);
+                    }
+                    else{
+                        switch (key_val->grade.val5) {
+                        case 0:
+                        case 1:         //连接/断开连接
+                            wifi_connect();
+                            break;
+                        case 2:         //显示信息
+                            tools = new WifiTools(wifi_config,WifiTools::WorkMode::Info);
+                            QThreadPool::globalInstance()->start(tools);
+                            break;
+                        default:
+                            break;
+                        }
+                        key_val->grade.val5 = 0;
+                    }
                 }
-                else{
-                    emit show_input();      //开启软键盘
-                    inputStatus = true;
-
+                else {              //wifi热点
+                    switch (key_val->grade.val4) {
+                    case 0:         //开启热点
+//                        wifi_config->wifi_hotpot(ui->lineEdit_wifi_hot_name->text(), ui->lineEdit_wifi_hot_password->text());
+                        emit show_indicator(true);
+                        isBusy = true;
+                        tools = new WifiTools(wifi_config,WifiTools::WorkMode::Hotpot,
+                                              ui->lineEdit_wifi_hot_name->text(),ui->lineEdit_wifi_hot_password->text() );
+                        connect(tools, SIGNAL(wifi_hotpot_finished()), this, SLOT(wifi_hotpot_finished()) );
+                        QThreadPool::globalInstance()->start(tools);
+                        break;
+                    case 1:         //修改名称
+                        emit show_input(ui->lineEdit_wifi_hot_name->text());
+                        inputStatus = true;
+                        break;
+                    case 2:         //修改密码
+                        emit show_input(ui->lineEdit_wifi_hot_password->text());
+                        inputStatus = true;
+                        break;
+                    default:
+                        break;
+                    }
                 }
             }
             else{
@@ -150,12 +234,14 @@ void Options::trans_key(quint8 key_code)
         }
         break;
     case KEY_CANCEL:
-        if(key_val->grade.val4!=0){     //退出日期编辑模式
+        if(key_val->grade.val5!=0){     //退出右键菜单
+            key_val->grade.val5=0;
+        }
+        else if(key_val->grade.val4!=0){     //退出日期编辑模式
             key_val->grade.val4=0;
         }
         else if(key_val->grade.val3 != 0){  //退出次级菜单
             key_val->grade.val3 = 0;
-//            view->hide();
         }
         else{
             key_val->grade.val2 = 0;    //其他模式下就全退出了
@@ -181,13 +267,6 @@ void Options::trans_key(quint8 key_code)
         break;
     }
     refresh();
-}
-
-void Options::input_finished(QString str)
-{
-    inputStatus = false;
-    qDebug() << "Option recv str:"<<str;
-
 }
 
 void Options::do_key_up_down(int d)
@@ -229,10 +308,43 @@ void Options::do_key_up_down(int d)
             }
             break;
         case 2:     //wifi
-            Common::change_index(key_val->grade.val3, d, ui->listWidget->count() + 1 , 1);
+//            Common::change_index(key_val->grade.val3, d, ui->listWidget->count() + 1 , 1);
+            if(key_val->grade.val5 == 0){
+                switch (key_val->grade.val3) {
+                case 1:
+                    if(ui->listWidget->count() > 0){
+                        Common::change_index(key_val->grade.val4,d,ui->listWidget->count(),0);
+                    }
+                    break;
+                case 2:
+//                    if(ui->listWidget_hot->count() > 0){
+                        Common::change_index(key_val->grade.val4,d,2,0);
+//                    }
+                    break;
+                default:
+                    break;
+                }
+            }
+            else{
+                Common::change_index(key_val->grade.val5, d, 2 , 1);
+            }
+
             break;
         case 3:     //高级
             Common::change_index(key_val->grade.val3, d, GRADE_2_ADVANCED , 1);
+            switch (key_val->grade.val3) {
+            case 4:
+                sql_para.sync_mode = SYNC_NONE;
+                break;
+            case 5:
+                sql_para.sync_mode = SYNC_INTERNAL;
+                break;
+            case 6:
+                sql_para.sync_mode = SYNC_EXTERNAL;
+                break;
+            default:
+                break;
+            }
             break;
         default:
             break;
@@ -283,23 +395,13 @@ void Options::do_key_left_right(int d)
         }
         break;
     case 2:         //wifi
-        switch (key_val->grade.val3) {
-        case 0:         //进入菜单
-            if(d > 0){
-                key_val->grade.val3 = 1;
-            }
-            break;
-        case 1:
-            if(d < 0){
-                key_val->grade.val3 = 0;
-            }
-            break;
-        default:
-            if(key_val->grade.val3 > 1 && d > 0){
-                contextMenu->show();
-            }
-            break;
+        if(key_val->grade.val4 > 0){
+            Common::change_index(key_val->grade.val5,d,2,0);
         }
+        else if(key_val->grade.val4 == 0){
+            Common::change_index(key_val->grade.val3,d,2,0);
+        }
+
         break;
     case 3:         //高级
         switch (key_val->grade.val3) {
@@ -313,7 +415,13 @@ void Options::do_key_left_right(int d)
             sql_para.file_copy_to_SD = !sql_para.file_copy_to_SD;
             break;
         case 3:         //自动录波间隔
-            sql_para.auto_rec_interval += d;
+            Common::change_index(sql_para.auto_rec_interval, d, 100, 0);
+            break;
+        case 5:         //内同步补偿值
+            Common::change_index(sql_para.sync_internal_val, d, 360, 0);
+            break;
+        case 6:         //外同步补偿值
+            Common::change_index(sql_para.sync_external_val, d, 360, 0);
             break;
         default:
             break;
@@ -402,14 +510,40 @@ void Options::refresh()
         ui->rbt_EN->setChecked(true);
     }
 
+    //录波文件上限
     ui->lineEdit_MaxFileNum->setText(QString("%1").arg(sql_para.max_rec_num));
+
+    //文件保存至SD卡
     if(sql_para.file_copy_to_SD){
         ui->rbt_sd_on->setChecked(true);
     }
     else{
         ui->rbt_sd_off->setChecked(true);
     }
+
+    //录波间隔
     ui->lineEdit_interval->setText(QString("%1").arg(sql_para.auto_rec_interval));
+
+    //同步模式
+    switch (sql_para.sync_mode) {
+    case SYNC_NONE:
+        ui->rbt_sync_none->setChecked(true);
+        break;
+    case SYNC_INTERNAL:
+        ui->rbt_sync_internal->setChecked(true);
+        break;
+    case SYNC_EXTERNAL:
+        ui->rbt_sync_external->setChecked(true);
+        break;
+    default:
+        break;
+    }
+
+    //内同步补偿
+    ui->lineEdit_sync_internal->setText(QString("%1").arg(sql_para.sync_internal_val));
+
+    //外同步补偿
+    ui->lineEdit_sync_external->setText(QString("%1").arg(sql_para.sync_external_val));
 
     //以下是ui视觉效果
     if(key_val != NULL){
@@ -463,43 +597,80 @@ void Options::refresh()
             }
             break;
         case 2:   //wifi
-            switch (key_val->grade.val3) {
+            ui->pushButton->setStyleSheet("");
+            ui->pushButton_hot->setStyleSheet("");
+            ui->listWidget->setCurrentRow(-1);
+
+            switch (key_val->grade.val3) {            
             case 0:
                 tab0->setStyleSheet("QLabel{border: 0px solid darkGray;}");
                 tab1->setStyleSheet("QLabel{border: 1px solid darkGray;}");
                 tab2->setStyleSheet("QLabel{border: 0px solid darkGray;}");
-//                ui->pushButton->setChecked(false);
-                ui->pushButton->setStyleSheet("");
-                ui->listWidget->setCurrentRow(-1);
+
                 break;
-            case 1:         //刷新
-//                ui->pushButton->setChecked(true);
-                ui->pushButton->setStyleSheet("QPushButton{background-color:darkGray;}");
-                ui->listWidget->setCurrentRow(-1);
-
-
+            case 1:         //wifi设置
+                if(key_val->grade.val5 > 0){
+                    contextMenu->show();
+                    contextMenu->setCurrentRow(key_val->grade.val5-1);
+                }
+                else{
+                    contextMenu->hide();
+                }
+                if(key_val->grade.val4 == 0){
+                    ui->pushButton->setStyleSheet("QPushButton{background-color:darkGray;}");
+                }
+                else {
+                    ui->listWidget->setCurrentRow(key_val->grade.val4-1);
+                }
+                break;
+            case 2:         //wifi热点
+                ui->lineEdit_wifi_hot_name->deselect();
+                ui->lineEdit_wifi_hot_password->deselect();
+                switch (key_val->grade.val4) {
+                case 0:
+                    ui->pushButton_hot->setStyleSheet("QPushButton{background-color:darkGray;}");
+                    break;
+                case 1:
+                    ui->lineEdit_wifi_hot_name->selectAll();
+                    break;
+                case 2:
+                    ui->lineEdit_wifi_hot_password->selectAll();
+                    break;
+                default:
+                    break;
+                }
                 break;
             default:
-//                ui->pushButton->setChecked(false);
-                ui->pushButton->setStyleSheet("");
-                ui->listWidget->setCurrentRow(key_val->grade.val3 - 2);
                 break;
             }
             break;
         case 3:     //高级
+            ui->lineEdit_MaxFileNum->deselect();
+            ui->lineEdit_interval->deselect();
+            ui->lineEdit_sync_external->deselect();
+            ui->lineEdit_sync_internal->deselect();
             switch (key_val->grade.val3) {
             case 0:
                 tab0->setStyleSheet("QLabel{border: 0px solid darkGray;}");
                 tab1->setStyleSheet("QLabel{border: 0px solid darkGray;}");
                 tab2->setStyleSheet("QLabel{border: 1px solid darkGray;}");
-                ui->lineEdit_MaxFileNum->deselect();
-                ui->lineEdit_interval->deselect();
                 break;
             case 1:     //文件个数
                 ui->lineEdit_MaxFileNum->selectAll();
                 break;
             case 3:     //录波间隔
                 ui->lineEdit_interval->selectAll();
+                break;
+            case 4:
+                ui->rbt_sync_none->setChecked(true);
+                break;
+            case 5:
+                ui->rbt_sync_internal->setChecked(true);
+                ui->lineEdit_sync_internal->selectAll();
+                break;
+            case 6:
+                ui->rbt_sync_external->setChecked(true);
+                ui->lineEdit_sync_external->selectAll();
                 break;
             default:
                 break;

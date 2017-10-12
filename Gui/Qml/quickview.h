@@ -14,14 +14,14 @@ public:
     QuickView(QString str = 0);
 
 public slots:
-    void show_input();                          //主界面交互
+    void show_input(QString str);                          //主界面交互
     void trans_input_key(quint8 key_code);      //主界面交互
     void editFinished(QString str);             //QML交互
 
 signals:
     void mouseClicked(int mouseX,int mouseY);   //QML交互
     void mouseMoved(int mouseX,int mouseY);     //QML交互
-    void inputClear();
+    void inputClear(QString str);
     void input_str(QString str);
 
 private slots:
