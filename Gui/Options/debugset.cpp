@@ -29,7 +29,7 @@ DebugSet::DebugSet(G_PARA *g_data,QWidget *parent) : QFrame(parent),ui(new Ui::D
     connect(timer_rdb, SIGNAL(timeout()), this, SLOT(fresh_rdb_data()) );
 
     timer_hardware = new QTimer;
-    timer_hardware->start(5000);
+    timer_hardware->start(2000);
     connect(timer_hardware, SIGNAL(timeout()), this, SLOT(fresh_hardware_status()) );
 
     iniUi();

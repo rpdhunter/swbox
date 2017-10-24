@@ -26,6 +26,7 @@
 #include "Options/systeminfo.h"
 
 #include "Common/common.h"
+#include "IO/rtu/rtu.h"
 
 
 namespace Ui {
@@ -54,6 +55,7 @@ private slots:
     void fresh_status();
     void fresh_batt();
     void system_reboot();
+    void system_sleep();
     void set_reboot_time();
     void show_message(QString str);
     void show_busy(bool f);
@@ -97,10 +99,13 @@ private:
     QTimer *timer_time;                 //系统时间和系统关机倒计时
     QTimer *timer_batt;                 //电池电量监视
     QTimer *timer_reboot;               //系统关机计时器
+    QTimer *timer_sleep;               //系统休眠计时器
     Battery *battery;
     int low_power;                      //自动关机计数
 
     QQuickWidget *busyIndicator;
+
+    Rtu *rtu;
 
     void menu_init();
     void statusbar_init();

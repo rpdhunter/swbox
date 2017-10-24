@@ -23,6 +23,7 @@
 
 #define SYSTEM_FREQ			50
 #define BACK_LIGTH			3
+#define SCREEN_CLOSE_TIME   30
 #define SHUT_DOWN_TIME		5
 #define LANGUAGE_DEF		CN
 #define MAX_REC_NUM			200
@@ -41,6 +42,7 @@ enum DISPLAY {
     BASIC = 0,
     PRPD = 1,
     Histogram = 2,
+    PRPS = 3,
 };
 
 enum FILTER {
@@ -143,8 +145,8 @@ typedef struct SQL_PARA {
     int freq_val;                   //频率（需要FPGA同步）
     int backlight;                  //背光（需要FPGA同步）
     int key_backlight;              //键盘背光（需要FPGA同步）
-    int screen_close_time;          //屏幕自动关闭时间，暂时没有使用，预留
-    int close_time;                 //自动关机时间
+    int screen_close_time;          //屏幕自动关闭时间，单位为秒
+    int close_time;                 //自动关机时间,单位为分钟
     int max_rec_num;                //录波文件保存个数
     bool file_copy_to_SD;           //是否保存文件到SD卡
     int auto_rec_interval;          //自动录波间隔

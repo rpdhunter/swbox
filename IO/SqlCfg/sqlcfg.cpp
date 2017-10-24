@@ -166,7 +166,7 @@ SQL_PARA *SqlCfg::default_config(void)
 
     sql_para.key_backlight = 0;                             //默认键盘背光关闭
 
-    sql_para.screen_close_time = 4;
+    sql_para.screen_close_time = SCREEN_CLOSE_TIME;
 
     sql_para.close_time = SHUT_DOWN_TIME;
 

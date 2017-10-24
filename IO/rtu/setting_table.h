@@ -303,5 +303,6 @@ int setting_param_show ();
 
 int init_device_setting_param ();
 
+
 #endif /* _SETTING_TABLE_H_ */
 

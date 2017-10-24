@@ -3,6 +3,7 @@
 
 #include <QFrame>
 #include <QVector>
+#include <QGraphicsView>
 
 #include "IO/Data/data.h"
 #include "IO/Key/key.h"
@@ -11,6 +12,7 @@
 #include "IO/rdb/rdb.h"
 
 #include "../Common/barchart.h"
+#include "../Common/prpsscene.h"
 #include "../Common/recwaveform.h"
 #include "../Common/common.h"
 
@@ -73,6 +75,8 @@ private:
     QTimer *timer1, *timer2 , *timer_freeze;
     quint32 groupNum;   //用于判别PRPD图数据有效性的组号(0-3变化)
     QwtPlot *plot_Barchart, *plot_PRPD, *plot_Histogram;
+    QGraphicsView *plot_PRPS;
+    PRPSScene *scene;
     BarChart *d_PRPS;              //PRPS图
     QwtPlotSpectroCurve *d_PRPD;   //PRPD图
     QwtPlotHistogram *d_histogram;   //Histogram图
@@ -87,7 +91,7 @@ private:
     QVector<QwtIntervalSample> histogram_data;
     G_RECV_PARA_PRPD *data_prpd;
 
-    void transData(int x, int y);
+    void transData(int &x, int &y);
     void PRPDReset();
 	void calc_tev_value (double * tev_val, double * tev_db, int * sug_central_offset, int * sug_offset);
     void do_key_up_down(int d);

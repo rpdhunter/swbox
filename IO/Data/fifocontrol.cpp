@@ -276,6 +276,8 @@ void FifoControl::regs_init()
     tdata->set_send_para (sp_rec_start_hfct1, 3);
     tdata->set_send_para (sp_rec_start_hfct2, 3);
 
+//    tdata->set_send_para (sp_fpga_sleep, 0);//xwt
+
     send_para();
 }
 
@@ -310,7 +312,8 @@ void FifoControl::check_send_param(RPARA pp[], int index, unsigned int data_mask
 //                && index != sp_rec_start_tev1 && index != sp_rec_start_tev2
                 && index != sp_rec_start_hfct1 && index != sp_rec_start_hfct2
                 && index != sp_read_fpga_prpd1 && index != sp_read_fpga_hfct1
-                && index != sp_read_fpga_prpd2 && index != sp_read_fpga_hfct2){
+                && index != sp_read_fpga_prpd2 && index != sp_read_fpga_hfct2
+                ){
 //            qDebug("WRITE_REG = 0x%08x", temp);
             qDebug().noquote() << QString("%1 = 0x%2").arg(send_para_to_string(index)).arg(temp,8,16, QLatin1Char('0'));
         }

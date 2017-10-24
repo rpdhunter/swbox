@@ -65,7 +65,8 @@ SOURCES += \
     IO/rtu/iec101.c \
     IO/rtu/rtu.cpp \
     IO/Other/CPU/xadc_core.c \
-    IO/Other/CPU/cpustatus.cpp
+    IO/Other/CPU/cpustatus.cpp \
+    Gui/Common/prpsscene.cpp
 
 
 HEADERS  += \
@@ -118,7 +119,8 @@ HEADERS  += \
     IO/Other/CPU/xadc_core.h \
     IO/Other/CPU/types.h \
     IO/Other/CPU/events.h \
-    IO/Other/CPU/cpustatus.h
+    IO/Other/CPU/cpustatus.h \
+    Gui/Common/prpsscene.h
 
 
 RESOURCES += \

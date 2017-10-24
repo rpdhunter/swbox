@@ -7,7 +7,7 @@ class Rtu
 public:
     Rtu();
 
-#if 0
+#if 1
     int init_rtu();
     static int test_menu ();
 

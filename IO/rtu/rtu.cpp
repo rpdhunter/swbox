@@ -12,6 +12,7 @@
 #include "../rdb/point_table.h"
 #include "../rdb/rdb.h"
 #include "../rdb/comm_head.h"
+#include "../rtu/setting_value.c"
 
 #if 0
 extern "C"
@@ -29,11 +30,11 @@ int gpio_edge (unsigned int gpio_pin, char * edge /* none, rising, falling, both
 
 Rtu::Rtu()
 {
-//    init_rtu ();
+    init_rtu ();
 //    test_menu ();
 }
 
-#if 0
+#if 1
 
 int Rtu::init_rtu()
 {
@@ -43,7 +44,7 @@ int Rtu::init_rtu()
     init_rdb ();                        //创建点表以及消息池，处理各事件
 
     /* init protocols at last */
-    init_iec104_server ();
+//    init_iec104_server ();
     init_iec101_service ();
 
     printf ("ftu main started\n");

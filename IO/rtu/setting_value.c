@@ -23,6 +23,7 @@ unsigned int * prot_setting_mem_base = NULL;
 unsigned int prot_setting_mem_size = 0;
 unsigned int prot_setting_mem_offset = 0;
 
+
 static setting_param_table_t * setting_param_tables;
 
 static int init_setting_param_memory ();

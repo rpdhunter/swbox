@@ -28,11 +28,11 @@ int UART_write (UART_Handle handle, const void * buffer, int size)
 	if (size > 0) {
 		//if (ndp->rs485_rw_pin >= 0 && ndp->mode == MODBUS_MODE_485) {
 		//目前为485模式，不用判断
-		gpio_set(GPIO_RS485_RW, RS485_WR);	/* set wr */
+        //gpio_set(GPIO_RS485_RW, RS485_WR);	/* set wr */
 		len = uart_send(handle, buffer, size);
-		sleep_cnt = (size * 9000 / 9600 + 2) * 1000;
-		usleep(sleep_cnt);	/* sleep for a while, waiting for send completed */
-		gpio_set(GPIO_RS485_RW, RS485_RD);	/* set rd */
+        //sleep_cnt = (size * 9000 /  9600 + 2) * 1000;
+        //usleep(sleep_cnt);	/* sleep for a while, waiting for send completed */
+        //gpio_set(GPIO_RS485_RW, RS485_RD);	/* set rd */
 #if 0
 		if (ndp->rs485_rw_pin >= 0 && ndp->mode == MODBUS_MODE_485) {
 			sleep_cnt = (ndp->send_len * 9000 / ndp->baundrate + 2) * 1000;
@@ -42,7 +42,8 @@ int UART_write (UART_Handle handle, const void * buffer, int size)
 #endif
 		if (len == size) {
 			show_msg("sent msg", (char *)buffer, size);
-			return 0;
+//			return 0;
+            return len;
 		}
 		else {
 			return -1;

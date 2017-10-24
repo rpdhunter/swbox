@@ -39,14 +39,15 @@ MainWindow::MainWindow(QSplashScreen *sp, QWidget *parent ) :
     fifodata = new FifoData(data);
 
     sp->showMessage(tr("正在初始化通信..."),Qt::AlignBottom|Qt::AlignLeft);
-    modbus = new Modbus(this,data);
+//    modbus = new Modbus(this,data);
+//    rtu = new Rtu;
 
     //注册两个自定义类型
     qRegisterMetaType<VectorList>("VectorList");
     qRegisterMetaType<MODE>("MODE");
 
     connect(keydetect, &KeyDetect::sendkey, this, &MainWindow::trans_key);
-    connect(modbus,SIGNAL(closeTimeChanged(int)),this,SLOT(set_reboot_time()) );
+//    connect(modbus,SIGNAL(closeTimeChanged(int)),this,SLOT(set_reboot_time()) );
 
 #ifdef PRINTSCREEN
     connect(timer_time,SIGNAL(timeout()),this,SLOT(printSc()));  //截屏
@@ -126,11 +127,17 @@ void MainWindow::statusbar_init()
 
     timer_reboot =  new QTimer();
     timer_reboot->setSingleShot(true);
+
+    timer_sleep =  new QTimer();
+    timer_sleep->setInterval(30*1000);  //暂时设定为30秒
+    timer_sleep->setSingleShot(true);
+
     set_reboot_time();
 
     connect(timer_time, SIGNAL(timeout()), this, SLOT(fresh_status()) );
     connect(timer_batt, SIGNAL(timeout()), this, SLOT(fresh_batt()) );
     connect(timer_reboot, SIGNAL(timeout()), this, SLOT(system_reboot()) );
+    connect(timer_sleep, SIGNAL(timeout()), this, SLOT(system_sleep()) );
 
     fresh_batt();       //立刻显示一次电量
 
@@ -710,16 +717,23 @@ void MainWindow::fresh_grade1()
 
 void MainWindow::set_reboot_time()
 {
+    //重启关机计时器
     int m = sqlcfg->get_para()->close_time;
     if(m != 0){
-        timer_reboot->setInterval(m*60 *1000);
-        timer_reboot->start();
+        timer_reboot->start(m*60 *1000);
 //        qDebug()<<"reboot timer started!  interval is :"<<m*60<<"sec";
     }
     else if(timer_reboot->isActive()){
         timer_reboot->stop();
         qDebug()<<"reboot timer stoped!";
     }
+    //重启休眠计时器
+    if(!timer_sleep->isActive()){
+        qDebug()<<"screen_close_time"<<sqlcfg->get_para()->screen_close_time;
+        data->set_send_para(sp_backlight_reg,sqlcfg->get_para()->backlight);        //恢复屏幕亮度
+        data->set_send_para(sp_fpga_sleep,1);                                       //开启复杂功能
+    }
+    timer_sleep->start(sqlcfg->get_para()->screen_close_time * 1000);
 }
 
 void MainWindow::fresh_status()
@@ -805,6 +819,13 @@ void MainWindow::system_reboot()
 {
     qDebug()<<"system will reboot immediately!";
     system("reboot");
+}
+
+void MainWindow::system_sleep()
+{
+    qDebug()<<"system will sleep immediately!";
+    data->set_send_para(sp_backlight_reg,0);        //关屏(to be)
+    data->set_send_para(sp_fpga_sleep,0);           //关闭复杂功能
 }
 
 void MainWindow::show_message(QString str)

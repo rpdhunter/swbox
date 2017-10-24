@@ -3,10 +3,14 @@
 
 //基地址
 #define AXI_STREAM_BASE0		0x43c00000  //基本读（读）
-#define AXI_STREAM_BASE1		0x43c10000  //基本写（写）
+//#define AXI_STREAM_BASE1		0x43c10000  //基本写（写）
+#define AXI_STREAM_BASE1		0x83c00000  //1013xwt
+
 #define AXI_STREAM_BASE2		0x43c20000  //超声1（写）
 #define AXI_STREAM_BASE3		0x43c30000  //超声2（写）
-#define AXI_STREAM_BASE4		0x83c00000  //预留（写）
+//#define AXI_STREAM_BASE4		0x83c00000  //预留（写）
+#define AXI_STREAM_BASE4		0x43c10000  //1013xwt
+
 #define AXI_STREAM_BASE6		0x43c40000  //HFCT1（读）
 #define AXI_STREAM_BASE5		0x43c50000  //HFCT2（读）
 #define AXI_STREAM_BASE7		0x43c60000  //PRPD1（读）
@@ -84,6 +88,8 @@
 #define READ_FPGA_HFCT1         0x0034          //HFCT1模式
 #define READ_FPGA_HFCT2         0x0035          //HFCT2模式
 
+#define FPGA_SLEEP              0x0036          //FPGAsleep
+
 enum send_params {
     //常规功能设置
     sp_ram_reset = 0,
@@ -121,6 +127,8 @@ enum send_params {
     sp_read_fpga_prpd2,
     sp_read_fpga_hfct1,
     sp_read_fpga_hfct2,
+
+    sp_fpga_sleep,  //xwt
 
     sp_num
 };

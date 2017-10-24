@@ -167,9 +167,11 @@ int set_seconds_1900(time_type * tt_1900)
 static int init_iec101_data_local_mem ()
 {
 	iec101_service = (struct APPDEF *)malloc (sizeof (struct APPDEF));
+
 	if (iec101_service == NULL) {
 		return -1;
 	}
+
 	memset (iec101_service, 0, sizeof (struct APPDEF));
 	
 	return 0;
@@ -657,6 +659,7 @@ int init_iec101_service()
 	if (init_iec101_data_local_mem () < 0) {
 		return -1;
 	}
+
 	dp= iec101_service;
 	dp->app_id=IEC101_APPID;
 
@@ -664,7 +667,7 @@ int init_iec101_service()
 	if(IEC101ReportPtrMallocInit(dp)==NO) {
 		dp->ProtoEnableFig=NO;
 	}
-	
+
 	init_iec101_reg_rdb(dp);
 	
 	/**********INTI COM ***********/
@@ -673,10 +676,10 @@ int init_iec101_service()
 	dp->rs_mode = device_setting_value->uart_mode [1] == 0 ? 232 : 485;
 	boudrate = device_setting_value->uart_boundrate [1];
 	parity = device_setting_value->uart_parity [1];
-	*/
-	dp->rs_mode = 485;
-	boudrate = 9600;
-	parity = 1;
+    */
+    dp->rs_mode = 232;
+    boudrate = 115200;
+    parity = 0;
 	memset(dp->app_name,0,32);
 	sprintf(dp->app_name,"UART:1");		/* ����1 (�����2������) */
 	
@@ -686,21 +689,21 @@ int init_iec101_service()
 		return -1;
 	}
 	/********************/
-
 	tid = thread_create ("time task", 1000 * 2, 1, timer1s_task, (void *)dp);
-	if (tid < 0) {
+
+    if ((int)tid == -1) {
 		IEC101Printf (dp,"construct_task timer 200ms task error\n");
 		return -1;
 	}
 
 	tid = thread_create ("101 task", 1000 * 4,1, iec101_task, (void *)dp);
-	if (tid < 0) {
+    if ((int)tid == -1) {
 		IEC101Printf (dp,"construct_task iec101 task error\n");
 		return -1;
 	}
 
 	tid = thread_create ("101 recv", 1000 * 4, 1, iec101_recv, (void *)dp);
-	if (tid < 0) {
+    if ((int)tid == -1) {
 		IEC101Printf (dp,"construct_task iec101 recv error\n");
 		return -1;
 	}
@@ -3966,24 +3969,24 @@ static void IEC101BalanceModeCheckSendDataClm(struct APPDEF *dp)
 					{
 						if(((dp->InitStepFig2)&INIT_LINKREPLY)==0){
 							IEC101AskLinkState(dp);
-							IEC101Printf(dp,"��һ����·��ʼ������ѯ��վ��·״̬.\n");
+//							IEC101Printf(dp,"��һ����·��ʼ������ѯ��վ��·״̬.\n");
 						}
 						if((((dp->InitStepFig2)&INIT_LINKREPLY)>0)&&
 						  (((dp->InitStepFig2)&INIT_FCBRST)==0)){
 							IEC101RstLinkState(dp);
-							IEC101Printf(dp,"��һ����·��ʼ������λ��վ��·״̬.\n");
+//							IEC101Printf(dp,"��һ����·��ʼ������λ��վ��·״̬.\n");
 						}
 					}
 				}
 				if(dp->LnkInitStartFig2==YES) {
 					if(((dp->InitStepFig2)&INIT_LINKREPLY)==0) {
 						IEC101AskLinkState(dp);
-						IEC101Printf(dp,"��վ����·��ʼ������ѯ��վ��·״̬.\n");
+//						IEC101Printf(dp,"��վ����·��ʼ������ѯ��վ��·״̬.\n");
 					}
 					if((((dp->InitStepFig2)&INIT_LINKREPLY)>0)
 					&&(((dp->InitStepFig2)&INIT_FCBRST)==0)) {
 						IEC101RstLinkState(dp);
-						IEC101Printf(dp,"��վ����·��ʼ������λ��վ��·״̬.\n");
+//						IEC101Printf(dp,"��վ����·��ʼ������λ��վ��·״̬.\n");
 					}
 				}
 			}
@@ -3992,7 +3995,7 @@ static void IEC101BalanceModeCheckSendDataClm(struct APPDEF *dp)
 				if((dp->fresendframe2) <= IEC101_MAX_RESEND_NUM)
 				{
 					IEC101SendData(dp,dp->sbuf2,dp->slen2);
-					IEC101Printf(dp,"warning ����ʱ�ط�,��%d��\n",dp->fresendframe2);
+//					IEC101Printf(dp,"warning ����ʱ�ط�,��%d��\n",dp->fresendframe2);
 				}
 				dp->fresendfig2=NO;
 			}
@@ -4001,13 +4004,13 @@ static void IEC101BalanceModeCheckSendDataClm(struct APPDEF *dp)
 			if(dp->fsendfig2==NO) {
 				if(((dp->InitStepFig2)&INIT_LINKREPLY)==0) {
 					IEC101AskLinkState(dp);
-					IEC101Printf(dp,"��վ����·��ʼ������ѯ��վ��·״̬.\n");
+//					IEC101Printf(dp,"��վ����·��ʼ������ѯ��վ��·״̬.\n");
 					return;
 				}
 				if((((dp->InitStepFig2)&INIT_LINKREPLY)>0)
 				&&(((dp->InitStepFig2)&INIT_FCBRST)==0)) {
 					IEC101RstLinkState(dp);
-					IEC101Printf(dp,"��վ����·��ʼ������λ��վ��·״̬.\n");
+//					IEC101Printf(dp,"��վ����·��ʼ������λ��վ��·״̬.\n");
 					return;
 				}
 				if(((((dp->InitStepFig)&INIT_LINKREPLY)>0)&&(((dp->InitStepFig)&INIT_FCBRST)>0))
@@ -4021,7 +4024,7 @@ static void IEC101BalanceModeCheckSendDataClm(struct APPDEF *dp)
 				dp->fresendframe2++;
 				if((dp->fresendframe2) <= IEC101_MAX_RESEND_NUM) {
 					IEC101SendData(dp,dp->sbuf2,dp->slen2);
-					IEC101Printf(dp,"warning :��ʱ�ط�,��%d��\n",dp->fresendframe2);
+//					IEC101Printf(dp,"warning :��ʱ�ط�,��%d��\n",dp->fresendframe2);
 				}
 				dp->fresendfig2=NO;
 			}

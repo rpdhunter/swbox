@@ -56,6 +56,7 @@ TEVWidget::TEVWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu_i
     connect(this,SIGNAL(tev_PRPD_data(QVector<QwtPoint3D>)),logtools,SLOT(dealRPRDLog(QVector<QwtPoint3D>)));
 
     reload(menu_index);
+    fresh_setting();
     //自动录波
     if(tev_sql->auto_rec == true){
         data->set_send_para(sp_auto_rec, menu_index + 1);
@@ -178,7 +179,7 @@ void TEVWidget::do_key_left_right(int d)
         tev_sql->mode = !tev_sql->mode;
         break;
     case 2:
-        Common::change_index(tev_sql->mode_chart,d,Histogram,BASIC);
+        Common::change_index(tev_sql->mode_chart,d,PRPS,BASIC);
         break;
     case 3:
         Common::change_index(tev_sql->gain, d * 0.1, 20, 0.1 );
@@ -235,6 +236,16 @@ void TEVWidget::chart_ini()
     plot_Histogram->resize(200, 150);
     d_histogram = new QwtPlotHistogram;
     Common::set_histogram_style(plot_Histogram,d_histogram);
+
+    //PRPS
+    scene = new PRPSScene;
+    plot_PRPS = new QGraphicsView(ui->widget);
+//    plot_PRPS->resize(200, 150);
+    plot_PRPS->resize(ui->widget->size());
+    plot_PRPS->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    plot_PRPS->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    plot_PRPS->setStyleSheet("background:transparent;color:gray;");
+    plot_PRPS->setScene(scene);
 }
 
 void TEVWidget::calc_tev_value (double * tev_val, double * tev_db, int * sug_central_offset, int * sug_offset)
@@ -414,9 +425,20 @@ void TEVWidget::fresh_PRPD()
             x = (int)data_prpd->data[2*i+2];    /* FPGA要求数据对齐 */
             y = (int)data_prpd->data[2*i+3];    /* FPGA要求数据对齐 */
 
-//            if( !(x==0 && y==0) ){
-                transData(x,y);
-//            }
+            transData(x,y);
+
+            if(x<360 && x>=0 && y<=60 &&y>=-60){
+                QwtPoint3D p0(x,y,map[x][y+60]);
+                map[x][y+60]++;
+                QwtPoint3D p1(x,y,map[x][y+60]);
+                if(map[x][y+60]>1){
+                    int n = points.indexOf(p0);
+                    points[n] = p1;
+                }
+                else{
+                    points.append(p1);
+                }
+            }
 
 //            qDebug()<<"x0="<<data_prpd->data[2*i  ] <<"\ty0="<<data_prpd->data[2*i+1];
 //                qDebug()<<"x1="<<x <<"\ty1="<<y;
@@ -452,7 +474,7 @@ void TEVWidget::fresh_Histogram()
     plot_Histogram->replot();
 }
 
-void TEVWidget::transData(int x, int y)
+void TEVWidget::transData(int &x, int &y)
 {
     y = tev_sql->gain * TEV_FACTOR * (y - 0x8000 - tev_sql->fpga_zero) ; //注意，脉冲计算里，忽略了噪声偏置的影响
 
@@ -484,18 +506,7 @@ void TEVWidget::transData(int x, int y)
     //    }
 
 
-    if(x<360 && x>=0 && y<=60 &&y>=-60){
-        QwtPoint3D p0(x,y,map[x][y+60]);
-        map[x][y+60]++;
-        QwtPoint3D p1(x,y,map[x][y+60]);
-        if(map[x][y+60]>1){
-            int n = points.indexOf(p0);
-            points[n] = p1;
-        }
-        else{
-            points.append(p1);
-        }
-    }
+
 }
 
 void TEVWidget::PRPDReset()
@@ -525,21 +536,31 @@ void TEVWidget::fresh_setting()
         timer1->setSingleShot(false);
         ui->comboBox->setItemText(0,tr("检测模式\t[连续]"));
     }
+
     if (tev_sql->mode_chart == PRPD) {
         ui->comboBox->setItemText(1,tr("图形显示\t[PRPD]"));
         plot_PRPD->show();
         plot_Barchart->hide();
         plot_Histogram->hide();
+        plot_PRPS->hide();
     } else if(tev_sql->mode_chart == BASIC){
         ui->comboBox->setItemText(1,tr("图形显示 \t[时序图]"));
         plot_PRPD->hide();
         plot_Barchart->show();
         plot_Histogram->hide();
+        plot_PRPS->hide();
     } else if(tev_sql->mode_chart == Histogram){
         ui->comboBox->setItemText(1,tr("图形显示 \t[柱状图]"));
         plot_PRPD->hide();
         plot_Barchart->hide();
         plot_Histogram->show();
+        plot_PRPS->hide();
+    } else if(tev_sql->mode_chart == PRPS){
+        ui->comboBox->setItemText(1,tr("图形显示 \t[PRPS]"));
+        plot_PRPD->hide();
+        plot_Barchart->hide();
+        plot_Histogram->hide();
+        plot_PRPS->show();
     }
     ui->comboBox->setItemText(2,tr("增益调节\t[×%1]").arg(QString::number(tev_sql->gain, 'f', 1)));
     ui->comboBox->setItemText(3,tr("黄色报警阈值\t[%1]dB").arg(QString::number(tev_sql->low)));
