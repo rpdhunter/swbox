@@ -49,8 +49,7 @@ HFCTWidget::HFCTWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu
     timer_freeze->setInterval(FREEZE_TIME);      //5秒内不出现新录波界面
     timer_freeze->setSingleShot(true);
 
-    BarChart_inti();
-    PRPD_inti();
+    chart_ini();
 
     recWaveForm = new RecWaveForm(menu_index,this);
     connect(this, SIGNAL(send_key(quint8)), recWaveForm, SLOT(trans_key(quint8)));
@@ -72,6 +71,7 @@ HFCTWidget::HFCTWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu
     }
     //设置滤波器
     data->set_send_para (sp_filter_mode, hfct_sql->filter);
+    fresh_setting();
 }
 
 HFCTWidget::~HFCTWidget()
@@ -207,7 +207,7 @@ void HFCTWidget::do_key_left_right(int d)
         hfct_sql->mode = !hfct_sql->mode;
         break;
     case 2:
-        Common::change_index(hfct_sql->mode_chart,d,PRPD,BASIC);
+        Common::change_index(hfct_sql->mode_chart,d,PRPS,BASIC);
         break;
     case 3:
         Common::change_index(hfct_sql->gain, d * 0.1, 20, 0.1 );
@@ -240,23 +240,31 @@ void HFCTWidget::showWaveData(VectorList buf, MODE mod)
     }
 }
 
-void HFCTWidget::BarChart_inti()
+void HFCTWidget::chart_ini()
 {
-    plot_PRPS = new QwtPlot(ui->widget);
-    plot_PRPS->resize(200, 140);
-    Common::set_barchart_style(plot_PRPS,PC_MAX);
-    d_PRPS = new BarChart(plot_PRPS, &db, &high, &low);
+    //棒状图
+    plot_BarChart = new QwtPlot(ui->widget);
+    plot_BarChart->resize(200, 140);
+    Common::set_barchart_style(plot_BarChart,PC_MAX);
+    d_PRPS = new BarChart(plot_BarChart, &db, &high, &low);
     connect(timer1, SIGNAL(timeout()), d_PRPS, SLOT(fresh()) );
-}
 
-void HFCTWidget::PRPD_inti()
-{
+    //PRPS
+    scene = new PRPSScene(mode);
+    plot_PRPS = new QGraphicsView(ui->widget);
+    plot_PRPS->resize(ui->widget->size());
+    plot_PRPS->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    plot_PRPS->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    plot_PRPS->setStyleSheet("background:transparent;color:gray;");
+    plot_PRPS->setScene(scene);
+
+    //PRPD
     plot_PRPD = new QwtPlot(ui->widget);
     plot_PRPD->resize(200, 140);
     d_PRPD = new QwtPlotSpectroCurve;
     Common::set_PRPD_style(plot_PRPD,d_PRPD,VALUE_MAX);
     PRPDReset();
-    plot_PRPD->hide();
+//    plot_PRPD->hide();
 }
 
 void HFCTWidget::maxReset()
@@ -276,6 +284,8 @@ void HFCTWidget::PRPDReset()
 void HFCTWidget::fresh_PRPD()
 {
     MyKey key;
+    QVector<QPointF> PRPS_point_list;
+
     foreach (QPoint point, points_origin) {
         if(sql_para.freq_val == 50){            //x坐标变换
             key = MyKey(point.x() * 360 / 2000000 , (int)(point.y()/40)*40 );       //y做处理，为了使重复点更多，节省空间
@@ -283,6 +293,8 @@ void HFCTWidget::fresh_PRPD()
         else if(sql_para.freq_val == 60){
             key = MyKey(point.x() * 360 / 1666667 , (int)(point.y()/40)*40 );
         }
+
+        PRPS_point_list.append(QPointF(key.x, key.y));      //生成一次点序列
 
         if( map.contains(key) ){
             map[key] = map.value(key) + 1;
@@ -303,6 +315,8 @@ void HFCTWidget::fresh_PRPD()
 
     points_origin.clear();
     plot_PRPD->replot();
+
+    scene->addPRPD(PRPS_point_list);
 
 }
 
@@ -548,7 +562,7 @@ void HFCTWidget::fresh_plot()
     emit hfct_log_data(db,pulse_number,degree);
 
     pulse_number = 0;
-    plot_PRPS->replot();
+    plot_BarChart->replot();
 }
 
 void HFCTWidget::fresh_setting()
@@ -563,19 +577,30 @@ void HFCTWidget::fresh_setting()
     if (hfct_sql->mode_chart == PRPD) {
         ui->comboBox->setItemText(1,tr("图形显示\t[PRPD]"));
         plot_PRPD->show();
+        plot_BarChart->hide();
         plot_PRPS->hide();
-        //        plot_Histogram->hide();
+//                plot_Histogram->hide();
     } else if(hfct_sql->mode_chart == BASIC){
         ui->comboBox->setItemText(1,tr("图形显示 \t[时序图]"));
         plot_PRPD->hide();
-        plot_PRPS->show();
+        plot_BarChart->show();
+        plot_PRPS->hide();
         //        plot_Histogram->hide();
     } else if(hfct_sql->mode_chart == Histogram){
         ui->comboBox->setItemText(1,tr("图形显示 \t[柱状图]"));
         plot_PRPD->hide();
+        plot_BarChart->hide();
         plot_PRPS->hide();
         //        plot_Histogram->show();
     }
+    else if(hfct_sql->mode_chart == PRPS){
+        ui->comboBox->setItemText(1,tr("图形显示 \t[PRPS]"));
+        plot_PRPD->hide();
+        plot_BarChart->hide();
+        plot_PRPS->show();
+        //        plot_Histogram->show();
+    }
+
     ui->comboBox->setItemText(2,tr("增益调节\t[×%1]").arg(QString::number(hfct_sql->gain, 'f', 1)));
 
     if(hfct_sql->filter == NONE){
@@ -607,6 +632,7 @@ void HFCTWidget::fresh_setting()
 
     ui->comboBox->lineEdit()->setText(tr(" 参 数 设 置"));
 }
+
 
 
 

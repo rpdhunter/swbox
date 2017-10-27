@@ -75,9 +75,9 @@ private:
     QTimer *timer1, *timer2 , *timer_freeze;
     quint32 groupNum;   //用于判别PRPD图数据有效性的组号(0-3变化)
     QwtPlot *plot_Barchart, *plot_PRPD, *plot_Histogram;
-    QGraphicsView *plot_PRPS;
+    QGraphicsView *plot_PRPS;       //PRPS图
     PRPSScene *scene;
-    BarChart *d_PRPS;              //PRPS图
+    BarChart *d_BarChart;              //棒状图
     QwtPlotSpectroCurve *d_PRPD;   //PRPD图
     QwtPlotHistogram *d_histogram;   //Histogram图
 

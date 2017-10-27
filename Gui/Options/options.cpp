@@ -5,8 +5,6 @@
 #include <QPalette>
 #include <QThreadPool>
 
-
-
 #define GRADE_1             3
 #define GRADE_2_NORMAL      6
 #define GRADE_2_WIFI        2

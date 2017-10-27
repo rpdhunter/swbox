@@ -74,7 +74,7 @@ private:
         READ_FPGA_HFCT1,
         READ_FPGA_HFCT2,
 
-        FPGA_SLEEP,
+//        FPGA_SLEEP,
     };
 
     QString send_para_to_string(int val);

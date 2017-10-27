@@ -4,6 +4,7 @@
 #include <QFrame>
 #include <QMap>
 #include <qwt_point_3d.h>
+#include <QGraphicsView>
 
 #include "IO/Data/data.h"
 #include "IO/Key/key.h"
@@ -13,6 +14,7 @@
 #include "../Common/barchart.h"
 #include "../Common/recwaveform.h"
 #include "../Common/common.h"
+#include "../Common/prpsscene.h"
 
 namespace Ui {
 class HFCTWidget;
@@ -107,8 +109,7 @@ private slots:
 private:
     void fresh_setting(void);
 
-    void BarChart_inti();
-    void PRPD_inti();
+    void chart_ini();
 
     void maxReset();
     void PRPDReset();
@@ -121,7 +122,10 @@ private:
     HFCT_SQL *hfct_sql;
     bool manual;        //手动录波标志
 
-    QwtPlot *plot_PRPS, *plot_PRPD, *plot_Histogram;
+    QGraphicsView *plot_PRPS;       //PRPS图
+    PRPSScene *scene;
+
+    QwtPlot *plot_BarChart, *plot_PRPD, *plot_Histogram;
     BarChart *d_PRPS;              //PRPS图
     QwtPlotSpectroCurve *d_PRPD;   //PRPD图
 //    QwtPlotHistogram *d_histogram;   //Histogram图

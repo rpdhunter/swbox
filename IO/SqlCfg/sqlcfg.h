@@ -18,12 +18,13 @@
 #define AA_HIGH				40
 #define AA_LOW				20
 
-#define HFCT_HIGH				40
-#define HFCT_LOW				20
+#define HFCT_HIGH           2000
+#define HFCT_LOW			1000
 
 #define SYSTEM_FREQ			50
 #define BACK_LIGTH			3
-#define SCREEN_CLOSE_TIME   30
+#define SCREEN_DARK_TIME    30
+#define SCREEN_CLOSE_TIME   60
 #define SHUT_DOWN_TIME		5
 #define LANGUAGE_DEF		CN
 #define MAX_REC_NUM			200
@@ -40,9 +41,9 @@ enum TRIGGER_MODE {
 
 enum DISPLAY {
     BASIC = 0,
-    PRPD = 1,
-    Histogram = 2,
-    PRPS = 3,
+    PRPD = 1,    
+    PRPS = 2,
+    Histogram = 3,
 };
 
 enum FILTER {
@@ -145,6 +146,7 @@ typedef struct SQL_PARA {
     int freq_val;                   //频率（需要FPGA同步）
     int backlight;                  //背光（需要FPGA同步）
     int key_backlight;              //键盘背光（需要FPGA同步）
+    int screen_dark_time;           //屏幕自动变暗时间,单位为秒
     int screen_close_time;          //屏幕自动关闭时间，单位为秒
     int close_time;                 //自动关机时间,单位为分钟
     int max_rec_num;                //录波文件保存个数

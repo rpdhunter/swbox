@@ -37,7 +37,7 @@ TEVWidget::TEVWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu_i
     timer1->setInterval(1000);
     connect(timer1, SIGNAL(timeout()), this, SLOT(fresh_plot()));
     connect(timer1, SIGNAL(timeout()), this, SLOT(fresh_Histogram()));
-    connect(timer1, SIGNAL(timeout()), d_PRPS, SLOT(fresh()) );
+    connect(timer1, SIGNAL(timeout()), d_BarChart, SLOT(fresh()) );
 
     timer2 = new QTimer(this);
     timer2->setInterval(100);
@@ -179,7 +179,7 @@ void TEVWidget::do_key_left_right(int d)
         tev_sql->mode = !tev_sql->mode;
         break;
     case 2:
-        Common::change_index(tev_sql->mode_chart,d,PRPS,BASIC);
+        Common::change_index(tev_sql->mode_chart,d,Histogram,BASIC);
         break;
     case 3:
         Common::change_index(tev_sql->gain, d * 0.1, 20, 0.1 );
@@ -216,7 +216,16 @@ void TEVWidget::chart_ini()
     plot_Barchart = new QwtPlot(ui->widget);
     Common::set_barchart_style(plot_Barchart, VALUE_MAX);
     plot_Barchart->resize(200, 140);
-    d_PRPS = new BarChart(plot_Barchart, &db, &tev_sql->high, &tev_sql->low);
+    d_BarChart = new BarChart(plot_Barchart, &db, &tev_sql->high, &tev_sql->low);
+
+    //PRPS
+    scene = new PRPSScene(mode);
+    plot_PRPS = new QGraphicsView(ui->widget);
+    plot_PRPS->resize(ui->widget->size());
+    plot_PRPS->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    plot_PRPS->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    plot_PRPS->setStyleSheet("background:transparent;color:gray;");
+    plot_PRPS->setScene(scene);
 
     //PRPD
     if(mode == TEV1){
@@ -237,15 +246,7 @@ void TEVWidget::chart_ini()
     d_histogram = new QwtPlotHistogram;
     Common::set_histogram_style(plot_Histogram,d_histogram);
 
-    //PRPS
-    scene = new PRPSScene;
-    plot_PRPS = new QGraphicsView(ui->widget);
-//    plot_PRPS->resize(200, 150);
-    plot_PRPS->resize(ui->widget->size());
-    plot_PRPS->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    plot_PRPS->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    plot_PRPS->setStyleSheet("background:transparent;color:gray;");
-    plot_PRPS->setScene(scene);
+
 }
 
 void TEVWidget::calc_tev_value (double * tev_val, double * tev_db, int * sug_central_offset, int * sug_offset)
@@ -419,6 +420,7 @@ void TEVWidget::fresh_PRPD()
 //        qDebug()<<"groupNum ="<<groupNum << "length =" <<data_prpd->totol;
         //处理数据
         points_origin.clear();
+        QVector<QPointF> PRPS_point_list;
 
         for(quint32 i=0;i<data_prpd->totol;i++){
 
@@ -440,6 +442,8 @@ void TEVWidget::fresh_PRPD()
                 }
             }
 
+            PRPS_point_list.append(QPointF(x,y));
+
 //            qDebug()<<"x0="<<data_prpd->data[2*i  ] <<"\ty0="<<data_prpd->data[2*i+1];
 //                qDebug()<<"x1="<<x <<"\ty1="<<y;
 
@@ -449,6 +453,8 @@ void TEVWidget::fresh_PRPD()
         d_PRPD->setSamples(points);
         plot_PRPD->replot();
         emit origin_pluse_points(points_origin, groupNum);
+
+        scene->addPRPD(PRPS_point_list);
     }
 
 }

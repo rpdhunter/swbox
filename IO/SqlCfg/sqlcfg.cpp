@@ -140,7 +140,7 @@ SQL_PARA *SqlCfg::default_config(void)
     sql_para.hfct2_sql.filter = NONE;
 
     /* location mode */
-    sql_para.location_sql.mode = single;
+    sql_para.location_sql.mode = continuous;
     sql_para.location_sql.time = 2;
     sql_para.location_sql.channel = Double;
     sql_para.location_sql.chart_mode = CURVE;
@@ -166,6 +166,7 @@ SQL_PARA *SqlCfg::default_config(void)
 
     sql_para.key_backlight = 0;                             //默认键盘背光关闭
 
+    sql_para.screen_dark_time = SCREEN_DARK_TIME;
     sql_para.screen_close_time = SCREEN_CLOSE_TIME;
 
     sql_para.close_time = SHUT_DOWN_TIME;

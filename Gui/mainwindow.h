@@ -56,6 +56,7 @@ private slots:
     void fresh_batt();
     void system_reboot();
     void system_sleep();
+    void screen_dark();
     void set_reboot_time();
     void show_message(QString str);
     void show_busy(bool f);
@@ -99,7 +100,8 @@ private:
     QTimer *timer_time;                 //系统时间和系统关机倒计时
     QTimer *timer_batt;                 //电池电量监视
     QTimer *timer_reboot;               //系统关机计时器
-    QTimer *timer_sleep;               //系统休眠计时器
+    QTimer *timer_sleep;                //系统休眠计时器
+    QTimer *timer_dark;                 //屏幕暗化计时器
     Battery *battery;
     int low_power;                      //自动关机计数
 

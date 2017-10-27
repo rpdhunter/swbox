@@ -36,6 +36,7 @@
 #define KEYBOARD_BACKLIGHT      0x0004          //0熄灭键盘灯，1打开键盘灯
 #define SLEEPING                0x0005          //FPGA休眠(0为休眠,1为唤醒)
 
+
 #define WORKING_MODE            0x0008          //工作模式，对应表格如下
 /*
 0：物理1——TEV1，物理2——TEV2
@@ -88,7 +89,7 @@
 #define READ_FPGA_HFCT1         0x0034          //HFCT1模式
 #define READ_FPGA_HFCT2         0x0035          //HFCT2模式
 
-#define FPGA_SLEEP              0x0036          //FPGAsleep
+//#define FPGA_SLEEP              0x0036          //FPGAsleep
 
 enum send_params {
     //常规功能设置
@@ -128,7 +129,7 @@ enum send_params {
     sp_read_fpga_hfct1,
     sp_read_fpga_hfct2,
 
-    sp_fpga_sleep,  //xwt
+//    sp_fpga_sleep,  //xwt
 
     sp_num
 };

@@ -129,8 +129,12 @@ void MainWindow::statusbar_init()
     timer_reboot->setSingleShot(true);
 
     timer_sleep =  new QTimer();
-    timer_sleep->setInterval(30*1000);  //暂时设定为30秒
+//    timer_sleep->setInterval(sqlcfg->get_para()->screen_close_time * 1000);
     timer_sleep->setSingleShot(true);
+
+    timer_dark = new QTimer();
+//    timer_dark->setInterval(sqlcfg->get_para()->screen_dark_time * 1000);
+    timer_dark->setSingleShot(true);
 
     set_reboot_time();
 
@@ -138,6 +142,7 @@ void MainWindow::statusbar_init()
     connect(timer_batt, SIGNAL(timeout()), this, SLOT(fresh_batt()) );
     connect(timer_reboot, SIGNAL(timeout()), this, SLOT(system_reboot()) );
     connect(timer_sleep, SIGNAL(timeout()), this, SLOT(system_sleep()) );
+    connect(timer_dark, SIGNAL(timeout()), this, SLOT(screen_dark()) );
 
     fresh_batt();       //立刻显示一次电量
 
@@ -731,9 +736,15 @@ void MainWindow::set_reboot_time()
     if(!timer_sleep->isActive()){
         qDebug()<<"screen_close_time"<<sqlcfg->get_para()->screen_close_time;
         data->set_send_para(sp_backlight_reg,sqlcfg->get_para()->backlight);        //恢复屏幕亮度
-        data->set_send_para(sp_fpga_sleep,1);                                       //开启复杂功能
+        data->set_send_para(sp_sleeping,1);                                       //开启复杂功能
     }
     timer_sleep->start(sqlcfg->get_para()->screen_close_time * 1000);
+    //重启亮屏计时器
+    if(!timer_dark->isActive()){
+        qDebug()<<"screen_dark_time"<<sqlcfg->get_para()->screen_dark_time;
+        data->set_send_para(sp_backlight_reg,sqlcfg->get_para()->backlight);        //恢复屏幕亮度
+    }
+    timer_dark->start(sqlcfg->get_para()->screen_dark_time * 1000);
 }
 
 void MainWindow::fresh_status()
@@ -824,8 +835,14 @@ void MainWindow::system_reboot()
 void MainWindow::system_sleep()
 {
     qDebug()<<"system will sleep immediately!";
-    data->set_send_para(sp_backlight_reg,0);        //关屏(to be)
-    data->set_send_para(sp_fpga_sleep,0);           //关闭复杂功能
+    data->set_send_para(sp_backlight_reg,8);
+    data->set_send_para(sp_sleeping,0);           //关闭复杂功能
+}
+
+void MainWindow::screen_dark()
+{
+    qDebug()<<"screen will darken immediately!";
+    data->set_send_para(sp_backlight_reg,0);
 }
 
 void MainWindow::show_message(QString str)

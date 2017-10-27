@@ -535,6 +535,8 @@ void DebugSet::fresh_hardware_status()
     ui->lineEdit_BATT_VCC->setText(QString("%1").arg(v) );
     ui->lineEdit_BATT_CUR->setText(QString("%1").arg(c) );
     ui->lineEdit_BATT_P->setText(QString("%1").arg(v*c/1000) );
+
+//    qDebug()<<"CUR = "<<c<<"\tP = "<<v*c/1000;
 }
 
 void DebugSet::fresh()
