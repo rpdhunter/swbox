@@ -8,7 +8,7 @@
 #include <qwt_plot_layout.h>
 #include "IO/Other/filetools.h"
 #include <QThreadPool>
-#include "IO/rdb/rdb.h"
+#include "IO/Com/rdb/rdb.h"
 
 #define SHOW_FACTOR 4.0     //保存默认的也是最小的纵轴间距
 #define SETTING_NUM 5           //设置菜单条目数
@@ -223,6 +223,7 @@ void FaultLocation::showWaveData(VectorList buf, MODE)
 {
     if(key_val->grade.val0 == menu_index){
         qDebug()<<"double channel data received!    " << buf.length();
+        data->set_send_para (sp_rec_on, 0);
         data->set_send_para (sp_auto_rec, 0);
 
         setData(buf);
@@ -364,6 +365,7 @@ void FaultLocation::processingAScan()
     }
     else{
 //        data->set_send_para (sp_auto_rec, sql_para.tev1_sql.auto_rec + 2 * sql_para.tev2_sql.auto_rec);   //恢复自动录波
+        data->set_send_para (sp_rec_on, 0);
         data->set_send_para (sp_auto_rec, 0);           //关闭自动录波
     }
 }
@@ -373,12 +375,15 @@ void FaultLocation::startANewScan()
     qDebug()<<"start a new scan";
 //    timer2->start();
     if(sql_para.location_sql.channel == Left){
+        data->set_send_para (sp_rec_on, 1);
         data->set_send_para (sp_auto_rec, 12);
     }
     else if(sql_para.location_sql.channel == Right){
+        data->set_send_para (sp_rec_on, 1);
         data->set_send_para (sp_auto_rec, 20);
     }
     else if(sql_para.location_sql.channel == Double){
+        data->set_send_para (sp_rec_on, 1);
         data->set_send_para (sp_auto_rec, 28);
     }
 

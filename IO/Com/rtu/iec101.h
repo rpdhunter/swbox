@@ -384,9 +384,9 @@ extern int iec101_comm_stat;
 
 time_t 	sys_time_to_timet(struct SYS_TIME *t);
 int sys_get_time(struct SYS_TIME *sys_t);
-int sys_open_com(struct APPDEF *dp, int databits, int stopbits, int parity, int baudrate, int com_no);
+int sys_open_com(struct APPDEF *dp, int databits, int stopbits, int parity, int baudrate, int com_no, int fd);
 int send_iec101_internal_udp_data (unsigned char * send_buf, int send_len);
-int init_iec101_service ();
+int init_iec101_service (int fd);
 
 #ifdef __cplusplus
 }

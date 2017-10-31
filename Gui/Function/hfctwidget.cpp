@@ -2,7 +2,7 @@
 #include "ui_hfctwidget.h"
 #include <QLineEdit>
 #include <QTimer>
-#include "IO/rdb/rdb.h"
+#include "IO/Com/rdb/rdb.h"
 
 #define VALUE_MAX       3000           //RPPD最大值
 #define PC_MAX          VALUE_MAX/10
@@ -64,9 +64,11 @@ HFCTWidget::HFCTWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu
     reload(menu_index);
     //设置自动录波
     if( hfct_sql->auto_rec == true ){
+        data->set_send_para (sp_rec_on, 1);
         data->set_send_para(sp_auto_rec, menu_index + 1);
     }
     else{
+        data->set_send_para (sp_rec_on, 0);
         data->set_send_para(sp_auto_rec, 0);
     }
     //设置滤波器
@@ -145,9 +147,11 @@ void HFCTWidget::trans_key(quint8 key_code)
         case 5:
             //设置自动录波
             if( hfct_sql->auto_rec == true ){
+                data->set_send_para (sp_rec_on, 1);
                 data->set_send_para(sp_auto_rec, menu_index + 1);
             }
             else{
+                data->set_send_para (sp_rec_on, 0);
                 data->set_send_para(sp_auto_rec, 0);
             }
             break;

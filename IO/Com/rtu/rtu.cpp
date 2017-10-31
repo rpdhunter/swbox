@@ -28,8 +28,9 @@ int gpio_edge (unsigned int gpio_pin, char * edge /* none, rising, falling, both
 #endif
 
 
-Rtu::Rtu()
+Rtu::Rtu(int serial_fd)
 {
+    this->serial_fd = serial_fd;
     init_rtu ();
 //    test_menu ();
 }
@@ -41,11 +42,11 @@ int Rtu::init_rtu()
     init_mem_base ();		//分配各块内存大小rdb_mem=128kB,commu_104_mem=64kB,commu_101_mem=128kB,prot_setting_mem=16kB
     show_sdram_mem();                   //show 函数，显示各mem使用情况
     init_device_setting_param();        //分配prot_setting_mem第一部分为setting_param_tables，其为一个10行的向量组，每个向量大小不一。
-    init_rdb ();                        //创建点表以及消息池，处理各事件
+//    init_rdb ();                        //创建点表以及消息池，处理各事件
 
     /* init protocols at last */
 //    init_iec104_server ();
-    init_iec101_service ();
+    init_iec101_service (serial_fd);
 
     printf ("ftu main started\n");
 

@@ -5,7 +5,7 @@
 class Rtu
 {
 public:
-    Rtu();
+    Rtu(int serial_fd);
 
 #if 1
     int init_rtu();
@@ -23,6 +23,8 @@ private:
     unsigned int * commu_101_mem_base;
     unsigned int commu_101_mem_size;
     unsigned int commu_101_mem_offset;
+
+    int serial_fd;      //保存一个全局的串口fd值
 
 
     static char * rtu_console_gets (char * buf, int size);

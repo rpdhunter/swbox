@@ -59,9 +59,11 @@ TEVWidget::TEVWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu_i
     fresh_setting();
     //自动录波
     if(tev_sql->auto_rec == true){
+        data->set_send_para (sp_rec_on, 1);
         data->set_send_para(sp_auto_rec, menu_index + 1);
     }
     else{
+        data->set_send_para (sp_rec_on, 0);
         data->set_send_para(sp_auto_rec, 0);
     }
 }
@@ -121,9 +123,11 @@ void TEVWidget::trans_key(quint8 key_code)
         case 6:
             //自动录波
             if(tev_sql->auto_rec == true){
+                data->set_send_para (sp_rec_on, 1);
                 data->set_send_para(sp_auto_rec, menu_index + 1);
             }
             else{
+                data->set_send_para (sp_rec_on, 0);
                 data->set_send_para(sp_auto_rec, 0);
             }
             break;

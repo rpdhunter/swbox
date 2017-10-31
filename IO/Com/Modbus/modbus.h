@@ -35,6 +35,8 @@ class Modbus : public QThread
 public:
     Modbus(QObject *parent = NULL,G_PARA *g_data = NULL);
 
+    int get_serial_fd();
+
     ~Modbus();
 
 signals:
@@ -126,7 +128,7 @@ private:
     unsigned short state, tevAmplitude, tevPluse, aaAmplitude;
 
 //    QSerialPort *serial;
-
+    int _serial_fd;      //保存一个全局的串口fd值
 };
 
 #endif // MODBUS_H

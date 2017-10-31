@@ -2,7 +2,7 @@
 #include "ui_aawidget.h"
 #include <QLineEdit>
 #include <QTimer>
-#include "IO/rdb/rdb.h"
+#include "IO/Com/rdb/rdb.h"
 
 #define SETTING_NUM 7           //设置菜单条目数
 #define VALUE_MAX 60
@@ -29,8 +29,9 @@ AAWidget::AAWidget(G_PARA *data, CURRENT_KEY_VALUE *val, int menu_index, QWidget
     isBusy = false;
 
     //图形设置
-    Common::set_barchart_style(ui->qwtPlot, VALUE_MAX);
+    Common::set_barchart_style(ui->qwtPlot, VALUE_MAX);    
     chart = new BarChart(ui->qwtPlot, &db, &aaultra_sql->high, &aaultra_sql->low);
+    chart->resize(200, 140);
 
     timer1 = new QTimer(this);
     timer1->setInterval(100);

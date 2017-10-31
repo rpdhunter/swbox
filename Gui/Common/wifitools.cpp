@@ -2,15 +2,17 @@
 #include "IO/Other/wifi.h"
 #include <QtDebug>
 
-WifiTools::WifiTools(WifiConfig *wifi_config, WorkMode m)
+WifiTools::WifiTools(int serial_fd, WifiConfig *wifi_config, WorkMode m)
 {
+    this->serial_fd = serial_fd;
     this->wifi_config = wifi_config;
     mode = m;
     //    this->setAutoDelete(false);
 }
 
-WifiTools::WifiTools(WifiConfig *wifi_config, WifiTools::WorkMode m, QString name, QString password)
+WifiTools::WifiTools(int serial_fd, WifiConfig *wifi_config, WifiTools::WorkMode m, QString name, QString password)
 {
+    this->serial_fd = serial_fd;
     this->wifi_config = wifi_config;
     mode = m;
     this->name = name;
@@ -26,7 +28,7 @@ WifiTools::~WifiTools()
 void WifiTools::run()
 {
     if(wifi_config == NULL){
-        wifi_config = new WifiConfig();
+        wifi_config = new WifiConfig(serial_fd);
         qDebug()<<"wifi_config="<<wifi_config;
     }
     if(mode == Init){

@@ -64,7 +64,7 @@
   <widget class="QProgressBar" name="progressBar">
    <property name="geometry">
     <rect>
-     <x>230</x>
+     <x>240</x>
      <y>150</y>
      <width>151</width>
      <height>16</height>
@@ -84,7 +84,7 @@ QProgressBar::chunk{&quot;background-color:skyblue;&quot;}</string>
   <widget class="QLabel" name="label_val">
    <property name="geometry">
     <rect>
-     <x>220</x>
+     <x>230</x>
      <y>40</y>
      <width>131</width>
      <height>71</height>
@@ -101,7 +101,7 @@ background:transparent;color:gray;</string>
   <widget class="QLabel" name="label_max">
    <property name="geometry">
     <rect>
-     <x>230</x>
+     <x>240</x>
      <y>120</y>
      <width>151</width>
      <height>17</height>
@@ -117,7 +117,7 @@ background:transparent;color:gray;</string>
   <widget class="QLabel" name="label_3">
    <property name="geometry">
     <rect>
-     <x>360</x>
+     <x>370</x>
      <y>80</y>
      <width>41</width>
      <height>17</height>
@@ -133,7 +133,7 @@ background:transparent;color:gray;</string>
   <widget class="QLabel" name="label_range">
    <property name="geometry">
     <rect>
-     <x>390</x>
+     <x>400</x>
      <y>150</y>
      <width>61</width>
      <height>17</height>
@@ -150,9 +150,9 @@ background:transparent;color:gray;</string>
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>30</y>
-     <width>200</width>
-     <height>136</height>
+     <y>35</y>
+     <width>201</width>
+     <height>140</height>
     </rect>
    </property>
   </widget>

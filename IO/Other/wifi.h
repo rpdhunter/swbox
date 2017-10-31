@@ -3,7 +3,7 @@
 
 #include <QStringList>
 #include <QString>
-#include "../Modbus/uart_oper.h"
+#include "../Com/Modbus/uart_oper.h"
 
 #define UART_PORT				"/dev/ttyPS0"
 //#define UART_BAUNDRATE			460800
@@ -59,7 +59,7 @@
 class WifiConfig
 {
 public:
-    WifiConfig();
+    WifiConfig(int fd);
     ~WifiConfig();
 
     QStringList wifi_get_list();            //获取列表
@@ -283,6 +283,7 @@ private:
     wifi_at_cmd_t wifi_at_cmd;
     ap_item_t ap_list [WSCAN_NUM];
     int ap_num;
+    int serial_fd;      //保存一个全局的串口fd值
 
     int init_wifi_dev (wifi_at_cmd_t * wa, int baundrate);
     int close_wifi_dev (wifi_at_cmd_t * wa);

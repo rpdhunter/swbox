@@ -193,7 +193,7 @@ time_t sys_time_to_timet(struct SYS_TIME *t)
 	return  mktime(&ansi_time);
 }
 
-int sys_open_com(struct APPDEF *dp, int databits, int stopbits, int parity, int baudrate, int com_no)
+int sys_open_com(struct APPDEF *dp, int databits, int stopbits, int parity, int baudrate, int com_no, int fd)
 {
     int com_fd;
  #if 0
@@ -263,8 +263,10 @@ int sys_open_com(struct APPDEF *dp, int databits, int stopbits, int parity, int 
 	}
 
 	/* open uart */
-	com_fd = uart_open(UART_PORT, baudrate, 0, 8, 1, 'N'); //�򿪴��ڣ������ļ�������
-	if (com_fd < 0) {
+//    com_fd = uart_open(UART_PORT, baudrate, 0, 8, 1, 'N');
+    com_fd = fd;
+    printf("hellow 101 = %d!\n\n\n ",com_fd );
+    if (com_fd < 0) {
 		printf("failed to open port %s\n", UART_PORT);
 		return -1;
 	}
@@ -648,7 +650,7 @@ static void iec101_recv (void * arg)
 	//fdCloseSession(Task_self());
 }
 
-int init_iec101_service()
+int init_iec101_service(int fd)
 {
 	struct APPDEF *dp;
 	Uint32 boudrate;
@@ -684,7 +686,7 @@ int init_iec101_service()
 	sprintf(dp->app_name,"UART:1");		/* ����1 (�����2������) */
 	
 	//dp->comfd = sys_open_com(dp->app_name,8,1,parity,boudrate,dp->com_no);
-	dp->comfd = sys_open_com(dp,8,1,parity,boudrate,dp->com_no);
+    dp->comfd = sys_open_com(dp,8,1,parity,boudrate,dp->com_no,fd);
 	if (dp->comfd == (int)NULL) {
 		return -1;
 	}

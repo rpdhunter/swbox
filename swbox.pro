@@ -29,12 +29,12 @@ SOURCES += \
     IO/Data/recwave.cpp \
     IO/SqlCfg/sqlcfg.cpp \
     IO/Key/keydetect.cpp \
-    IO/Modbus/modbus.cpp \
-    IO/Modbus/gpio_oper.c \
-    IO/Modbus/uart_oper.c \
-    IO/rdb/thread.c \
-    IO/rdb/rdb.c \
-    IO/rdb/ipcs.c \
+    IO/Com/Modbus/modbus.cpp \
+    IO/Com/Modbus/gpio_oper.c \
+    IO/Com/Modbus/uart_oper.c \
+    IO/Com/rdb/thread.c \
+    IO/Com/rdb/rdb.c \
+    IO/Com/rdb/ipcs.c \
     main.cpp \
     Gui/Common/common.cpp \
     Gui/Common/barchart.cpp \
@@ -58,12 +58,12 @@ SOURCES += \
     IO/Other/wifi.cpp \
     Gui/Common/wifitools.cpp \
     Gui/Qml/quickview.cpp \
-    IO/rtu/uart_driver.c \
-    IO/rtu/setting_value.c \
-    IO/rtu/io.c \
-    IO/rtu/iec104.c \
-    IO/rtu/iec101.c \
-    IO/rtu/rtu.cpp \
+    IO/Com/rtu/uart_driver.c \
+    IO/Com/rtu/setting_value.c \
+    IO/Com/rtu/io.c \
+    IO/Com/rtu/iec104.c \
+    IO/Com/rtu/iec101.c \
+    IO/Com/rtu/rtu.cpp \
     IO/Other/CPU/xadc_core.c \
     IO/Other/CPU/cpustatus.cpp \
     Gui/Common/prpsscene.cpp
@@ -76,16 +76,16 @@ HEADERS  += \
     IO/Data/recwave.h \
     IO/Key/key.h \
     IO/Key/keydetect.h \
-    IO/Modbus/modbus.h \
-    IO/Modbus/gpio_oper.h \
-    IO/Modbus/uart_oper.h \
+    IO/Com/Modbus/modbus.h \
+    IO/Com/Modbus/gpio_oper.h \
+    IO/Com/Modbus/uart_oper.h \
     IO/SqlCfg/sqlcfg.h \    
-    IO/rdb/thread.h \
-    IO/rdb/rdb.h \
-    IO/rdb/point_table.h \
-    IO/rdb/ipcs.h \
-    IO/rdb/data_types.h \
-    IO/rdb/comm_head.h \
+    IO/Com/rdb/thread.h \
+    IO/Com/rdb/rdb.h \
+    IO/Com/rdb/point_table.h \
+    IO/Com/rdb/ipcs.h \
+    IO/Com/rdb/data_types.h \
+    IO/Com/rdb/comm_head.h \
     Gui/Common/common.h \
     Gui/Common/barchart.h \
     Gui/Function/tevwidget.h \
@@ -108,13 +108,13 @@ HEADERS  += \
     IO/Other/wifi.h \
     Gui/Common/wifitools.h \
     Gui/Qml/quickview.h \
-    IO/rtu/uart_driver.h \
-    IO/rtu/setting_table.h \
-    IO/rtu/protocol.h \
-    IO/rtu/io.h \
-    IO/rtu/iec104.h \
-    IO/rtu/iec101.h \
-    IO/rtu/rtu.h \
+    IO/Com/rtu/uart_driver.h \
+    IO/Com/rtu/setting_table.h \
+    IO/Com/rtu/protocol.h \
+    IO/Com/rtu/io.h \
+    IO/Com/rtu/iec104.h \
+    IO/Com/rtu/iec101.h \
+    IO/Com/rtu/rtu.h \
     IO/Other/CPU/xadc_core_if.h \
     IO/Other/CPU/xadc_core.h \
     IO/Other/CPU/types.h \

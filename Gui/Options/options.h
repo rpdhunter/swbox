@@ -21,7 +21,7 @@ class Options : public QFrame
 {
     Q_OBJECT
 public:
-    Options(QWidget *parent = 0, G_PARA *g_data = NULL);
+    Options(QWidget *parent = 0, G_PARA *g_data = NULL, int serial_fd = -1);
     ~Options();
 
     void working(CURRENT_KEY_VALUE *val);
@@ -57,7 +57,7 @@ private:
     QLabel *tab0, *tab1, *tab2, *tab3;
 
     WifiTools *tools;
-
+    int serial_fd;      //保存一个全局的串口fd值
     QListWidget *contextMenu;
 
     bool inputStatus;       //记录当前是否在虚拟键盘输入状态

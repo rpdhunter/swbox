@@ -3,7 +3,7 @@
 #include <QButtonGroup>
 #include <QDir>
 #include "../Common/common.h"
-#include "IO/rdb/rdb.h"
+#include "IO/Com/rdb/rdb.h"
 
 #define SETTING_NUM             5           //设置菜单条目数
 #define SETTING_NUM_TEV         6

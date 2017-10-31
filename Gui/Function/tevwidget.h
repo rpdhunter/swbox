@@ -9,7 +9,7 @@
 #include "IO/Key/key.h"
 #include "IO/SqlCfg/sqlcfg.h"
 #include "IO/Other/logtools.h"
-#include "IO/rdb/rdb.h"
+#include "IO/Com/rdb/rdb.h"
 
 #include "../Common/barchart.h"
 #include "../Common/prpsscene.h"

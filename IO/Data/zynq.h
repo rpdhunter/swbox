@@ -69,17 +69,18 @@
 
 
 //录波
-#define REC_START_TEV1			0x0020          //TEV1录波控制信号（0为常态，1为录波开始，2为上传开始）
-#define REC_START_TEV2          0x0021          //TEV2录波控制信号（0为常态，1为录波开始，2为上传开始）
-#define REC_START_HFCT1         0x0022          //HFCT1录波控制信号（0为常态，1为录波开始，2为上传开始）
-#define REC_START_HFCT2         0x0023          //HFCT2录波控制信号（0为常态，1为录波开始，2为上传开始）
+#define REC_ON                  0x001f          //录波开关(0为关闭录波功能,1为开启录波功能,常态关闭)
+#define REC_START_TEV1			0x0020          //TEV1录波控制信号（0为常态，1为录波开始，2为上传开始, 初始化为3）
+#define REC_START_TEV2          0x0021          //TEV2录波控制信号（0为常态，1为录波开始，2为上传开始, 初始化为3）
+#define REC_START_HFCT1         0x0022          //HFCT1录波控制信号（0为常态，1为录波开始，2为上传开始, 初始化为3）
+#define REC_START_HFCT2         0x0023          //HFCT2录波控制信号（0为常态，1为录波开始，2为上传开始, 初始化为3）
 #define REC_START_AA1           0x0024          //AA1录波控制信号（0为常态，1为录波开始，2为上传开始）
 #define REC_START_AA2           0x0025          //AA2录波控制信号（0为常态，1为录波开始，2为上传开始）
 
 //组号，录波时用于数据组标志，范围(0-15)+通道编号(0x100-TEV1,0x200-TEV2,0x400-HFCT1,0x800-HFCT2,0x1000-AA1,0x2000-AA2)
 #define GROUP_NUM				0x002a
+#define AUTO_REC                0x002b          //自动录波标志位（0为关闭所有自动录波，1为1通道自动，2为2通道自动，3为双通道自动，12为1通道触发同步，20为2通道触发同步，28为双通道触发同步）
 
-#define AUTO_REC			0x002b          //自动录波标志位（0为关闭所有自动录波，1为1通道自动，2为2通道自动，3为双通道自动，12为1通道触发同步，20为2通道触发同步，28为双通道触发同步）
 
 //要通道数据信号
 #define READ_FPGA_NOMAL         0x0030          //普通
@@ -113,6 +114,7 @@ enum send_params {
     sp_aa_vol,
     sp_aa_record_play,
     //录波
+    sp_rec_on,
     sp_rec_start_tev1,
     sp_rec_start_tev2,
     sp_rec_start_hfct1,

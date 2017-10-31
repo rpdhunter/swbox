@@ -44,7 +44,7 @@ PRPSScene::PRPSScene(MODE mode, QObject *parent) : QGraphicsScene(parent)
 void PRPSScene::axisInit()
 {
     P_shadow = QPointF(-70,35);      //定义投影
-    P0 = QPointF(0,-20);        //定义三主要点
+    P0 = QPointF(20,-20);        //定义原点
     Px_max = P0 + QPointF(100,40);
     Py_max = P0 + QPointF(0,-48);
 
@@ -62,14 +62,25 @@ void PRPSScene::axisInit()
     setText(QString("180"), Px_max+P_shadow/2);
     setText(QString("  0"), Px_max+P_shadow);
     addLine(QLineF(P0+P_shadow/2, Py_max+P_shadow/2),pen_gray);
+
+    QPointF P_adjust(-20,-10);
     if(mode == TEV1 || mode == TEV2){
         data_max = 60;
+        setText(QString("%1").arg(data_max), Py_max+P_shadow + P_adjust);
+        setText(QString("%1").arg(data_max/2), (Py_max + P0)/2 + P_shadow + P_adjust);
     }
     else if(mode == HFCT1 || mode == HFCT2){
         data_max = 8000;
+        setText(QString("8k"), Py_max+P_shadow + P_adjust);
+        setText(QString("4k"), (Py_max + P0)/2 + P_shadow + P_adjust);
     }
-    setText(QString("%1").arg(data_max), Py_max+P_shadow);
-    setText(QString("%1").arg(data_max/2), (Py_max + P0)/2 + P_shadow);
+
+//    QPointF P_adjust(-20,-10);
+//    if(mode == HFCT1 || mode == HFCT2){
+//        P_adjust = P_adjust + QPointF(-10,0);
+//    }
+//    setText(QString("%1").arg(data_max), Py_max+P_shadow + P_adjust);
+//    setText(QString("%1").arg(data_max/2), (Py_max + P0)/2 + P_shadow + P_adjust);
 }
 
 void PRPSScene::test()
@@ -109,7 +120,7 @@ void PRPSScene::addPRPD(QVector<QPointF> list)
     foreach (QPointF P, list) {
         if(P.x()>360 || P.x()<0 || qAbs(P.y()) > data_max){
             qDebug()<<"PRPS input data error! P.y="<<qAbs(P.y());
-//            return;
+            return;
         }
         P.setY(qAbs(P.y()) );
         QPointF P_t = transData(P);

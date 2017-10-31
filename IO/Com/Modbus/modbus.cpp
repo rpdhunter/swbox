@@ -16,7 +16,7 @@
 
 #include "gpio_oper.c"
 #include "uart_oper.c"
-#include "IO/rdb/rdb.h"
+#include "IO/Com/rdb/rdb.h"
 
 
 
@@ -27,6 +27,7 @@ Modbus::Modbus(QObject *parent, G_PARA *g_data) : QThread(parent)
     data = g_data;
     sql_para = new SQL_PARA;
     data_stand = new unsigned short[md_wr_reg_max];
+    _serial_fd = -1;
 
     for (i = 0; i < md_wr_reg_max; ++i) {
         data_stand [i] = 0;
@@ -59,7 +60,17 @@ Modbus::Modbus(QObject *parent, G_PARA *g_data) : QThread(parent)
     //    else
     //        qDebug()<<"serial open failed!";
 
+    if (init_modbus_dev (&pd_dev) != 0) {
+        printf ("failed to init modbus device\n");
+        //        return -1;
+    }
+
     this->start();
+}
+
+int Modbus::get_serial_fd()
+{
+    return _serial_fd;
 }
 
 Modbus::~Modbus()
@@ -74,10 +85,7 @@ void Modbus::run()
     int len;
     unsigned char recv_buf [300];
 
-    if (init_modbus_dev (&pd_dev) != 0) {
-        printf ("failed to init modbus device\n");
-        //        return -1;
-    }
+
 
     while (1) {
         len = uart_recv (pd_dev.com_fd, recv_buf, sizeof (recv_buf));
@@ -135,13 +143,17 @@ int Modbus::init_modbus_dev(Modbus::modbus_dev_t *ndp)
     ndp->rs485_rw_pin = GPIO_RS485_RW;
     if (gpio_open (ndp->rs485_rw_pin, (char *)"out") < 0) {
         printf ("failed to export gpio %d\n", GPIO_RS485_RW);
-        return -1;
+//        return -1;
     }
     /* set rd */
     gpio_set (ndp->rs485_rw_pin, RS485_RD);
 
     /* open uart */
     ndp->com_fd = uart_open ((char*)UART_PORT, ndp->baundrate, 0, 8, 1, 'N'); //打开串口，返回文件描述符
+
+    printf("hellow modbus = %d!\n\n\n ",ndp->com_fd );
+    _serial_fd = ndp->com_fd;
+
     if (ndp->com_fd < 0) {
         printf ("failed to open port %s\n", UART_PORT);
         return -1;

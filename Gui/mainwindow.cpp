@@ -24,6 +24,10 @@ MainWindow::MainWindow(QSplashScreen *sp, QWidget *parent ) :
     this->setPalette(Pal);
 
 //    sqlcfg->sql_save(sqlcfg->default_config());       //用于程序崩溃时重置数据
+    sqlcfg->get_para()->tev1_sql.auto_rec = false;
+    sqlcfg->get_para()->tev2_sql.auto_rec = false;
+    sqlcfg->get_para()->hfct1_sql.auto_rec = false;
+    sqlcfg->get_para()->hfct2_sql.auto_rec = false;
 
     key_val.val = 0;
     data = new G_PARA;
@@ -39,15 +43,16 @@ MainWindow::MainWindow(QSplashScreen *sp, QWidget *parent ) :
     fifodata = new FifoData(data);
 
     sp->showMessage(tr("正在初始化通信..."),Qt::AlignBottom|Qt::AlignLeft);
-//    modbus = new Modbus(this,data);
-//    rtu = new Rtu;
+    modbus = new Modbus(this,data);
+    serial_fd = modbus->get_serial_fd();    //获取串口fd,便于统一管理
+//    rtu = new Rtu(serial_fd);
 
     //注册两个自定义类型
     qRegisterMetaType<VectorList>("VectorList");
     qRegisterMetaType<MODE>("MODE");
 
     connect(keydetect, &KeyDetect::sendkey, this, &MainWindow::trans_key);
-//    connect(modbus,SIGNAL(closeTimeChanged(int)),this,SLOT(set_reboot_time()) );
+    connect(modbus,SIGNAL(closeTimeChanged(int)),this,SLOT(set_reboot_time()) );
 
 #ifdef PRINTSCREEN
     connect(timer_time,SIGNAL(timeout()),this,SLOT(printSc()));  //截屏
@@ -129,11 +134,9 @@ void MainWindow::statusbar_init()
     timer_reboot->setSingleShot(true);
 
     timer_sleep =  new QTimer();
-//    timer_sleep->setInterval(sqlcfg->get_para()->screen_close_time * 1000);
     timer_sleep->setSingleShot(true);
 
     timer_dark = new QTimer();
-//    timer_dark->setInterval(sqlcfg->get_para()->screen_dark_time * 1000);
     timer_dark->setSingleShot(true);
 
     set_reboot_time();
@@ -315,7 +318,7 @@ void MainWindow::channel_init(MODE mode, int index)
 
 void MainWindow::options_init()
 {
-    options = new Options(ui->Options,data);
+    options = new Options(ui->Options,data,serial_fd);
     debugset = new DebugSet(data,ui->Options);
     systeminfo = new SystemInfo(ui->Options);
     factoryreset = new FactoryReset(ui->Options);
@@ -735,14 +738,24 @@ void MainWindow::set_reboot_time()
     //重启休眠计时器
     if(!timer_sleep->isActive()){
         qDebug()<<"screen_close_time"<<sqlcfg->get_para()->screen_close_time;
-        data->set_send_para(sp_backlight_reg,sqlcfg->get_para()->backlight);        //恢复屏幕亮度
-        data->set_send_para(sp_sleeping,1);                                       //开启复杂功能
+        data->set_send_para(sp_backlight_reg,sqlcfg->get_para()->backlight);            //恢复屏幕亮度
+        data->set_send_para(sp_keyboard_backlight,sqlcfg->get_para()->key_backlight);   //恢复键盘背光
+        data->set_send_para(sp_sleeping,1);                                             //开启复杂功能
+        if(sqlcfg->get_para()->tev1_sql.auto_rec == 1 || sqlcfg->get_para()->tev2_sql.auto_rec == 1
+               || sqlcfg->get_para()->hfct1_sql.auto_rec == 1 || sqlcfg->get_para()->hfct2_sql.auto_rec == 1){
+             data->set_send_para(sp_rec_on,1);
+        }
     }
     timer_sleep->start(sqlcfg->get_para()->screen_close_time * 1000);
     //重启亮屏计时器
     if(!timer_dark->isActive()){
         qDebug()<<"screen_dark_time"<<sqlcfg->get_para()->screen_dark_time;
-        data->set_send_para(sp_backlight_reg,sqlcfg->get_para()->backlight);        //恢复屏幕亮度
+        data->set_send_para(sp_backlight_reg,sqlcfg->get_para()->backlight);            //恢复屏幕亮度
+        data->set_send_para(sp_keyboard_backlight,sqlcfg->get_para()->key_backlight);   //恢复键盘背光
+        if(sqlcfg->get_para()->tev1_sql.auto_rec == 1 || sqlcfg->get_para()->tev2_sql.auto_rec == 1
+               || sqlcfg->get_para()->hfct1_sql.auto_rec == 1 || sqlcfg->get_para()->hfct2_sql.auto_rec == 1){
+             data->set_send_para(sp_rec_on,1);
+        }
     }
     timer_dark->start(sqlcfg->get_para()->screen_dark_time * 1000);
 }
@@ -836,13 +849,17 @@ void MainWindow::system_sleep()
 {
     qDebug()<<"system will sleep immediately!";
     data->set_send_para(sp_backlight_reg,8);
-    data->set_send_para(sp_sleeping,0);           //关闭复杂功能
+    data->set_send_para(sp_keyboard_backlight,0);   //关闭键盘背光
+    data->set_send_para(sp_rec_on,0);               //关闭录波
+    data->set_send_para(sp_sleeping,0);             //关闭复杂功能
 }
 
 void MainWindow::screen_dark()
 {
     qDebug()<<"screen will darken immediately!";
     data->set_send_para(sp_backlight_reg,0);
+    data->set_send_para(sp_rec_on,0);               //关闭录波
+    data->set_send_para(sp_keyboard_backlight,0);   //关闭键盘背光
 }
 
 void MainWindow::show_message(QString str)

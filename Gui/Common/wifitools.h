@@ -16,8 +16,8 @@ public:
         Info
     };
 
-    WifiTools(WifiConfig *wifi_config, WorkMode m);
-    WifiTools(WifiConfig *wifi_config, WorkMode m, QString name, QString password);
+    WifiTools(int serial_fd, WifiConfig *wifi_config, WorkMode m);
+    WifiTools(int serial_fd, WifiConfig *wifi_config, WorkMode m, QString name, QString password);
     ~WifiTools();
 
     void run();
@@ -30,6 +30,7 @@ private:
     WifiConfig *wifi_config;
     WorkMode mode;
     QString name, password;
+    int serial_fd;      //保存一个全局的串口fd值
 
 };
 

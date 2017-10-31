@@ -105,6 +105,9 @@ QString FifoControl::send_para_to_string(int val)
     case sp_auto_rec:
         tmp = "auto_rec";
         break;
+    case sp_rec_on:
+        tmp = "rec_on";
+        break;
     case sp_read_fpga_normal:
         tmp = "read_fpga_normal";
         break;
@@ -269,9 +272,11 @@ void FifoControl::regs_init()
     tdata->set_send_para (sp_aa_vol, sqlcfg->get_para ()->aaultra_sql.vol);
     tdata->set_send_para (sp_aa_record_play, 0);
 
-    tdata->set_send_para (sp_auto_rec, 0);//to be
 
-    tdata->set_send_para (sp_rec_start_tev1, 3);
+    tdata->set_send_para (sp_auto_rec, 0);//to be
+    tdata->set_send_para (sp_rec_on, 0);
+
+    tdata->set_send_para (sp_rec_start_tev1, 3);        //初始化使用
     tdata->set_send_para (sp_rec_start_tev2, 3);
     tdata->set_send_para (sp_rec_start_hfct1, 3);
     tdata->set_send_para (sp_rec_start_hfct2, 3);

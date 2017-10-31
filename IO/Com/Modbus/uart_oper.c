@@ -176,6 +176,7 @@ int uart_open (char * port, int speed, int flow_ctrl, int databits, int stopbits
 #endif
 	if (fcntl (fd, F_SETFL, flags) == 0) {
 		if (uart_set (fd, speed, flow_ctrl, databits, stopbits, parity) == 0) {
+
 			return fd;
 		}
 	}

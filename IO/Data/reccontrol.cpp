@@ -40,6 +40,8 @@ void RecControl::startRecWave(MODE mode, int time)
         return;
     }
 
+    data->set_send_para(sp_rec_on,1);           //开启录波
+
     this->_mode = mode;
     switch (mode) {
     case TEV1:

@@ -17,8 +17,9 @@
 #define PRINT_MSG		0
 
 
-WifiConfig::WifiConfig()
+WifiConfig::WifiConfig(int fd)
 {
+    serial_fd = fd;
     if (init_wifi_dev (&wifi_at_cmd, UART_BAUNDRATE) != 0) {
         printf ("failed to init modbus device\n");
     }
@@ -549,7 +550,9 @@ int WifiConfig::wifi_config_sta_tcp_client(WifiConfig::string_32_t ssid_dst, cha
 int WifiConfig::init_wifi_dev(WifiConfig::wifi_at_cmd_t *wa, int baundrate)
 {
     /* open uart */
-    wa->com_fd = uart_open (UART_PORT, baundrate, 0, 8, 1, 'N'); //打开串口，返回文件描述符
+//    wa->com_fd = uart_open (UART_PORT, baundrate, 0, 8, 1, 'N'); //打开串口，返回文件描述符
+    wa->com_fd = serial_fd;
+    printf("hellow wifi = %d!\n\n\n ",wa->com_fd );
     if (wa->com_fd < 0) {
         printf ("failed to open port %s\n", UART_PORT);
         return -1;

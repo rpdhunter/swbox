@@ -9,9 +9,10 @@
 #define GRADE_2_NORMAL      6
 #define GRADE_2_WIFI        2
 #define GRADE_2_ADVANCED    6
+#define SYNC_WIFI_DISABLE   1       //关闭复杂功能
 
 
-Options::Options(QWidget *parent, G_PARA *g_data) : QFrame(parent),ui(new Ui::OptionUi)
+Options::Options(QWidget *parent, G_PARA *g_data, int serial_fd) : QFrame(parent),ui(new Ui::OptionUi)
 {
     ui->setupUi(this);
     this->resize(CHANNEL_X, CHANNEL_Y);
@@ -28,7 +29,7 @@ Options::Options(QWidget *parent, G_PARA *g_data) : QFrame(parent),ui(new Ui::Op
     inputStatus = false;
     isBusy = false;
     wifi_config = NULL;
-
+    this->serial_fd = serial_fd;
 
     contextMenu = new QListWidget(this);        //右键菜单
     contextMenu->setStyleSheet("QListWidget {border-image: url(:/widgetphoto/bk/para_child.png);color:gray;outline: none;}");
@@ -41,6 +42,12 @@ Options::Options(QWidget *parent, G_PARA *g_data) : QFrame(parent),ui(new Ui::Op
     contextMenu->hide();
 
     contextMenu_num = 2;        //显示菜单条目
+
+#if SYNC_WIFI_DISABLE
+    ui->tabWidget->widget(1)->setDisabled(true);
+    ui->groupBox_sync->setDisabled(true);
+    tab1->setFixedHeight(0);
+#endif
 
     refresh();
 
@@ -125,7 +132,7 @@ void Options::input_finished(QString str)
 
 void Options::wifi_connect(QString name, QString password)
 {
-    tools = new WifiTools(wifi_config,WifiTools::WorkMode::Connect,name,password);
+    tools = new WifiTools(serial_fd,wifi_config,WifiTools::WorkMode::Connect,name,password);
     QThreadPool::globalInstance()->start(tools);
 }
 
@@ -182,7 +189,7 @@ void Options::trans_key(quint8 key_code)
                         emit show_indicator(true);
                         isBusy = true;
                         //刷新列表
-                        tools = new WifiTools(wifi_config,WifiTools::WorkMode::Init);
+                        tools = new WifiTools(serial_fd,wifi_config,WifiTools::WorkMode::Init);
                         connect(tools, SIGNAL(wifi_list(QStringList,WifiConfig*)), this, SLOT(refresh_wifilist(QStringList,WifiConfig*)) );
                         QThreadPool::globalInstance()->start(tools);
                     }
@@ -193,7 +200,7 @@ void Options::trans_key(quint8 key_code)
                             wifi_connect();
                             break;
                         case 2:         //显示信息
-                            tools = new WifiTools(wifi_config,WifiTools::WorkMode::Info);
+                            tools = new WifiTools(serial_fd,wifi_config,WifiTools::WorkMode::Info);
                             QThreadPool::globalInstance()->start(tools);
                             break;
                         default:
@@ -208,7 +215,7 @@ void Options::trans_key(quint8 key_code)
 //                        wifi_config->wifi_hotpot(ui->lineEdit_wifi_hot_name->text(), ui->lineEdit_wifi_hot_password->text());
                         emit show_indicator(true);
                         isBusy = true;
-                        tools = new WifiTools(wifi_config,WifiTools::WorkMode::Hotpot,
+                        tools = new WifiTools(serial_fd,wifi_config,WifiTools::WorkMode::Hotpot,
                                               ui->lineEdit_wifi_hot_name->text(),ui->lineEdit_wifi_hot_password->text() );
                         connect(tools, SIGNAL(wifi_hotpot_finished()), this, SLOT(wifi_hotpot_finished()) );
                         QThreadPool::globalInstance()->start(tools);
@@ -269,8 +276,13 @@ void Options::trans_key(quint8 key_code)
 
 void Options::do_key_up_down(int d)
 {
-    if(key_val->grade.val3 == 0){   //在一级菜单
+    if(key_val->grade.val3 == 0){   //在一级菜单        
         Common::change_index(key_val->grade.val2, d, GRADE_1 , 1);
+#if SYNC_WIFI_DISABLE
+        if(key_val->grade.val2 == 2){
+            Common::change_index(key_val->grade.val2, d, GRADE_1 , 1);
+        }
+#endif
     }
     else{
         switch (key_val->grade.val2) {
@@ -306,7 +318,6 @@ void Options::do_key_up_down(int d)
             }
             break;
         case 2:     //wifi
-//            Common::change_index(key_val->grade.val3, d, ui->listWidget->count() + 1 , 1);
             if(key_val->grade.val5 == 0){
                 switch (key_val->grade.val3) {
                 case 1:
@@ -315,9 +326,7 @@ void Options::do_key_up_down(int d)
                     }
                     break;
                 case 2:
-//                    if(ui->listWidget_hot->count() > 0){
-                        Common::change_index(key_val->grade.val4,d,2,0);
-//                    }
+                    Common::change_index(key_val->grade.val4,d,2,0);
                     break;
                 default:
                     break;
@@ -326,10 +335,13 @@ void Options::do_key_up_down(int d)
             else{
                 Common::change_index(key_val->grade.val5, d, 2 , 1);
             }
-
             break;
         case 3:     //高级
+#if SYNC_WIFI_DISABLE
+            Common::change_index(key_val->grade.val3, d, 3 , 1);
+#else
             Common::change_index(key_val->grade.val3, d, GRADE_2_ADVANCED , 1);
+#endif
             switch (key_val->grade.val3) {
             case 4:
                 sql_para.sync_mode = SYNC_NONE;

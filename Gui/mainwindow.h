@@ -8,7 +8,7 @@
 #include <QQuickWidget>
 
 #include "IO/Data/fifodata.h"
-#include "IO/Modbus/modbus.h"
+#include "IO/Com/Modbus/modbus.h"
 #include "IO/Key/keydetect.h"
 #include "IO/SqlCfg/sqlcfg.h"
 #include "IO/Other/battery.h"
@@ -26,7 +26,7 @@
 #include "Options/systeminfo.h"
 
 #include "Common/common.h"
-#include "IO/rtu/rtu.h"
+#include "IO/Com/rtu/rtu.h"
 
 
 namespace Ui {
@@ -108,6 +108,9 @@ private:
     QQuickWidget *busyIndicator;
 
     Rtu *rtu;
+
+    int serial_fd;      //保存一个全局的串口fd值
+
 
     void menu_init();
     void statusbar_init();

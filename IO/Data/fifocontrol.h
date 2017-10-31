@@ -58,6 +58,7 @@ private:
         AA_VOL,
         AA_RECORD_PLAY,
         //录波
+        REC_ON,
         REC_START_TEV1,
         REC_START_TEV2,
         REC_START_HFCT1,
