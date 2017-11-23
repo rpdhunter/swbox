@@ -77,6 +77,8 @@ private:
 
     battery_power_t battery_power;
 
+    int force_pwr_off_num;
+
     int adm1191_conv_init ();
 
     int adm1191_conv_set (int value);

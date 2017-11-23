@@ -28,9 +28,11 @@ public:
 
     void send_para();       //将所有寄存器数据发送至FPGA
 
+
 public slots:
     void playVoiceData(VectorList wave);            //向FPGA发送声音数据
     void stop_play_voice();
+    void send_sync(uint offset);       //发送同步信号
 
 signals:
     void playVoiceProgress(int cur, int all, bool);        //返回播放声音的实时进度，前2个参数是播放进度，后一个是是否播完，0未播完，1播完
@@ -103,7 +105,7 @@ private:
     //基地址群
     volatile quint32 *vbase_normal, *vbase_send;
     volatile quint32 *vbase_play_voice_1, *vbase_play_voice_2;
-    volatile quint32 *vbase4;
+    volatile quint32 *vbase_sync;
     volatile quint32 *vbase_hfct1, *vbase_hfct2;
     volatile quint32 *vbase_prpd1, *vbase_prpd2;
     volatile quint32 *vbase_rec;

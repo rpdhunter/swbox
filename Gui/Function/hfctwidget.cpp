@@ -39,7 +39,7 @@ HFCTWidget::HFCTWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu
 
     timer2 = new QTimer(this);
     timer2->setInterval(1);         //1ms读取一次数据
-    connect(timer2, SIGNAL(timeout()), this, SLOT(doHfctData()));
+    connect(timer2, SIGNAL(timeout()), this, SLOT(get_fpga_hfct_data()));
 
     timer3 = new QTimer(this);
     timer3->setInterval(200);       //200ms刷新一次PRPD图
@@ -289,13 +289,16 @@ void HFCTWidget::fresh_PRPD()
 {
     MyKey key;
     QVector<QPointF> PRPS_point_list;
+    int temp_x = 0;
 
     foreach (QPoint point, points_origin) {
         if(sql_para.freq_val == 50){            //x坐标变换
-            key = MyKey(point.x() * 360 / 2000000 , (int)(point.y()/40)*40 );       //y做处理，为了使重复点更多，节省空间
+            temp_x = point.x() % 2000000;    //取余数
+            key = MyKey(temp_x * 360 / 2000000 , (int)(point.y()/40)*40 );       //y做处理，为了使重复点更多，节省空间
         }
         else if(sql_para.freq_val == 60){
-            key = MyKey(point.x() * 360 / 1666667 , (int)(point.y()/40)*40 );
+            temp_x = point.x() % 1666667;    //取余数
+            key = MyKey(temp_x * 360 / 1666667 , (int)(point.y()/40)*40 );
         }
 
         PRPS_point_list.append(QPointF(key.x, key.y));      //生成一次点序列
@@ -358,7 +361,7 @@ QVector<int> HFCTWidget::compute_pulse_number(QVector<double> list)
 }
 
 //根据读取到的序列，计算电缆局放值
-double HFCTWidget::compute_pC(QVector<double> list , int x_origin)
+double HFCTWidget::compute_list_pC(QVector<double> list , int x_origin)
 {
     if(list.length() < 2 )
         return 0;
@@ -459,11 +462,11 @@ double HFCTWidget::triangle(double d1, double d2)
     return d1*d1 / (d1 - d2) / 2;
 }
 
-void HFCTWidget::doHfctData()
+void HFCTWidget::get_fpga_hfct_data()
 {
-    if( group != hfct_data->time ){      //判断数据有效性
+    if( group != hfct_data->time ){         //判断数据有效性
         group = hfct_data->time;
-        if(hfct_data->empty == 0){
+        if(hfct_data->empty == 0){          //0为有数据
             QVector<double> list;
             for (int i = 0; i < 256; ++i) {
                 if(hfct_data->data[i] == 0x55aa){
@@ -471,20 +474,9 @@ void HFCTWidget::doHfctData()
                 }
                 else{
                     list.append(((double)hfct_data->data[i] - 0x8000));
-                    //                    list.append(data->recv_para.recData[i]);
                 }
             }
-
-            //计算一次数据的脉冲数
-            //            double max = 0;
-            //            foreach (double l, list) {
-            //                max = MAX(qAbs(l),max);
-            //            }
-            //            qDebug()<<"one pluse data number: "<< list.length() << "\t first = "<<list.first()<<"\tlast = "<<list.last()
-            //                      <<"\tmax = "<<max;
-
-            //            qDebug()<<list;
-            pCList.append(compute_pC(list,hfct_data->time ) );
+            pCList.append(compute_list_pC(list,hfct_data->time ) );
         }
     }
 }

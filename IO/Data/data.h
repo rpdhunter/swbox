@@ -28,7 +28,7 @@
 #define RESOLUTION_AD_LOW   (5.0/262144.0)
 #define AA_FACTOR   ( RESOLUTION_AD_LOW * 1000000 / AMP_FACTOR_J27_680P )
 
-#define TEV_FACTOR  (1.8*1000/65536)
+#define TEV_FACTOR  (2.0*1000/65536)
 
 #define VERSION_MAJOR   1       //软件版本号
 #define VERSION_MINOR   4

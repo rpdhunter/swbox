@@ -53,7 +53,7 @@
       <enum>QTabWidget::West</enum>
      </property>
      <property name="currentIndex">
-      <number>2</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
@@ -813,7 +813,7 @@
                 </size>
                </property>
                <property name="text">
-                <string>PDTEV1</string>
+                <string notr="true">PDTEV1</string>
                </property>
               </widget>
              </item>
@@ -833,7 +833,7 @@
                 </size>
                </property>
                <property name="text">
-                <string>12345678</string>
+                <string notr="true">12345678</string>
                </property>
               </widget>
              </item>
@@ -1019,7 +1019,7 @@
             <item>
              <widget class="QLineEdit" name="lineEdit_sync_internal">
               <property name="text">
-               <string>0</string>
+               <string notr="true">0</string>
               </property>
              </widget>
             </item>
@@ -1047,7 +1047,7 @@
             <item>
              <widget class="QLineEdit" name="lineEdit_sync_external">
               <property name="text">
-               <string>0</string>
+               <string notr="true">0</string>
               </property>
              </widget>
             </item>

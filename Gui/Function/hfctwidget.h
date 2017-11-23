@@ -104,7 +104,7 @@ signals:
 private slots:
     void fresh_plot();
     void fresh_PRPD();
-    void doHfctData();
+    void get_fpga_hfct_data();
 
 private:
     void fresh_setting(void);
@@ -156,7 +156,7 @@ private:
     quint32 group;
     QVector<double> pCList;     //记录一秒内的脉冲pc值列表
 
-    double compute_pC(QVector<double> list, int x_origin);
+    double compute_list_pC(QVector<double> list, int x_origin);
     double compute_one_pC(QVector<double> list);
     double simpson(QVector<double> list);
     double triangle(double d1, double d2);

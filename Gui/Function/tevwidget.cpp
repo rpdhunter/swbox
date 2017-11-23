@@ -504,9 +504,11 @@ void TEVWidget::transData(int &x, int &y)
     points_origin.append(QPoint(x,y));
 
     if(sqlcfg->get_para()->freq_val == 50){
+        x = x % 2000000;    //取余数
         x = x *360 /2000000;
     }
     else if(sqlcfg->get_para()->freq_val == 60){
+        x = x % 1666667;
         x = x *360 /1666667;
     }
 

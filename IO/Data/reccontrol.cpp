@@ -3,6 +3,7 @@
 #include "IO/Other/filetools.h"
 #include <QThreadPool>
 #include "IO/SqlCfg/sqlcfg.h"
+#include "Gui/Common/fft.h"
 
 RecControl::RecControl(G_PARA *g_data, QObject *parent) : QObject(parent)
 {
@@ -311,6 +312,9 @@ void RecControl::recWaveComplete(VectorList wave, MODE mode)
     else if(this->_mode != Disable){
         emit waveData(wave,mode);
         this->_mode = Disable;
+        //这里插入FFT测试程序
+//        fft_test(wave);
+
         FileTools *filetools = new FileTools(wave,mode,FileTools::Write);      //开一个线程，为了不影响数据接口性能
         QThreadPool::globalInstance()->start(filetools);
     }
@@ -320,9 +324,50 @@ void RecControl::recContinuousComplete()
 {
     emit waveData(rec_continuous, _mode);
     qDebug()<<"rec continuous complete, times ============================================================== "<< rec_continuous.length()/4000;
+
+    //这里插入FFT测试程序
+//    fft_test(rec_continuous);
+
     FileTools *filetools = new FileTools(rec_continuous,_mode,FileTools::Write);      //开一个线程，为了不影响数据接口性能
     _mode = Disable;         //Disable为去掉最后一次连续录波数据
     QThreadPool::globalInstance()->start(filetools);
+}
+
+void RecControl::fft_test(VectorList inputlist)
+{
+    VectorList tmplist = inputlist.mid(250,32);
+
+
+    for (int i = 0; i < 4000 / 32 - 1 ; ++i) {
+        for (int j = 0; j < 32; ++j) {
+            inputlist[i*32 + j] = tmplist.at(j);
+        }
+    }
+
+    qDebug()<<inputlist;
+
+
+    FFT fft;
+    int fft_in[2048];
+    VectorList list;
+
+    QTime t;            //计时器
+    t.start();
+
+    for (int i = 0; i < inputlist.count()/4000; ++i) {
+        for (int j = 0; j < 2048; ++j) {
+            fft_in[j] = inputlist.at(i*4000 + j);
+        }
+        list.append( fft.fft2048(fft_in) );
+
+    }
+
+    qDebug("Time elapsed: %d ms", t.elapsed());
+
+    qDebug()<<"fft complete! length = "<<list.length();
+    qDebug()<<list;
+
+
 }
 
 

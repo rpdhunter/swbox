@@ -4,12 +4,12 @@
 //基地址
 #define AXI_STREAM_BASE0		0x43c00000  //基本读（读）
 //#define AXI_STREAM_BASE1		0x43c10000  //基本写（写）
-#define AXI_STREAM_BASE1		0x83c00000  //1013xwt
+#define AXI_STREAM_BASE1		0x83c00000  //1013xwt,基本写（写）
 
 #define AXI_STREAM_BASE2		0x43c20000  //超声1（写）
 #define AXI_STREAM_BASE3		0x43c30000  //超声2（写）
 //#define AXI_STREAM_BASE4		0x83c00000  //预留（写）
-#define AXI_STREAM_BASE4		0x43c10000  //1013xwt
+#define AXI_STREAM_BASE4		0x43c10000  //1013xwt,同步(写)
 
 #define AXI_STREAM_BASE6		0x43c40000  //HFCT1（读）
 #define AXI_STREAM_BASE5		0x43c50000  //HFCT2（读）
@@ -76,7 +76,6 @@
 #define REC_START_HFCT2         0x0023          //HFCT2录波控制信号（0为常态，1为录波开始，2为上传开始, 初始化为3）
 #define REC_START_AA1           0x0024          //AA1录波控制信号（0为常态，1为录波开始，2为上传开始）
 #define REC_START_AA2           0x0025          //AA2录波控制信号（0为常态，1为录波开始，2为上传开始）
-
 //组号，录波时用于数据组标志，范围(0-15)+通道编号(0x100-TEV1,0x200-TEV2,0x400-HFCT1,0x800-HFCT2,0x1000-AA1,0x2000-AA2)
 #define GROUP_NUM				0x002a
 #define AUTO_REC                0x002b          //自动录波标志位（0为关闭所有自动录波，1为1通道自动，2为2通道自动，3为双通道自动，12为1通道触发同步，20为2通道触发同步，28为双通道触发同步）

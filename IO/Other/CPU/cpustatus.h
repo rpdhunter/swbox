@@ -23,6 +23,7 @@ public:
 
     int get_cpu_temp (float * cpu_temp);
     int get_cpu_vcc (float * cpu_vcc);
+    int get_vvpn (float* vvpn);
 
 private:
     struct command

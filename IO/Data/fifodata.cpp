@@ -4,7 +4,8 @@
 //#include <QTime>
 #include "zynq.h"
 
-#define DELAY_TIME_LONG     200000
+//#define DELAY_TIME_LONG     200000
+#define DELAY_TIME_LONG     5000
 #define DELAY_TIME_MID      5000
 #define DELAY_TIME_SHORT    50
 //#define DELAY_TIME_SHORT    200000
@@ -29,6 +30,9 @@ FifoData::FifoData(G_PARA *g_data)
     connect(this,SIGNAL(playVoiceData(VectorList)), fifocontrol, SLOT(playVoiceData(VectorList)) );
     connect(this,SIGNAL(stop_play_voice()), fifocontrol, SLOT(stop_play_voice()) );
     connect(fifocontrol, SIGNAL(playVoiceProgress(int,int,bool)), this, SIGNAL(playVoiceProgress(int,int,bool)) );
+
+    //同步信号
+    connect(this,SIGNAL(send_sync(uint)),fifocontrol,SLOT(send_sync(uint)) );
 
     /* Start qthread */
     this->start();
@@ -57,12 +61,13 @@ void FifoData::run(void)
 //            qDebug()<<"ret = "<<ret;
             fifocontrol->read_fpga(sp_read_fpga_prpd2);
             fifocontrol->read_prpd2_data();
-            fifocontrol->read_fpga(sp_read_fpga_hfct1);
-            fifocontrol->read_hfct1_data();
-            fifocontrol->read_fpga(sp_read_fpga_hfct2);
-            fifocontrol->read_hfct2_data();
             read_slow = false;
         }
+
+        fifocontrol->read_fpga(sp_read_fpga_hfct1);
+        fifocontrol->read_hfct1_data();
+        fifocontrol->read_fpga(sp_read_fpga_hfct2);
+        fifocontrol->read_hfct2_data();
 
         //录波数据
 

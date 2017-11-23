@@ -328,7 +328,7 @@ background:transparent;
     <string notr="true">QLabel {color:white;}</string>
    </property>
    <property name="text">
-    <string notr="true">TextLabel</string>
+    <string notr="true"/>
    </property>
   </widget>
   <widget class="QLabel" name="lab_pwr">
@@ -374,6 +374,25 @@ background:transparent;
    </property>
    <property name="text">
     <string/>
+   </property>
+  </widget>
+  <widget class="QLabel" name="lab_sync">
+   <property name="geometry">
+    <rect>
+     <x>200</x>
+     <y>250</y>
+     <width>272</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QLabel {color:white;}</string>
+   </property>
+   <property name="text">
+    <string>同步状态:未同步</string>
+   </property>
+   <property name="pixmap">
+    <pixmap resource="../resource/resource.qrc">:/widgetphoto/bk/ohv_gary.png</pixmap>
    </property>
   </widget>
  </widget>

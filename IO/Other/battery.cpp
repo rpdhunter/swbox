@@ -10,44 +10,53 @@ static float bat_pwr_percent [BAT_PWR_PER_NUM] = {
     //3.93f * 2 - DELT_VOL,		/* 75% */
     3.88f * 2 - DELT_VOL,		/* 70% */
     //3.87f * 2 - DELT_VOL,		/* 65% */
-    3.83f * 2 - DELT_VOL,		/* 60% */
+    3.82f * 2 - DELT_VOL,		/* 60% */
     //3.81f * 2 - DELT_VOL,		/* 55% */
-    3.79f * 2 - DELT_VOL,		/* 50% */
+    3.76f * 2 - DELT_VOL,		/* 50% */
     //3.77f * 2 - DELT_VOL,		/* 45% */
-    3.75f * 2 - DELT_VOL,		/* 40% */
+    3.70f * 2 - DELT_VOL,		/* 40% */
     //3.74f * 2 - DELT_VOL,		/* 35% */
-    3.73f * 2 - DELT_VOL,		/* 30% */
+    3.64f * 2 - DELT_VOL,		/* 30% */
     //3.72f * 2 - DELT_VOL,		/* 25% */
-    3.71f * 2 - DELT_VOL,		/* 20% */
+    3.58f * 2 - DELT_VOL,		/* 20% */
     //3.69f * 2 - DELT_VOL,		/* 15% */
-    3.65f * 2 - DELT_VOL,		/* 10% */
+    3.52f * 2 - DELT_VOL,		/* 10% */
     //3.63f * 2 - DELT_VOL,		/* 5% */
-    3.58f * 2 - DELT_VOL,		/* 1% */
+    3.46f * 2 - DELT_VOL,		/* 1% */
 };
 
 
 Battery::Battery()
 {
     init_battery_power (&battery_power);
+    force_pwr_off_num = 2;      //2次检查低电量机会
 }
 
 int Battery::battValue()
 {
     check_battery_power (&battery_power);
 
-////    低电量自动关机
-//    if (battery_power.force_pwr_off) {
-//        qDebug()<<"is batt!!!! batt = "<< battery_power.power;
-//        system ("reboot");
-//    }
+//    低电量自动关机
+    if (battery_power.force_pwr_off) {
+        force_pwr_off_num --;
+        if(force_pwr_off_num == 0){
+            qDebug()<<"is batt!!!! batt = "<< battery_power.power;
+            system ("reboot");
+        }
+        else {
+            force_pwr_off_num = 2;
+        }
+    }
     return battery_power.power;
 }
 
 bool Battery::is_low_power()
 {
     check_battery_power (&battery_power);
-    if (battery_power.force_pwr_off) {
-        qDebug()<<"is batt!!!! batt = "<< battery_power.power;
+
+    if (battery_power.power == 0) {
+        qDebug()<<"batt vol = "<< battery_power.vol;
+//        qDebug()<<"is batt!!!! batt = "<< battery_power.power;
         return true;
     }
     return false;

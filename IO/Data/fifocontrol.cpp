@@ -192,7 +192,7 @@ void FifoControl::base_init()
         if ((vbase_play_voice_2 = init_vbase (fd, AXI_STREAM_BASE3, AXI_STREAM_SIZE)) == NULL) {
             break;
         }
-        if ((vbase4 = init_vbase (fd, AXI_STREAM_BASE4, AXI_STREAM_SIZE)) == NULL) {
+        if ((vbase_sync = init_vbase (fd, AXI_STREAM_BASE4, AXI_STREAM_SIZE)) == NULL) {
             break;
         }
         if ((vbase_hfct1 = init_vbase (fd, AXI_STREAM_BASE5, AXI_STREAM_SIZE)) == NULL) {
@@ -298,6 +298,11 @@ void FifoControl::send_para()
         check_send_param (tdata->send_para.send_params, i, spr_maps [i]);
     }
     tdata->send_para.data_changed = false;
+}
+
+void FifoControl::send_sync(uint offset)
+{
+    send_data (vbase_sync, &offset, 1);
 }
 
 /***************************************

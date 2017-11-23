@@ -66,7 +66,8 @@ SOURCES += \
     IO/Com/rtu/rtu.cpp \
     IO/Other/CPU/xadc_core.c \
     IO/Other/CPU/cpustatus.cpp \
-    Gui/Common/prpsscene.cpp
+    Gui/Common/prpsscene.cpp \
+    Gui/Common/fft.cpp
 
 
 HEADERS  += \
@@ -120,7 +121,8 @@ HEADERS  += \
     IO/Other/CPU/types.h \
     IO/Other/CPU/events.h \
     IO/Other/CPU/cpustatus.h \
-    Gui/Common/prpsscene.h
+    Gui/Common/prpsscene.h \
+    Gui/Common/fft.h
 
 
 RESOURCES += \
@@ -141,6 +143,13 @@ INCLUDEPATH += $$PWD/../../../../pub/toolchain/arm-xilinx-linux-gnueabi-4.9.2/ar
 DEPENDPATH += $$PWD/../../../../pub/toolchain/arm-xilinx-linux-gnueabi-4.9.2/arm-xilinx-linux-gnueabi/libc/usr/include
 
 unix:!macx: PRE_TARGETDEPS += $$PWD/../../../../pub/toolchain/arm-xilinx-linux-gnueabi-4.9.2/arm-xilinx-linux-gnueabi/libc/usr/lib/libpthread.a
+
+unix:!macx: LIBS += -L$$PWD/lib/ -lNE10
+
+INCLUDEPATH += $$PWD/lib/NE10
+DEPENDPATH += $$PWD/lib/NE10
+
+unix:!macx: PRE_TARGETDEPS += $$PWD/lib/libNE10.a
 
 #INCLUDEPATH += \
 #    /usr/local/qwtplot3d/include
@@ -164,4 +173,6 @@ FORMS += \
     Gui/Options/optionui.ui \
     Gui/Options/debugui.ui \
     Gui/mainwindow.ui
+
+
 

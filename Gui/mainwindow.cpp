@@ -54,16 +54,16 @@ MainWindow::MainWindow(QSplashScreen *sp, QWidget *parent ) :
     connect(keydetect, &KeyDetect::sendkey, this, &MainWindow::trans_key);
     connect(modbus,SIGNAL(closeTimeChanged(int)),this,SLOT(set_reboot_time()) );
 
-#ifdef PRINTSCREEN
-    connect(timer_time,SIGNAL(timeout()),this,SLOT(printSc()));  //截屏
-#endif
-
     sp->showMessage(tr("正在初始化主菜单..."),Qt::AlignBottom|Qt::AlignLeft);
     menu_init();
     qml_init();
     statusbar_init();
     function_init(sp);
     options_init();
+
+#ifdef PRINTSCREEN
+    connect(timer_time,SIGNAL(timeout()),this,SLOT(printSc()));  //截屏
+#endif
 
     for (int i = 0; i < mode_list.count(); ++i) {
         if(mode_list.at(i) != Disable){
@@ -121,6 +121,7 @@ void MainWindow::statusbar_init()
 {
     battery = new Battery;
     low_power = LOW_POWER_TIMES;
+    cpu_status = new CPUStatus;
 
     timer_time = new QTimer();
     timer_time->setInterval(1000);   //1秒1跳
@@ -129,6 +130,9 @@ void MainWindow::statusbar_init()
     timer_batt = new QTimer();
     timer_batt->setInterval(10000);   //10秒1跳
     timer_batt->start();
+
+    timer_sync = new QTimer();
+    timer_sync->setInterval(1);       //1毫秒1跳
 
     timer_reboot =  new QTimer();
     timer_reboot->setSingleShot(true);
@@ -143,6 +147,7 @@ void MainWindow::statusbar_init()
 
     connect(timer_time, SIGNAL(timeout()), this, SLOT(fresh_status()) );
     connect(timer_batt, SIGNAL(timeout()), this, SLOT(fresh_batt()) );
+    connect(timer_sync, SIGNAL(timeout()), this, SLOT(fresh_sync()) );
     connect(timer_reboot, SIGNAL(timeout()), this, SLOT(system_reboot()) );
     connect(timer_sleep, SIGNAL(timeout()), this, SLOT(system_sleep()) );
     connect(timer_dark, SIGNAL(timeout()), this, SLOT(screen_dark()) );
@@ -762,7 +767,7 @@ void MainWindow::set_reboot_time()
 
 void MainWindow::fresh_status()
 {
-    ui->lab_time->setText(QDate::currentDate().toString("yyyy年M月d日")
+    ui->lab_time->setText(QDate::currentDate().toString(tr("yyyy年M月d日"))
                           + " "
                           + QTime::currentTime().toString("h:mm:ss"));
 
@@ -771,7 +776,6 @@ void MainWindow::fresh_status()
         ui->lab_imformation->setText(tr("再过%1秒将自动关机，按任意键取消").arg(s));
     }
     ui->lab_freq->setText(QString("%1Hz").arg(sqlcfg->get_para()->freq_val));
-
 }
 
 void MainWindow::fresh_batt()
@@ -780,9 +784,17 @@ void MainWindow::fresh_batt()
 
     batt_val = battery->battValue();
 
+    //检测过零点
+    cpu_status->get_vvpn(&sync_vcc);
+    qDebug()<<"sync vcc = "<< sync_vcc;
+    if(sync_vcc > 20){
+        timer_sync->start();
+    }
+
     //自动关机
     if(battery->is_low_power()){
         low_power--;
+        qDebug()<<"low_power = "<<low_power;
         if(low_power == 0){
             system_reboot();
         }
@@ -836,6 +848,24 @@ void MainWindow::fresh_batt()
         break;
     default:
         break;
+    }
+}
+
+void MainWindow::fresh_sync()
+{
+    float temp = sync_vcc;
+    cpu_status->get_vvpn(&sync_vcc);
+
+    int interval;
+    if(temp < 0 && sync_vcc > 0){       //正向过零点
+        interval = sync_time.elapsed();
+        qDebug()<<"sync interval = "<<interval << "ms";
+        sync_time.start();
+
+        if(qAbs(interval - 20)<10 ){        //判断条件可再改进
+            timer_sync->stop();
+//            data->set_send_para(sp_aa_vol);       //to be
+        }
     }
 }
 
