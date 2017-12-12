@@ -303,6 +303,7 @@ void FifoControl::send_para()
 void FifoControl::send_sync(uint offset)
 {
     send_data (vbase_sync, &offset, 1);
+    qDebug()<<"sync completed!!! \t sync offset = "<< offset;
 }
 
 /***************************************

@@ -44,6 +44,7 @@ enum DISPLAY {
     PRPD = 1,    
     PRPS = 2,
     Histogram = 3,
+    TF = 4,
 };
 
 enum FILTER {
@@ -153,7 +154,7 @@ typedef struct SQL_PARA {
     bool file_copy_to_SD;           //是否保存文件到SD卡
     int auto_rec_interval;          //自动录波间隔
     int menu_h1, menu_h2;           //高速通道模式（需要FPGA同步）
-    int menu_double, menu_aa, menu_ae;       //其他菜单模式
+    int menu_double, menu_l1, menu_l2;       //其他菜单模式
     int sync_mode;                  //同步模式
     int sync_internal_val;          //内同步时间
     int sync_external_val;          //外同步时间

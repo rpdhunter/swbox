@@ -5,12 +5,13 @@
 #include "data.h"
 #include "recwave.h"
 #include <QTime>
+#include "fifocontrol.h"
 
 class RecControl : public QObject
 {
     Q_OBJECT
 public:
-    explicit RecControl(G_PARA *g_data, QObject *parent = 0);
+    explicit RecControl(G_PARA *g_data, FifoControl *fifocontrol, QObject *parent = 0);
 
     void recvRecData();     //接收录波数据
     MODE mode();
@@ -31,6 +32,8 @@ private slots:
 private:
     G_PARA *data;
     RecWave *tev1, *tev2, *hfct1, *hfct2, *aa;
+
+    FifoControl *fifocontrol;
 
     QTimer *timer_long;     //连续录波计时器
     QTimer *timer_interval;     //录波间隔计时器

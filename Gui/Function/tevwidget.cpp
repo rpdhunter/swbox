@@ -94,12 +94,13 @@ void TEVWidget::reload(int index)
             timer2->start();
         }
         //自动录波
-//        if(tev_sql->auto_rec == true){
-//            data->set_send_para(sp_auto_rec, menu_index + 1);
-//        }
-//        else{
-//            data->set_send_para(sp_auto_rec, 0);
-//        }
+        if(tev_sql->auto_rec == true){
+            data->set_send_para(sp_auto_rec, menu_index + 1);
+        }
+        else{
+            data->set_send_para(sp_auto_rec, 0);
+        }
+        fresh_setting();
     }
 }
 
@@ -223,7 +224,7 @@ void TEVWidget::chart_ini()
     d_BarChart = new BarChart(plot_Barchart, &db, &tev_sql->high, &tev_sql->low);
 
     //PRPS
-    scene = new PRPSScene(mode);
+    scene = new PRPSScene(mode,VALUE_MAX);
     plot_PRPS = new QGraphicsView(ui->widget);
     plot_PRPS->resize(ui->widget->size());
     plot_PRPS->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);

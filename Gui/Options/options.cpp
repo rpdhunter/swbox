@@ -9,7 +9,7 @@
 #define GRADE_2_NORMAL      6
 #define GRADE_2_WIFI        2
 #define GRADE_2_ADVANCED    6
-#define SYNC_WIFI_DISABLE   0       //关闭复杂功能
+#define SYNC_WIFI_DISABLE   1       //关闭复杂功能
 
 
 Options::Options(QWidget *parent, G_PARA *g_data, int serial_fd) : QFrame(parent),ui(new Ui::OptionUi)
@@ -295,22 +295,22 @@ void Options::do_key_up_down(int d)
                 case QDateTimeEdit::NoSection:
                     break;
                 case QDateTimeEdit::YearSection:
-                    _datetime = _datetime.addYears(d);
+                    _datetime = _datetime.addYears(-d);
                     break;
                 case QDateTimeEdit::MonthSection:
-                    _datetime = _datetime.addMonths(d);
+                    _datetime = _datetime.addMonths(-d);
                     break;
                 case QDateTimeEdit::DaySection:
-                    _datetime = _datetime.addDays(d);
+                    _datetime = _datetime.addDays(-d);
                     break;
                 case QDateTimeEdit::HourSection:
-                    _datetime = _datetime.addSecs(d*3600);
+                    _datetime = _datetime.addSecs(-d*3600);
                     break;
                 case QDateTimeEdit::MinuteSection:
-                    _datetime = _datetime.addSecs(d*60);
+                    _datetime = _datetime.addSecs(-d*60);
                     break;
                 case QDateTimeEdit::SecondSection:
-                    _datetime = _datetime.addSecs(d);
+                    _datetime = _datetime.addSecs(-d);
                     break;
                 default:
                     break;

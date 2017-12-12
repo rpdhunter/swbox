@@ -181,8 +181,8 @@ SQL_PARA *SqlCfg::default_config(void)
     sql_para.menu_h1 = TEV1;
     sql_para.menu_h2 = TEV2;
     sql_para.menu_double = Double_Channel;
-    sql_para.menu_aa = AA_Ultrasonic;
-    sql_para.menu_ae = Disable;
+    sql_para.menu_l1 = AA_Ultrasonic;
+    sql_para.menu_l2 = Disable;
 
     sql_para.sync_mode = SYNC_NONE;
     sql_para.sync_internal_val = 0;

@@ -34,7 +34,7 @@ class PRPSScene : public QGraphicsScene
 {
     Q_OBJECT
 public:
-    explicit PRPSScene(MODE mode, QObject *parent = 0);
+    explicit PRPSScene(MODE mode, int hfct_max, QObject *parent = 0);
 
 signals:
 
@@ -43,7 +43,7 @@ public slots:
     void addPRPD(QVector<QPointF> list);     //添加一组PRPD数据
 
 private:
-    void axisInit();
+    void axisInit(int hfct_max);
     void setText(QString str, QPointF P);
     QPointF transData(QPointF P);
 

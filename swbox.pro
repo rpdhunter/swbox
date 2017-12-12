@@ -15,6 +15,7 @@ TEMPLATE = app
 #DEFINES += PRINTSCREEN     #截屏
 #DEFINES += AMG          #OEM
 DEFINES += OHV          #OEM
+#DEFINES += ZDIT          #OEM
 
 TRANSLATIONS += trans/en.ts
 
@@ -67,7 +68,8 @@ SOURCES += \
     IO/Other/CPU/xadc_core.c \
     IO/Other/CPU/cpustatus.cpp \
     Gui/Common/prpsscene.cpp \
-    Gui/Common/fft.cpp
+    Gui/Common/fft.cpp \
+    Gui/Function/uhfwidget.cpp
 
 
 HEADERS  += \
@@ -122,7 +124,8 @@ HEADERS  += \
     IO/Other/CPU/events.h \
     IO/Other/CPU/cpustatus.h \
     Gui/Common/prpsscene.h \
-    Gui/Common/fft.h
+    Gui/Common/fft.h \
+    Gui/Function/uhfwidget.h
 
 
 RESOURCES += \
@@ -159,8 +162,7 @@ unix:!macx: PRE_TARGETDEPS += $$PWD/lib/libNE10.a
 
 DISTFILES += \
     BOOT.bin \
-    trans/en.ts \
-    PDTEV操作指南_V1.1.docx
+    trans/en.ts
 
 FORMS += \    
     Gui/Function/tevwidget.ui \
@@ -172,7 +174,8 @@ FORMS += \
     Gui/Options/systeminfo.ui \
     Gui/Options/optionui.ui \
     Gui/Options/debugui.ui \
-    Gui/mainwindow.ui
+    Gui/mainwindow.ui \
+    Gui/Function/uhfwidget.ui
 
 
 

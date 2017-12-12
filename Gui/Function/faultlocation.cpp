@@ -203,7 +203,7 @@ void FaultLocation::do_key_left_right(int d)
             sql_para.location_sql.mode = !sql_para.location_sql.mode;
             break;
         case 2:
-            Common::change_value(sql_para.location_sql.chart_mode, CURVE, CURVE);
+            Common::change_value(sql_para.location_sql.chart_mode, CURVE, COMPASS);
             break;
         case 3:
             Common::change_index(sql_para.location_sql.channel, d, Double, Left);

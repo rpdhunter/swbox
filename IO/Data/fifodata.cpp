@@ -16,7 +16,7 @@ FifoData::FifoData(G_PARA *g_data)
     data = g_data;     //与外部交互的数据指针
 
     fifocontrol = new FifoControl(g_data, this);
-    reccontrol = new RecControl(g_data, this);    //完成录波、声音播放等功能
+    reccontrol = new RecControl(g_data, fifocontrol, this);    //完成录波、声音播放等功能
 
     timer_slow = new QTimer;
     timer_slow->start(200);

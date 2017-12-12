@@ -15,6 +15,7 @@
 
 #include "Function/tevwidget.h"
 #include "Function/hfctwidget.h"
+#include "Function/uhfwidget.h"
 #include "Function/faultlocation.h"
 #include "Function/aawidget.h"
 #include "Function/aewidget.h"
@@ -50,12 +51,12 @@ signals:
     void show_input(QString);
     void send_input_key(quint8);
     void input_str(QString str);
+    void send_sync(uint);
 
 private slots:
     void fresh_menu_icon();
     void fresh_status();
     void fresh_batt();
-    void fresh_sync();
     void system_reboot();
     void system_sleep();
     void screen_dark();
@@ -63,6 +64,8 @@ private slots:
     void show_message(QString str);
     void show_busy(bool f);
     void set_wifi_icon(int w);
+    void set_sync_status(bool flag);
+    void do_sync(uint offset);
 
 #ifdef PRINTSCREEN
     void printSc(); //截屏
@@ -81,9 +84,10 @@ private:
     FifoData *fifodata;
     Modbus *modbus;
 
-    //7个逻辑通道
+    //9个逻辑通道
     TEVWidget *tev1_widget, *tev2_widget;
     HFCTWidget *hfct1_widget, *hfct2_widget;
+    UHFWidget *uhf1_widget, *uhf2_widget;
     FaultLocation *double_widget;
     AAWidget *aa_widget;
     AEWidget *ae_widget;        //to be
@@ -101,14 +105,10 @@ private:
     //状态栏
     QTimer *timer_time;                 //系统时间和系统关机倒计时
     QTimer *timer_batt;                 //电池电量监视
-    QTimer *timer_sync;                 //同步信号计时器
     QTimer *timer_reboot;               //系统关机计时器
     QTimer *timer_sleep;                //系统休眠计时器
     QTimer *timer_dark;                 //屏幕暗化计时器
     Battery *battery;
-    CPUStatus *cpu_status;
-    float sync_vcc;                     //同步信号电压
-    QTime sync_time;                    //过零点计时器
     int low_power;                      //自动关机计数
 
     QQuickWidget *busyIndicator;

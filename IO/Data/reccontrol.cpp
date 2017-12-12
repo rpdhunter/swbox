@@ -5,13 +5,14 @@
 #include "IO/SqlCfg/sqlcfg.h"
 #include "Gui/Common/fft.h"
 
-RecControl::RecControl(G_PARA *g_data, QObject *parent) : QObject(parent)
+RecControl::RecControl(G_PARA *g_data, FifoControl *fifocontrol, QObject *parent) : QObject(parent)
 {
     //双通道录波
     rec_double_flag = 0;
     data = g_data;
     _mode = Disable;
     timer_interval = NULL;
+    this->fifocontrol = fifocontrol;
 
     //开启3个录波通道
     tev1 = new RecWave(g_data, MODE::TEV1);
@@ -132,13 +133,15 @@ void RecControl::recvRecData()
             if(timer_interval->remainingTime() > 0){
                 qDebug()<<"tringer the interval! remain timer:"<<timer_interval->remainingTime();
                 data->set_send_para(sp_rec_start_tev1, 2);
-                data->set_send_para(sp_rec_start_tev1, 0);
                 data->set_send_para(sp_rec_start_tev2, 2);
-                data->set_send_para(sp_rec_start_tev2, 0);
                 data->set_send_para(sp_rec_start_hfct1, 2);
-                data->set_send_para(sp_rec_start_hfct1, 0);
                 data->set_send_para(sp_rec_start_hfct2, 2);
+                fifocontrol->send_para();
+                data->set_send_para(sp_rec_start_tev1, 0);
+                data->set_send_para(sp_rec_start_tev2, 0);
+                data->set_send_para(sp_rec_start_hfct1, 0);
                 data->set_send_para(sp_rec_start_hfct2, 0);
+                fifocontrol->send_para();
                 return;
             }
             else{

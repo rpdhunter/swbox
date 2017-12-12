@@ -182,6 +182,42 @@ void Common::set_PRPD_style(QwtPlot *plot, QwtPlotSpectroCurve *d_PRPD, int max_
     d_PRPD->attach(plot);
 }
 
+void Common::set_TF_style(QwtPlot *plot, QwtPlotSpectroCurve *d_PRPD, int max_value)
+{
+    plot->setStyleSheet("background:transparent;color:gray;");
+
+    plot->setAxisScale(QwtPlot::xBottom, 0, 360, 180);
+    plot->setAxisScale(QwtPlot::yLeft, -max_value, max_value, max_value);
+
+    plot->axisScaleDraw(QwtPlot::yLeft)->enableComponent(QwtAbstractScaleDraw::Backbone, true);
+    plot->axisScaleDraw(QwtPlot::yLeft)->enableComponent(QwtAbstractScaleDraw::Ticks, false);
+
+    /* remove gap */
+    plot->axisWidget(QwtPlot::xBottom)->setMargin(0);
+    plot->axisWidget(QwtPlot::yLeft)->setMargin(0);
+
+//    plot->setAxisScaleEngine( QwtPlot::yLeft, new QwtLogScaleEngine );  //对数坐标
+    plot->axisScaleDraw(QwtPlot::xBottom)->enableComponent(QwtAbstractScaleDraw::Backbone, true);
+    plot->axisScaleDraw(QwtPlot::xBottom)->enableComponent(QwtAbstractScaleDraw::Ticks, false);
+    plot->plotLayout()->setAlignCanvasToScales(true);
+
+    QwtLinearColorMap *colorMap = new QwtLinearColorMap;
+    colorMap->setColorInterval(Qt::blue,Qt::red);
+    colorMap->addColorStop(0.3,Qt::green);
+    colorMap->addColorStop(0.6,Qt::yellow);
+    d_PRPD->setColorMap(colorMap);
+    d_PRPD->setColorRange(QwtInterval(1,6));
+    QwtScaleWidget *rightAxis = plot->axisWidget( QwtPlot::yRight );
+    rightAxis->setColorBarEnabled( true );
+    rightAxis->setColorMap(QwtInterval(1,6),colorMap);
+
+    plot->setAxisScale( QwtPlot::yRight, 1, 6 );
+    plot->enableAxis( QwtPlot::yRight );
+
+    plot->plotLayout()->setAlignCanvasToScales( true );
+    d_PRPD->attach(plot);
+}
+
 void Common::set_histogram_style(QwtPlot *plot, QwtPlotHistogram *d_histogram)
 {
     plot->setStyleSheet("background:transparent;color:gray;");

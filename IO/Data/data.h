@@ -142,6 +142,8 @@ enum MODE{
     TEV2,
     HFCT1,
     HFCT2,
+    UHF1,
+    UHF2,
     AA_Ultrasonic,
     AE_Ultrasonic,
     Double_Channel,

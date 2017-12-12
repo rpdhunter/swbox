@@ -42,7 +42,7 @@ int gpio_open (unsigned int gpio_pin /* 0 - 53, mio, 54 - 117, emio */, char * g
 	ret = write (fd, value, strlen (value));
 	close (fd);
 	if (ret < 0) {
-		printf("write failed\n");
+//		printf("write failed\n");
 		return -1;
 	}
 

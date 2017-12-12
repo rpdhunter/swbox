@@ -14,7 +14,7 @@ LineItem::LineItem(QColor color, QLineF line, QGraphicsItem *parent) : QGraphics
     myNum = 0;
 }
 
-PRPSScene::PRPSScene(MODE mode, QObject *parent) : QGraphicsScene(parent)
+PRPSScene::PRPSScene(MODE mode, int hfct_max, QObject *parent) : QGraphicsScene(parent)
 {
     this->mode = mode;
 
@@ -23,7 +23,7 @@ PRPSScene::PRPSScene(MODE mode, QObject *parent) : QGraphicsScene(parent)
     pen_yellow.setColor(Qt::yellow);
     pen_green.setColor(Qt::green);
 
-    axisInit();
+    axisInit(hfct_max);
 
     for (int i = 0; i < 36; ++i) {
         QPointF P;
@@ -41,7 +41,7 @@ PRPSScene::PRPSScene(MODE mode, QObject *parent) : QGraphicsScene(parent)
 }
 
 //绘制坐标轴
-void PRPSScene::axisInit()
+void PRPSScene::axisInit(int hfct_max)
 {
     P_shadow = QPointF(-70,35);      //定义投影
     P0 = QPointF(20,-20);        //定义原点
@@ -63,16 +63,22 @@ void PRPSScene::axisInit()
     setText(QString("  0"), Px_max+P_shadow);
     addLine(QLineF(P0+P_shadow/2, Py_max+P_shadow/2),pen_gray);
 
-    QPointF P_adjust(-20,-10);
+    QPointF P_adjust(-25,-10);
     if(mode == TEV1 || mode == TEV2){
         data_max = 60;
-        setText(QString("%1").arg(data_max), Py_max+P_shadow + P_adjust);
-        setText(QString("%1").arg(data_max/2), (Py_max + P0)/2 + P_shadow + P_adjust);
+//        setText(QString("%1").arg(data_max), Py_max+P_shadow + P_adjust);
+//        setText(QString("%1").arg(data_max/2), (Py_max + P0)/2 + P_shadow + P_adjust);
     }
     else if(mode == HFCT1 || mode == HFCT2){
-        data_max = 8000;
-        setText(QString("8k"), Py_max+P_shadow + P_adjust);
-        setText(QString("4k"), (Py_max + P0)/2 + P_shadow + P_adjust);
+        data_max = hfct_max;
+    }
+    if(data_max > 1000){
+        setText(QString("%1k").arg(data_max/1000), Py_max+P_shadow + P_adjust);
+        setText(QString("%1k").arg(data_max/2000), (Py_max + P0)/2 + P_shadow + P_adjust);
+    }
+    else{
+        setText(QString("%1").arg(data_max), Py_max+P_shadow + P_adjust);
+        setText(QString("%1").arg(data_max/2), (Py_max + P0)/2 + P_shadow + P_adjust);
     }
 
 //    QPointF P_adjust(-20,-10);

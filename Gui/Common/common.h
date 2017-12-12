@@ -109,6 +109,7 @@ public:
     static void set_comboBox_style(QComboBox *comboBox);                  //完成QComboBox的样式设置
     static void set_barchart_style(QwtPlot *plot, int v_max);                  //完成barchart的样式设置
     static void set_PRPD_style(QwtPlot *plot, QwtPlotSpectroCurve *d_PRPD, int max_value);                      //完成PRPD的样式设置
+    static void set_TF_style(QwtPlot *plot, QwtPlotSpectroCurve *d_PRPD, int max_value);                      //完成TF的样式设置
     static void set_histogram_style(QwtPlot *plot, QwtPlotHistogram *d_histogram);                      //完成histogram的样式设置
     static void setTab(QLabel *label);              //设置tabwidget的标签格式
 

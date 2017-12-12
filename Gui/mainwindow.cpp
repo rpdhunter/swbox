@@ -53,6 +53,7 @@ MainWindow::MainWindow(QSplashScreen *sp, QWidget *parent ) :
 
     connect(keydetect, &KeyDetect::sendkey, this, &MainWindow::trans_key);
     connect(modbus,SIGNAL(closeTimeChanged(int)),this,SLOT(set_reboot_time()) );
+    connect(this, SIGNAL(send_sync(uint)), fifodata, SIGNAL(send_sync(uint)) );
 
     sp->showMessage(tr("正在初始化主菜单..."),Qt::AlignBottom|Qt::AlignLeft);
     menu_init();
@@ -121,7 +122,6 @@ void MainWindow::statusbar_init()
 {
     battery = new Battery;
     low_power = LOW_POWER_TIMES;
-    cpu_status = new CPUStatus;
 
     timer_time = new QTimer();
     timer_time->setInterval(1000);   //1秒1跳
@@ -130,9 +130,6 @@ void MainWindow::statusbar_init()
     timer_batt = new QTimer();
     timer_batt->setInterval(10000);   //10秒1跳
     timer_batt->start();
-
-    timer_sync = new QTimer();
-    timer_sync->setInterval(1);       //1毫秒1跳
 
     timer_reboot =  new QTimer();
     timer_reboot->setSingleShot(true);
@@ -147,7 +144,6 @@ void MainWindow::statusbar_init()
 
     connect(timer_time, SIGNAL(timeout()), this, SLOT(fresh_status()) );
     connect(timer_batt, SIGNAL(timeout()), this, SLOT(fresh_batt()) );
-    connect(timer_sync, SIGNAL(timeout()), this, SLOT(fresh_sync()) );
     connect(timer_reboot, SIGNAL(timeout()), this, SLOT(system_reboot()) );
     connect(timer_sleep, SIGNAL(timeout()), this, SLOT(system_sleep()) );
     connect(timer_dark, SIGNAL(timeout()), this, SLOT(screen_dark()) );
@@ -158,6 +154,8 @@ void MainWindow::statusbar_init()
 #ifdef OHV
     ui->lab_logo->setPixmap(QPixmap(":/widgetphoto/bk/ohv_gary.png").scaled(ui->lab_logo->size()));     //logo
 #elif AMG
+    ui->lab_logo->hide();
+#elif ZDIT
     ui->lab_logo->hide();
 #else
     ui->lab_logo->hide();
@@ -171,6 +169,8 @@ void MainWindow::function_init(QSplashScreen *sp)
     tev2_widget = NULL;
     hfct1_widget = NULL;
     hfct2_widget = NULL;
+    uhf1_widget = NULL;
+    uhf2_widget = NULL;
     double_widget = NULL;
     aa_widget = NULL;
     ae_widget = NULL;
@@ -180,8 +180,8 @@ void MainWindow::function_init(QSplashScreen *sp)
     channel_init((MODE)sqlcfg->get_para()->menu_h2,1);
     channel_init((MODE)sqlcfg->get_para()->menu_double,2);
     sp->showMessage(tr("正在初始化低频通道..."),Qt::AlignBottom|Qt::AlignLeft);
-    channel_init((MODE)sqlcfg->get_para()->menu_aa,3);
-    channel_init((MODE)sqlcfg->get_para()->menu_ae,4);
+    channel_init((MODE)sqlcfg->get_para()->menu_l1,3);
+    channel_init((MODE)sqlcfg->get_para()->menu_l2,4);
     mode_list.append(Options_Mode);
 
     if(tev1_widget != NULL){
@@ -223,6 +223,28 @@ void MainWindow::function_init(QSplashScreen *sp)
         connect(ui->tabWidget,SIGNAL(currentChanged(int)), hfct2_widget, SLOT(reload(int)) );
         //菊花
         connect(hfct2_widget,SIGNAL(show_indicator(bool)), this, SLOT(show_busy(bool)) );
+    }
+    if(uhf1_widget != NULL){
+        connect(this, SIGNAL(send_key(quint8)), uhf1_widget, SLOT(trans_key(quint8)) );
+        connect(uhf1_widget,SIGNAL(fresh_parent()), this, SLOT(fresh_menu_icon()) );
+        //录波
+        connect(uhf1_widget,SIGNAL(startRecWave(MODE,int)),fifodata,SIGNAL(startRecWave(MODE,int)) );
+        connect(fifodata,SIGNAL(waveData(VectorList,MODE)),uhf1_widget,SLOT(showWaveData(VectorList,MODE)) );
+        //重载数据
+        connect(ui->tabWidget,SIGNAL(currentChanged(int)), uhf1_widget, SLOT(reload(int)) );
+        //菊花
+        connect(uhf1_widget,SIGNAL(show_indicator(bool)), this, SLOT(show_busy(bool)) );
+    }
+    if(uhf2_widget != NULL){
+        connect(this, SIGNAL(send_key(quint8)), uhf2_widget, SLOT(trans_key(quint8)) );
+        connect(uhf2_widget,SIGNAL(fresh_parent()), this, SLOT(fresh_menu_icon()) );
+        //录波
+        connect(uhf2_widget,SIGNAL(startRecWave(MODE,int)),fifodata,SIGNAL(startRecWave(MODE,int)) );
+        connect(fifodata,SIGNAL(waveData(VectorList,MODE)),uhf2_widget,SLOT(showWaveData(VectorList,MODE)) );
+        //重载数据
+        connect(ui->tabWidget,SIGNAL(currentChanged(int)), uhf2_widget, SLOT(reload(int)) );
+        //菊花
+        connect(uhf2_widget,SIGNAL(show_indicator(bool)), this, SLOT(show_busy(bool)) );
     }
     if(double_widget != NULL){
         connect(this, SIGNAL(send_key(quint8)), double_widget, SLOT(trans_key(quint8)) );
@@ -266,6 +288,12 @@ void MainWindow::channel_init(MODE mode, int index)
         case HFCT2:
             hfct2_widget = new HFCTWidget(data,&key_val,mode,0,ui->H_Channel1);
             break;
+        case UHF1:
+            uhf1_widget = new UHFWidget(data,&key_val,mode,0,ui->H_Channel1);
+            break;
+        case UHF2:
+            uhf2_widget = new UHFWidget(data,&key_val,mode,0,ui->H_Channel1);
+            break;
         default:
             mode = Disable;
             break;
@@ -284,6 +312,12 @@ void MainWindow::channel_init(MODE mode, int index)
             break;
         case HFCT2:
             hfct2_widget = new HFCTWidget(data,&key_val,mode,1,ui->H_Channel2);
+            break;
+        case UHF1:
+            uhf1_widget = new UHFWidget(data,&key_val,mode,1,ui->H_Channel2);
+            break;
+        case UHF2:
+            uhf2_widget = new UHFWidget(data,&key_val,mode,1,ui->H_Channel2);
             break;
         default:
             mode = Disable;
@@ -357,6 +391,9 @@ void MainWindow::options_init()
     connect(recwavemanage,SIGNAL(show_indicator(bool)), this, SLOT(show_busy(bool)) );
     //状态栏
     connect(options,SIGNAL(show_wifi_icon(int)), this, SLOT(set_wifi_icon(int)) );
+//    connect(debugset,SIGNAL(update_syncBar(bool)), this, SLOT(set_sync_status(bool)) );
+    //同步
+    connect(debugset,SIGNAL(send_sync(uint)), this, SLOT(do_sync(uint)) );
 }
 
 void MainWindow::qml_init()
@@ -438,19 +475,11 @@ void MainWindow::trans_key(quint8 key_code)
         if (key_val.grade.val0 == 5) {
             Common::change_index(key_val.grade.val1,-1,5,1);
         }
-//        else{
-//            key_val.grade.val1 = 1;
-//            emit send_key(key_code);
-//        }
         break;
     case KEY_DOWN:
         if (key_val.grade.val0 == 5) {
             Common::change_index(key_val.grade.val1,1,5,1);
         }
-//        else{
-//            key_val.grade.val1 = 1;
-//            emit send_key(key_code);
-//        }
         break;
     case KEY_CANCEL:
         if (key_val.grade.val1 > 0){
@@ -500,6 +529,14 @@ void MainWindow::fresh_menu_icon()
             menu_icon0->setPixmap(QPixmap(":/widgetphoto/menu/HFCT2_1.png"));
             ui->lab_imformation->setText(tr("电缆局放检测(通道2)"));
             break;
+        case UHF1:
+            menu_icon0->setPixmap(QPixmap(":/widgetphoto/menu/UHF1_1.png"));
+            ui->lab_imformation->setText(tr("特高频检测(通道1)"));
+            break;
+        case UHF2:
+            menu_icon0->setPixmap(QPixmap(":/widgetphoto/menu/UHF2_1.png"));
+            ui->lab_imformation->setText(tr("特高频检测(通道2)"));
+            break;
         default:
             break;
         }
@@ -521,6 +558,14 @@ void MainWindow::fresh_menu_icon()
         case HFCT2:
             menu_icon1->setPixmap(QPixmap(":/widgetphoto/menu/HFCT2_1.png"));
             ui->lab_imformation->setText(tr("电缆局放检测(通道2)"));
+            break;
+        case UHF1:
+            menu_icon1->setPixmap(QPixmap(":/widgetphoto/menu/UHF1_1.png"));
+            ui->lab_imformation->setText(tr("特高频检测(通道1)"));
+            break;
+        case UHF2:
+            menu_icon1->setPixmap(QPixmap(":/widgetphoto/menu/UHF2_1.png"));
+            ui->lab_imformation->setText(tr("特高频检测(通道2)"));
             break;
         default:
             break;
@@ -578,6 +623,12 @@ void MainWindow::set_non_current_menu_icon()
     case HFCT2:
         menu_icon0->setPixmap(QPixmap(":/widgetphoto/menu/HFCT2_2.png"));
         break;
+    case UHF1:
+        menu_icon0->setPixmap(QPixmap(":/widgetphoto/menu/UHF1_2.png"));
+        break;
+    case UHF2:
+        menu_icon0->setPixmap(QPixmap(":/widgetphoto/menu/UHF2_2.png"));
+        break;
     default:                     //禁用
         if(mode_list.at(1) == TEV1){
             menu_icon0->setPixmap(QPixmap(":/widgetphoto/menu/TEV2_0.png"));
@@ -600,6 +651,12 @@ void MainWindow::set_non_current_menu_icon()
         break;
     case HFCT2:
         menu_icon1->setPixmap(QPixmap(":/widgetphoto/menu/HFCT2_2.png"));
+        break;
+    case UHF1:
+        menu_icon1->setPixmap(QPixmap(":/widgetphoto/menu/UHF1_2.png"));
+        break;
+    case UHF2:
+        menu_icon1->setPixmap(QPixmap(":/widgetphoto/menu/UHF2_2.png"));
         break;
     default:                     //禁用
         if(mode_list.at(0) == TEV2){
@@ -659,6 +716,12 @@ void MainWindow::set_disable_menu_icon()
     case HFCT2:
         menu_icon0->setPixmap(QPixmap(":/widgetphoto/menu/HFCT2_0.png"));
         break;
+    case UHF1:
+        menu_icon0->setPixmap(QPixmap(":/widgetphoto/menu/UHF1_0.png"));
+        break;
+    case UHF2:
+        menu_icon0->setPixmap(QPixmap(":/widgetphoto/menu/UHF2_0.png"));
+        break;
     default:                     //禁用
         if(mode_list.at(1) == TEV1){
             menu_icon0->setPixmap(QPixmap(":/widgetphoto/menu/TEV2_0.png"));
@@ -681,6 +744,12 @@ void MainWindow::set_disable_menu_icon()
         break;
     case HFCT2:
         menu_icon1->setPixmap(QPixmap(":/widgetphoto/menu/HFCT2_0.png"));
+        break;
+    case UHF1:
+        menu_icon1->setPixmap(QPixmap(":/widgetphoto/menu/UHF1_0.png"));
+        break;
+    case UHF2:
+        menu_icon1->setPixmap(QPixmap(":/widgetphoto/menu/UHF2_0.png"));
         break;
     default:                     //禁用
         if(mode_list.at(0) == TEV2){
@@ -784,13 +853,6 @@ void MainWindow::fresh_batt()
 
     batt_val = battery->battValue();
 
-    //检测过零点
-    cpu_status->get_vvpn(&sync_vcc);
-    qDebug()<<"sync vcc = "<< sync_vcc;
-    if(sync_vcc > 20){
-        timer_sync->start();
-    }
-
     //自动关机
     if(battery->is_low_power()){
         low_power--;
@@ -851,24 +913,6 @@ void MainWindow::fresh_batt()
     }
 }
 
-void MainWindow::fresh_sync()
-{
-    float temp = sync_vcc;
-    cpu_status->get_vvpn(&sync_vcc);
-
-    int interval;
-    if(temp < 0 && sync_vcc > 0){       //正向过零点
-        interval = sync_time.elapsed();
-        qDebug()<<"sync interval = "<<interval << "ms";
-        sync_time.start();
-
-        if(qAbs(interval - 20)<10 ){        //判断条件可再改进
-            timer_sync->stop();
-//            data->set_send_para(sp_aa_vol);       //to be
-        }
-    }
-}
-
 void MainWindow::system_reboot()
 {
     qDebug()<<"system will reboot immediately!";
@@ -920,6 +964,22 @@ void MainWindow::set_wifi_icon(int w)
         ui->lab_wifi->setPixmap(QPixmap(":/widgetphoto/wifi/wifi0.png").scaled(ui->lab_wifi->size()));
         break;
     }
+}
+
+void MainWindow::set_sync_status(bool flag)
+{
+    if(flag){
+        ui->lab_sync->setText("同步方式:工频信号  当前状态:已同步");
+    }
+    else {
+        ui->lab_sync->setText("同步方式:工频信号  当前状态:已失步");
+    }
+}
+
+void MainWindow::do_sync(uint offset)
+{
+    emit send_sync(offset);
+    ui->lab_sync->setText(tr("同步源:工频量 状态:已同步"));
 }
 
 #ifdef PRINTSCREEN

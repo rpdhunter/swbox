@@ -102,74 +102,99 @@ signals:
     void show_indicator(bool);      //显示菊花
 
 private slots:
-    void fresh_plot();
-    void fresh_PRPD();
-    void get_fpga_hfct_data();
+    void fresh_1000ms();
+    void fresh_200ms();
+    void fresh_1ms();
 
 private:
-    void fresh_setting(void);
+    struct PC_DATA {
+        double pc_value;    //脉冲放电强度
+        int phase;          //相位
+        double rise_time;      //上升时间
+        double fall_time;      //下降时间
+    };
 
-    void chart_ini();
-
-    void maxReset();
-    void PRPDReset();
-
-    void do_key_up_down(int d);
-    void do_key_left_right(int d);
-
-
+    //常规变量
+    Ui::HFCTWidget *ui;
+    CURRENT_KEY_VALUE *key_val;
+    G_PARA *data;
+    G_RECV_PARA_HFCT *hfct_data;
     SQL_PARA sql_para;
     HFCT_SQL *hfct_sql;
-    bool manual;        //手动录波标志
+    MODE mode;
+    int menu_index;
+    LogTools *logtools;
+    void do_key_up_down(int d);
+    void do_key_left_right(int d);
+    void chart_ini();
+    void fresh_setting(void);
 
+    //定时器
+    QTimer *timer_1ms, *timer_200ms, *timer_1000ms, *timer_freeze;
+
+    //数据流
+    quint32 group_num;                  //有效数据校验
+    QVector<PC_DATA> pclist_200ms;      //200ms的脉冲数据,HFCT分析的基准
+    QVector<PC_DATA> compute_pc_1ms(QVector<double> list, int x_origin);        //计算1ms数据的HFCT数据
+    PC_DATA compute_pc_1node(QVector<double> list, int x_origin);           //计算一个脉冲节点的HFCT数据
+    double simpson(QVector<double> list);
+    double triangle(double d1, double d2);
+
+    //基本数据+时序图
+    BarChart *d_barchart;              //时序图
+    QwtPlot *plot_BarChart;
+    int low, high;
+    int db;         //每秒的最大值，用于给图形传递参数
+    int pulse_number;       //脉冲数
+    double max_db;  //最大值
+    void maxReset();
+
+    //PRPD
+    QwtPlot *plot_PRPD;             //PRPD窗口部件(qwt)
+    QwtPlotSpectroCurve *d_PRPD;    //PRPD曲线(qwt)
+    QVector<QwtPoint3D> points_PRPD;//PRPD曲线数据(qwt)
+    QMap<MyKey,int> map_PRPD;       //PRPD数据(Qt,points_PRPD的数据源,便与检索)
+    void PRPDReset();
+
+    //t-f图
+    QwtPlot *plot_TF;
+    QwtPlotSpectroCurve *d_TF;    //TF曲线(qwt)
+    QVector<QwtPoint3D> points_TF;//TF曲线数据(qwt)
+    QMap<MyKey,int> map_TF;       //TF数据(Qt,points_TF的数据源,便与检索)
+
+    //PRPS
     QGraphicsView *plot_PRPS;       //PRPS图
     PRPSScene *scene;
 
-    QwtPlot *plot_BarChart, *plot_PRPD, *plot_Histogram;
-    BarChart *d_PRPS;              //PRPS图
-    QwtPlotSpectroCurve *d_PRPD;   //PRPD图
-//    QwtPlotHistogram *d_histogram;   //Histogram图
-
-//    int map[360][121];
-    QMap<MyKey,int> map;
+    //柱状图
+    QwtPlot *plot_Histogram;
+    QwtPlotHistogram *d_histogram;   //Histogram图
+    QVector<QwtIntervalSample> histogram_data;
 
 
-    QVector<QwtPoint3D> points;
+
+    //录波
+    bool isBusy;            //菊花状态
+    bool manual;            //手动录波标志
+    MODE mode_continuous;
+    RecWaveForm *recWaveForm;
+
+
+
+
+
 
     QVector<int> compute_pulse_number(QVector<double> list);
-    int pulse_number;
+
     QVector<QPoint> points_origin;  //原始脉冲点
 
 
-//    QVector<QwtIntervalSample> histogram_data;
-
-    int db;         //每秒的最大值，用于给图形传递参数
-    double max_db;  //最大值
-    int low, high;
-//    double temp_db; //显示值缓冲区，用于减缓刷新
-
-
-    CURRENT_KEY_VALUE *key_val;
-    QTimer *timer, *timer1 , *timer2, *timer3, *timer_freeze;
-    G_PARA *data;
-    int menu_index;
-    quint32 group;
     QVector<double> pCList;     //记录一秒内的脉冲pc值列表
 
     double compute_list_pC(QVector<double> list, int x_origin);
     double compute_one_pC(QVector<double> list);
-    double simpson(QVector<double> list);
-    double triangle(double d1, double d2);
 
-    RecWaveForm *recWaveForm;
-    LogTools *logtools;
 
-    MODE mode, mode_continuous;
-    G_RECV_PARA_HFCT *hfct_data;
-
-    bool isBusy;            //菊花状态
-
-    Ui::HFCTWidget *ui;
 };
 
 #endif // HFCTWIDGET_H

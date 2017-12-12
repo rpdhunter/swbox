@@ -5,6 +5,7 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QTimer>
+#include <QTime>
 
 #include "IO/Key/key.h"
 #include "IO/Data/data.h"
@@ -32,12 +33,20 @@ signals:
     void fregChanged(int);      //频率设置变化
     void send_key(quint8);
     void update_statusBar(QString);
+    void update_syncBar(bool);  //参数为false代表同步未成功,true为同步成功
+    void send_sync(uint);
 
 private slots:
     void fresh_rdb_data();
     void fresh_hardware_status();
+    void fresh_sync();
 
 private:
+    struct SYNC_DATA{
+        struct timeval t;
+        float vcc;
+    };
+
     void iniUi();
     void iniPasswordUi();
     void fresh();       //刷新界面
@@ -52,8 +61,13 @@ private:
     G_PARA *data;
     SQL_PARA sql_para;
     QTimer *timer_rdb, *timer_hardware;
+    QTimer *timer_sync;                 //同步信号计时器
     CPUStatus *cpu_status;
     Battery *battery;
+    float sync_vcc;                     //同步信号电压
+    QVector<SYNC_DATA> sync_data;       //同步数据信号
+    struct timeval start, end , last_zero;          //测试用计时
+
     QLabel *tab0, *tab1, *tab2, *tab3, *tab4;  //tab标签
 
     QWidget *widget_password;        //密码窗口

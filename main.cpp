@@ -3,6 +3,8 @@
 #include <QTranslator>
 #include <QSplashScreen>
 #include <QQmlContext>
+#include <QFile>
+#include <QDir>
 
 #include "Gui/mainwindow.h"
 #include "IO/SqlCfg/sqlcfg.h"
@@ -20,9 +22,17 @@ int main(int argc, char *argv[])
     QPixmap pixmap(":/widgetphoto/bk/ohv.png");
 #elif AMG
     QPixmap pixmap(":/widgetphoto/bk/amg.png");
+#elif ZDIT
+    QPixmap pixmap(":/widgetphoto/bk/zdit.png");
 #else
     QPixmap pixmap(":/widgetphoto/bk/powersystem.png");
 #endif
+
+
+    QFile file("/root/OEM/logo.png");
+    if(file.exists()){
+        pixmap.load("/root/OEM/logo.png");
+    }
 
     pixmap.scaled(480,272);
     QSplashScreen *splash = new QSplashScreen(pixmap);
@@ -30,6 +40,8 @@ int main(int argc, char *argv[])
 
     print_centor();
     sqlite3_init();
+
+//    return 1;
 
     splash->showMessage(QObject::tr("正在载入语言模块..."),Qt::AlignBottom|Qt::AlignLeft);
     qDebug("language = %s", sqlcfg->get_para()->language == EN ? "EN" : "CN");

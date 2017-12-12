@@ -11,9 +11,6 @@
         <file>widgetphoto/pwr/pwr90.png</file>
         <file>widgetphoto/pwr/pwr100.png</file>
         <file>widgetphoto/pwr/pwr0.png</file>
-        <file>widgetphoto/menu/UHF_2.png</file>
-        <file>widgetphoto/menu/UHF_1.png</file>
-        <file>widgetphoto/menu/UHF_0.png</file>
         <file>widgetphoto/menu/TEV2_2.png</file>
         <file>widgetphoto/menu/TEV2_1.png</file>
         <file>widgetphoto/menu/TEV2_0.png</file>
@@ -56,5 +53,13 @@
         <file>Input.qml</file>
         <file>widgetphoto/wifi/pointer.png</file>
         <file>Busy.qml</file>
+        <file>widgetphoto/menu/UHF2_2.png</file>
+        <file>widgetphoto/menu/UHF2_1.png</file>
+        <file>widgetphoto/menu/UHF2_0 .png</file>
+        <file>widgetphoto/menu/UHF1_2.png</file>
+        <file>widgetphoto/menu/UHF1_1.png</file>
+        <file>widgetphoto/menu/UHF1_0.png</file>
+        <file>widgetphoto/bk/zdit_low.png</file>
+        <file>widgetphoto/bk/zdit.png</file>
     </qresource>
 </RCC>

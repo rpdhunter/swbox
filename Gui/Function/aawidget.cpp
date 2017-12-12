@@ -74,7 +74,9 @@ void AAWidget::reload(int index)
             timer2->start();
         }
         data->set_send_para (sp_aa_vol, aaultra_sql->vol);  //重置声音
+        data->set_send_para(sp_auto_rec, 0);        //关闭自动录波
 //        qDebug()<<"vol changed!";
+        fresh_setting();
     }
 }
 
@@ -189,9 +191,9 @@ void AAWidget::calc_aa_value (double * aa_val, double * aa_db, int * offset)
     d = (int)data->recv_para_normal.ldata1_max - (int)data->recv_para_normal.ldata1_min ;      //最大值-最小值=幅值
     * offset = ( d - 1 / sqlcfg->get_para()->aaultra_sql.gain / AA_FACTOR ) / 100;
     * aa_val = (d - sqlcfg->get_para()->aaultra_sql.aa_offset * 100) * sqlcfg->get_para()->aaultra_sql.gain * AA_FACTOR;
-    if(* aa_val < 1){
-        * aa_val = 1;
-    }
+//    if(* aa_val < 1){
+//        * aa_val = 1;
+//    }
     * aa_db = 20 * log10 (* aa_val);
 }
 

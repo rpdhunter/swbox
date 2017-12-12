@@ -5,6 +5,8 @@
 #include "../Common/common.h"
 #include "IO/Com/rdb/rdb.h"
 
+#include <sys/time.h>    // for gettimeofday()
+
 #define SETTING_NUM             5           //设置菜单条目数
 #define SETTING_NUM_TEV         6
 #define SETTING_NUM_HFCT        4
@@ -29,8 +31,13 @@ DebugSet::DebugSet(G_PARA *g_data,QWidget *parent) : QFrame(parent),ui(new Ui::D
     connect(timer_rdb, SIGNAL(timeout()), this, SLOT(fresh_rdb_data()) );
 
     timer_hardware = new QTimer;
-    timer_hardware->start(2000);
+    timer_hardware->start(5000);        //5秒检测一次硬件及同步
+//    timer_hardware->start(20000);
     connect(timer_hardware, SIGNAL(timeout()), this, SLOT(fresh_hardware_status()) );
+
+    timer_sync = new QTimer();
+    timer_sync->setInterval(1);       //1毫秒1跳
+    connect(timer_sync, SIGNAL(timeout()), this, SLOT(fresh_sync()) );
 
     iniUi();
     reload();
@@ -77,11 +84,15 @@ void DebugSet::iniUi()
     group1->addButton( ui->rb_HC1_TEV2 );
     group1->addButton( ui->rb_HC1_HFCT1 );
     group1->addButton( ui->rb_HC1_HFCT2 );
+    group1->addButton( ui->rb_HC1_UHF1 );
+    group1->addButton( ui->rb_HC1_UHF2 );
     group1->addButton( ui->rb_HC1_Disable );
     group2->addButton( ui->rb_HC2_TEV1 );
     group2->addButton( ui->rb_HC2_TEV2 );
     group2->addButton( ui->rb_HC2_HFCT1 );
     group2->addButton( ui->rb_HC2_HFCT2 );
+    group2->addButton( ui->rb_HC2_UHF1 );
+    group2->addButton( ui->rb_HC2_UHF2 );
     group2->addButton( ui->rb_HC2_Disable );
     group3->addButton( ui->rb_LC1_AA );
     group3->addButton( ui->rb_LC1_Disable );
@@ -125,7 +136,7 @@ void DebugSet::resetPassword()
 void DebugSet::saveSql()
 {
     bool flag = true;      //判断是否需要重启标志
-    if(sql_para.menu_aa == sqlcfg->get_para()->menu_aa && sql_para.menu_ae == sqlcfg->get_para()->menu_ae
+    if(sql_para.menu_l1 == sqlcfg->get_para()->menu_l1 && sql_para.menu_l2 == sqlcfg->get_para()->menu_l2
             && sql_para.menu_h1 == sqlcfg->get_para()->menu_h1 && sql_para.menu_h2 == sqlcfg->get_para()->menu_h2
             && sql_para.menu_double == sqlcfg->get_para()->menu_double){
         flag = false;
@@ -189,6 +200,12 @@ void DebugSet::reload()
     case HFCT2:
         ui->rb_HC1_HFCT2->setChecked(true);
         break;
+    case UHF1:
+        ui->rb_HC1_UHF1->setChecked(true);
+        break;
+    case UHF2:
+        ui->rb_HC1_UHF2->setChecked(true);
+        break;
     case Disable:
         ui->rb_HC1_Disable->setChecked(true);
         break;
@@ -209,6 +226,12 @@ void DebugSet::reload()
     case HFCT2:
         ui->rb_HC2_HFCT2->setChecked(true);
         break;
+    case UHF1:
+        ui->rb_HC2_UHF1->setChecked(true);
+        break;
+    case UHF2:
+        ui->rb_HC2_UHF2->setChecked(true);
+        break;
     case Disable:
         ui->rb_HC2_Disable->setChecked(true);
         break;
@@ -216,7 +239,7 @@ void DebugSet::reload()
         break;
     }
 
-    switch (sql_para.menu_ae) {
+    switch (sql_para.menu_l2) {
     case AE_Ultrasonic:
         ui->rb_LC2_AE->setChecked(true);
         break;
@@ -227,7 +250,7 @@ void DebugSet::reload()
         break;
     }
 
-    switch (sql_para.menu_aa) {
+    switch (sql_para.menu_l1) {
     case AA_Ultrasonic:
         ui->rb_LC1_AA->setChecked(true);
         break;
@@ -428,32 +451,32 @@ void DebugSet::do_key_left_right(int d)
         case 4:     //通道
             switch (key_val->grade.val4) {
             case 1:     //高频通道1
-                Common::change_index(sql_para.menu_h1, d, HFCT2, Disable);
+                Common::change_index(sql_para.menu_h1, d, UHF2, Disable);
                 if(sql_para.menu_h1 == sql_para.menu_h2){       //如果冲突,再执行一次
-                    Common::change_index(sql_para.menu_h1, d, HFCT2, Disable);
+                    Common::change_index(sql_para.menu_h1, d, UHF2, Disable);
                 }
                 break;
             case 2:
-                Common::change_index(sql_para.menu_h2, d, HFCT2, Disable);
+                Common::change_index(sql_para.menu_h2, d, UHF2, Disable);
                 if(sql_para.menu_h2 == sql_para.menu_h1){
-                    Common::change_index(sql_para.menu_h2, d, HFCT2, Disable);
+                    Common::change_index(sql_para.menu_h2, d, UHF2, Disable);
                 }
                 break;
             case 3:
-                if(sql_para.menu_aa == AA_Ultrasonic){
-                    sql_para.menu_aa = Disable;
+                if(sql_para.menu_l1 == AA_Ultrasonic){
+                    sql_para.menu_l1 = Disable;
                 }
-                else if(sql_para.menu_aa == Disable && ui->rb_LC1_AA->isEnabled()){       //判断AA是否可用
-                    sql_para.menu_aa = AA_Ultrasonic;
+                else if(sql_para.menu_l1 == Disable && ui->rb_LC1_AA->isEnabled()){       //判断AA是否可用
+                    sql_para.menu_l1 = AA_Ultrasonic;
                 }
 
                 break;
             case 4:
-                if(sql_para.menu_ae == AE_Ultrasonic){
-                    sql_para.menu_ae = Disable;
+                if(sql_para.menu_l2 == AE_Ultrasonic){
+                    sql_para.menu_l2 = Disable;
                 }
-                else if(sql_para.menu_ae == Disable && ui->rb_LC2_AE->isEnabled()){       //判断AE是否可用
-                    sql_para.menu_ae = AE_Ultrasonic;
+                else if(sql_para.menu_l2 == Disable && ui->rb_LC2_AE->isEnabled()){       //判断AE是否可用
+                    sql_para.menu_l2 = AE_Ultrasonic;
                 }
                 break;
             case 5:
@@ -526,7 +549,7 @@ void DebugSet::fresh_rdb_data()
 
 void DebugSet::fresh_hardware_status()
 {
-    float temp, vcc;
+    float temp, vcc, sync;
     cpu_status->get_cpu_temp(&temp);
     cpu_status->get_cpu_vcc(&vcc);
     ui->lineEdit_CPU_TEMP->setText(QString("%1").arg(temp) );
@@ -536,7 +559,65 @@ void DebugSet::fresh_hardware_status()
     ui->lineEdit_BATT_CUR->setText(QString("%1").arg(c) );
     ui->lineEdit_BATT_P->setText(QString("%1").arg(v*c/1000) );
 
-//    qDebug()<<"CUR = "<<c<<"\tP = "<<v*c/1000;
+    cpu_status->get_vvpn(&sync);
+
+//    qDebug()<<"sync = "<< sync << "mV";
+//    if(qAbs(sync) > 100){
+        gettimeofday( &last_zero, NULL );
+//        timer_sync->start();
+//    }
+}
+
+void DebugSet::fresh_sync()
+{
+    //存储当前采样数据
+    SYNC_DATA temp_data;
+    cpu_status->get_vvpn(&temp_data.vcc);
+    gettimeofday( &temp_data.t, NULL );
+    sync_data.append(temp_data);
+
+    int interval, offset, time_interval;
+
+    //当存在6个有效数据时,进行过零点判断(过零点判断比较严格,必须单调)
+    if(sync_data.length() > 6){
+        if(sync_data.at(2).vcc < 0 && sync_data.at(3).vcc > 0
+                && sync_data.at(0).vcc < sync_data.at(1).vcc && sync_data.at(1).vcc < sync_data.at(2).vcc
+                && sync_data.at(3).vcc < sync_data.at(4).vcc && sync_data.at(4).vcc < sync_data.at(5).vcc){
+            struct timeval zero_time = sync_data.at(5).t;       //6组数据的时间间隔
+            time_interval = sync_data.at(5).t.tv_usec - sync_data.at(0).t.tv_usec;
+            if(time_interval <0){
+                time_interval += 1000000;
+            }
+//            qDebug()<<time_interval;
+            zero_time.tv_usec -=  time_interval * sync_data.at(5).vcc / (sync_data.at(5).vcc - sync_data.at(0).vcc);
+            if(zero_time.tv_usec < 0){
+                zero_time.tv_sec -= 1;
+                zero_time.tv_usec += 1000000;
+            }
+            interval = zero_time.tv_usec - last_zero.tv_usec;
+            if(interval<0){
+                interval += 1000000;
+            }
+            offset = interval % (1000000 / sqlcfg->get_para()->freq_val);
+            if(offset > 10000){
+                offset -= 1000000 / sqlcfg->get_para()->freq_val;
+            }
+
+            if(qAbs(offset) < 1000){
+//                qDebug()<< "sync interval =" << interval << "\toffset = "<< offset /*<< "\trate = " << 100.0*offset/interval << "%"*/;
+//                qDebug()<< "sync begin!!!!!!!";
+                offset += 500;
+                if(offset < 0){
+                    offset += 1000000 / sqlcfg->get_para()->freq_val;
+                }
+                emit send_sync(100 * offset );
+                timer_sync->stop();
+
+            }
+            last_zero = zero_time;
+        }
+        sync_data.removeFirst();
+    }
 }
 
 void DebugSet::fresh()

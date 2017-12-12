@@ -389,10 +389,7 @@ background:transparent;
     <string notr="true">QLabel {color:white;}</string>
    </property>
    <property name="text">
-    <string>同步状态:未同步</string>
-   </property>
-   <property name="pixmap">
-    <pixmap resource="../resource/resource.qrc">:/widgetphoto/bk/ohv_gary.png</pixmap>
+    <string/>
    </property>
   </widget>
  </widget>
