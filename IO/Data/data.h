@@ -7,6 +7,7 @@
 
 //定义一些全局数据类型，和一些全局宏
 #define PROGRAM_DIR     "/root"
+#define DATA_DIR        PROGRAM_DIR "/data"
 #define WAVE_DIR        PROGRAM_DIR "/data/WaveForm"
 #define FAVORITE_DIR    PROGRAM_DIR "/data/WaveForm/favorite"
 #define DATALOG_DIR     PROGRAM_DIR "/data/DataLog"

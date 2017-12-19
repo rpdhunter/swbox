@@ -65,6 +65,10 @@ void LogTools::logFileInit()
     //创建文件夹
     QDir dir;
 
+    if(!dir.exists(DATA_DIR"/") ){
+        dir.mkdir(DATA_DIR"/");
+    }
+
     if(!dir.exists(DATALOG_DIR)){
         dir.mkdir(DATALOG_DIR);
     }

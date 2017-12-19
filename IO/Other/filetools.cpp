@@ -161,6 +161,10 @@ void FileTools::getWriteFilePath()
         dir.mkdir("/mmc/sdcard/WaveForm/favorite");
     }
 
+    if(!dir.exists(DATA_DIR"/") ){
+        dir.mkdir(DATA_DIR"/");
+    }
+
     if(!dir.exists(WAVE_DIR"/") ){
         dir.mkdir(WAVE_DIR"/");
     }
