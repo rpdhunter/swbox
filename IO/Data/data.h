@@ -7,10 +7,10 @@
 
 //定义一些全局数据类型，和一些全局宏
 #define PROGRAM_DIR     "/root"
-#define WAVE_DIR        PROGRAM_DIR "/WaveForm"
-#define FAVORITE_DIR    PROGRAM_DIR "/WaveForm/favorite"
-#define DATALOG_DIR     PROGRAM_DIR "/DataLog"
-#define PRPDLOG_DIR     PROGRAM_DIR "/PRPDLog"
+#define WAVE_DIR        PROGRAM_DIR "/data/WaveForm"
+#define FAVORITE_DIR    PROGRAM_DIR "/data/WaveForm/favorite"
+#define DATALOG_DIR     PROGRAM_DIR "/data/DataLog"
+#define PRPDLOG_DIR     PROGRAM_DIR "/data/PRPDLog"
 
 #define SDCARD_DIR          "/mmc/sdcard"
 #define WAVE_DIR_SD         SDCARD_DIR "/WaveForm"
