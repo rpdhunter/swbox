@@ -6,6 +6,7 @@
 #include <QTimer>
 #include <QSplashScreen>
 #include <QQuickWidget>
+#include <QVector>
 
 #include "IO/Data/fifodata.h"
 #include "IO/Com/Modbus/modbus.h"
@@ -110,6 +111,7 @@ private:
     QTimer *timer_dark;                 //屏幕暗化计时器
     Battery *battery;
     int low_power;                      //自动关机计数
+    QVector<int> power_list;            //电量序列
 
     QQuickWidget *busyIndicator;
 

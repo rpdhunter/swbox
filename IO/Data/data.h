@@ -7,11 +7,12 @@
 
 //定义一些全局数据类型，和一些全局宏
 #define PROGRAM_DIR     "/root"
-#define DATA_DIR        PROGRAM_DIR "/data"
-#define WAVE_DIR        PROGRAM_DIR "/data/WaveForm"
-#define FAVORITE_DIR    PROGRAM_DIR "/data/WaveForm/favorite"
-#define DATALOG_DIR     PROGRAM_DIR "/data/DataLog"
-#define PRPDLOG_DIR     PROGRAM_DIR "/data/PRPDLog"
+#define USB_DIR         "/mmc/usb_dev_mount"
+#define DATA_DIR        USB_DIR"/data"
+#define WAVE_DIR        DATA_DIR "/WaveForm"
+#define FAVORITE_DIR    WAVE_DIR "/favorite"
+#define DATALOG_DIR     DATA_DIR "/DataLog"
+#define PRPDLOG_DIR     DATA_DIR "/PRPDLog"
 
 #define SDCARD_DIR          "/mmc/sdcard"
 #define WAVE_DIR_SD         SDCARD_DIR "/WaveForm"
@@ -27,7 +28,7 @@
 #define AMP_FACTOR_J27_680P 22560.0f
 #define AMP_FACTOR_J27_1N   12200.0f
 #define RESOLUTION_AD_LOW   (5.0/262144.0)
-#define AA_FACTOR   ( RESOLUTION_AD_LOW * 1000000 / AMP_FACTOR_J27_680P )
+#define AA_FACTOR   ( RESOLUTION_AD_LOW * 1000000 / AMP_FACTOR_J27_1N )
 
 #define TEV_FACTOR  (2.0*1000/65536)
 

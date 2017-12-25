@@ -161,6 +161,10 @@ void FileTools::getWriteFilePath()
         dir.mkdir("/mmc/sdcard/WaveForm/favorite");
     }
 
+    if(!dir.exists(USB_DIR"/") ){
+        dir.mkdir(USB_DIR"/");
+    }
+
     if(!dir.exists(DATA_DIR"/") ){
         dir.mkdir(DATA_DIR"/");
     }
@@ -169,8 +173,8 @@ void FileTools::getWriteFilePath()
         dir.mkdir(WAVE_DIR"/");
     }
 
-    if(!dir.exists(WAVE_DIR"/favorite") ){
-        dir.mkdir(WAVE_DIR"/favorite");
+    if(!dir.exists(FAVORITE_DIR"/") ){
+        dir.mkdir(FAVORITE_DIR"/");
     }
 
     filepath = QString(WAVE_DIR"/" + filename);

@@ -849,10 +849,6 @@ void MainWindow::fresh_status()
 
 void MainWindow::fresh_batt()
 {
-    int batt_val;
-
-    batt_val = battery->battValue();
-
     //自动关机
     if(battery->is_low_power()){
         low_power--;
@@ -864,6 +860,27 @@ void MainWindow::fresh_batt()
     else{
         low_power = LOW_POWER_TIMES;      //检测错误,重置
     }
+
+    //电量显示
+    int batt_val = battery->battValue();
+    power_list.append(batt_val);
+    while (power_list.length() > 3 ){       //保持power_list长度不大于4
+        power_list.removeFirst();
+    }
+
+
+    if(power_list.length() == 3){
+        if( power_list.last() - power_list.at(power_list.length()-2) >= 20                          //电量增长迅速,判断为充电,予以显示
+           || (power_list.at(0) == power_list.at(1) && power_list.at(0) == power_list.at(2))){      //电量稳定,予以显示
+//            qDebug()<<"batt li ke xian shi"<<power_list;
+        }
+        else {
+//            qDebug()<<"batt zhen dong,"<<power_list;
+            return;
+        }
+    }
+
+
 
     //UI
     ui->lab_pwr_num->setText(QString("%1%").arg(batt_val));

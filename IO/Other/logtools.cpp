@@ -65,6 +65,10 @@ void LogTools::logFileInit()
     //创建文件夹
     QDir dir;
 
+    if(!dir.exists(USB_DIR"/") ){
+        dir.mkdir(USB_DIR"/");
+    }
+
     if(!dir.exists(DATA_DIR"/") ){
         dir.mkdir(DATA_DIR"/");
     }
