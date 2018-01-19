@@ -7,7 +7,7 @@
 #include <QVector>
 #include <qwt_point_3d.h>
 
-#define MAX_LOG_NUM         1000    //保存日志最大条目数
+#define MAX_LOG_NUM         10000    //保存日志最大条目数
 #define LOG_TIME_INTERVAL   10      //记录时间间隔（10s）
 
 class LogTools : public QObject

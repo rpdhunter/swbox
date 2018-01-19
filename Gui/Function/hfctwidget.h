@@ -25,60 +25,6 @@ class QTimer;
 class BarChart;
 class QwtPlotSpectroCurve;
 
-class MyKey{
-public:
-    MyKey(int X=0,int Y=0){
-        x = X;
-        y = Y;
-    }
-    bool operator < (const MyKey another) const
-    {
-        if(this->x < another.x ){
-            return true;
-        }
-        else if(this->x > another.x){
-            return false;
-        }
-        else if(this->y < another.y){       //this->x == another.x
-            return true;
-        }
-        else {                              //this->x == another.x
-            return false;
-        }
-    }
-
-    bool operator > (const MyKey another) const
-    {
-        if(this->x > another.x ){
-            return true;
-        }
-        else if(this->x < another.x){
-            return false;
-        }
-        else if(this->y > another.y){       //this->x == another.x
-            return true;
-        }
-        else {                              //this->x == another.x
-            return false;
-        }
-    }
-
-    bool operator == (const MyKey another) const
-    {
-        if(this->x == another.x && this->y == another.y){
-            return true;
-        }
-        else {
-            return false;
-        }
-    }
-
-    int x;
-    int y;
-
-
-};
-
 
 class HFCTWidget : public QFrame
 {
@@ -94,12 +40,13 @@ public slots:
     void showWaveData(VectorList buf, MODE mod);
 
 signals:
-    void send_key(quint8);
-    void startRecWave(MODE, int);        //开始录播
     void fresh_parent();
+    void send_key(quint8);
+    void startRecWave(MODE, int);
     void hfct_log_data(double,int,double);
     void hfct_PRPD_data(QVector<QwtPoint3D>);
     void show_indicator(bool);      //显示菊花
+    void beep(int index, int red_alert);        //蜂鸣器报警
 
 private slots:
     void fresh_1000ms();
@@ -118,7 +65,7 @@ private:
     Ui::HFCTWidget *ui;
     CURRENT_KEY_VALUE *key_val;
     G_PARA *data;
-    G_RECV_PARA_HFCT *hfct_data;
+    G_RECV_PARA_SHORT *short_data;
     SQL_PARA sql_para;
     HFCT_SQL *hfct_sql;
     MODE mode;
@@ -170,8 +117,6 @@ private:
     QwtPlot *plot_Histogram;
     QwtPlotHistogram *d_histogram;   //Histogram图
     QVector<QwtIntervalSample> histogram_data;
-
-
 
     //录波
     bool isBusy;            //菊花状态

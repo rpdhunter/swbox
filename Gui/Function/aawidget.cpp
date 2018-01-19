@@ -7,19 +7,19 @@
 #define SETTING_NUM 7           //设置菜单条目数
 #define VALUE_MAX 60
 
-AAWidget::AAWidget(G_PARA *data, CURRENT_KEY_VALUE *val, int menu_index, QWidget *parent) :
+AAWidget::AAWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu_index, QWidget *parent) :
     QFrame(parent),
     ui(new Ui::AAWidget)
 {
     ui->setupUi(this);
-
     this->resize(CHANNEL_X, CHANNEL_Y);
-    this->setStyleSheet("AAWidget {border-image: url(:/widgetphoto/bk/bk2.png);}");
     this->move(3, 3);
+    this->setStyleSheet("AAWidget {border-image: url(:/widgetphoto/bk/bk2.png);}");
     Common::set_comboBox_style(ui->comboBox);
 
     this->data = data;
     this->key_val = val;
+    this->mode = mode;
     this->menu_index = menu_index;
 
     reload(-1);
@@ -46,7 +46,7 @@ AAWidget::AAWidget(G_PARA *data, CURRENT_KEY_VALUE *val, int menu_index, QWidget
     connect(this, SIGNAL(send_key(quint8)), recWaveForm, SLOT(trans_key(quint8)));
     connect(recWaveForm,SIGNAL(fresh_parent()),this,SIGNAL(fresh_parent()));
 
-    logtools = new LogTools(MODE::AA_Ultrasonic);      //日志保存模块
+    logtools = new LogTools(mode);      //日志保存模块
     connect(this,SIGNAL(aa_log_data(double,int,double)),logtools,SLOT(dealLog(double,int,double)));
 
 
@@ -63,7 +63,12 @@ void AAWidget::reload(int index)
 {
     //基本sql内容的初始化
     sql_para = *sqlcfg->get_para();
-    aaultra_sql = &sql_para.aaultra_sql;
+    if(mode == AA1){
+        aaultra_sql = &sql_para.aa1_sql;
+    }
+    else{
+        aaultra_sql = &sql_para.aa2_sql;
+    }
 
     //构造函数中计时器不启动
     if(index == menu_index){
@@ -102,7 +107,7 @@ void AAWidget::trans_key(quint8 key_code)
         switch (key_val->grade.val2) {
         case 6:
             key_val->grade.val1 = 1;        //为了锁住主界面，防止左右键切换通道
-            emit startRecWave(AA_Ultrasonic, aaultra_sql->time);        //发送录波信号
+            emit startRecWave(mode, aaultra_sql->time);        //发送录波信号
             emit show_indicator(true);
             isBusy = true;
             return;
@@ -188,12 +193,17 @@ void AAWidget::showWaveData(VectorList buf, MODE mod)
 void AAWidget::calc_aa_value (double * aa_val, double * aa_db, int * offset)
 {
     int d;
-    d = (int)data->recv_para_normal.ldata1_max - (int)data->recv_para_normal.ldata1_min ;      //最大值-最小值=幅值
-    * offset = ( d - 1 / sqlcfg->get_para()->aaultra_sql.gain / AA_FACTOR ) / 100;
-    * aa_val = (d - sqlcfg->get_para()->aaultra_sql.aa_offset * 100) * sqlcfg->get_para()->aaultra_sql.gain * AA_FACTOR;
-//    if(* aa_val < 1){
-//        * aa_val = 1;
-//    }
+    if(mode == AA1){
+        d = (int)data->recv_para_normal.ldata0_max - (int)data->recv_para_normal.ldata0_min ;      //最大值-最小值=幅值
+//        qDebug()<<  "AA1"<<(int)data->recv_para_normal.ldata0_max << '\t'<<(int)data->recv_para_normal.ldata0_min<< '\t'<<d;
+    }
+    else{
+        d = (int)data->recv_para_normal.ldata1_max - (int)data->recv_para_normal.ldata1_min ;      //最大值-最小值=幅值
+//        qDebug()<< "AA2"<<(int)data->recv_para_normal.ldata1_max << '\t'<<(int)data->recv_para_normal.ldata1_min<< '\t'<<d;
+    }
+
+    * offset = ( d - 1 / aaultra_sql->gain / AA_FACTOR ) / 100;
+    * aa_val = (d - aaultra_sql->aa_offset * 100) * aaultra_sql->gain * AA_FACTOR;
     * aa_db = 20 * log10 (* aa_val);
 }
 
@@ -226,8 +236,10 @@ void AAWidget::fresh(bool f)
         //彩色显示
         if ( val_db >= aaultra_sql->high) {
             ui->label_val->setStyleSheet("QLabel {font-family:WenQuanYi Micro Hei;font-size:60px;color:red}");
+            emit beep(menu_index, 2);        //蜂鸣器报警
         } else if (val_db >= aaultra_sql->low) {
             ui->label_val->setStyleSheet("QLabel {font-family:WenQuanYi Micro Hei;font-size:60px;color:yellow}");
+            emit beep(menu_index, 1);
         } else {
             ui->label_val->setStyleSheet("QLabel {font-family:WenQuanYi Micro Hei;font-size:60px;color:green}");
         }
@@ -246,7 +258,7 @@ void AAWidget::fresh(bool f)
         yc_set_value(AA_biased_adv, &temp_data, 0, NULL,0);
     }
     else{   //条件显示
-        if(qAbs(val_db-temp_db ) >= sqlcfg->get_para()->aaultra_sql.aa_step){
+        if(qAbs(val_db-temp_db ) >= aaultra_sql->aa_step){
             ui->label_val->setText(QString::number(val_db, 'f', 1));
             if ( val_db > aaultra_sql->high) {
                 ui->label_val->setStyleSheet("QLabel {font-family:WenQuanYi Micro Hei;font-size:60px;color:red}");

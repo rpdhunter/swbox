@@ -32,6 +32,7 @@ MainWindow::MainWindow(QSplashScreen *sp, QWidget *parent ) :
     key_val.val = 0;
     data = new G_PARA;
     memset(data, 0, sizeof(G_PARA));
+    buzzer = new Buzzer(data);
 
     sp->showMessage(tr("正在初始化实时数据库..."),Qt::AlignBottom|Qt::AlignLeft);
     init_rdb();
@@ -66,7 +67,7 @@ MainWindow::MainWindow(QSplashScreen *sp, QWidget *parent ) :
     connect(timer_time,SIGNAL(timeout()),this,SLOT(printSc()));  //截屏
 #endif
 
-    for (int i = 0; i < mode_list.count(); ++i) {
+    for (int i = 0; i < mode_list.count(); ++i) {           //寻找有效的初始通道
         if(mode_list.at(i) != Disable){
             key_val.grade.val0 = i;
             ui->tabWidget->setCurrentIndex(i);
@@ -172,8 +173,10 @@ void MainWindow::function_init(QSplashScreen *sp)
     uhf1_widget = NULL;
     uhf2_widget = NULL;
     double_widget = NULL;
-    aa_widget = NULL;
-    ae_widget = NULL;
+    aa1_widget = NULL;
+    aa2_widget = NULL;
+    ae1_widget = NULL;
+    ae2_widget = NULL;
 
     sp->showMessage(tr("正在初始化高频通道..."),Qt::AlignBottom|Qt::AlignLeft);
     channel_init((MODE)sqlcfg->get_para()->menu_h1,0);
@@ -192,6 +195,10 @@ void MainWindow::function_init(QSplashScreen *sp)
         connect(fifodata,SIGNAL(waveData(VectorList,MODE)),tev1_widget,SLOT(showWaveData(VectorList,MODE)) );
         //重载数据
         connect(ui->tabWidget,SIGNAL(currentChanged(int)), tev1_widget, SLOT(reload(int)) );
+        //短录波
+        connect(fifodata,SIGNAL(short1_update()), tev1_widget,SLOT(fresh_1ms()));
+        //蜂鸣器
+        connect(tev1_widget,SIGNAL(beep(int,int)),this,SLOT(do_beep(int,int)));
     }
     if(tev2_widget != NULL){
         connect(this, SIGNAL(send_key(quint8)), tev2_widget, SLOT(trans_key(quint8)) );
@@ -201,6 +208,10 @@ void MainWindow::function_init(QSplashScreen *sp)
         connect(fifodata,SIGNAL(waveData(VectorList,MODE)),tev2_widget,SLOT(showWaveData(VectorList,MODE)) );
         //重载数据
         connect(ui->tabWidget,SIGNAL(currentChanged(int)), tev2_widget, SLOT(reload(int)) );
+        //短录波
+        connect(fifodata,SIGNAL(short2_update()), tev2_widget,SLOT(fresh_1ms()));
+        //蜂鸣器
+        connect(tev2_widget,SIGNAL(beep(int,int)),this,SLOT(do_beep(int,int)));
     }
     if(hfct1_widget != NULL){
         connect(this, SIGNAL(send_key(quint8)), hfct1_widget, SLOT(trans_key(quint8)) );
@@ -212,6 +223,10 @@ void MainWindow::function_init(QSplashScreen *sp)
         connect(ui->tabWidget,SIGNAL(currentChanged(int)), hfct1_widget, SLOT(reload(int)) );
         //菊花
         connect(hfct1_widget,SIGNAL(show_indicator(bool)), this, SLOT(show_busy(bool)) );
+        //短录波
+        connect(fifodata,SIGNAL(short1_update()), hfct1_widget,SLOT(fresh_1ms()));
+        //蜂鸣器
+        connect(hfct1_widget,SIGNAL(beep(int,int)),this,SLOT(do_beep(int,int)));
     }
     if(hfct2_widget != NULL){
         connect(this, SIGNAL(send_key(quint8)), hfct2_widget, SLOT(trans_key(quint8)) );
@@ -223,6 +238,10 @@ void MainWindow::function_init(QSplashScreen *sp)
         connect(ui->tabWidget,SIGNAL(currentChanged(int)), hfct2_widget, SLOT(reload(int)) );
         //菊花
         connect(hfct2_widget,SIGNAL(show_indicator(bool)), this, SLOT(show_busy(bool)) );
+        //短录波
+        connect(fifodata,SIGNAL(short2_update()), hfct2_widget,SLOT(fresh_1ms()));
+        //蜂鸣器
+        connect(hfct2_widget,SIGNAL(beep(int,int)),this,SLOT(do_beep(int,int)));
     }
     if(uhf1_widget != NULL){
         connect(this, SIGNAL(send_key(quint8)), uhf1_widget, SLOT(trans_key(quint8)) );
@@ -234,6 +253,8 @@ void MainWindow::function_init(QSplashScreen *sp)
         connect(ui->tabWidget,SIGNAL(currentChanged(int)), uhf1_widget, SLOT(reload(int)) );
         //菊花
         connect(uhf1_widget,SIGNAL(show_indicator(bool)), this, SLOT(show_busy(bool)) );
+        //蜂鸣器
+        connect(uhf1_widget,SIGNAL(beep(int,int)),this,SLOT(do_beep(int,int)));
     }
     if(uhf2_widget != NULL){
         connect(this, SIGNAL(send_key(quint8)), uhf2_widget, SLOT(trans_key(quint8)) );
@@ -245,6 +266,8 @@ void MainWindow::function_init(QSplashScreen *sp)
         connect(ui->tabWidget,SIGNAL(currentChanged(int)), uhf2_widget, SLOT(reload(int)) );
         //菊花
         connect(uhf2_widget,SIGNAL(show_indicator(bool)), this, SLOT(show_busy(bool)) );
+        //蜂鸣器
+        connect(uhf2_widget,SIGNAL(beep(int,int)),this,SLOT(do_beep(int,int)));
     }
     if(double_widget != NULL){
         connect(this, SIGNAL(send_key(quint8)), double_widget, SLOT(trans_key(quint8)) );
@@ -254,20 +277,43 @@ void MainWindow::function_init(QSplashScreen *sp)
         //重载数据
         connect(ui->tabWidget,SIGNAL(currentChanged(int)), double_widget, SLOT(reload(int)) );
     }
-    if(aa_widget != NULL){
-        connect(this, SIGNAL(send_key(quint8)), aa_widget, SLOT(trans_key(quint8)) );
-        connect(aa_widget,SIGNAL(fresh_parent()), this, SLOT(fresh_menu_icon()) );
+    if(aa1_widget != NULL){
+        connect(this, SIGNAL(send_key(quint8)), aa1_widget, SLOT(trans_key(quint8)) );
+        connect(aa1_widget,SIGNAL(fresh_parent()), this, SLOT(fresh_menu_icon()) );
         //录波
-        connect(aa_widget,SIGNAL(startRecWave(MODE,int)),fifodata,SIGNAL(startRecWave(MODE,int)) );
-        connect(fifodata,SIGNAL(waveData(VectorList,MODE)),aa_widget,SLOT(showWaveData(VectorList,MODE)) );
+        connect(aa1_widget,SIGNAL(startRecWave(MODE,int)),fifodata,SIGNAL(startRecWave(MODE,int)) );
+        connect(fifodata,SIGNAL(waveData(VectorList,MODE)),aa1_widget,SLOT(showWaveData(VectorList,MODE)) );
         //重载数据
-        connect(ui->tabWidget,SIGNAL(currentChanged(int)), aa_widget, SLOT(reload(int)) );
+        connect(ui->tabWidget,SIGNAL(currentChanged(int)), aa1_widget, SLOT(reload(int)) );
         //菊花
-        connect(aa_widget,SIGNAL(show_indicator(bool)), this, SLOT(show_busy(bool)) );
+        connect(aa1_widget,SIGNAL(show_indicator(bool)), this, SLOT(show_busy(bool)) );
+        //蜂鸣器
+        connect(aa1_widget,SIGNAL(beep(int,int)),this,SLOT(do_beep(int,int)));
     }
-    if(ae_widget != NULL){
-        connect(this, SIGNAL(send_key(quint8)), ae_widget, SLOT(trans_key(quint8)) );
-        connect(ae_widget,SIGNAL(fresh_parent()), this, SLOT(fresh_menu_icon()) );
+    if(aa2_widget != NULL){
+        connect(this, SIGNAL(send_key(quint8)), aa2_widget, SLOT(trans_key(quint8)) );
+        connect(aa2_widget,SIGNAL(fresh_parent()), this, SLOT(fresh_menu_icon()) );
+        //录波
+        connect(aa2_widget,SIGNAL(startRecWave(MODE,int)),fifodata,SIGNAL(startRecWave(MODE,int)) );
+        connect(fifodata,SIGNAL(waveData(VectorList,MODE)),aa2_widget,SLOT(showWaveData(VectorList,MODE)) );
+        //重载数据
+        connect(ui->tabWidget,SIGNAL(currentChanged(int)), aa2_widget, SLOT(reload(int)) );
+        //菊花
+        connect(aa2_widget,SIGNAL(show_indicator(bool)), this, SLOT(show_busy(bool)) );
+        //蜂鸣器
+        connect(aa2_widget,SIGNAL(beep(int,int)),this,SLOT(do_beep(int,int)));
+    }
+    if(ae1_widget != NULL){
+        connect(this, SIGNAL(send_key(quint8)), ae1_widget, SLOT(trans_key(quint8)) );
+        connect(ae1_widget,SIGNAL(fresh_parent()), this, SLOT(fresh_menu_icon()) );
+        //蜂鸣器
+        connect(ae1_widget,SIGNAL(beep(int,int)),this,SLOT(do_beep(int,int)));
+    }
+    if(ae2_widget != NULL){
+        connect(this, SIGNAL(send_key(quint8)), ae2_widget, SLOT(trans_key(quint8)) );
+        connect(ae2_widget,SIGNAL(fresh_parent()), this, SLOT(fresh_menu_icon()) );
+        //蜂鸣器
+        connect(ae2_widget,SIGNAL(beep(int,int)),this,SLOT(do_beep(int,int)));
     }
 }
 
@@ -279,20 +325,11 @@ void MainWindow::channel_init(MODE mode, int index)
         case TEV1:
             tev1_widget = new TEVWidget(data,&key_val,mode,0,ui->H_Channel1);
             break;
-        case TEV2:
-            tev2_widget = new TEVWidget(data,&key_val,mode,0,ui->H_Channel1);
-            break;
         case HFCT1:
             hfct1_widget = new HFCTWidget(data,&key_val,mode,0,ui->H_Channel1);
             break;
-        case HFCT2:
-            hfct2_widget = new HFCTWidget(data,&key_val,mode,0,ui->H_Channel1);
-            break;
         case UHF1:
             uhf1_widget = new UHFWidget(data,&key_val,mode,0,ui->H_Channel1);
-            break;
-        case UHF2:
-            uhf2_widget = new UHFWidget(data,&key_val,mode,0,ui->H_Channel1);
             break;
         default:
             mode = Disable;
@@ -301,20 +338,11 @@ void MainWindow::channel_init(MODE mode, int index)
         break;
     case 1:
         switch (mode) {
-        case TEV1:
-            tev1_widget = new TEVWidget(data,&key_val,mode,1,ui->H_Channel2);
-            break;
         case TEV2:
             tev2_widget = new TEVWidget(data,&key_val,mode,1,ui->H_Channel2);
             break;
-        case HFCT1:
-            hfct1_widget = new HFCTWidget(data,&key_val,mode,1,ui->H_Channel2);
-            break;
         case HFCT2:
             hfct2_widget = new HFCTWidget(data,&key_val,mode,1,ui->H_Channel2);
-            break;
-        case UHF1:
-            uhf1_widget = new UHFWidget(data,&key_val,mode,1,ui->H_Channel2);
             break;
         case UHF2:
             uhf2_widget = new UHFWidget(data,&key_val,mode,1,ui->H_Channel2);
@@ -333,19 +361,29 @@ void MainWindow::channel_init(MODE mode, int index)
         }
         break;
     case 3:
-        if(mode == AA_Ultrasonic){
-            aa_widget = new AAWidget(data,&key_val,3,ui->L_Channel1);
-        }
-        else{
+        switch (mode) {
+        case AA1:
+            aa1_widget = new AAWidget(data,&key_val,mode,3,ui->L_Channel1);
+            break;
+        case AE1:
+            ae1_widget = new AEWidget(data,&key_val,mode,3,ui->L_Channel1);
+            break;
+        default:
             mode = Disable;
+            break;
         }
         break;
     case 4:
-        if(mode == AE_Ultrasonic){
-            ae_widget = new AEWidget(data,&key_val,4,ui->L_Channel2);
-        }
-        else{
+        switch (mode) {
+        case AA2:
+            aa2_widget = new AAWidget(data,&key_val,mode,4,ui->L_Channel2);
+            break;
+        case AE2:
+            ae2_widget = new AEWidget(data,&key_val,mode,4,ui->L_Channel2);
+            break;
+        default:
             mode = Disable;
+            break;
         }
         break;
     default:
@@ -399,29 +437,18 @@ void MainWindow::options_init()
 void MainWindow::qml_init()
 {
     busyIndicator = new QQuickWidget(this);
-//    busyIndicator->setAttribute(Qt::WA_AlwaysStackOnTop);
-//    busyIndicator->setAttribute(Qt::WA_TranslucentBackground,true);
-//    busyIndicator->setStyleSheet("background: transparent;");
-//    busyIndicator->setAttribute(Qt::WA_OpaquePaintEvent);
-
     busyIndicator->setClearColor(QColor(Qt::transparent));
     busyIndicator->setSource(QUrl(QStringLiteral("qrc:/Busy.qml")));
-
-
-//    busyIndicator->hide();
 }
 
 void MainWindow::trans_key(quint8 key_code)
 {
-    //    qDebug()<<"val0 = "<<key_val.grade.val0 <<"\nval1 = "<<key_val.grade.val1 <<"\nval2 = "<<key_val.grade.val2 ;
-
     set_reboot_time();          //接到任何按键，重置重启计时器
 
     if(key_val.grade.val0 == 5 && key_val.grade.val2 !=0 ){
         emit send_key(key_code);
         return;
     }
-
 
     switch (key_code) {
     case KEY_LEFT:
@@ -515,27 +542,15 @@ void MainWindow::fresh_menu_icon()
         switch (mode_list.at(0)) {
         case TEV1:
             menu_icon0->setPixmap(QPixmap(":/widgetphoto/menu/TEV1_1.png"));
-            ui->lab_imformation->setText(tr("地电波检测(通道1)"));
-            break;
-        case TEV2:
-            menu_icon0->setPixmap(QPixmap(":/widgetphoto/menu/TEV2_1.png"));
-            ui->lab_imformation->setText(tr("地电波检测(通道2)"));
+            ui->lab_imformation->setText(tr("地电波检测(高频通道1)"));
             break;
         case HFCT1:
             menu_icon0->setPixmap(QPixmap(":/widgetphoto/menu/HFCT1_1.png"));
-            ui->lab_imformation->setText(tr("电缆局放检测(通道1)"));
-            break;
-        case HFCT2:
-            menu_icon0->setPixmap(QPixmap(":/widgetphoto/menu/HFCT2_1.png"));
-            ui->lab_imformation->setText(tr("电缆局放检测(通道2)"));
+            ui->lab_imformation->setText(tr("电缆局放检测(高频通道1)"));
             break;
         case UHF1:
             menu_icon0->setPixmap(QPixmap(":/widgetphoto/menu/UHF1_1.png"));
-            ui->lab_imformation->setText(tr("特高频检测(通道1)"));
-            break;
-        case UHF2:
-            menu_icon0->setPixmap(QPixmap(":/widgetphoto/menu/UHF2_1.png"));
-            ui->lab_imformation->setText(tr("特高频检测(通道2)"));
+            ui->lab_imformation->setText(tr("特高频检测(高频通道1)"));
             break;
         default:
             break;
@@ -543,29 +558,17 @@ void MainWindow::fresh_menu_icon()
         break;
     case 1:
         switch (mode_list.at(1)) {
-        case TEV1:
-            menu_icon1->setPixmap(QPixmap(":/widgetphoto/menu/TEV1_1.png"));
-            ui->lab_imformation->setText(tr("地电波检测(通道1)"));
-            break;
         case TEV2:
             menu_icon1->setPixmap(QPixmap(":/widgetphoto/menu/TEV2_1.png"));
-            ui->lab_imformation->setText(tr("地电波检测(通道2)"));
-            break;
-        case HFCT1:
-            menu_icon1->setPixmap(QPixmap(":/widgetphoto/menu/HFCT1_1.png"));
-            ui->lab_imformation->setText(tr("电缆局放检测(通道1)"));
+            ui->lab_imformation->setText(tr("地电波检测(高频通道2)"));
             break;
         case HFCT2:
             menu_icon1->setPixmap(QPixmap(":/widgetphoto/menu/HFCT2_1.png"));
-            ui->lab_imformation->setText(tr("电缆局放检测(通道2)"));
-            break;
-        case UHF1:
-            menu_icon1->setPixmap(QPixmap(":/widgetphoto/menu/UHF1_1.png"));
-            ui->lab_imformation->setText(tr("特高频检测(通道1)"));
+            ui->lab_imformation->setText(tr("电缆局放检测(高频通道2)"));
             break;
         case UHF2:
             menu_icon1->setPixmap(QPixmap(":/widgetphoto/menu/UHF2_1.png"));
-            ui->lab_imformation->setText(tr("特高频检测(通道2)"));
+            ui->lab_imformation->setText(tr("特高频检测(高频通道2)"));
             break;
         default:
             break;
@@ -576,12 +579,32 @@ void MainWindow::fresh_menu_icon()
         ui->lab_imformation->setText(tr("双通道检测"));
         break;
     case 3:
-        menu_icon3->setPixmap(QPixmap(":/widgetphoto/menu/AA_1.png"));
-        ui->lab_imformation->setText(tr("AA超声波检测"));
+        switch (mode_list.at(3)) {
+        case AA1:
+            menu_icon3->setPixmap(QPixmap(":/widgetphoto/menu/AA_1.png"));
+            ui->lab_imformation->setText(tr("AA超声波检测(低频通道1)"));
+            break;
+        case AE1:
+            menu_icon3->setPixmap(QPixmap(":/widgetphoto/menu/AE_1.png"));
+            ui->lab_imformation->setText(tr("AE超声波检测(低频通道1)"));
+            break;
+        default:
+            break;
+        }
         break;
     case 4:
-        menu_icon4->setPixmap(QPixmap(":/widgetphoto/menu/AE_1.png"));
-        ui->lab_imformation->setText(tr("AE超声波检测"));
+        switch (mode_list.at(4)) {
+        case AA2:
+            menu_icon4->setPixmap(QPixmap(":/widgetphoto/menu/AA_1.png"));
+            ui->lab_imformation->setText(tr("AA超声波检测(低频通道2)"));
+            break;
+        case AE2:
+            menu_icon4->setPixmap(QPixmap(":/widgetphoto/menu/AE_1.png"));
+            ui->lab_imformation->setText(tr("AE超声波检测(低频通道2)"));
+            break;
+        default:
+            break;
+        }
         break;
     case 5:
         menu_icon5->setPixmap(QPixmap(":/widgetphoto/menu/Option_1.png"));
@@ -614,57 +637,29 @@ void MainWindow::set_non_current_menu_icon()
     case TEV1:
         menu_icon0->setPixmap(QPixmap(":/widgetphoto/menu/TEV1_2.png"));
         break;
-    case TEV2:
-        menu_icon0->setPixmap(QPixmap(":/widgetphoto/menu/TEV2_2.png"));
-        break;
     case HFCT1:
         menu_icon0->setPixmap(QPixmap(":/widgetphoto/menu/HFCT1_2.png"));
-        break;
-    case HFCT2:
-        menu_icon0->setPixmap(QPixmap(":/widgetphoto/menu/HFCT2_2.png"));
         break;
     case UHF1:
         menu_icon0->setPixmap(QPixmap(":/widgetphoto/menu/UHF1_2.png"));
         break;
-    case UHF2:
-        menu_icon0->setPixmap(QPixmap(":/widgetphoto/menu/UHF2_2.png"));
-        break;
     default:                     //禁用
-        if(mode_list.at(1) == TEV1){
-            menu_icon0->setPixmap(QPixmap(":/widgetphoto/menu/TEV2_0.png"));
-        }
-        else{
-            menu_icon0->setPixmap(QPixmap(":/widgetphoto/menu/TEV1_0.png"));
-        }
+        menu_icon0->setPixmap(QPixmap(":/widgetphoto/menu/TEV1_0.png"));
         break;
     }
 
     switch (mode_list.at(1)) {
-    case TEV1:
-        menu_icon1->setPixmap(QPixmap(":/widgetphoto/menu/TEV1_2.png"));
-        break;
     case TEV2:
         menu_icon1->setPixmap(QPixmap(":/widgetphoto/menu/TEV2_2.png"));
         break;
-    case HFCT1:
-        menu_icon1->setPixmap(QPixmap(":/widgetphoto/menu/HFCT1_2.png"));
-        break;
     case HFCT2:
         menu_icon1->setPixmap(QPixmap(":/widgetphoto/menu/HFCT2_2.png"));
-        break;
-    case UHF1:
-        menu_icon1->setPixmap(QPixmap(":/widgetphoto/menu/UHF1_2.png"));
         break;
     case UHF2:
         menu_icon1->setPixmap(QPixmap(":/widgetphoto/menu/UHF2_2.png"));
         break;
     default:                     //禁用
-        if(mode_list.at(0) == TEV2){
-            menu_icon1->setPixmap(QPixmap(":/widgetphoto/menu/TEV1_0.png"));
-        }
-        else{
-            menu_icon1->setPixmap(QPixmap(":/widgetphoto/menu/TEV2_0.png"));
-        }
+        menu_icon1->setPixmap(QPixmap(":/widgetphoto/menu/TEV2_0.png"));
         break;
     }
 
@@ -678,8 +673,11 @@ void MainWindow::set_non_current_menu_icon()
     }
 
     switch (mode_list.at(3)) {
-    case AA_Ultrasonic:
+    case AA1:
         menu_icon3->setPixmap(QPixmap(":/widgetphoto/menu/AA_2.png"));
+        break;
+    case AE1:
+        menu_icon3->setPixmap(QPixmap(":/widgetphoto/menu/AE_2.png"));
         break;
     default:                     //禁用
         menu_icon3->setPixmap(QPixmap(":/widgetphoto/menu/AA_0.png"));
@@ -687,7 +685,10 @@ void MainWindow::set_non_current_menu_icon()
     }
 
     switch (mode_list.at(4)) {
-    case AE_Ultrasonic:
+    case AA2:
+        menu_icon4->setPixmap(QPixmap(":/widgetphoto/menu/AA_2.png"));
+        break;
+    case AE2:
         menu_icon4->setPixmap(QPixmap(":/widgetphoto/menu/AE_2.png"));
         break;
     default:                     //禁用
@@ -707,63 +708,58 @@ void MainWindow::set_disable_menu_icon()
     case TEV1:
         menu_icon0->setPixmap(QPixmap(":/widgetphoto/menu/TEV1_0.png"));
         break;
-    case TEV2:
-        menu_icon0->setPixmap(QPixmap(":/widgetphoto/menu/TEV2_0.png"));
-        break;
     case HFCT1:
         menu_icon0->setPixmap(QPixmap(":/widgetphoto/menu/HFCT1_0.png"));
-        break;
-    case HFCT2:
-        menu_icon0->setPixmap(QPixmap(":/widgetphoto/menu/HFCT2_0.png"));
         break;
     case UHF1:
         menu_icon0->setPixmap(QPixmap(":/widgetphoto/menu/UHF1_0.png"));
         break;
-    case UHF2:
-        menu_icon0->setPixmap(QPixmap(":/widgetphoto/menu/UHF2_0.png"));
-        break;
     default:                     //禁用
-        if(mode_list.at(1) == TEV1){
-            menu_icon0->setPixmap(QPixmap(":/widgetphoto/menu/TEV2_0.png"));
-        }
-        else{
-            menu_icon0->setPixmap(QPixmap(":/widgetphoto/menu/TEV1_0.png"));
-        }
+        menu_icon0->setPixmap(QPixmap(":/widgetphoto/menu/TEV1_0.png"));
         break;
     }
 
     switch (mode_list.at(1)) {
-    case TEV1:
-        menu_icon1->setPixmap(QPixmap(":/widgetphoto/menu/TEV1_0.png"));
-        break;
     case TEV2:
         menu_icon1->setPixmap(QPixmap(":/widgetphoto/menu/TEV2_0.png"));
         break;
-    case HFCT1:
-        menu_icon1->setPixmap(QPixmap(":/widgetphoto/menu/HFCT1_0.png"));
-        break;
     case HFCT2:
         menu_icon1->setPixmap(QPixmap(":/widgetphoto/menu/HFCT2_0.png"));
-        break;
-    case UHF1:
-        menu_icon1->setPixmap(QPixmap(":/widgetphoto/menu/UHF1_0.png"));
         break;
     case UHF2:
         menu_icon1->setPixmap(QPixmap(":/widgetphoto/menu/UHF2_0.png"));
         break;
     default:                     //禁用
-        if(mode_list.at(0) == TEV2){
-            menu_icon1->setPixmap(QPixmap(":/widgetphoto/menu/TEV1_0.png"));
-        }
-        else{
-            menu_icon1->setPixmap(QPixmap(":/widgetphoto/menu/TEV2_0.png"));
-        }
+        menu_icon1->setPixmap(QPixmap(":/widgetphoto/menu/TEV2_0.png"));
         break;
     }
 
     menu_icon2->setPixmap(QPixmap(":/widgetphoto/menu/Double_0.png"));
-    menu_icon3->setPixmap(QPixmap(":/widgetphoto/menu/AA_0.png"));
-    menu_icon4->setPixmap(QPixmap(":/widgetphoto/menu/AE_0.png"));
+
+    switch (mode_list.at(3)) {
+    case AA1:
+        menu_icon3->setPixmap(QPixmap(":/widgetphoto/menu/AA_0.png"));
+        break;
+    case AE1:
+        menu_icon3->setPixmap(QPixmap(":/widgetphoto/menu/AE_0.png"));
+        break;
+    default:                     //禁用
+        menu_icon3->setPixmap(QPixmap(":/widgetphoto/menu/AA_0.png"));
+        break;
+    }
+
+    switch (mode_list.at(4)) {
+    case AA2:
+        menu_icon4->setPixmap(QPixmap(":/widgetphoto/menu/AA_0.png"));
+        break;
+    case AE2:
+        menu_icon4->setPixmap(QPixmap(":/widgetphoto/menu/AE_0.png"));
+        break;
+    default:                     //禁用
+        menu_icon4->setPixmap(QPixmap(":/widgetphoto/menu/AE_0.png"));
+        break;
+    }
+
     menu_icon5->setPixmap(QPixmap(":/widgetphoto/menu/Option_0.png"));
 }
 
@@ -948,7 +944,8 @@ void MainWindow::system_sleep()
 void MainWindow::screen_dark()
 {
     qDebug()<<"screen will darken immediately!";
-    data->set_send_para(sp_backlight_reg,0);
+//    data->set_send_para(sp_backlight_reg,0);
+    data->set_send_para(sp_backlight_reg,8);
     data->set_send_para(sp_rec_on,0);               //关闭录波
     data->set_send_para(sp_keyboard_backlight,0);   //关闭键盘背光
 }
@@ -997,6 +994,22 @@ void MainWindow::do_sync(uint offset)
 {
     emit send_sync(offset);
     ui->lab_sync->setText(tr("同步源:工频量 状态:已同步"));
+}
+
+void MainWindow::do_beep(int menu_index, int red_alert)
+{
+//    if(buzzer->isRunning()){
+//        qDebug()<<"buzzer->isRunning()";
+//    }
+    if(sqlcfg->get_para()->buzzer_on && menu_index == ui->tabWidget->currentIndex() && !buzzer->isRunning()){
+        if(red_alert == 2){
+            buzzer->red();
+        }
+        else if(red_alert == 1){
+            buzzer->yellow();
+        }
+
+    }
 }
 
 #ifdef PRINTSCREEN

@@ -13,9 +13,9 @@ class RecControl : public QObject
 public:
     explicit RecControl(G_PARA *g_data, FifoControl *fifocontrol, QObject *parent = 0);
 
-    void recvRecData();     //接收录波数据
-    MODE mode();
-    void re_send_rec_continuous();
+    void recv_rec_data();       //接收一次录波数据
+    MODE mode();                //返回当前录波状态
+    void re_send_rec_continuous();      //如果在连续录波状态下,发起一次连续录波
     int free_time();
 
 signals:
@@ -23,15 +23,15 @@ signals:
 
 
 public slots:
-    void startRecWave(MODE mode , int time);       //启动录波，需要主函数建立连接'
+    void startRecWave(MODE mode , int time);       //启动录波
 
 private slots:
-    void recWaveComplete(VectorList wave,MODE mode);
-    void recContinuousComplete();
+    void rec_wave_complete(VectorList wave,MODE mode);
+    void rec_continuous_complete();
 
 private:
     G_PARA *data;
-    RecWave *tev1, *tev2, *hfct1, *hfct2, *aa;
+    RecWave *channel_h1, *channel_h2, *channel_l1, *channel_l2;
 
     FifoControl *fifocontrol;
 

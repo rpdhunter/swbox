@@ -68,6 +68,24 @@ void Common::change_index(int &index, int d_index, int max_index, int min_index)
     }
 }
 
+void Common::change_index(int &index, int d_index, QList<int> list)
+{
+    int current_index = list.indexOf(index);
+    if(current_index != -1){
+        current_index += d_index;
+        if(current_index >= list.length()){
+            current_index = 0;
+        }
+        if(current_index < 0){
+            current_index = list.length()-1;
+        }
+        index = list.at(current_index);
+    }
+    else{
+        qDebug()<<"input error in Common::change_index()"<<list;
+    }
+}
+
 void Common::change_value(int &value, int value_a, int value_b)
 {
     if(value == value_a){
@@ -264,8 +282,11 @@ double Common::physical_value(int code_value, MODE mode)
     case TEV2_CONTINUOUS:
         v_real = code_value * sqlcfg->get_para()->tev2_sql.gain * TEV_FACTOR;
         break;
-    case AA_Ultrasonic:
-        v_real = (code_value * 4) * sqlcfg->get_para()->aaultra_sql.gain * AA_FACTOR;
+    case AA1:
+        v_real = (code_value * 4) * sqlcfg->get_para()->aa1_sql.gain * AA_FACTOR;
+        break;
+    case AA2:
+        v_real = (code_value * 4) * sqlcfg->get_para()->aa2_sql.gain * AA_FACTOR;
         break;
     case HFCT1:
     case HFCT1_CONTINUOUS:
@@ -293,8 +314,11 @@ int Common::code_value(double physical_value, MODE mode)
     case TEV2_CONTINUOUS:
         v_code = physical_value / sqlcfg->get_para()->tev2_sql.gain / TEV_FACTOR;
         break;
-    case AA_Ultrasonic:
-        v_code = physical_value / 4 / sqlcfg->get_para()->aaultra_sql.gain / AA_FACTOR;
+    case AA1:
+        v_code = physical_value / 4 / sqlcfg->get_para()->aa1_sql.gain / AA_FACTOR;
+        break;
+    case AA2:
+        v_code = physical_value / 4 / sqlcfg->get_para()->aa2_sql.gain / AA_FACTOR;
         break;
     case HFCT1:
     case HFCT1_CONTINUOUS:
@@ -357,11 +381,17 @@ QString Common::MODE_toString(MODE val)
     case HFCT2:
         tmpStr = "HFCT2";
         break;
-    case AA_Ultrasonic:
-        tmpStr = "AA_Ultrasonic";
+    case AA1:
+        tmpStr = "AA1";
         break;
-    case AE_Ultrasonic:
-        tmpStr = "AE_Ultrasonic";
+    case AA2:
+        tmpStr = "AA2";
+        break;
+    case AE1:
+        tmpStr = "AE1";
+        break;
+    case AE2:
+        tmpStr = "AE2";
         break;
     case Double_Channel:
         tmpStr = "Double_Channel";
@@ -385,4 +415,40 @@ QString Common::MODE_toString(MODE val)
         break;
     }
     return tmpStr;
+}
+
+void Common::write_fpga_offset(G_PARA *data)
+{
+    switch (sqlcfg->get_para()->menu_h1) {
+    case TEV1:
+        data->set_send_para (sp_tev1_zero, 0x8000 - sqlcfg->get_para()->tev1_sql.fpga_zero);
+        data->set_send_para (sp_tev1_threshold, sqlcfg->get_para()->tev1_sql.fpga_threshold);
+
+        break;
+    case HFCT1:
+        data->set_send_para (sp_hfct1_zero, 0x8000 - sqlcfg->get_para()->hfct1_sql.fpga_zero);
+        data->set_send_para (sp_hfct1_threshold, sqlcfg->get_para()->hfct1_sql.fpga_threshold);
+        break;
+    case UHF1:
+
+        break;
+    default:
+        break;
+    }
+
+    switch (sqlcfg->get_para()->menu_h2) {
+    case TEV2:
+        data->set_send_para (sp_tev2_zero, 0x8000 - sqlcfg->get_para()->tev2_sql.fpga_zero);
+        data->set_send_para (sp_tev2_threshold, sqlcfg->get_para()->tev2_sql.fpga_threshold);
+        break;
+    case HFCT2:
+        data->set_send_para (sp_hfct2_zero, 0x8000 - sqlcfg->get_para()->hfct2_sql.fpga_zero);
+        data->set_send_para (sp_hfct2_threshold, sqlcfg->get_para()->hfct2_sql.fpga_threshold);
+        break;
+    case UHF2:
+
+        break;
+    default:
+        break;
+    }
 }

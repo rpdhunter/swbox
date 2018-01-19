@@ -26,6 +26,7 @@ HFCTWidget::HFCTWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu
 
     reload(-1);
 
+    db = 0;
     low = PC_MAX / 3.0;
     high = low * 2;
     pulse_number = 0;
@@ -37,9 +38,9 @@ HFCTWidget::HFCTWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu
     timer_1000ms->setInterval(1000);      //每隔1秒，刷新一次主界面
     connect(timer_1000ms, SIGNAL(timeout()), this, SLOT(fresh_1000ms()));
 
-    timer_1ms = new QTimer(this);
-    timer_1ms->setInterval(1);         //1ms读取一次数据
-    connect(timer_1ms, SIGNAL(timeout()), this, SLOT(fresh_1ms()));
+//    timer_1ms = new QTimer(this);
+//    timer_1ms->setInterval(1);         //1ms读取一次数据
+//    connect(timer_1ms, SIGNAL(timeout()), this, SLOT(fresh_1ms()));
 
     timer_200ms = new QTimer(this);
     timer_200ms->setInterval(200);       //200ms刷新一次PRPD图
@@ -62,18 +63,18 @@ HFCTWidget::HFCTWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu
     connect(this,SIGNAL(hfct_PRPD_data(QVector<QwtPoint3D>)),logtools,SLOT(dealRPRDLog(QVector<QwtPoint3D>)));
 
     reload(menu_index);
-    //设置自动录波
-    if( hfct_sql->auto_rec == true ){
-        data->set_send_para (sp_rec_on, 1);
-        data->set_send_para(sp_auto_rec, menu_index + 1);
-    }
-    else{
-        data->set_send_para (sp_rec_on, 0);
-        data->set_send_para(sp_auto_rec, 0);
-    }
-    //设置滤波器
-    data->set_send_para (sp_filter_mode, hfct_sql->filter);
-    fresh_setting();
+//    //设置自动录波
+//    if( hfct_sql->auto_rec == true ){
+//        data->set_send_para (sp_rec_on, 1);
+//        data->set_send_para(sp_auto_rec, menu_index + 1);
+//    }
+//    else{
+//        data->set_send_para (sp_rec_on, 0);
+//        data->set_send_para(sp_auto_rec, 0);
+//    }
+//    //设置滤波器
+//    data->set_send_para (sp_filter_mode, hfct_sql->filter);
+//    fresh_setting();
 }
 
 HFCTWidget::~HFCTWidget()
@@ -86,12 +87,12 @@ void HFCTWidget::reload(int index)
     //基本sql内容的初始化
     sql_para = *sqlcfg->get_para();     //重置SQL
     if(mode == HFCT1){
-        hfct_data = &data->recv_para_hfct1;
+        short_data = &data->recv_para_short1;
         hfct_sql = &sql_para.hfct1_sql;
         mode_continuous = HFCT1_CONTINUOUS;
     }
     else if(mode == HFCT2){
-        hfct_data = &data->recv_para_hfct2;
+        short_data = &data->recv_para_short2;
         hfct_sql = &sql_para.hfct2_sql;
         mode_continuous = HFCT2_CONTINUOUS;
     }
@@ -102,9 +103,9 @@ void HFCTWidget::reload(int index)
         if(!timer_1000ms->isActive()){
             timer_1000ms->start();
         }
-        if(!timer_1ms->isActive()){
-            timer_1ms->start();
-        }
+//        if(!timer_1ms->isActive()){
+//            timer_1ms->start();
+//        }
         if(!timer_200ms->isActive()){
             timer_200ms->start();
         }
@@ -304,7 +305,6 @@ void HFCTWidget::PRPDReset()
 
 void HFCTWidget::fresh_200ms()
 {
-#if 1
     MyKey key_PRPD, key_TF;
     QVector<QPointF> PRPS_point_list;
     int temp_x = 0;
@@ -329,7 +329,7 @@ void HFCTWidget::fresh_200ms()
             map_PRPD.insert(key_PRPD,1);
         }
 
-        qDebug()<<point.pc_value << "\t" << point.rise_time << "\t" << point.fall_time;
+//        qDebug()<<point.pc_value << "\t" << point.rise_time << "\t" << point.fall_time;
         if(point.rise_time == 0){
             point.rise_time = 1;
         }
@@ -379,46 +379,6 @@ void HFCTWidget::fresh_200ms()
     pulse_number += pclist_200ms.length();
 
     pclist_200ms.clear();
-
-#else
-    MyKey key;
-    QVector<QPointF> PRPS_point_list;
-    int temp_x = 0;
-
-    foreach (QPoint point, points_origin) {
-        if(sql_para.freq_val == 50){            //x坐标变换
-            temp_x = point.x() % 2000000;    //取余数
-            key = MyKey(temp_x * 360 / 2000000 , (int)(point.y()/40)*40 );       //y做处理，为了使重复点更多，节省空间
-        }
-        else if(sql_para.freq_val == 60){
-            temp_x = point.x() % 1666667;    //取余数
-            key = MyKey(temp_x * 360 / 1666667 , (int)(point.y()/40)*40 );
-        }
-
-        PRPS_point_list.append(QPointF(key.x, key.y));      //生成一次点序列
-
-        if( map.contains(key) ){
-            map[key] = map.value(key) + 1;
-        }
-        else{
-            map.insert(key,1);
-        }
-    }
-
-    points.clear();
-    foreach (MyKey k, map.keys()) {
-        points.append(QwtPoint3D(k.x, k.y, map.value(k) ) );
-    }
-
-    d_PRPD->setSamples(points);
-
-    plot_PRPD->setAxisScale(QwtPlot::yLeft, -VALUE_MAX, VALUE_MAX, VALUE_MAX);
-
-    points_origin.clear();
-    plot_PRPD->replot();
-
-    scene->addPRPD(PRPS_point_list);
-#endif
 
 }
 
@@ -561,71 +521,29 @@ double HFCTWidget::triangle(double d1, double d2)
 //原始数据为256个数据
 void HFCTWidget::fresh_1ms()
 {
-#if 1
-    if( group_num != hfct_data->time ){         //判断数据有效性
-        group_num = hfct_data->time;
-        if(hfct_data->empty == 0){              //0为有数据
+    if( group_num != short_data->time ){         //判断数据有效性
+        group_num = short_data->time;
+        if(short_data->empty == 0){              //0为有数据
             //拷贝数据
             QVector<double> list;
             for (int i = 0; i < 256; ++i) {
-                if(hfct_data->data[i] == 0x55aa){
+                if(short_data->data[i] == 0x55aa){
                     break;
                 }
                 else{
-                    list.append(((double)hfct_data->data[i] - 0x8000));
+                    list.append(((double)short_data->data[i] - 0x8000));
                 }
             }
             //切割 计算 筛选
-            QVector<PC_DATA> pclist_1ms = compute_pc_1ms(list,hfct_data->time);
+            QVector<PC_DATA> pclist_1ms = compute_pc_1ms(list,short_data->time);
             //累计数据
             pclist_200ms.append(pclist_1ms);
         }
     }
-#else
-    if( group_num != hfct_data->time ){         //判断数据有效性
-        group_num = hfct_data->time;
-        if(hfct_data->empty == 0){              //0为有数据
-            //拷贝数据
-            QVector<double> list;
-            for (int i = 0; i < 256; ++i) {
-                if(hfct_data->data[i] == 0x55aa){
-                    break;
-                }
-                else{
-                    list.append(((double)hfct_data->data[i] - 0x8000));
-                }
-            }
-            pCList.append(compute_list_pC(list,hfct_data->time ) );
-        }
-    }
-#endif
 }
 
 void HFCTWidget::fresh_1000ms()
 {
-#if 0
-    if(pCList.isEmpty()){
-        //        qDebug()<<"pC is : 0 ";
-        db = 0;
-    }
-    else{
-        double max = 0;
-        foreach (double l, pCList) {
-            max = MAX(qAbs(l),max);
-        }
-        //        qDebug()<<pCList;
-        //        qDebug()<<"pC is : "<< max <<"\tpC number: " << pCList.count() << "\tpulse_number : "<< pulse_number;
-        db = max * TEV_FACTOR * hfct_sql->gain;
-
-        //临时加入一个坏值判定
-        if(db > 5000){
-            db = 0;
-            pulse_number = 0;
-        }
-
-        pCList.clear();
-    }
-#endif
     if(db > 9999){
         db = 9999;
     }
@@ -636,6 +554,13 @@ void HFCTWidget::fresh_1000ms()
     ui->label_val->setText(QString("%1").arg(db));
     ui->label_pluse->setText(tr("脉冲数: %1").arg(pulse_number));
     ui->label_degree->setText(tr("严重度: %1").arg(degree));
+
+    if(db >= 4000){
+        emit beep(menu_index, 2);        //蜂鸣器报警
+    }
+    else if( db >= 2000){
+        emit beep(menu_index, 1);
+    }
 
     yc_data_type temp_data;
     if(mode == HFCT1){
@@ -771,7 +696,6 @@ void HFCTWidget::fresh_setting()
 
 QVector<HFCTWidget::PC_DATA> HFCTWidget::compute_pc_1ms(QVector<double> list, int x_origin)
 {
-#if 1
     QVector<PC_DATA> pclist_1ms;
 
     if(list.length() < 2 )
@@ -797,29 +721,6 @@ QVector<HFCTWidget::PC_DATA> HFCTWidget::compute_pc_1ms(QVector<double> list, in
     }
 
     return pclist_1ms;
-#else
-    if(pC.isEmpty()){   //说明序列没有子脉冲，则把整个序列看做一个脉冲
-        pC.append(compute_one_pC(list) );
-    }
-
-    //    qDebug()<<"divide:"<<pC;
-
-    //计算原始脉冲点
-    QVector<int> index = compute_pulse_number(pC);
-    foreach (int in, index) {
-        points_origin.append( QPoint( x_origin, pC.at(in) ));
-    }
-
-    //脉冲数
-    pulse_number += index.length();
-
-    //计算脉冲值（最大值）
-    double max = 0;
-    foreach (double l, pC) {
-        max = MAX(qAbs(l),max);
-    }
-    return max;
-#endif
 }
 
 HFCTWidget::PC_DATA HFCTWidget::compute_pc_1node(QVector<double> list, int x_origin)

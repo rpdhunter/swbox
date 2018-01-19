@@ -24,13 +24,13 @@ public:
     int read_hfct1_data();
     int read_hfct2_data();
     int read_rec_data();
-    void playVoiceData();
+    void play_voice_data();   //向FPGA发送声音数据
 
     void send_para();       //将所有寄存器数据发送至FPGA
 
 
 public slots:
-    void playVoiceData(VectorList wave);            //向FPGA发送声音数据
+    void playVoiceData(VectorList wave);        //检查播放声音开关
     void stop_play_voice();
     void send_sync(uint offset);       //发送同步信号
 
@@ -46,7 +46,8 @@ private:
         BACKLIGHT_REG,
         KEYBOARD_BACKLIGHT,
         SLEEPING,
-        WORKING_MODE,
+        BUZZER,
+        BUZZER_FREQ,
         FILTER_MODE,
         //通道参数
         TEV1_ZERO,
@@ -61,12 +62,12 @@ private:
         AA_RECORD_PLAY,
         //录波
         REC_ON,
-        REC_START_TEV1,
-        REC_START_TEV2,
-        REC_START_HFCT1,
-        REC_START_HFCT2,
-        REC_START_AA1,
-        REC_START_AA2,
+        REC_START_H1,
+        REC_START_H2,
+//        REC_START_HFCT1,
+//        REC_START_HFCT2,
+        REC_START_L1,
+        REC_START_L2,
         GROUP_NUM,
         AUTO_REC,
         //要通道数据信号
@@ -97,8 +98,7 @@ private:
 
 
     //声音播放
-
-    void sendAPackage(VectorList wave);
+    void send_a_package(VectorList wave);
 
     G_PARA * tdata;
 
@@ -110,7 +110,7 @@ private:
     volatile quint32 *vbase_prpd1, *vbase_prpd2;
     volatile quint32 *vbase_rec;
 
-    bool playVoice;     //是否播放声音
+    bool play_voice_flag;     //是否播放声音
     VectorList wave;    //保存播放的声音文件
 };
 

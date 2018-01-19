@@ -9,7 +9,7 @@
 #define GRADE_2_NORMAL      6
 #define GRADE_2_WIFI        2
 #define GRADE_2_ADVANCED    6
-#define SYNC_WIFI_DISABLE   1       //关闭复杂功能
+#define SYNC_WIFI_DISABLE   0       //关闭复杂功能
 
 
 Options::Options(QWidget *parent, G_PARA *g_data, int serial_fd) : QFrame(parent),ui(new Ui::OptionUi)
@@ -395,7 +395,7 @@ void Options::do_key_left_right(int d)
             data->set_send_para (sp_keyboard_backlight, sql_para.key_backlight);
             break;
         case 5:         //关机
-            Common::change_index(sql_para.close_time,d,30,0);
+            Common::change_index(sql_para.close_time,d,60,0);
             break;
         case 6:         //语言
             Common::change_value(sql_para.language, EN, CN);
@@ -421,8 +421,8 @@ void Options::do_key_left_right(int d)
         case 1:         //文件个数
             Common::change_index(sql_para.max_rec_num, 10 * d, 2000, 50);
             break;
-        case 2:         //转存SD卡
-            sql_para.file_copy_to_SD = !sql_para.file_copy_to_SD;
+        case 2:         //蜂鸣器
+            sql_para.buzzer_on = !sql_para.buzzer_on;
             break;
         case 3:         //自动录波间隔
             Common::change_index(sql_para.auto_rec_interval, d, 100, 0);
@@ -523,12 +523,12 @@ void Options::refresh()
     //录波文件上限
     ui->lineEdit_MaxFileNum->setText(QString("%1").arg(sql_para.max_rec_num));
 
-    //文件保存至SD卡
-    if(sql_para.file_copy_to_SD){
-        ui->rbt_sd_on->setChecked(true);
+    //蜂鸣器
+    if(sql_para.buzzer_on){
+        ui->rbt_buzzer_on->setChecked(true);
     }
     else{
-        ui->rbt_sd_off->setChecked(true);
+        ui->rbt_buzzer_off->setChecked(true);
     }
 
     //录波间隔

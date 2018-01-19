@@ -1,7 +1,7 @@
 #include "aewidget.h"
 #include "ui_aewidget.h"
 
-AEWidget::AEWidget(G_PARA *data, CURRENT_KEY_VALUE *val, int menu_index, QWidget *parent) :
+AEWidget::AEWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu_index, QWidget *parent) :
     QFrame(parent),
     ui(new Ui::AEWidget)
 {
@@ -12,6 +12,7 @@ AEWidget::AEWidget(G_PARA *data, CURRENT_KEY_VALUE *val, int menu_index, QWidget
     this->move(3, 3);
 
     this->data = data;
+    this->mode = mode;
     key_val = val;
     this->menu_index = menu_index;
     sql_para = *sqlcfg->get_para();

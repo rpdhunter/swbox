@@ -34,7 +34,7 @@ void FileTools::run()
         saveDataFile();         //保存数据文件
         saveCfgFile();          //生成对应的配置文件
 
-        if(_mode == AA_Ultrasonic){
+        if(_mode == AA1 || _mode == AA2){
             saveWavFile();      //生成声音文件
             wavToMp3();         //mp3转换
         }
@@ -83,19 +83,27 @@ void FileTools::getReadFilePath(QString str)
     else if(str.contains("TEV2_")){
         _mode = TEV2;
     }
-    else if(str.contains("AAUltrasonic_")){
-        _mode = AA_Ultrasonic;
-    }
-    else if(str.contains("Double_")){
-        _mode = Double_Channel;
-    }
     else if(str.contains("HFCT1_")){
         _mode = HFCT1;
     }
     else if(str.contains("HFCT2_")){
         _mode = HFCT2;
     }
-
+    else if(str.contains("AA1_")){
+        _mode = AA1;
+    }
+    else if(str.contains("AA2_")){
+        _mode = AA2;
+    }
+    else if(str.contains("AE1_")){
+        _mode = AE1;
+    }
+    else if(str.contains("AE2_")){
+        _mode = AE2;
+    }
+    else if(str.contains("Double_")){
+        _mode = Double_Channel;
+    }
 
     if(str.contains(QString("☆") )){
         filepath = QString(FAVORITE_DIR"/" + str.remove(QString("☆") ) + ".DAT");        //收藏夹
@@ -122,11 +130,17 @@ void FileTools::getWriteFilePath()
     case Double_Channel:
         filename.prepend("Double_");
         break;
-    case AA_Ultrasonic:
-        filename.prepend("AAUltrasonic_");
+    case AA1:
+        filename.prepend("AA1_");
         break;
-    case AE_Ultrasonic:
-        filename.prepend("AEUltrasonic_");
+    case AA2:
+        filename.prepend("AA2_");
+        break;
+    case AE1:
+        filename.prepend("AE1_");
+        break;
+    case AE2:
+        filename.prepend("AE2_");
         break;
     case HFCT1:
         filename.prepend("HFCT1_");
@@ -188,21 +202,21 @@ void FileTools::saveDataFile()
     QFile file;
     bool flag;
 
-    //    //保存文本文件
-    //    file.setFileName(filepath + ".txt");
-    //    flag = file.open(QIODevice::WriteOnly | QIODevice::Text);
-    //    if(flag){
-    //        QTextStream out(&file);
-    //        short a;
-    //        for(int i=0;i<_data.length();i++){
-    //            a = (qint16)_data[i];
-    //            out << a <<",";
-    //        }
-    //        qDebug()<<file.fileName()<<"    "<<_data.length()<<" points";
-    //        file.close();
-    //    }
-    //    else
-    //        qDebug()<<"file open failed!";
+    //保存文本文件
+    file.setFileName(filepath + ".txt");
+    flag = file.open(QIODevice::WriteOnly | QIODevice::Text);
+    if(flag){
+        QTextStream out(&file);
+        short a;
+        for(int i=0;i<_data.length();i++){
+            a = (qint16)_data[i];
+            out << a <<",";
+        }
+        qDebug()<<file.fileName()<<"    "<<_data.length()<<" points";
+        file.close();
+    }
+    else
+        qDebug()<<"file open failed!";
 
 
     //保存二进制文件（小端）
@@ -231,8 +245,9 @@ void FileTools::saveDataFile()
             }
         }
 
+#if 0
         //拷贝到SD卡
-        if(sqlcfg->get_para()->file_copy_to_SD){
+        if(sqlcfg->get_para()->buzzer_on){
             if(file.copy(filepath_SD + ".DAT")){
                 qDebug()<<"copy " + filename + ".DAT to SDCard succeed!";
             }
@@ -240,6 +255,7 @@ void FileTools::saveDataFile()
                 qDebug()<<"copy " + filename + ".DAT to SDCard failed!";
             }
         }
+#endif
         file.close();
     }
     else{
@@ -261,22 +277,29 @@ void FileTools::saveCfgFile()
         out << "2,UB,,,V,1.000000,0.000000,0,-32768,32767,1.000000,1.000000,S" << "\n";
         out << sqlcfg->get_para()->freq_val << ".000000" << "\n";
         out << "1" << "\n";
-        out << "3200," << _data.length()/2 << "\n";     //点数可变
+        out << "1000000000," << _data.length()/2 << "\n";     //点数可变
     }
     else{
         out << "1,1A,0D" << "\n";
         out << "1,UA,,,V,1.000000,0.000000,0,-32768,32767,1.000000,1.000000,S" << "\n";
         out << sqlcfg->get_para()->freq_val << ".000000" << "\n";
         out << "1" << "\n";
-        out << "3200," << _data.length() << "\n";     //点数可变
+        if(_mode == AA1 || _mode == AA2 || _mode == AE1 || _mode == AE2){
+//            out << "400000," << _data.length()/2 << "\n";     //点数可变
+            out << "4000," << _data.length()/2 << "\n";     //点数可变
+        }
+        else{
+//            out << "1000000000," << _data.length()/2 << "\n";     //点数可变
+            out << "4000," << _data.length()/2 << "\n";     //点数可变
+        }
     }
 
 
     out << QDateTime::currentDateTime().toString() << "\n";
     out << QDateTime::currentDateTime().toString() << "\n";
     out << "BINARY" << "\n";
-
-    if(sqlcfg->get_para()->file_copy_to_SD){
+#if 0
+    if(sqlcfg->get_para()->buzzer_on){
         if(file.copy(filepath_SD + ".CFG")){
             //        qDebug()<<"copy " + filename + ".CFG to SDCard succeed!";
         }
@@ -284,6 +307,7 @@ void FileTools::saveCfgFile()
             qDebug()<<"copy " + filename + ".CFG to SDCard failed!";
         }
     }
+#endif
 
     file.close();
 }
@@ -308,7 +332,8 @@ void FileTools::saveWavFile()
     wfh1->ByteFilter = 16;
     wfh1->Format = 1;
     wfh1->Channel = 1;
-    wfh1->SampleFreq = 320000;
+//    wfh1->SampleFreq = 400000;
+    wfh1->SampleFreq = 40000;       //临时测试时使用
     wfh1->PCMBitSize = 16;
     wfh1->ByteFreq   = wfh1->PCMBitSize * wfh1->Channel * wfh1->SampleFreq / 8;     //640000
     wfh1->BlockAlign = wfh1->PCMBitSize * wfh1->Channel / 8;
@@ -363,11 +388,13 @@ void FileTools::wavToMp3()
     myProcess1->start(program, arguments1);
     QObject::connect(myProcess1,SIGNAL(finished(int)),myProcess1,SLOT(deleteLater()));
 
-    if(sqlcfg->get_para()->file_copy_to_SD){
+#if 0
+    if(sqlcfg->get_para()->buzzer_on){
         QProcess *myProcess2 = new QProcess;
         myProcess2->start(program, arguments2);
         QObject::connect(myProcess2,SIGNAL(finished(int)),myProcess2,SLOT(deleteLater()));
     }
+#endif
     qDebug()<<"mp3 file saved!";
 }
 

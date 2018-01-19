@@ -4,6 +4,7 @@
 #include <QThreadPool>
 #include "IO/SqlCfg/sqlcfg.h"
 #include "Gui/Common/fft.h"
+#include "Gui/Common/common.h"
 
 RecControl::RecControl(G_PARA *g_data, FifoControl *fifocontrol, QObject *parent) : QObject(parent)
 {
@@ -14,24 +15,22 @@ RecControl::RecControl(G_PARA *g_data, FifoControl *fifocontrol, QObject *parent
     timer_interval = NULL;
     this->fifocontrol = fifocontrol;
 
-    //开启3个录波通道
-    tev1 = new RecWave(g_data, MODE::TEV1);
-    tev2 = new RecWave(g_data, MODE::TEV2);
-    hfct1 = new RecWave(g_data, MODE::HFCT1);
-    hfct2 = new RecWave(g_data, MODE::HFCT2);
-    aa = new RecWave(g_data, MODE::AA_Ultrasonic);
+    //开启4个录波通道
+    channel_h1 = new RecWave(g_data, CHANNEL_H1);
+    channel_h2 = new RecWave(g_data, CHANNEL_H2);
+    channel_l1 = new RecWave(g_data, CHANNEL_L1);
+    channel_l2 = new RecWave(g_data, CHANNEL_L2);
 
-    connect(tev1,SIGNAL(waveData(VectorList,MODE)),this,SLOT(recWaveComplete(VectorList,MODE)));
-    connect(tev2,SIGNAL(waveData(VectorList,MODE)),this,SLOT(recWaveComplete(VectorList,MODE)));
-    connect(hfct1,SIGNAL(waveData(VectorList,MODE)),this,SLOT(recWaveComplete(VectorList,MODE)));
-    connect(hfct2,SIGNAL(waveData(VectorList,MODE)),this,SLOT(recWaveComplete(VectorList,MODE)));
-    connect(aa,SIGNAL(waveData(VectorList,MODE)),this,SLOT(recWaveComplete(VectorList,MODE)));
+    //四个通道录播完成处理
+    connect(channel_h1,SIGNAL(waveData(VectorList,MODE)),this,SLOT(rec_wave_complete(VectorList,MODE)));
+    connect(channel_h2,SIGNAL(waveData(VectorList,MODE)),this,SLOT(rec_wave_complete(VectorList,MODE)));
+    connect(channel_l1,SIGNAL(waveData(VectorList,MODE)),this,SLOT(rec_wave_complete(VectorList,MODE)));
+    connect(channel_l2,SIGNAL(waveData(VectorList,MODE)),this,SLOT(rec_wave_complete(VectorList,MODE)));
 
+    //处理连续录波计时
     timer_long = new QTimer;
     timer_long->setSingleShot(true);
-    connect(timer_long,SIGNAL(timeout()), this, SLOT(recContinuousComplete()) );
-
-
+    connect(timer_long,SIGNAL(timeout()), this, SLOT(rec_continuous_complete()) );
 }
 
 //从UI发起的的录波入口
@@ -47,29 +46,32 @@ void RecControl::startRecWave(MODE mode, int time)
     this->_mode = mode;
     switch (mode) {
     case TEV1:
-        tev1->recStart(mode);
+    case HFCT1:
+    case UHF1:
+        channel_h1->recStart(mode);
         break;
     case TEV2:
-        tev2->recStart(mode);
-        break;
-    case HFCT1:
-        hfct1->recStart(mode);
-        break;
     case HFCT2:
-        hfct2->recStart(mode);
+    case UHF2:
+        channel_h2->recStart(mode);
         break;
     case HFCT1_CONTINUOUS:
-        hfct1->recStart(HFCT1);
+        channel_h1->recStart(HFCT1);
         timer_long->start(time * 1000);
         rec_continuous.clear();
         break;
     case HFCT2_CONTINUOUS:
-        hfct2->recStart(HFCT2);
+        channel_h2->recStart(HFCT2);
         timer_long->start(time * 1000);
         rec_continuous.clear();
         break;
-    case AA_Ultrasonic:
-        aa->recStart(mode,time);
+    case AA1:
+    case AE1:
+        channel_l1->recStart(mode,time);
+        break;
+    case AA2:
+    case AE2:
+        channel_l2->recStart(mode,time);
         break;
     default:
         break;
@@ -81,19 +83,17 @@ void RecControl::startRecWave(MODE mode, int time)
  * 接收从FPGA返回的录波完成信号
  * 由于可能存在自发录播，且可能存在多路同事录播，需要根据FPGA反馈进行模式判断
  * 多路同时录波，约定首先传送AD编号较小的通道数据
- * TEV1 ---- 0000 0001(1)
- * TEV2 ---- 0000 0010(2)
- * AA   ---- 0000 0100(4)
- * HFCT1---- 0100 0000(64)
- * HFCT2---- 1000 0000(128)
+ * H1  ---- 0000 0001(1)
+ * H2  ---- 0000 0010(2)
+ * L1  ---- 0000 0100(4)
+ * L2  ---- 0000 1000(8)
  * 下面算法基于以上生成
  * ***************************************************************/
-void RecControl::recvRecData()
+void RecControl::recv_rec_data()
 {
     MODE mode;
     int x = data->recv_para_rec.recComplete;
 
-//    qDebug()<<"recComplete = "<< x;
     if (x == 3 || x == 65 || x == 66  || x == 129 || x == 130 || x == 192) {
         rec_double_flag = 2;  //同步录波模式
         qDebug()<<"rece rec_double_signal";
@@ -104,47 +104,40 @@ void RecControl::recvRecData()
         mode = Disable;
     }
     else if (x & 1) {
-        mode = TEV1;   //TEV1
+        mode = (MODE)sqlcfg->get_para()->menu_h1;
     }
     else if (x & 2) {
-        mode = TEV2;   //TEV2
+        mode = (MODE)sqlcfg->get_para()->menu_h2;
     }
     else if (x & 4) {
-        mode = AA_Ultrasonic;   //AA超声
+        mode = (MODE)sqlcfg->get_para()->menu_l1;
     }
-    else if (x & 64){
-        mode = HFCT1;
+    else if (x & 8) {
+        mode = (MODE)sqlcfg->get_para()->menu_l2;
     }
-    else if (x & 128){
-        mode = HFCT2;
-    }
-    else{           //AD4暂时不用
+    else{
         mode = Disable;
     }
 
     //如果是自动录波,需要改变模式
     if(this->_mode == Disable && mode != Disable){
         if(this->_mode != HFCT1_CONTINUOUS && this->_mode != HFCT2_CONTINUOUS && this->_mode != Double_Channel){     //自动录波且非连续录波
-            if(timer_interval == NULL){
+            if(timer_interval == NULL){         //首次运行,初始化
                 timer_interval = new QTimer;
                 timer_interval->setSingleShot(true);
-                qDebug()<<"init timer_interval";
+//                qDebug()<<"init timer_interval";
             }
-            if(timer_interval->remainingTime() > 0){
+            if(timer_interval->remainingTime() > 0){        //触发间隔
                 qDebug()<<"tringer the interval! remain timer:"<<timer_interval->remainingTime();
-                data->set_send_para(sp_rec_start_tev1, 2);
-                data->set_send_para(sp_rec_start_tev2, 2);
-                data->set_send_para(sp_rec_start_hfct1, 2);
-                data->set_send_para(sp_rec_start_hfct2, 2);
+                data->set_send_para(sp_rec_start_h1, 2);
+                data->set_send_para(sp_rec_start_h2, 2);
                 fifocontrol->send_para();
-                data->set_send_para(sp_rec_start_tev1, 0);
-                data->set_send_para(sp_rec_start_tev2, 0);
-                data->set_send_para(sp_rec_start_hfct1, 0);
-                data->set_send_para(sp_rec_start_hfct2, 0);
+                data->set_send_para(sp_rec_start_h1, 0);
+                data->set_send_para(sp_rec_start_h2, 0);
                 fifocontrol->send_para();
                 return;
             }
-            else{
+            else{           //判断自动录波成功触发,重置间隔
                 timer_interval->start(sqlcfg->get_para()->auto_rec_interval * 1000);    //开始设置间隔
                 this->_mode = mode;
             }
@@ -153,114 +146,50 @@ void RecControl::recvRecData()
 
     switch (mode) {
     case TEV1:
-        if(tev1->status == RecWave::Free){
-            tev1->status = RecWave::Working;
-            tev1->startWork();
-        }
-        else{
-            tev1->work();
-        }
-        break;
-    case TEV2:
-        if(tev2->status == RecWave::Free){
-            tev2->status = RecWave::Working;
-            tev2->startWork();
-        }
-        else{
-            tev2->work();
-        }
-        break;
-    case AA_Ultrasonic:
-        if(aa->status == RecWave::Free){
-            aa->status = RecWave::Working;
-            aa->startWork();
-        }
-        else{
-            aa->work();
-        }
-        break;
     case HFCT1:
-        if(hfct1->status == RecWave::Free){
-            hfct1->status = RecWave::Working;
-            hfct1->startWork();
+    case UHF1:
+        if(channel_h1->status == RecWave::Free){
+            channel_h1->status = RecWave::Working;
+            channel_h1->startWork();
         }
         else{
-            hfct1->work();
+            channel_h1->work();
         }
         break;
-    case HFCT2:
-        if(hfct2->status == RecWave::Free){
-            hfct2->status = RecWave::Working;
-            hfct2->startWork();
-        }
-        else{
-            hfct2->work();
-        }
-        break;
-    default:
-        break;
-    }
-
-    /*    switch (mode) {
-    case TEV1:
-        if(tev2->status == RecWave::Working){
-//            qDebug()<<"TEV2 Working --> Waiting";
-            tev2->status = RecWave::Waiting;        //TEV1优先级高于TEV2 Working --> Waiting
-        }
-        if(tev1->status == RecWave::Free){
-//            qDebug()<<"TEV1 Free --> Working";
-            tev1->status = RecWave::Working;
-//            qDebug()<<"start new rec!!!!!!!!! mode = TEV1!";
-            tev1->startWork();
-        }
-        else{
-            tev1->work();
-        }
-        break;
-
     case TEV2:
-        switch (tev2->status) {
-        case RecWave::Free:
-            if(tev1->status == RecWave::Free){
-                tev2->status = RecWave::Working;            //Free --> Working
-//                qDebug()<<"TEV2 Free --> Working";
-                tev2->startWork();
-            }
-            else{
-                tev2->status = RecWave::Waiting;            //Free --> Waiting
-//                qDebug()<<"TEV2 Free --> Waiting";
-            }
-            break;
-        case RecWave::Working:      //继续上传
-            //            qDebug()<<"TEV2 go on working";
-            tev2->work();
-            break;
-        case RecWave::Waiting:      //改变状态
-            if(tev1->status == RecWave::Free){
-                tev2->status = RecWave::Working;            //Waiting --> Working
-//                qDebug()<<"TEV2 Waiting --> Working";
-                tev2->startWork();
-            }
-            break;
-        default:
-            break;
-        }
-        break;
-
-    case AA_Ultrasonic:
-        if(aa->status == RecWave::Free){
-            aa->status = RecWave::Working;
-            aa->startWork();
+    case HFCT2:
+    case UHF2:
+        if(channel_h2->status == RecWave::Free){
+            channel_h2->status = RecWave::Working;
+            channel_h2->startWork();
         }
         else{
-            aa->work();
+            channel_h2->work();
         }
-
+        break;
+    case AA1:
+    case AE1:
+        if(channel_l1->status == RecWave::Free){
+            channel_l1->status = RecWave::Working;
+            channel_l1->startWork();
+        }
+        else{
+            channel_l1->work();
+        }
+        break;
+    case AA2:
+    case AE2:
+        if(channel_l2->status == RecWave::Free){
+            channel_l2->status = RecWave::Working;
+            channel_l2->startWork();
+        }
+        else{
+            channel_l2->work();
+        }
         break;
     default:
         break;
     }
-    */
 }
 
 MODE RecControl::mode()
@@ -273,10 +202,10 @@ void RecControl::re_send_rec_continuous()
     rec_continuous_free_time = QTime::currentTime();
     hfct_rec_times = 0;
     if(_mode == HFCT1_CONTINUOUS){
-        hfct1->recStart(HFCT1);
+        channel_h1->recStart(HFCT1);
     }
     else if(_mode == HFCT2_CONTINUOUS){
-        hfct2->recStart(HFCT2);
+        channel_h2->recStart(HFCT2);
     }
 }
 
@@ -289,7 +218,7 @@ int RecControl::free_time()
 //录播完成的处理
 //使用了一次性执行的多线程处理模式——QRunnable
 //经实际测试，线程能自动结束
-void RecControl::recWaveComplete(VectorList wave, MODE mode)
+void RecControl::rec_wave_complete(VectorList wave, MODE mode)
 {
 //    qDebug()<<"rec_double_flag= "<<rec_double_flag;
 
@@ -302,8 +231,6 @@ void RecControl::recWaveComplete(VectorList wave, MODE mode)
         rec_double_flag -- ;
         emit waveData(rec_double,Double_Channel);   //发送拼接好的双通道数据(保存操作在界面完成)
         this->_mode = Disable;
-//        FileTools *filetools = new FileTools(rec_double,Double_Channel);      //开一个线程，为了不影响数据接口性能
-//        QThreadPool::globalInstance()->start(filetools);
     }
     else if(timer_long->isActive()){
         re_send_rec_continuous();
@@ -318,12 +245,14 @@ void RecControl::recWaveComplete(VectorList wave, MODE mode)
         //这里插入FFT测试程序
 //        fft_test(wave);
 
+        qDebug()<<"save wave file, mode = "<<Common::MODE_toString(mode);
+
         FileTools *filetools = new FileTools(wave,mode,FileTools::Write);      //开一个线程，为了不影响数据接口性能
         QThreadPool::globalInstance()->start(filetools);
     }
 }
 
-void RecControl::recContinuousComplete()
+void RecControl::rec_continuous_complete()
 {
     emit waveData(rec_continuous, _mode);
     qDebug()<<"rec continuous complete, times ============================================================== "<< rec_continuous.length()/4000;

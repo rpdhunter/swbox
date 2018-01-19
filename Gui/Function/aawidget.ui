@@ -111,7 +111,7 @@ background:transparent;color:gray;</string>
     <string notr="true">QLabel {color:white;}</string>
    </property>
    <property name="text">
-    <string notr="true">TextLabel</string>
+    <string notr="true"/>
    </property>
   </widget>
   <widget class="QLabel" name="label_3">

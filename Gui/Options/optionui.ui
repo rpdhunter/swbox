@@ -53,7 +53,7 @@
       <enum>QTabWidget::West</enum>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
@@ -875,7 +875,7 @@
        <item row="0" column="0">
         <widget class="QGroupBox" name="groupBox_4">
          <property name="title">
-          <string>录波设置</string>
+          <string>高级设置</string>
          </property>
          <layout class="QGridLayout" name="gridLayout">
           <property name="topMargin">
@@ -910,21 +910,21 @@
           <item row="1" column="0">
            <widget class="QLabel" name="label_8">
             <property name="text">
-             <string>录波文件复制到SD卡</string>
+             <string>局放信号蜂鸣器报警</string>
             </property>
            </widget>
           </item>
           <item row="1" column="1">
            <layout class="QHBoxLayout" name="horizontalLayout_9">
             <item>
-             <widget class="QRadioButton" name="rbt_sd_on">
+             <widget class="QRadioButton" name="rbt_buzzer_on">
               <property name="text">
                <string>开启</string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QRadioButton" name="rbt_sd_off">
+             <widget class="QRadioButton" name="rbt_buzzer_off">
               <property name="text">
                <string>关闭</string>
               </property>

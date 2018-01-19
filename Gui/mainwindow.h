@@ -13,6 +13,7 @@
 #include "IO/Key/keydetect.h"
 #include "IO/SqlCfg/sqlcfg.h"
 #include "IO/Other/battery.h"
+#include "IO/Other/buzzer.h"
 
 #include "Function/tevwidget.h"
 #include "Function/hfctwidget.h"
@@ -67,6 +68,7 @@ private slots:
     void set_wifi_icon(int w);
     void set_sync_status(bool flag);
     void do_sync(uint offset);
+    void do_beep(int index, int red_alert);
 
 #ifdef PRINTSCREEN
     void printSc(); //截屏
@@ -90,8 +92,8 @@ private:
     HFCTWidget *hfct1_widget, *hfct2_widget;
     UHFWidget *uhf1_widget, *uhf2_widget;
     FaultLocation *double_widget;
-    AAWidget *aa_widget;
-    AEWidget *ae_widget;        //to be
+    AAWidget *aa1_widget, *aa2_widget;
+    AEWidget *ae1_widget, *ae2_widget;
 
     //5个设置界面
     Options *options;
@@ -118,6 +120,7 @@ private:
     Rtu *rtu;
 
     int serial_fd;      //保存一个全局的串口fd值
+    Buzzer *buzzer;
 
 
     void menu_init();

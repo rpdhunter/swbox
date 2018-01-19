@@ -8,7 +8,8 @@
 //定义一些全局数据类型，和一些全局宏
 #define PROGRAM_DIR     "/root"
 #define USB_DIR         "/mmc/usb_dev_mount"
-#define DATA_DIR        USB_DIR"/data"
+//#define DATA_DIR        USB_DIR"/data"
+#define DATA_DIR        PROGRAM_DIR"/data"
 #define WAVE_DIR        DATA_DIR "/WaveForm"
 #define FAVORITE_DIR    WAVE_DIR "/favorite"
 #define DATALOG_DIR     DATA_DIR "/DataLog"
@@ -23,7 +24,8 @@
 #define AD_VAL(val, offset)		((val) >= offset ? (val) - offset : offset - (val))
 #define MAX(a, b)				((a) > (b) ? (a) : (b))
 #define MIN(a, b)				((a) < (b) ? (a) : (b))
-#define BUFF_DATA_SIZE			1030
+//#define BUFF_DATA_SIZE			1030
+#define BUFF_DATA_SIZE			520
 
 #define AMP_FACTOR_J27_680P 22560.0f
 #define AMP_FACTOR_J27_1N   12200.0f
@@ -80,7 +82,7 @@ struct G_RECV_PARA_PRPD {
 //HFCT数据
 //适用通道：HFCT1，HFCT2
 //更新时间：立刻更新
-struct G_RECV_PARA_HFCT {
+struct G_RECV_PARA_SHORT {
     quint32 empty;          //第一个为0有数据，1无数据
     quint32 time;           //时标（0-2M对应0-360°）
     quint32 data [BUFF_DATA_SIZE];   //数据,250
@@ -111,12 +113,12 @@ typedef struct G_SEND_PARA {
 
 /* total data */
 typedef struct G_PARA {
-    G_RECV_PARA_NOMAL recv_para_normal;
-    G_RECV_PARA_REC recv_para_rec;
-    G_RECV_PARA_PRPD recv_para_prpd1;
-    G_RECV_PARA_PRPD recv_para_prpd2;
-    G_RECV_PARA_HFCT recv_para_hfct1;
-    G_RECV_PARA_HFCT recv_para_hfct2;
+    G_RECV_PARA_NOMAL recv_para_normal;     //常规数据
+    G_RECV_PARA_REC recv_para_rec;          //录波数据
+    G_RECV_PARA_PRPD recv_para_prpd1;       //脉冲数据(低频1)
+    G_RECV_PARA_PRPD recv_para_prpd2;       //脉冲数据(低频2)
+    G_RECV_PARA_SHORT recv_para_short1;     //短波形数据(高频1)
+    G_RECV_PARA_SHORT recv_para_short2;     //短波形数据(高频2)
     G_SEND_PARA send_para;
 
 public:
@@ -146,14 +148,23 @@ enum MODE{
     HFCT2,
     UHF1,
     UHF2,
-    AA_Ultrasonic,
-    AE_Ultrasonic,
+    AA1,
+    AA2,
+    AE1,
+    AE2,
     Double_Channel,
     TEV1_CONTINUOUS,        //连续录波
     TEV2_CONTINUOUS,        //连续录波
     HFCT1_CONTINUOUS,        //连续录波
     HFCT2_CONTINUOUS,        //连续录波
     Options_Mode,
+};
+
+enum CHANNEL{
+    CHANNEL_H1,     //高频通道1
+    CHANNEL_H2,     //高频通道2
+    CHANNEL_L1,     //低频通道1
+    CHANNEL_L2,     //低频通道2
 };
 
 

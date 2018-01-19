@@ -79,7 +79,7 @@ enum WIFI_MODE {
 
 typedef struct TEV_SQL {
     bool mode;                      //检测模式
-    int mode_chart;             //图形显示模式
+    int mode_chart;                 //图形显示模式
     int high;                       //红色报警阈值
     int low;                        //黄色报警阈值
     double gain;                    //TEV增益
@@ -117,7 +117,7 @@ typedef struct LOCATION_SQL {
 #define VOL_MIN                 0
 
 /* aaultrasonic mode */
-typedef struct AAULTRA_SQL {
+typedef struct AA_SQL {
     bool mode;                      //脉冲触发模式
     double gain;                    //AA超声增益
     int vol;                        //AA超声音量（0-15）（需要FPGA同步）
@@ -126,7 +126,19 @@ typedef struct AAULTRA_SQL {
     int time;                       //录波时长（1-60）
     double aa_step;                 //显示幅值变化门槛
     int aa_offset;                  //AA超声偏置值
-} AAULTRA_SQL;
+} AA_SQL;
+
+/* aeultrasonic mode */
+typedef struct AE_SQL {
+    bool mode;                      //脉冲触发模式
+    double gain;                    //AE超声增益
+    int vol;                        //AE超声音量（0-15）（需要FPGA同步）
+    int high;                       //红色报警阈值
+    int low;                        //黄色报警阈值
+    int time;                       //录波时长（1-60）
+    double aa_step;                 //显示幅值变化门槛
+    int ae_offset;                  //AE超声偏置值
+} AE_SQL;
 
 //typedef struct SYNCMODE_SQL {
 //    bool mode;                      //检测模式
@@ -141,7 +153,7 @@ typedef struct SQL_PARA {
     TEV_SQL tev1_sql, tev2_sql;     //地电波设置(通道1和2)
     HFCT_SQL hfct1_sql, hfct2_sql;  //高频CT模式
     LOCATION_SQL location_sql;      //定位模式设置
-    AAULTRA_SQL aaultra_sql;        //AA超声设置
+    AA_SQL aa1_sql, aa2_sql;        //AA超声设置
 
     bool language;                  //语言设置
     int freq_val;                   //频率（需要FPGA同步）
@@ -151,7 +163,7 @@ typedef struct SQL_PARA {
     int screen_close_time;          //屏幕自动关闭时间，单位为秒
     int close_time;                 //自动关机时间,单位为分钟
     int max_rec_num;                //录波文件保存个数
-    bool file_copy_to_SD;           //是否保存文件到SD卡
+    bool buzzer_on;           //是否保存文件到SD卡
     int auto_rec_interval;          //自动录波间隔
     int menu_h1, menu_h2;           //高速通道模式（需要FPGA同步）
     int menu_double, menu_l1, menu_l2;       //其他菜单模式

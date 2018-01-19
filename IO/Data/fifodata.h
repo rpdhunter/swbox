@@ -30,6 +30,8 @@ signals:
     void playVoiceProgress(int cur, int all, bool);        //返回播放声音的实时进度，前2个参数是播放进度，后一个是是否播完，0未播完，1播完
 
     void send_sync(uint);
+    void short1_update();       //高频1通道数据更新
+    void short2_update();       //高频1通道数据更新
 
 private slots:
     void do_slow();

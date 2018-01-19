@@ -66,8 +66,14 @@ void FifoData::run(void)
 
         fifocontrol->read_fpga(sp_read_fpga_hfct1);
         fifocontrol->read_hfct1_data();
+        if(data->recv_para_short1.empty == 0){
+            emit short1_update();
+        }
         fifocontrol->read_fpga(sp_read_fpga_hfct2);
         fifocontrol->read_hfct2_data();
+        if(data->recv_para_short2.empty == 0){
+            emit short2_update();
+        }
 
         //录波数据
 
@@ -81,10 +87,10 @@ void FifoData::run(void)
 
         if(data->recv_para_rec.recComplete > 0 && data->recv_para_rec.recComplete < 255){
 //            qDebug()<<"tdata->recv_para_rec.recComplete = "<<data->recv_para_rec.recComplete;
-            reccontrol->recvRecData();
+            reccontrol->recv_rec_data();
         }
 
-        fifocontrol->playVoiceData();
+        fifocontrol->play_voice_data();
 
         fifocontrol->send_para();
 
@@ -92,17 +98,17 @@ void FifoData::run(void)
         if(data->recv_para_rec.recComplete == 16){
             delay_time = DELAY_TIME_MID;
         }
-        else if(reccontrol->mode() == Disable){
-            delay_time = DELAY_TIME_LONG;
-        }
-        else {
+        else if(reccontrol->mode() != Disable || data->recv_para_short1.empty == 0 || data->recv_para_short2.empty == 0){
             delay_time = DELAY_TIME_SHORT;
 //            qDebug()<<"free time"<<reccontrol->free_time();
             if(reccontrol->free_time()>10){
                 reccontrol->re_send_rec_continuous();
             }
-
         }
+        else {
+            delay_time = DELAY_TIME_LONG;
+        }
+
 //        t2 = QTime::currentTime();
 //        int temp = t1.msecsTo(t2);
 //        if(temp > 1000){

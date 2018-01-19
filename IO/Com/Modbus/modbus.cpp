@@ -485,11 +485,11 @@ int Modbus::set_reg_value(unsigned short reg, unsigned short val)
         break;
     case md_rw_reg_aa_gain:
 //        val = ((float)val) / 10;
-        sql_para->aaultra_sql.gain = val / 10.0;
+        sql_para->aa2_sql.gain = val / 10.0;
         qDebug()<<"aa_gain changed! val = "<<val / 10.0;
         break;
     case md_rw_reg_aa_bias:
-        sql_para->aaultra_sql.aa_offset = val;
+        sql_para->aa2_sql.aa_offset = val;
         qDebug()<<"aa_offset changed! val = "<<val;
         break;
     case md_wr_reg_start:
@@ -551,10 +551,10 @@ void Modbus::transData()
     }
 
     val = data_stand[md_rd_reg_aa_mag];
-    if(val < sql_para->aaultra_sql.low){
+    if(val < sql_para->aa2_sql.low){
         data_stand[md_rd_reg_aa_severity] = 0;
     }
-    else if(val < sql_para->aaultra_sql.high){
+    else if(val < sql_para->aa2_sql.high){
         data_stand[md_rd_reg_aa_severity] = 1;
     }
     else{
@@ -566,8 +566,8 @@ void Modbus::transData()
     data_stand[md_rw_reg_tev_noise_bias] = sql_para->tev1_sql.tev_offset1;
     data_stand[md_rw_reg_tev_zero_bias] = sql_para->tev1_sql.tev_offset2;
 
-    data_stand[md_rw_reg_aa_gain] = sql_para->aaultra_sql.gain;
-    data_stand[md_rw_reg_aa_bias] = sql_para->aaultra_sql.aa_offset;
+    data_stand[md_rw_reg_aa_gain] = sql_para->aa2_sql.gain;
+    data_stand[md_rw_reg_aa_bias] = sql_para->aa2_sql.aa_offset;
 
 }
 

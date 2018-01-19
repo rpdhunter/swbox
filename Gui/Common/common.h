@@ -12,6 +12,90 @@
 
 #define FREEZE_TIME     5000            //秒界面锁定时间
 
+class MyKey{
+public:
+    MyKey(int X=0,int Y=0){
+        x = X;
+        y = Y;
+    }
+    bool operator < (const MyKey another) const
+    {
+        if(this->x < another.x ){
+            return true;
+        }
+        else if(this->x > another.x){
+            return false;
+        }
+        else if(this->y < another.y){       //this->x == another.x
+            return true;
+        }
+        else {                              //this->x == another.x
+            return false;
+        }
+    }
+
+    bool operator > (const MyKey another) const
+    {
+        if(this->x > another.x ){
+            return true;
+        }
+        else if(this->x < another.x){
+            return false;
+        }
+        else if(this->y > another.y){       //this->x == another.x
+            return true;
+        }
+        else {                              //this->x == another.x
+            return false;
+        }
+    }
+
+    bool operator == (const MyKey another) const
+    {
+        if(this->x == another.x && this->y == another.y){
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
+    int x;
+    int y;
+};
+
+
+class Common : public QObject
+{
+public:
+    explicit Common(QObject *parent = 0);
+
+    static void change_index(unsigned char &index, int d_index,     //完成index的循环增减功能
+                             int max_index, int min_index);
+    static void change_index(double &index, double d_index,     //完成index的循环增减功能
+                             double max_index, double min_index);
+    static void change_index(int &index, int d_index,     //完成index的循环增减功能
+                             int max_index, int min_index);
+    static void change_index(int &index, int d_index,     //完成index的循环增减功能
+                             QList<int> list);
+    static void change_value(int &value, int value_a, int value_b); //完成value的档位变化
+    static void change_value(bool &value, bool value_a, bool value_b); //完成value的档位变化
+
+    static void set_comboBox_style(QComboBox *comboBox);                  //完成QComboBox的样式设置
+    static void set_barchart_style(QwtPlot *plot, int v_max);                  //完成barchart的样式设置
+    static void set_PRPD_style(QwtPlot *plot, QwtPlotSpectroCurve *d_PRPD, int max_value);                      //完成PRPD的样式设置
+    static void set_TF_style(QwtPlot *plot, QwtPlotSpectroCurve *d_PRPD, int max_value);                      //完成TF的样式设置
+    static void set_histogram_style(QwtPlot *plot, QwtPlotHistogram *d_histogram);                      //完成histogram的样式设置
+    static void setTab(QLabel *label);              //设置tabwidget的标签格式
+
+    static double physical_value(int code_value, MODE mode);        //根据码值返回物理值
+    static int code_value(double physical_value, MODE mode);        //根据物理值返回码值
+    static double physical_threshold(MODE mode);                    //返回各模式下的物理阈值
+    static QString MODE_toString(MODE val);
+    static void write_fpga_offset(G_PARA *data);        //根据当前通道设置fpga参数
+
+};
+
 #if 0
 /* 路径等定义 */
 #define BASE_DIR			"."
@@ -91,33 +175,5 @@ oem_info_t oem_list [oem_num] = {
         SW_VERSION, HW_VERSION},
 };
 #endif
-
-class Common : public QObject
-{
-public:
-    explicit Common(QObject *parent = 0);
-
-    static void change_index(unsigned char &index, int d_index,     //完成index的循环增减功能
-                             int max_index, int min_index);
-    static void change_index(double &index, double d_index,     //完成index的循环增减功能
-                             double max_index, double min_index);
-    static void change_index(int &index, int d_index,     //完成index的循环增减功能
-                             int max_index, int min_index);
-    static void change_value(int &value, int value_a, int value_b); //完成value的档位变化
-    static void change_value(bool &value, bool value_a, bool value_b); //完成value的档位变化
-
-    static void set_comboBox_style(QComboBox *comboBox);                  //完成QComboBox的样式设置
-    static void set_barchart_style(QwtPlot *plot, int v_max);                  //完成barchart的样式设置
-    static void set_PRPD_style(QwtPlot *plot, QwtPlotSpectroCurve *d_PRPD, int max_value);                      //完成PRPD的样式设置
-    static void set_TF_style(QwtPlot *plot, QwtPlotSpectroCurve *d_PRPD, int max_value);                      //完成TF的样式设置
-    static void set_histogram_style(QwtPlot *plot, QwtPlotHistogram *d_histogram);                      //完成histogram的样式设置
-    static void setTab(QLabel *label);              //设置tabwidget的标签格式
-
-    static double physical_value(int code_value, MODE mode);        //根据码值返回物理值
-    static int code_value(double physical_value, MODE mode);        //根据物理值返回码值
-    static double physical_threshold(MODE mode);                    //返回各模式下的物理阈值
-    static QString MODE_toString(MODE val);
-
-};
 
 #endif // COMMON_H

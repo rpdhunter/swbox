@@ -21,7 +21,7 @@ class AEWidget : public QFrame
     Q_OBJECT
 
 public:
-    explicit AEWidget(G_PARA *data, CURRENT_KEY_VALUE *val, int menu_index, QWidget *parent = 0);
+    explicit AEWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu_index, QWidget *parent = 0);
     ~AEWidget();
 
 public slots:
@@ -30,6 +30,7 @@ public slots:
 signals:
     void send_key(quint8);
     void fresh_parent();
+    void beep(int);        //蜂鸣器报警
 
 private:
     Ui::AEWidget *ui;    
@@ -37,6 +38,7 @@ private:
     G_PARA *data;
     int menu_index;
     SQL_PARA sql_para;
+    MODE mode;
 
     void fresh_setting();
 };

@@ -2,9 +2,11 @@
 #include "ui_tevwidget.h"
 #include <QTimer>
 #include <QLineEdit>
+#include "IO/Other/buzzer.h"
 
 #define VALUE_MAX  60           //RPPD最大值
 #define SETTING_NUM 9           //设置菜单条目数
+#define TOKEN_MAX   50          //最大允许一次处理的数据量
 
 
 TEVWidget::TEVWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu_index, QWidget *parent) :
@@ -27,28 +29,38 @@ TEVWidget::TEVWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu_i
     db = 0;
     max_db = 0;
     pulse_cnt_last = 0;
+    pulse_number = 0;
     db_last1 = 0;
     db_last2 = 0;
     manual = false;
+    token = 0;
 
-    chart_ini();
 
-    timer1 = new QTimer(this);
-    timer1->setInterval(1000);
-    connect(timer1, SIGNAL(timeout()), this, SLOT(fresh_plot()));
-    connect(timer1, SIGNAL(timeout()), this, SLOT(fresh_Histogram()));
-    connect(timer1, SIGNAL(timeout()), d_BarChart, SLOT(fresh()) );
+    timer_1000ms = new QTimer(this);
+    timer_1000ms->setInterval(1000);
+    connect(timer_1000ms, SIGNAL(timeout()), this, SLOT(fresh_1000ms()));
+//    connect(timer_1000ms, SIGNAL(timeout()), this, SLOT(fresh_plot()));
+//    connect(timer_1000ms, SIGNAL(timeout()), this, SLOT(fresh_Histogram()));
+//    connect(timer_1000ms, SIGNAL(timeout()), d_BarChart, SLOT(fresh()) );
 
-    timer2 = new QTimer(this);
-    timer2->setInterval(100);
-    connect(timer2, SIGNAL(timeout()), this, SLOT(fresh_PRPD()));
+    timer_1ms = new QTimer(this);
+    timer_1ms->setInterval(2);         //1ms读取一次数据
+    connect(timer_1ms, SIGNAL(timeout()), this, SLOT(add_token()));
+
+    timer_200ms = new QTimer(this);
+    timer_200ms->setInterval(200);
+    connect(timer_200ms, SIGNAL(timeout()), this, SLOT(fresh_200ms()));
+//    connect(timer_200ms, SIGNAL(timeout()), this, SLOT(fresh_PRPD()));
 
     timer_freeze = new QTimer(this);      //timer3设置了一个界面手动退出后的锁定期,便于操作
     timer_freeze->setInterval(FREEZE_TIME);      //5秒内不出现新录波界面
     timer_freeze->setSingleShot(true);
 
+    chart_ini();
+
     recWaveForm = new RecWaveForm(menu_index,this);
     connect(this, SIGNAL(send_key(quint8)), recWaveForm, SLOT(trans_key(quint8)));
+    connect(recWaveForm,SIGNAL(fresh_parent()),this,SIGNAL(fresh_parent()));
     connect(recWaveForm, SIGNAL(fresh_parent()), timer_freeze, SLOT(start()) );
 
     logtools = new LogTools(mode);      //日志保存模块
@@ -56,16 +68,11 @@ TEVWidget::TEVWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu_i
     connect(this,SIGNAL(tev_PRPD_data(QVector<QwtPoint3D>)),logtools,SLOT(dealRPRDLog(QVector<QwtPoint3D>)));
 
     reload(menu_index);
-    fresh_setting();
-    //自动录波
-    if(tev_sql->auto_rec == true){
-        data->set_send_para (sp_rec_on, 1);
-        data->set_send_para(sp_auto_rec, menu_index + 1);
-    }
-    else{
-        data->set_send_para (sp_rec_on, 0);
-        data->set_send_para(sp_auto_rec, 0);
-    }
+
+//    if(mode == TEV1){
+//        Buzzer *buzzer = new Buzzer(data);
+//        buzzer->start();
+//    }
 }
 
 TEVWidget::~TEVWidget()
@@ -79,19 +86,24 @@ void TEVWidget::reload(int index)
     sql_para = *sqlcfg->get_para();
     if(mode == TEV1){
         tev_sql = &sql_para.tev1_sql;
+        short_data = &data->recv_para_short1;
     }
-    else{
+    else if(mode == TEV2){
         tev_sql = &sql_para.tev2_sql;
+        short_data = &data->recv_para_short2;
     }
 
     //仅切换到此界面的初始化
     if(index == menu_index){
-        //计时器开启
-        if(!timer1->isActive()){
-            timer1->start();
+        //条件启动计时器
+        if(!timer_1000ms->isActive()){
+            timer_1000ms->start();
         }
-        if(!timer2->isActive()){
-            timer2->start();
+        if(!timer_1ms->isActive()){
+            timer_1ms->start();
+        }
+        if(!timer_200ms->isActive()){
+            timer_200ms->start();
         }
         //自动录波
         if(tev_sql->auto_rec == true){
@@ -233,12 +245,12 @@ void TEVWidget::chart_ini()
     plot_PRPS->setScene(scene);
 
     //PRPD
-    if(mode == TEV1){
-        data_prpd = &data->recv_para_prpd1;
-    }
-    else if(mode == TEV2){
-        data_prpd = &data->recv_para_prpd2;
-    }
+//    if(mode == TEV1){
+//        data_prpd = &data->recv_para_prpd1;
+//    }
+//    else if(mode == TEV2){
+//        data_prpd = &data->recv_para_prpd2;
+//    }
     plot_PRPD = new QwtPlot(ui->widget);
     plot_PRPD->resize(200, 140);
     d_PRPD = new QwtPlotSpectroCurve;
@@ -279,7 +291,11 @@ void TEVWidget::calc_tev_value (double * tev_val, double * tev_db, int * sug_cen
     db = tev_sql->gain * (MAX (qAbs (a), qAbs (b)) - tev_sql->tev_offset1 * 10) * TEV_FACTOR;
     * tev_val = db;
 
+
+
     db = 20 * log10 (db);      //对数运算，来自工具链的函数
+
+//    qDebug()<<"TEV original value : " << * tev_val << "\tTEV db value"<< db;
 
     if(db < 0){
         db = 0;
@@ -300,6 +316,8 @@ void TEVWidget::fresh_plot()
 
     calc_tev_value (&t, &s, &sug_central_offset, &sug_offset);
 
+//    qDebug()<<data->recv_para_normal.hpulse1_totol;
+
     //记录并显示最大值
     if (max_db < s) {
         max_db = s;
@@ -313,15 +331,20 @@ void TEVWidget::fresh_plot()
     }
     else{
         pulse_cnt = data->recv_para_normal.hpulse1_totol;
+//        qDebug()<<"changgui = "<<pulse_cnt << "\tjisuan = "<< pulse_number;
+
     }
+
 
     pulse_cnt_show = pulse_cnt_last + pulse_cnt;    //显示2秒的脉冲计数
     pulse_cnt_last = pulse_cnt;
 
     degree = pow(t,tev_sql->gain) * (double)pulse_cnt / sql_para.freq_val;     //严重度算法更改
 
-    ui->label_pluse->setText(tr("脉冲数: ") + QString::number(pulse_cnt_show));
+    ui->label_pluse->setText(tr("脉冲数: ") + QString::number(pulse_number));
     ui->label_degree->setText(tr("严重度: ") + QString::number(degree, 'f', 2));
+
+
 
     if(qAbs(s - db_last1) <15){
         if(db_last1 > 16){
@@ -336,10 +359,12 @@ void TEVWidget::fresh_plot()
         db_last2 = db_last1;
     }
     db_last1 = s;
+#if 0
     //db值小于20时, 逐渐递减, 越接近0, 递减幅度越大
     if(db < 20){
         db = db * (0.5 + db / 20.0 );
     }
+#endif
     if(db > 60){
         db = 60;
     }
@@ -355,7 +380,7 @@ void TEVWidget::fresh_plot()
     if(mode == TEV1){
         temp_data.f_val = db;
         yc_set_value(TEV1_amplitude, &temp_data, 0, NULL,0);
-        temp_data.f_val = pulse_cnt_show;
+        temp_data.f_val = pulse_number;
         yc_set_value(TEV1_num, &temp_data, 0, NULL,0);
         temp_data.f_val = degree;
         yc_set_value(TEV1_severity, &temp_data, 0, NULL,0);
@@ -391,36 +416,41 @@ void TEVWidget::fresh_plot()
 
     if ( db >= tev_sql->high) {
         ui->label_val->setStyleSheet("QLabel {font-family:WenQuanYi Micro Hei;font-size:60px;color:red}");
+        emit beep(menu_index,2);        //蜂鸣器报警
     } else if (db >= tev_sql->low) {
         ui->label_val->setStyleSheet("QLabel {font-family:WenQuanYi Micro Hei;font-size:60px;color:yellow}");
+        emit beep(menu_index,1);
     } else {
         ui->label_val->setStyleSheet("QLabel {font-family:WenQuanYi Micro Hei;font-size:60px;color:green}");
     }
 
-    if (tev_sql->mode_chart == PRPD) {
-        plot_PRPD->show();
-        plot_Barchart->hide();
-        plot_Histogram->hide();
+    pulse_number = 0;
+
+//    if (tev_sql->mode_chart == PRPD) {
+//        plot_PRPD->show();
+//        plot_Barchart->hide();
+//        plot_Histogram->hide();
         plot_PRPD->replot();
-    } else if(tev_sql->mode_chart == BASIC){
-        plot_PRPD->hide();
-        plot_Barchart->show();
-        plot_Histogram->hide();
+//    } else if(tev_sql->mode_chart == BASIC){
+//        plot_PRPD->hide();
+//        plot_Barchart->show();
+//        plot_Histogram->hide();
         plot_Barchart->replot();
-    } else if(tev_sql->mode_chart == Histogram){
-        plot_PRPD->hide();
-        plot_Barchart->hide();
-        plot_Histogram->show();
+//    } else if(tev_sql->mode_chart == Histogram){
+//        plot_PRPD->hide();
+//        plot_Barchart->hide();
+//        plot_Histogram->show();
         plot_Histogram->replot();
-    }
+//    }
 }
 
+#if 0
 void TEVWidget::fresh_PRPD()
 {
     int x,y;
 
-    if( groupNum != data_prpd->groupNum ){
-        groupNum = data_prpd->groupNum;
+    if( group_num != data_prpd->groupNum ){
+        group_num = data_prpd->groupNum;
 
 //        qDebug()<<"groupNum ="<<groupNum << "length =" <<data_prpd->totol;
         //处理数据
@@ -439,11 +469,11 @@ void TEVWidget::fresh_PRPD()
                 map[x][y+60]++;
                 QwtPoint3D p1(x,y,map[x][y+60]);
                 if(map[x][y+60]>1){
-                    int n = points.indexOf(p0);
-                    points[n] = p1;
+                    int n = prpd_samples.indexOf(p0);
+                    prpd_samples[n] = p1;
                 }
                 else{
-                    points.append(p1);
+                    prpd_samples.append(p1);
                 }
             }
 
@@ -455,14 +485,14 @@ void TEVWidget::fresh_PRPD()
 
         }
 
-        d_PRPD->setSamples(points);
+        d_PRPD->setSamples(prpd_samples);
         plot_PRPD->replot();
-        emit origin_pluse_points(points_origin, groupNum);
 
         scene->addPRPD(PRPS_point_list);
     }
 
 }
+#endif
 
 void TEVWidget::fresh_Histogram()
 {
@@ -485,11 +515,109 @@ void TEVWidget::fresh_Histogram()
     plot_Histogram->replot();
 }
 
-void TEVWidget::transData(int &x, int &y)
+void TEVWidget::fresh_1000ms()
 {
-    y = tev_sql->gain * TEV_FACTOR * (y - 0x8000 - tev_sql->fpga_zero) ; //注意，脉冲计算里，忽略了噪声偏置的影响
+    fresh_plot();
+    fresh_Histogram();
+    qDebug()<<"token num:"<<token;
 
-    //    y = (int)(((double)y * 1000) / 32768);
+    d_BarChart->fresh();
+}
+
+void TEVWidget::fresh_200ms()
+{
+    QVector<QPointF> PRPS_point_list;
+
+//    qDebug()<<"pulse_200ms.length()"<<pulse_200ms;
+    int x,y;
+    for(int i=0; i<pulse_200ms.count(); i++){
+        x = pulse_200ms.at(i).x();
+        y = pulse_200ms.at(i).y();
+        if(x<360 && x>=0 && y<=60 &&y>=-60){
+            QwtPoint3D p0(x,y,map[x][y+60]);
+            map[x][y+60]++;
+            QwtPoint3D p1(x,y,map[x][y+60]);
+            if(map[x][y+60]>1){
+                int n = prpd_samples.indexOf(p0);
+                prpd_samples[n] = p1;
+            }
+            else{
+                prpd_samples.append(p1);
+            }
+        }
+
+        PRPS_point_list.append(QPointF(x,y));
+    }
+
+    d_PRPD->setSamples(prpd_samples);
+    plot_PRPD->replot();
+
+    scene->addPRPD(PRPS_point_list);
+
+    //刷新200ms内的db和脉冲数
+//    foreach (QPoint p, pulse_200ms) {
+//        if(db < qAbs(p.y()) ){
+//            db = qAbs(p.y());
+//        }
+//    }
+    pulse_number += pulse_200ms.length();
+
+    pulse_200ms.clear();
+
+}
+
+//每1ms,读取一次脉冲数据
+//每一次脉冲数据,生成一个脉冲点
+void TEVWidget::fresh_1ms()
+{
+//    qDebug()<<"get new data!  "<<short_data->empty<<"\t"<<short_data->time;
+    if( group_num != short_data->time ){         //判断数据有效性
+        group_num = short_data->time;
+        if(short_data->empty == 0){              //0为有数据
+            if(token == 0){
+//                qDebug()<<"token limited!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!";
+                return;
+            }
+            else{
+                token--;
+            }
+            //拷贝数据
+            QVector<double> list;
+            for (int i = 0; i < 256; ++i) {
+                if(short_data->data[i] == 0x55aa){
+                    break;
+                }
+                else{
+                    list.append(((double)short_data->data[i] - 0x8000));
+                }
+            }
+            //分析数据
+//            qDebug()<<list;
+            double max = 0, min = 0;
+            foreach (double l, list) {
+                max = MAX(max,l);
+                min = MIN(min,l);
+            }
+            if(qAbs(max) > qAbs(min)){
+                pulse_200ms.append(transData(short_data->time,max));
+            }
+            else{
+                pulse_200ms.append(transData(short_data->time,min));
+            }
+        }
+    }
+}
+
+void TEVWidget::add_token()
+{
+    if(token < TOKEN_MAX){
+        token += 1;
+    }
+}
+
+QPoint TEVWidget::transData(int x, int y)
+{
+    y = tev_sql->gain * TEV_FACTOR * (y - tev_sql->fpga_zero) ; //注意，脉冲计算里，忽略了噪声偏置的影响
 
     //取DB值
     if(y>=1){
@@ -502,24 +630,16 @@ void TEVWidget::transData(int &x, int &y)
         y = 0;
     }
 
-    points_origin.append(QPoint(x,y));
-
     if(sqlcfg->get_para()->freq_val == 50){
         x = x % 2000000;    //取余数
-        x = x *360 /2000000;
+        x = x * 360 /2000000;
     }
     else if(sqlcfg->get_para()->freq_val == 60){
         x = x % 1666667;
-        x = x *360 /1666667;
+        x = x * 360 /1666667;
     }
 
-    //    x = x * 360 * 50 / 1e8;
-    //    if(x>360){
-    //        qDebug()<<"x="<<x;
-    //    }
-
-
-
+    return QPoint(x,y);
 }
 
 void TEVWidget::PRPDReset()
@@ -529,9 +649,9 @@ void TEVWidget::PRPDReset()
             map[i][j]=0;
         }
     }
-    emit tev_PRPD_data(points);
-    points.clear();
-    fresh_PRPD();
+    emit tev_PRPD_data(prpd_samples);
+    prpd_samples.clear();
+//    fresh_PRPD();
 }
 
 void TEVWidget::maxReset()
@@ -543,10 +663,10 @@ void TEVWidget::maxReset()
 void TEVWidget::fresh_setting()
 {
     if (tev_sql->mode == single) {
-        timer1->setSingleShot(true);
+        timer_1000ms->setSingleShot(true);
         ui->comboBox->setItemText(0,tr("检测模式\t[单次]"));
     } else {
-        timer1->setSingleShot(false);
+        timer_1000ms->setSingleShot(false);
         ui->comboBox->setItemText(0,tr("检测模式\t[连续]"));
     }
 

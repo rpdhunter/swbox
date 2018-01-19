@@ -4,6 +4,7 @@
 #include <sys/mman.h>
 #include <unistd.h>
 #include "IO/SqlCfg/sqlcfg.h"
+#include "Gui/Common/common.h"
 
 FifoControl::FifoControl(G_PARA *g_data, QObject *parent) : QObject(parent)
 {
@@ -11,18 +12,18 @@ FifoControl::FifoControl(G_PARA *g_data, QObject *parent) : QObject(parent)
     base_init();        //基地址初始化
     regs_init();        //寄存器初始化
     //声音播放
-    playVoice = false;
+    play_voice_flag = false;
 }
 
 void FifoControl::playVoiceData(VectorList wave)
 {
     this->wave = wave;
-    this->playVoice = true;
+    this->play_voice_flag = true;
 }
 
 void FifoControl::stop_play_voice()
 {
-    playVoice = false;
+    play_voice_flag = false;
     qDebug()<<"voice play stopped";
 }
 
@@ -42,12 +43,18 @@ QString FifoControl::send_para_to_string(int val)
     case sp_keyboard_backlight:
         tmp = "keyboard_backlight";
         break;
+    case sp_buzzer:
+        tmp = "buzzer";
+        break;
+    case sp_buzzer_freq:
+        tmp = "buzzer_freq";
+        break;
     case sp_sleeping:
         tmp = "sleeping";
         break;
-    case sp_working_mode:
-        tmp = "working_mode";
-        break;
+//    case sp_working_mode:
+//        tmp = "working_mode";
+//        break;
     case sp_filter_mode:
         tmp = "filter_mode";
         break;
@@ -81,23 +88,17 @@ QString FifoControl::send_para_to_string(int val)
     case sp_aa_record_play:
         tmp = "aa_record_play";
         break;
-    case sp_rec_start_tev1:
-        tmp = "rec_start_tev1";
+    case sp_rec_start_h1:
+        tmp = "sp_rec_start_h1";
         break;
-    case sp_rec_start_tev2:
-        tmp = "rec_start_tev2";
+    case sp_rec_start_h2:
+        tmp = "sp_rec_start_h2";
         break;
-    case sp_rec_start_hfct1:
-        tmp = "rec_start_hfct1";
+    case sp_rec_start_l1:
+        tmp = "sp_rec_start_l1";
         break;
-    case sp_rec_start_hfct2:
-        tmp = "rec_start_hfct2";
-        break;
-    case sp_rec_start_aa1:
-        tmp = "rec_start_aa1";
-        break;
-    case sp_rec_start_aa2:
-        tmp = "rec_start_aa2";
+    case sp_rec_start_l2:
+        tmp = "sp_rec_start_l2";
         break;
     case sp_group_num:
         tmp = "group_num";
@@ -153,13 +154,13 @@ int FifoControl::read_prpd2_data()
 int FifoControl::read_hfct1_data()
 {
 //    read_fpga(sp_read_fpga_hfct1);
-    return recv_data (vbase_hfct1, (unsigned int *)&(tdata->recv_para_hfct1));
+    return recv_data (vbase_hfct1, (unsigned int *)&(tdata->recv_para_short1));
 }
 
 int FifoControl::read_hfct2_data()
 {
 //    read_fpga(sp_read_fpga_hfct2);
-    return recv_data (vbase_hfct2, (unsigned int *)&(tdata->recv_para_hfct2));
+    return recv_data (vbase_hfct2, (unsigned int *)&(tdata->recv_para_short2));
 }
 
 int FifoControl::read_rec_data()
@@ -257,29 +258,35 @@ void FifoControl::regs_init()
     tdata->set_send_para (sp_backlight_reg, sqlcfg->get_para()->backlight);
     tdata->set_send_para (sp_keyboard_backlight, sqlcfg->get_para()->key_backlight);
 
-    tdata->set_send_para (sp_working_mode, sqlcfg->get_working_mode((MODE)sqlcfg->get_para()->menu_h1, (MODE)sqlcfg->get_para()->menu_h2) );
+//    tdata->set_send_para (sp_working_mode, sqlcfg->get_working_mode((MODE)sqlcfg->get_para()->menu_h1, (MODE)sqlcfg->get_para()->menu_h2) );
     tdata->set_send_para (sp_filter_mode, 0);//to be
+    tdata->set_send_para (sp_buzzer_freq, 100000000/800/2/16);
 
-    tdata->set_send_para (sp_tev1_zero, 0x8000 - sqlcfg->get_para()->tev1_sql.fpga_zero);
-    tdata->set_send_para (sp_tev1_threshold, sqlcfg->get_para()->tev1_sql.fpga_threshold);
-    tdata->set_send_para (sp_tev2_zero, 0x8000 - sqlcfg->get_para()->tev2_sql.fpga_zero);
-    tdata->set_send_para (sp_tev2_threshold, sqlcfg->get_para()->tev2_sql.fpga_threshold);
-    tdata->set_send_para (sp_hfct1_zero, 0x8000 - sqlcfg->get_para()->hfct1_sql.fpga_zero);
-    tdata->set_send_para (sp_hfct1_threshold, sqlcfg->get_para()->hfct1_sql.fpga_threshold);
-    tdata->set_send_para (sp_hfct2_zero, 0x8000 - sqlcfg->get_para()->hfct2_sql.fpga_zero);
-    tdata->set_send_para (sp_hfct2_threshold, sqlcfg->get_para()->hfct2_sql.fpga_threshold);
+    Common::write_fpga_offset(tdata);
 
-    tdata->set_send_para (sp_aa_vol, sqlcfg->get_para ()->aaultra_sql.vol);
+//    tdata->set_send_para (sp_tev1_zero, 0x8000 - sqlcfg->get_para()->tev1_sql.fpga_zero);
+//    tdata->set_send_para (sp_tev1_threshold, sqlcfg->get_para()->tev1_sql.fpga_threshold);
+//    tdata->set_send_para (sp_tev2_zero, 0x8000 - sqlcfg->get_para()->tev2_sql.fpga_zero);
+//    tdata->set_send_para (sp_tev2_threshold, sqlcfg->get_para()->tev2_sql.fpga_threshold);
+//    tdata->set_send_para (sp_hfct1_zero, 0x8000 - sqlcfg->get_para()->hfct1_sql.fpga_zero);
+//    tdata->set_send_para (sp_hfct1_threshold, sqlcfg->get_para()->hfct1_sql.fpga_threshold);
+//    tdata->set_send_para (sp_hfct2_zero, 0x8000 - sqlcfg->get_para()->hfct2_sql.fpga_zero);
+//    tdata->set_send_para (sp_hfct2_threshold, sqlcfg->get_para()->hfct2_sql.fpga_threshold);
+
+//    tdata->set_send_para (sp_buzzer,1);
+    tdata->set_send_para (sp_buzzer_freq, 100000000/200/2/16);
+
+    tdata->set_send_para (sp_aa_vol, sqlcfg->get_para ()->aa2_sql.vol);
     tdata->set_send_para (sp_aa_record_play, 0);
 
 
     tdata->set_send_para (sp_auto_rec, 0);//to be
     tdata->set_send_para (sp_rec_on, 0);
 
-    tdata->set_send_para (sp_rec_start_tev1, 3);        //初始化使用
-    tdata->set_send_para (sp_rec_start_tev2, 3);
-    tdata->set_send_para (sp_rec_start_hfct1, 3);
-    tdata->set_send_para (sp_rec_start_hfct2, 3);
+    tdata->set_send_para (sp_rec_start_h1, 3);        //初始化使用
+    tdata->set_send_para (sp_rec_start_h2, 3);
+//    tdata->set_send_para (sp_rec_start_hfct1, 3);
+//    tdata->set_send_para (sp_rec_start_hfct2, 3);
 
 //    tdata->set_send_para (sp_fpga_sleep, 0);//xwt
 
@@ -320,8 +327,7 @@ void FifoControl::check_send_param(RPARA pp[], int index, unsigned int data_mask
         temp = (data_mask << 16) | pp[index].rval;
         send_data (vbase_send, &temp, 1);
         if(index != sp_read_fpga_normal && index != sp_read_fpga_rec && index != sp_group_num
-//                && index != sp_rec_start_tev1 && index != sp_rec_start_tev2
-                && index != sp_rec_start_hfct1 && index != sp_rec_start_hfct2
+//                && index != sp_rec_start_h1 && index != sp_rec_start_h2
                 && index != sp_read_fpga_prpd1 && index != sp_read_fpga_hfct1
                 && index != sp_read_fpga_prpd2 && index != sp_read_fpga_hfct2
                 ){
@@ -380,9 +386,9 @@ void FifoControl::read_fpga(send_params sp_n)
 }
 
 //以下为声音控制函数
-void FifoControl::playVoiceData()
+void FifoControl::play_voice_data()
 {
-    if(playVoice){
+    if(play_voice_flag){
         int len, i, j;
         unsigned int buff [0x500], temp;
         //    qDebug()<<"IO thread ID: "<<this->currentThreadId();
@@ -397,7 +403,7 @@ void FifoControl::playVoiceData()
 
         //先发32组
         for (i = 0; i < 32; ++i) {
-            sendAPackage (wave.mid (i /* 256*/ << 8, 256));
+            send_a_package (wave.mid (i /* 256*/ << 8, 256));
         }
 
         j = 2;
@@ -410,14 +416,14 @@ void FifoControl::playVoiceData()
             //t = wave.length () / 320000;
             emit playVoiceProgress (j * 100 * 16 * 256 / 320000 , wave.length() * 100 / 320000, true);        //播放进度
 
-            if (!playVoice) {     //接到终止信号
+            if (!play_voice_flag) {     //接到终止信号
                 break;
             }
 
             if (buff [0] == 1) {
                 //发16个包
                 for (i = 0; i < 16; ++i) {
-                    sendAPackage (wave.mid ((j /** 16 * 256*/ << 12) + (i /** 256*/ << 8), 256));
+                    send_a_package (wave.mid ((j /** 16 * 256*/ << 12) + (i /** 256*/ << 8), 256));
                 }
             }
             j++;
@@ -429,11 +435,11 @@ void FifoControl::playVoiceData()
 
         emit playVoiceProgress (wave.length () * 100 / 320000, wave.length () * 100 / 320000 , false);        //播放进度
 
-        this->playVoice = false;
+        this->play_voice_flag = false;
     }
 }
 
-void FifoControl::sendAPackage(VectorList wave)
+void FifoControl::send_a_package(VectorList wave)
 {
     int data [256], i;
 

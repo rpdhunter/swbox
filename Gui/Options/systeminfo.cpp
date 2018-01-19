@@ -17,7 +17,7 @@ SystemInfo::SystemInfo(QWidget *parent) : QFrame(parent),ui(new Ui::SystemInfoUi
     ui->label_logo_text->setText("copyright © 2014-2017 Ohv Diagnostic GmbH, Ltd\nAll rights reserved.");
     ui->label_logo->setPixmap(QPixmap(":/widgetphoto/bk/ohv_low.png"));
 #elif AMG
-    ui->label_logo_text->setText("copyright © 2016-2017 Australian Microgrid Technology Pty Lte\nAll rights reserved.");
+    ui->label_logo_text->setText("copyright © 2016-2017 Australian Microgrid Technology Pty Ltd\nAll rights reserved.");
     ui->label_logo->setPixmap(QPixmap(":/widgetphoto/bk/amg_low.png"));
 #elif ZDIT
     ui->label_logo_text->setText("copyright © 2016-2017 ZIT(Nanjing) Technology Co., Ltd\nAll rights reserved.");

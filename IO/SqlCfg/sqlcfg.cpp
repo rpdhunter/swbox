@@ -147,14 +147,23 @@ SQL_PARA *SqlCfg::default_config(void)
 
 
     /* aaultrasonic mode */
-    sql_para.aaultra_sql.mode = continuous;
-    sql_para.aaultra_sql.vol = AA_VOL_DEFAULT;
-    sql_para.aaultra_sql.gain = 1.0;
-    sql_para.aaultra_sql.high = AA_HIGH;					//default high
-    sql_para.aaultra_sql.low = AA_LOW;						//default low
-    sql_para.aaultra_sql.time = TIME_MIN;					//default time length
-    sql_para.aaultra_sql.aa_step = 2;
-    sql_para.aaultra_sql.aa_offset = 0;
+    sql_para.aa1_sql.mode = continuous;
+    sql_para.aa1_sql.vol = AA_VOL_DEFAULT;
+    sql_para.aa1_sql.gain = 1.0;
+    sql_para.aa1_sql.high = AA_HIGH;					//default high
+    sql_para.aa1_sql.low = AA_LOW;						//default low
+    sql_para.aa1_sql.time = TIME_MIN;					//default time length
+    sql_para.aa1_sql.aa_step = 2;
+    sql_para.aa1_sql.aa_offset = 0;
+
+    sql_para.aa2_sql.mode = continuous;
+    sql_para.aa2_sql.vol = AA_VOL_DEFAULT;
+    sql_para.aa2_sql.gain = 1.0;
+    sql_para.aa2_sql.high = AA_HIGH;					//default high
+    sql_para.aa2_sql.low = AA_LOW;						//default low
+    sql_para.aa2_sql.time = TIME_MIN;					//default time length
+    sql_para.aa2_sql.aa_step = 2;
+    sql_para.aa2_sql.aa_offset = 0;
 
 
 
@@ -175,14 +184,14 @@ SQL_PARA *SqlCfg::default_config(void)
     sql_para.language = LANGUAGE_DEF;
 
     sql_para.max_rec_num = MAX_REC_NUM;
-    sql_para.file_copy_to_SD = false;
+    sql_para.buzzer_on = false;
     sql_para.auto_rec_interval = 1;
 
     sql_para.menu_h1 = TEV1;
     sql_para.menu_h2 = TEV2;
     sql_para.menu_double = Double_Channel;
-    sql_para.menu_l1 = AA_Ultrasonic;
-    sql_para.menu_l2 = Disable;
+    sql_para.menu_l1 = AA1;
+    sql_para.menu_l2 = AE2;
 
     sql_para.sync_mode = SYNC_NONE;
     sql_para.sync_internal_val = 0;

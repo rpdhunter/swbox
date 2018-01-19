@@ -15,7 +15,7 @@ void LogTools::dealLog(double val, int pulse, double degree)
 {
     log_timer ++;   //计数器累加
 
-    if(log_timer % LOG_TIME_INTERVAL == 0){
+    if(log_timer % LOG_TIME_INTERVAL == 0 || qAbs((val-data.last().val)/data.last().val) > 0.2){
         //录入当前节点
         LOG_DATA d;
         d.datetime = QDateTime::currentDateTime().toString("yyyy-MM-dd-HH-mm-ss-zzz");
@@ -96,11 +96,23 @@ QString LogTools::getFileName()
     case TEV2:
         pre = "TEV2";
         break;
-    case AA_Ultrasonic:
-        pre = "AA_Ultrasonic";
-        break;
     case HFCT1:
         pre = "HFCT1";
+        break;
+    case HFCT2:
+        pre = "HFCT2";
+        break;
+    case AA1:
+        pre = "AA1";
+        break;
+    case AA2:
+        pre = "AA2";
+        break;
+    case AE1:
+        pre = "AE1";
+        break;
+    case AE2:
+        pre = "AE2";
         break;
     default:
         break;

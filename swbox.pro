@@ -13,8 +13,8 @@ TEMPLATE = app
 
 #DEFINES += QT_NO_DEBUG_OUTPUT
 #DEFINES += PRINTSCREEN     #截屏
-#DEFINES += AMG          #OEM
-DEFINES += OHV          #OEM
+DEFINES += AMG          #OEM
+#DEFINES += OHV          #OEM
 #DEFINES += ZDIT          #OEM
 
 TRANSLATIONS += trans/en.ts
@@ -69,7 +69,8 @@ SOURCES += \
     IO/Other/CPU/cpustatus.cpp \
     Gui/Common/prpsscene.cpp \
     Gui/Common/fft.cpp \
-    Gui/Function/uhfwidget.cpp
+    Gui/Function/uhfwidget.cpp \
+    IO/Other/buzzer.cpp
 
 
 HEADERS  += \
@@ -125,7 +126,8 @@ HEADERS  += \
     IO/Other/CPU/cpustatus.h \
     Gui/Common/prpsscene.h \
     Gui/Common/fft.h \
-    Gui/Function/uhfwidget.h
+    Gui/Function/uhfwidget.h \
+    IO/Other/buzzer.h
 
 
 RESOURCES += \

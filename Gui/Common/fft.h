@@ -14,6 +14,7 @@ public:
     FFT();
 
     QVector<qint32> fft2048(int ibuf[]);
+    QVector<qint32> fft64(int ibuf[]);
 
 private:
 
@@ -32,8 +33,8 @@ private:
 
     ne10_fft_r2c_cfg_float32_t fft_cfg_32;
     ne10_fft_cpx_float32_t * fft_out_32;
-    ne10_fft_r2c_cfg_float32_t fft_cfg_64;
-    ne10_fft_cpx_float32_t * fft_out_64;
+    ne10_fft_r2c_cfg_int32_t fft_cfg_64;
+    ne10_fft_cpx_int32_t * fft_out_64;
     ne10_fft_r2c_cfg_int32_t fft_cfg_2048;
     ne10_fft_cpx_int32_t * fft_out_2048;
 

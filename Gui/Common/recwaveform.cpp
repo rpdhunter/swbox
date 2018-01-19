@@ -224,8 +224,13 @@ void RecWaveForm::setData(VectorList buf, MODE mod)
             p = QPointF(i*0.01, v_real);
             wave1.append(p);
             break;
-        case AA_Ultrasonic:     //AA超声
-            v_real = (buf.at(i) * 4 ) * sqlcfg->get_para()->aaultra_sql.gain * AA_FACTOR;
+        case AA1:
+            v_real = (buf.at(i) * 4 ) * sqlcfg->get_para()->aa1_sql.gain * AA_FACTOR;
+            p = QPointF(i/320.0, v_real);
+            wave1.append(p);
+            break;
+        case AA2:
+            v_real = (buf.at(i) * 4 ) * sqlcfg->get_para()->aa2_sql.gain * AA_FACTOR;
             p = QPointF(i/320.0, v_real);
             wave1.append(p);
             break;
@@ -271,19 +276,17 @@ void RecWaveForm::set_canvas()
     plot->axisWidget(QwtPlot::xBottom)->setMargin(0);
     plot->axisWidget(QwtPlot::yLeft)->setMargin(0);
     plot->axisWidget(QwtPlot::yLeft)->setSpacing(10);
-    if(mode == AA_Ultrasonic){
+    if(mode == AA1 || mode == AA2 || mode == AE1 || mode == AE2){
         plot->axisWidget(QwtPlot::xBottom)->setTitle("ms");
         plot->axisWidget(QwtPlot::yLeft)->setTitle("V u");
     }
     else{
         plot->axisWidget(QwtPlot::xBottom)->setTitle("us");
         plot->axisWidget(QwtPlot::yLeft)->setTitle("V m");
-    }
-
-    if(mode != AA_Ultrasonic){
         d_marker_threshold1->setValue(0.0, Common::physical_threshold(mode));
         d_marker_threshold2->setValue(0.0, -Common::physical_threshold(mode));
     }
+
     d_marker_peak->hide();    
     d_marker_threshold1->hide();    
     d_marker_threshold2->hide();

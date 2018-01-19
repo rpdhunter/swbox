@@ -40,6 +40,7 @@ signals:
     void tev_log_data(double val, int pulse, double degree);    //发送日志数据
     void tev_PRPD_data(QVector<QwtPoint3D>);
     void show_indicator(bool);      //显示菊花
+    void beep(int index, int red_alert);       //蜂鸣器报警
 
     void origin_pluse_points(QVector<QPoint> p, int group);     //p是读取到的脉冲点，group是组号，目的是为故障定位提供原始数据
 

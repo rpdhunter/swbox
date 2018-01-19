@@ -80,23 +80,19 @@ void DebugSet::iniUi()
     QButtonGroup *group2 = new QButtonGroup(this);
     QButtonGroup *group3 = new QButtonGroup(this);
     QButtonGroup *group4 = new QButtonGroup(this);
-    group1->addButton( ui->rb_HC1_TEV1 );
-    group1->addButton( ui->rb_HC1_TEV2 );
-    group1->addButton( ui->rb_HC1_HFCT1 );
-    group1->addButton( ui->rb_HC1_HFCT2 );
-    group1->addButton( ui->rb_HC1_UHF1 );
-    group1->addButton( ui->rb_HC1_UHF2 );
+    group1->addButton( ui->rb_HC1_TEV );
+    group1->addButton( ui->rb_HC1_HFCT );;
+    group1->addButton( ui->rb_HC1_UHF );
     group1->addButton( ui->rb_HC1_Disable );
-    group2->addButton( ui->rb_HC2_TEV1 );
-    group2->addButton( ui->rb_HC2_TEV2 );
-    group2->addButton( ui->rb_HC2_HFCT1 );
-    group2->addButton( ui->rb_HC2_HFCT2 );
-    group2->addButton( ui->rb_HC2_UHF1 );
-    group2->addButton( ui->rb_HC2_UHF2 );
+    group2->addButton( ui->rb_HC2_TEV );
+    group2->addButton( ui->rb_HC2_HFCT );
+    group2->addButton( ui->rb_HC2_UHF );
     group2->addButton( ui->rb_HC2_Disable );
     group3->addButton( ui->rb_LC1_AA );
+    group3->addButton( ui->rb_LC1_AE );
     group3->addButton( ui->rb_LC1_Disable );
-    group4->addButton( ui->rb_LC2_AE );
+    group4->addButton( ui->rb_LC2_AA );
+    group4->addButton( ui->rb_LC2_AE );    
     group4->addButton( ui->rb_LC2_Disable );
 }
 
@@ -144,19 +140,38 @@ void DebugSet::saveSql()
     sqlcfg->sql_save(&sql_para);
 
     //这些设置中，只有这几个量是需要写入FPGA才能生效的
-    data->set_send_para (sp_tev1_zero, 0x8000 - sql_para.tev1_sql.fpga_zero);
-    data->set_send_para (sp_tev1_threshold, sql_para.tev1_sql.fpga_threshold);
-    data->set_send_para (sp_tev2_zero, 0x8000 - sql_para.tev2_sql.fpga_zero);
-    data->set_send_para (sp_tev2_threshold, sql_para.tev2_sql.fpga_threshold);
+    Common::write_fpga_offset(data);
+//    switch (sql_para.menu_l1) {
+//    case TEV1:
+//        data->set_send_para (sp_tev1_zero, 0x8000 - sql_para.tev1_sql.fpga_zero);
+//        data->set_send_para (sp_tev1_threshold, sql_para.tev1_sql.fpga_threshold);
+//        break;
+//    case HFCT1:
+//        data->set_send_para (sp_hfct1_zero, 0x8000 - sql_para.hfct1_sql.fpga_zero);
+//        data->set_send_para (sp_hfct1_threshold, sql_para.hfct1_sql.fpga_threshold);
+//        break;
+//    case UHF1:
 
-    data->set_send_para (sp_hfct1_zero, 0x8000 - sql_para.hfct1_sql.fpga_zero);
-    data->set_send_para (sp_hfct1_threshold, sql_para.hfct1_sql.fpga_threshold);
-    data->set_send_para (sp_hfct2_zero, 0x8000 - sql_para.hfct2_sql.fpga_zero);
-    data->set_send_para (sp_hfct2_threshold, sql_para.hfct2_sql.fpga_threshold);
+//        break;
+//    default:
+//        break;
+//    }
+//    switch (sql_para.menu_l2) {
+//    case TEV2:
+//        data->set_send_para (sp_tev2_zero, 0x8000 - sql_para.tev2_sql.fpga_zero);
+//        data->set_send_para (sp_tev2_threshold, sql_para.tev2_sql.fpga_threshold);
+//        break;
+//    case HFCT2:
+//        data->set_send_para (sp_hfct2_zero, 0x8000 - sql_para.hfct2_sql.fpga_zero);
+//        data->set_send_para (sp_hfct2_threshold, sql_para.hfct2_sql.fpga_threshold);
+//        break;
+//    case UHF2:
 
-    uint temp = sqlcfg->get_working_mode((MODE)sql_para.menu_h1, (MODE)sql_para.menu_h2);
-    data->set_send_para (sp_working_mode, temp);
-    qDebug()<<"current working mode code is: " << temp;
+//        break;
+//    default:
+//        break;
+//    }
+
     qDebug()<<"debug para saved!";
     emit update_statusBar(tr("【调试模式】设置已保存！"));
     if(flag){
@@ -183,28 +198,19 @@ void DebugSet::reload()
     ui->lineEdit_HFCT2_ZERO->setText(QString("%1").arg(sql_para.hfct2_sql.fpga_zero) );
 
     //AA
-    ui->lineEdit_AA_Step->setText(QString("%1").arg(sql_para.aaultra_sql.aa_step));
-    ui->lineEdit_AA_offset->setText(QString("%1").arg(sql_para.aaultra_sql.aa_offset));
+    ui->lineEdit_AA_Step->setText(QString("%1").arg(sql_para.aa2_sql.aa_step));
+    ui->lineEdit_AA_offset->setText(QString("%1").arg(sql_para.aa2_sql.aa_offset));
 
     //通道选择
     switch (sql_para.menu_h1) {
     case TEV1:
-        ui->rb_HC1_TEV1->setChecked(true);
-        break;
-    case TEV2:
-        ui->rb_HC1_TEV2->setChecked(true);
+        ui->rb_HC1_TEV->setChecked(true);
         break;
     case HFCT1:
-        ui->rb_HC1_HFCT1->setChecked(true);
-        break;
-    case HFCT2:
-        ui->rb_HC1_HFCT2->setChecked(true);
+        ui->rb_HC1_HFCT->setChecked(true);
         break;
     case UHF1:
-        ui->rb_HC1_UHF1->setChecked(true);
-        break;
-    case UHF2:
-        ui->rb_HC1_UHF2->setChecked(true);
+        ui->rb_HC1_UHF->setChecked(true);
         break;
     case Disable:
         ui->rb_HC1_Disable->setChecked(true);
@@ -214,23 +220,14 @@ void DebugSet::reload()
     }
 
     switch (sql_para.menu_h2) {
-    case TEV1:
-        ui->rb_HC2_TEV1->setChecked(true);
-        break;
     case TEV2:
-        ui->rb_HC2_TEV2->setChecked(true);
-        break;
-    case HFCT1:
-        ui->rb_HC2_HFCT1->setChecked(true);
+        ui->rb_HC2_TEV->setChecked(true);
         break;
     case HFCT2:
-        ui->rb_HC2_HFCT2->setChecked(true);
-        break;
-    case UHF1:
-        ui->rb_HC2_UHF1->setChecked(true);
+        ui->rb_HC2_HFCT->setChecked(true);
         break;
     case UHF2:
-        ui->rb_HC2_UHF2->setChecked(true);
+        ui->rb_HC2_UHF->setChecked(true);
         break;
     case Disable:
         ui->rb_HC2_Disable->setChecked(true);
@@ -239,23 +236,29 @@ void DebugSet::reload()
         break;
     }
 
-    switch (sql_para.menu_l2) {
-    case AE_Ultrasonic:
-        ui->rb_LC2_AE->setChecked(true);
+    switch (sql_para.menu_l1) {
+    case AA1:
+        ui->rb_LC1_AA->setChecked(true);
+        break;
+    case AE1:
+        ui->rb_LC1_AE->setChecked(true);
         break;
     case Disable:
-        ui->rb_LC2_Disable->setChecked(true);
+        ui->rb_LC1_Disable->setChecked(true);
         break;
     default:
         break;
     }
 
-    switch (sql_para.menu_l1) {
-    case AA_Ultrasonic:
-        ui->rb_LC1_AA->setChecked(true);
+    switch (sql_para.menu_l2) {
+    case AA2:
+        ui->rb_LC2_AA->setChecked(true);
+        break;
+    case AE2:
+        ui->rb_LC2_AE->setChecked(true);
         break;
     case Disable:
-        ui->rb_LC1_Disable->setChecked(true);
+        ui->rb_LC2_Disable->setChecked(true);
         break;
     default:
         break;
@@ -393,6 +396,8 @@ void DebugSet::do_key_left_right(int d)
         key_val->grade.val4 =1;
     }
     else{
+        QList<int> list;
+
         switch (key_val->grade.val3) {
         case 1:         //TEV
             switch (key_val->grade.val4) {
@@ -439,53 +444,37 @@ void DebugSet::do_key_left_right(int d)
         case 3:     //AA
             switch (key_val->grade.val4) {
             case 1:
-                Common::change_index(sql_para.aaultra_sql.aa_step, 0.5 * d, 10, 0.5);
+                Common::change_index(sql_para.aa2_sql.aa_step, 0.5 * d, 10, 0.5);
                 break;
             case 2:
-                sql_para.aaultra_sql.aa_offset += d;
+                sql_para.aa2_sql.aa_offset += d;
                 break;
             default:
                 break;
             }
             break;
         case 4:     //通道
+            list.clear();
             switch (key_val->grade.val4) {
-            case 1:     //高频通道1
-                Common::change_index(sql_para.menu_h1, d, UHF2, Disable);
-                if(sql_para.menu_h1 == sql_para.menu_h2){       //如果冲突,再执行一次
-                    Common::change_index(sql_para.menu_h1, d, UHF2, Disable);
-                }
+            case 1:     //高频通道1                
+                list << Disable << TEV1 << HFCT1 << UHF1;
+                Common::change_index(sql_para.menu_h1, d, list);
                 break;
             case 2:
-                Common::change_index(sql_para.menu_h2, d, UHF2, Disable);
-                if(sql_para.menu_h2 == sql_para.menu_h1){
-                    Common::change_index(sql_para.menu_h2, d, UHF2, Disable);
-                }
+                list << Disable << TEV2 << HFCT2 << UHF2;
+                Common::change_index(sql_para.menu_h2, d, list);
                 break;
             case 3:
-                if(sql_para.menu_l1 == AA_Ultrasonic){
-                    sql_para.menu_l1 = Disable;
-                }
-                else if(sql_para.menu_l1 == Disable && ui->rb_LC1_AA->isEnabled()){       //判断AA是否可用
-                    sql_para.menu_l1 = AA_Ultrasonic;
-                }
-
+                list << Disable << AA1 << AE1;
+                Common::change_index(sql_para.menu_l1, d, list);
                 break;
             case 4:
-                if(sql_para.menu_l2 == AE_Ultrasonic){
-                    sql_para.menu_l2 = Disable;
-                }
-                else if(sql_para.menu_l2 == Disable && ui->rb_LC2_AE->isEnabled()){       //判断AE是否可用
-                    sql_para.menu_l2 = AE_Ultrasonic;
-                }
+                list << Disable << AA2 << AE2;
+                Common::change_index(sql_para.menu_l2, d, list);
                 break;
             case 5:
-                if(sql_para.menu_double == Double_Channel){
-                    sql_para.menu_double = Disable;
-                }
-                else if(sql_para.menu_double == Disable && ui->rb_Double_Enable->isEnabled()){       //判断双通道是否可用
-                    sql_para.menu_double = Double_Channel;
-                }
+                list << Disable << Double_Channel;
+                Common::change_index(sql_para.menu_double, d, list);
                 break;
             default:
                 break;

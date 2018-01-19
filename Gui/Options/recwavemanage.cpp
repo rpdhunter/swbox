@@ -384,7 +384,7 @@ void RecWaveManage::refresh()
         contextMenu->setVisible(false);
     }
     if(tableWidget->currentRow()>=0){            //根据条目改变菜单
-        if(tableWidget->currentItem()->text().contains(("AAUltrasonic"))){
+        if(tableWidget->currentItem()->text().contains(("AA"))){
             contextMenu->item(4)->setHidden(false);
             contextMenu_num = 5;
             contextMenu->resize(100 + 10, 19*contextMenu_num);
