@@ -19,6 +19,183 @@
   <property name="frameShadow">
    <enum>QFrame::Raised</enum>
   </property>
+  <widget class="QLabel" name="label_3">
+   <property name="geometry">
+    <rect>
+     <x>370</x>
+     <y>80</y>
+     <width>41</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QLabel {color:white;}</string>
+   </property>
+   <property name="text">
+    <string notr="true">dBμV</string>
+   </property>
+  </widget>
+  <widget class="QComboBox" name="comboBox">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>131</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <property name="currentText">
+    <string>检测模式 [连续]</string>
+   </property>
+   <item>
+    <property name="text">
+     <string>检测模式 [连续]</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>图形显示 [时序图]</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>增益调节 [×1]</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>音量调节 [×8]</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>黄色报警阈值[20]dB</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>红色报警阈值[20]dB</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>脉冲触发 [15]mV</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>连续录波[5s]</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>最大值重置</string>
+    </property>
+   </item>
+  </widget>
+  <widget class="QWidget" name="widget" native="true">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>35</y>
+     <width>201</width>
+     <height>140</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_val">
+   <property name="geometry">
+    <rect>
+     <x>230</x>
+     <y>40</y>
+     <width>131</width>
+     <height>71</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QLabel {font-family:WenQuanYi Micro Hei;font-size:52px;color:white}
+background:transparent;color:gray;</string>
+   </property>
+   <property name="text">
+    <string notr="true">TextLabel</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_max">
+   <property name="geometry">
+    <rect>
+     <x>240</x>
+     <y>105</y>
+     <width>151</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QLabel {color:white;}</string>
+   </property>
+   <property name="text">
+    <string notr="true"/>
+   </property>
+  </widget>
+  <widget class="QWidget" name="layoutWidget">
+   <property name="geometry">
+    <rect>
+     <x>220</x>
+     <y>140</y>
+     <width>211</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <layout class="QGridLayout" name="gridLayout">
+    <item row="1" column="0">
+     <widget class="QLabel" name="label_range_2">
+      <property name="styleSheet">
+       <string notr="true">QLabel {color:white;}</string>
+      </property>
+      <property name="text">
+       <string notr="true">100Hz</string>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="1">
+     <widget class="QProgressBar" name="progressBar_2">
+      <property name="styleSheet">
+       <string notr="true">QProgressBar{border:1px solid gray;background:transparent;}
+QProgressBar::chunk{&quot;background-color:skyblue;&quot;}</string>
+      </property>
+      <property name="value">
+       <number>24</number>
+      </property>
+      <property name="textVisible">
+       <bool>false</bool>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="1">
+     <widget class="QProgressBar" name="progressBar">
+      <property name="styleSheet">
+       <string notr="true">QProgressBar{border:1px solid gray;background:transparent;}
+QProgressBar::chunk{&quot;background-color:skyblue;&quot;}</string>
+      </property>
+      <property name="value">
+       <number>24</number>
+      </property>
+      <property name="textVisible">
+       <bool>false</bool>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="0">
+     <widget class="QLabel" name="label_range">
+      <property name="styleSheet">
+       <string notr="true">QLabel {color:white;}</string>
+      </property>
+      <property name="text">
+       <string notr="true">50Hz</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
  </widget>
  <resources/>
  <connections/>

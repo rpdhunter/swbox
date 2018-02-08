@@ -162,6 +162,7 @@ void RecWave::l_channel_rec_core()
         for (int i = 0; i < 256; i++) {
             _data.append((qint32)data->recv_para_rec.data[ i + 2 ]);
 //            _data.append((qint32)data->recv_para_rec.data[ i + 2 ] - 0x8000);
+
         }
 //        printf("receive recWaveData! send_groupNum=%d\n",data->recv_para_rec.groupNum );
 

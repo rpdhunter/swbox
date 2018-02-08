@@ -6,7 +6,7 @@
 
 #define VALUE_MAX       6000           //RPPD最大值
 #define PC_MAX          VALUE_MAX
-#define SETTING_NUM     9           //设置菜单条目数
+#define SETTING_NUM     10           //设置菜单条目数
 
 
 HFCTWidget::HFCTWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu_index, QWidget *parent) :
@@ -33,6 +33,7 @@ HFCTWidget::HFCTWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu
     max_db = 0;
     manual = false;
     isBusy = false;
+    token = 0;
 
     timer_1000ms = new QTimer(this);
     timer_1000ms->setInterval(1000);      //每隔1秒，刷新一次主界面
@@ -116,8 +117,15 @@ void HFCTWidget::reload(int index)
         else{
             data->set_send_para(sp_auto_rec, 0);
         }
+        if(mode == HFCT1){
+            data->set_send_para(sp_tev1_threshold, hfct_sql->fpga_threshold);
+        }
+        else if(mode == HFCT2){
+            data->set_send_para(sp_tev2_threshold, hfct_sql->fpga_threshold);
+        }
         //设置滤波器
-        data->set_send_para (sp_filter_mode, hfct_sql->filter);
+        //滤波模式设定，高八位控制H2,低八位控制H1,0无滤波，2为1.8M高通，1为500K高通
+        data->set_send_para (sp_filter_mode, sqlcfg->get_para()->hfct1_sql.filter + sqlcfg->get_para()->hfct2_sql.filter * 0x100);
         fresh_setting();
     }
 }
@@ -142,34 +150,34 @@ void HFCTWidget::trans_key(quint8 key_code)
         sqlcfg->sql_save(&sql_para);        //保存SQL
         reload(menu_index);                 //重置默认数据
         switch (key_val->grade.val2) {
-        case 4:
-            //设置滤波器
-            data->set_send_para (sp_filter_mode, hfct_sql->filter);
-            break;
-        case 5:
-            //设置自动录波
-            if( hfct_sql->auto_rec == true ){
-                data->set_send_para (sp_rec_on, 1);
-                data->set_send_para(sp_auto_rec, menu_index + 1);
-            }
-            else{
-                data->set_send_para (sp_rec_on, 0);
-                data->set_send_para(sp_auto_rec, 0);
-            }
-            break;
-        case 6:
+//        case 4:
+//            //设置滤波器
+//            data->set_send_para (sp_filter_mode, hfct_sql->filter);
+//            break;
+//        case 6:
+//            //设置自动录波
+//            if( hfct_sql->auto_rec == true ){
+//                data->set_send_para (sp_rec_on, 1);
+//                data->set_send_para(sp_auto_rec, menu_index + 1);
+//            }
+//            else{
+//                data->set_send_para (sp_rec_on, 0);
+//                data->set_send_para(sp_auto_rec, 0);
+//            }
+//            break;
+        case 7:
             emit startRecWave(mode_continuous,hfct_sql->time);     //开始连续录波
             emit show_indicator(true);
             isBusy = true;
             return;
-        case 7:
+        case 8:
             emit startRecWave(mode,0);     //开始录波
             manual = true;
             break;
-        case 8:
+        case 9:
             maxReset();
             break;
-        case 9:
+        case 10:
             PRPDReset();
             break;
         default:
@@ -179,7 +187,7 @@ void HFCTWidget::trans_key(quint8 key_code)
         key_val->grade.val2 = 0;
         break;
     case KEY_CANCEL:
-        reload(menu_index);
+        reload(-1);
         key_val->grade.val1 = 0;
         key_val->grade.val2 = 0;
         break;
@@ -213,7 +221,7 @@ void HFCTWidget::do_key_left_right(int d)
         hfct_sql->mode = !hfct_sql->mode;
         break;
     case 2:
-        Common::change_index(hfct_sql->mode_chart,d,TF,BASIC);
+        Common::change_index(hfct_sql->chart,d,TF,BASIC);
         break;
     case 3:
         Common::change_index(hfct_sql->gain, d * 0.1, 20, 0.1 );
@@ -221,11 +229,14 @@ void HFCTWidget::do_key_left_right(int d)
     case 4:
         Common::change_index(hfct_sql->filter, d, HP_1800K, NONE );
         break;
-    case 6:
-        Common::change_index(hfct_sql->time, d, 20, 1 );
-        break;
     case 5:
+        hfct_sql->fpga_threshold += Common::code_value(1,mode) * d;
+        break;
+    case 6:
         hfct_sql->auto_rec = !hfct_sql->auto_rec;
+        break;
+    case 7:
+        Common::change_index(hfct_sql->time, d, 20, 1 );
         break;
     default:
         break;
@@ -524,6 +535,12 @@ void HFCTWidget::fresh_1ms()
     if( group_num != short_data->time ){         //判断数据有效性
         group_num = short_data->time;
         if(short_data->empty == 0){              //0为有数据
+            if(token == 0){
+                return;
+            }
+            else{
+                token--;
+            }
             //拷贝数据
             QVector<double> list;
             for (int i = 0; i < 256; ++i) {
@@ -539,6 +556,13 @@ void HFCTWidget::fresh_1ms()
             //累计数据
             pclist_200ms.append(pclist_1ms);
         }
+    }
+}
+
+void HFCTWidget::add_token()
+{
+    if(token < TOKEN_MAX){
+        token += 1;
     }
 }
 
@@ -623,21 +647,21 @@ void HFCTWidget::fresh_setting()
         ui->comboBox->setItemText(0,tr("检测模式\t[连续]"));
     }
 
-    if (hfct_sql->mode_chart == PRPD) {
+    if (hfct_sql->chart == PRPD) {
         ui->comboBox->setItemText(1,tr("图形显示\t[PRPD]"));
         plot_PRPD->show();
         plot_BarChart->hide();
         plot_PRPS->hide();
         plot_Histogram->hide();
         plot_TF->hide();
-    } else if(hfct_sql->mode_chart == BASIC){
+    } else if(hfct_sql->chart == BASIC){
         ui->comboBox->setItemText(1,tr("图形显示 \t[时序图]"));
         plot_PRPD->hide();
         plot_BarChart->show();
         plot_PRPS->hide();
         plot_Histogram->hide();
         plot_TF->hide();
-    } else if(hfct_sql->mode_chart == Histogram){
+    } else if(hfct_sql->chart == Histogram){
         ui->comboBox->setItemText(1,tr("图形显示 \t[柱状图]"));
         plot_PRPD->hide();
         plot_BarChart->hide();
@@ -645,7 +669,7 @@ void HFCTWidget::fresh_setting()
         plot_Histogram->show();
         plot_TF->hide();
     }
-    else if(hfct_sql->mode_chart == PRPS){
+    else if(hfct_sql->chart == PRPS){
         ui->comboBox->setItemText(1,tr("图形显示 \t[PRPS]"));
         plot_PRPD->hide();
         plot_BarChart->hide();
@@ -653,7 +677,7 @@ void HFCTWidget::fresh_setting()
         plot_Histogram->hide();
         plot_TF->hide();
     }
-    else if(hfct_sql->mode_chart == TF){
+    else if(hfct_sql->chart == TF){
         ui->comboBox->setItemText(1,tr("图形显示 \t[T-F图]"));
         plot_PRPD->hide();
         plot_BarChart->hide();
@@ -674,13 +698,16 @@ void HFCTWidget::fresh_setting()
         ui->comboBox->setItemText(3,tr("滤波器   [高通1.8M]"));
     }
 
-    ui->comboBox->setItemText(5,tr("连续录波\t[%1]s").arg(QString::number(hfct_sql->time)));
+    ui->comboBox->setItemText(4,tr("脉冲触发\t[%1]mV").arg(QString::number((int)Common::physical_value(hfct_sql->fpga_threshold,mode) )));
+
     if(hfct_sql->auto_rec == true){
-        ui->comboBox->setItemText(4,tr("自动录波\t[开启]") );
+        ui->comboBox->setItemText(5,tr("自动录波\t[开启]") );
     }
     else{
-        ui->comboBox->setItemText(4,tr("自动录波\t[关闭]") );
+        ui->comboBox->setItemText(5,tr("自动录波\t[关闭]") );
     }
+
+    ui->comboBox->setItemText(6,tr("连续录波\t[%1]s").arg(QString::number(hfct_sql->time)));
 
     ui->comboBox->setCurrentIndex(key_val->grade.val2-1);
 

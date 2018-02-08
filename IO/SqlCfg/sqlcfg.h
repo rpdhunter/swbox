@@ -23,8 +23,8 @@
 
 #define SYSTEM_FREQ			50
 #define BACK_LIGTH			3
-#define SCREEN_DARK_TIME    30
-#define SCREEN_CLOSE_TIME   60
+#define SCREEN_DARK_TIME    60
+#define SCREEN_CLOSE_TIME   90
 #define SHUT_DOWN_TIME		5
 #define LANGUAGE_DEF		CN
 #define MAX_REC_NUM			200
@@ -40,11 +40,13 @@ enum TRIGGER_MODE {
 };
 
 enum DISPLAY {
-    BASIC = 0,
-    PRPD = 1,    
-    PRPS = 2,
-    Histogram = 3,
-    TF = 4,
+    BASIC = 0,      //时序图
+    PRPD = 1,       //PRPD图
+    PRPS = 2,       //PRPS图
+    Histogram = 3,  //强度图
+    TF = 4,         //时频特性图
+    FLY = 5,        //飞行图
+    Exponent = 6,   //特征指数图
 };
 
 enum FILTER {
@@ -79,21 +81,21 @@ enum WIFI_MODE {
 
 typedef struct TEV_SQL {
     bool mode;                      //检测模式
-    int mode_chart;                 //图形显示模式
+    int chart;                      //图形显示模式
     int high;                       //红色报警阈值
     int low;                        //黄色报警阈值
     double gain;                    //TEV增益
     int fpga_zero;                  //TEV零点（需要FPGA同步）
     uint fpga_threshold;            //TEV阈值（需要FPGA同步）
     bool auto_rec;                  //自动录波（需要FPGA同步）
-    int time;                       //录波时长
-    int tev_offset1;                //TEV偏置1，目前用作噪声偏置
-    int tev_offset2;                //TEV偏置2，目前未使用，备用
+    int time;                       //录波时长（目前没用）
+    int offset_noise;               //噪声偏置
+    int offset_linearity;           //线性度补偿偏置
 } TEV_SQL;
 
 typedef struct HFCT_SQL {
     bool mode;                      //检测模式
-    int mode_chart;             //图形显示模式
+    int chart;                      //图形显示模式
     int high;                       //红色报警阈值
     int low;                        //黄色报警阈值
     double gain;                    //增益
@@ -101,14 +103,14 @@ typedef struct HFCT_SQL {
     uint fpga_threshold;            //HFCT阈值（需要FPGA同步）
     bool auto_rec;                  //自动录波（需要FPGA同步）
     int time;                       //录波时长
-    int filter;                  //滤波器
+    int filter;                     //滤波器（需要FPGA同步）
 } HFCT_SQL;
 
 typedef struct LOCATION_SQL {
     bool mode;                      //检测模式
     int time;                       //触发时长
-    int channel;   //触发通道
-    int chart_mode;      //图形显示模式
+    int channel;                    //触发通道
+    int chart;                      //图形显示模式
 } LOCATION_SQL;
 
 #define TIME_MAX                60
@@ -117,28 +119,19 @@ typedef struct LOCATION_SQL {
 #define VOL_MIN                 0
 
 /* aaultrasonic mode */
-typedef struct AA_SQL {
+typedef struct L_CHANNEL_SQL {
     bool mode;                      //脉冲触发模式
+    int chart;                      //图形显示模式
     double gain;                    //AA超声增益
     int vol;                        //AA超声音量（0-15）（需要FPGA同步）
     int high;                       //红色报警阈值
     int low;                        //黄色报警阈值
     int time;                       //录波时长（1-60）
-    double aa_step;                 //显示幅值变化门槛
-    int aa_offset;                  //AA超声偏置值
-} AA_SQL;
-
-/* aeultrasonic mode */
-typedef struct AE_SQL {
-    bool mode;                      //脉冲触发模式
-    double gain;                    //AE超声增益
-    int vol;                        //AE超声音量（0-15）（需要FPGA同步）
-    int high;                       //红色报警阈值
-    int low;                        //黄色报警阈值
-    int time;                       //录波时长（1-60）
-    double aa_step;                 //显示幅值变化门槛
-    int ae_offset;                  //AE超声偏置值
-} AE_SQL;
+    double step;                    //显示幅值变化门槛
+    int offset;                     //AA超声偏置值
+    bool envelope;                  //包络线模式（需要FPGA同步）
+    uint fpga_threshold;            //脉冲阈值（需要FPGA同步）
+} L_CHANNEL_SQL;
 
 //typedef struct SYNCMODE_SQL {
 //    bool mode;                      //检测模式
@@ -153,7 +146,8 @@ typedef struct SQL_PARA {
     TEV_SQL tev1_sql, tev2_sql;     //地电波设置(通道1和2)
     HFCT_SQL hfct1_sql, hfct2_sql;  //高频CT模式
     LOCATION_SQL location_sql;      //定位模式设置
-    AA_SQL aa1_sql, aa2_sql;        //AA超声设置
+    L_CHANNEL_SQL aa1_sql, aa2_sql;        //AA超声设置
+    L_CHANNEL_SQL ae1_sql, ae2_sql;        //AE超声设置（暂时用AA的设置）
 
     bool language;                  //语言设置
     int freq_val;                   //频率（需要FPGA同步）
@@ -163,9 +157,9 @@ typedef struct SQL_PARA {
     int screen_close_time;          //屏幕自动关闭时间，单位为秒
     int close_time;                 //自动关机时间,单位为分钟
     int max_rec_num;                //录波文件保存个数
-    bool buzzer_on;           //是否保存文件到SD卡
+    bool buzzer_on;                 //蜂鸣器
     int auto_rec_interval;          //自动录波间隔
-    int menu_h1, menu_h2;           //高速通道模式（需要FPGA同步）
+    int menu_h1, menu_h2;           //高速通道模式
     int menu_double, menu_l1, menu_l2;       //其他菜单模式
     int sync_mode;                  //同步模式
     int sync_internal_val;          //内同步时间

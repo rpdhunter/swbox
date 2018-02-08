@@ -34,7 +34,9 @@ public:
     ~TEVWidget();
 
 public slots:
-
+    void reload(int index);   //重新装载设置
+    void trans_key(quint8 key_code);
+    void showWaveData(VectorList buf, MODE mod);
 
 signals:
     void fresh_parent();
@@ -45,10 +47,6 @@ signals:
     void beep(int index, int red_alert);        //蜂鸣器报警(参数：通道，严重程度(0,1,2))
 
 private slots:
-    void reload(int index);   //重新装载设置
-    void trans_key(quint8 key_code);
-    void showWaveData(VectorList buf, MODE mod);
-
     void fresh_plot(void);
 //    void fresh_PRPD();
     void fresh_Histogram();
@@ -58,6 +56,7 @@ private slots:
     void fresh_1ms();
 
     void add_token();
+    void close_rec();       //关闭录波系统
 
 
 private:
@@ -80,7 +79,7 @@ private:
     void fresh_setting();
 
     //定时器
-    QTimer *timer_1ms, *timer_200ms, *timer_1000ms, *timer_freeze;
+    QTimer *timer_1ms, *timer_200ms, *timer_1000ms, *timer_freeze, *timer_rec_close_delay;
 
     //基本数据
     int db;

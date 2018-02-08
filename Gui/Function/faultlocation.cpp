@@ -203,7 +203,7 @@ void FaultLocation::do_key_left_right(int d)
             sql_para.location_sql.mode = !sql_para.location_sql.mode;
             break;
         case 2:
-            Common::change_value(sql_para.location_sql.chart_mode, CURVE, COMPASS);
+            Common::change_value(sql_para.location_sql.chart, CURVE, COMPASS);
             break;
         case 3:
             Common::change_index(sql_para.location_sql.channel, d, Double, Left);
@@ -501,7 +501,7 @@ void FaultLocation::fresh_setting()
     else{
         ui->comboBox->setItemText(0,tr("触发模式\t[连续]"));
     }
-    if(sql_para.location_sql.chart_mode == COMPASS){
+    if(sql_para.location_sql.chart == COMPASS){
         ui->comboBox->setItemText(1,tr("显示模式\t[罗盘]"));
         ui->Compass->show();
         plot->hide();

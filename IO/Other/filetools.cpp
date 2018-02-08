@@ -34,7 +34,7 @@ void FileTools::run()
         saveDataFile();         //保存数据文件
         saveCfgFile();          //生成对应的配置文件
 
-        if(_mode == AA1 || _mode == AA2){
+        if(_mode == AA1 || _mode == AA2 || _mode == AE1 || _mode == AE2){
             saveWavFile();      //生成声音文件
             wavToMp3();         //mp3转换
         }
@@ -365,12 +365,22 @@ void FileTools::saveWavFile()
     out.writeRawData(wfh1->fact,4);
     out << (qint32)wfh1->Datasize;
 
-    //    qDebug()<<"wfh1->Datasize :"<< wfh1->Datasize;
-
+#if 1           //送包络线
+    qint16 tmp;
     for(i=0;i<_data.length();i++){
-        out << qint16(_data.at(i)*64);
+        tmp = qint16(_data.at(i)*32);
+        if(tmp < 0){
+            tmp = 0x7fff;
+        }
+        out << tmp;
     }
-    //    qDebug()<<"i="<<i;
+
+#else
+    for(i=0;i<_data.length();i++){
+        out << 64 * qint16(_data.at(i)) ;
+    }
+#endif
+
 
     file.close();
 

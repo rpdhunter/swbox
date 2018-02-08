@@ -75,6 +75,8 @@ MainWindow::MainWindow(QSplashScreen *sp, QWidget *parent ) :
             break;
         }
     }
+
+    fifodata->start();
 }
 
 MainWindow::~MainWindow()
@@ -306,14 +308,36 @@ void MainWindow::function_init(QSplashScreen *sp)
     if(ae1_widget != NULL){
         connect(this, SIGNAL(send_key(quint8)), ae1_widget, SLOT(trans_key(quint8)) );
         connect(ae1_widget,SIGNAL(fresh_parent()), this, SLOT(fresh_menu_icon()) );
+        //录波
+        connect(ae1_widget,SIGNAL(startRecWave(MODE,int)),fifodata,SIGNAL(startRecWave(MODE,int)) );
+        connect(fifodata,SIGNAL(waveData(VectorList,MODE)),ae1_widget,SLOT(showWaveData(VectorList,MODE)) );
+        //重载数据
+        connect(ui->tabWidget,SIGNAL(currentChanged(int)), ae1_widget, SLOT(reload(int)) );
+        //菊花
+        connect(ae1_widget,SIGNAL(show_indicator(bool)), this, SLOT(show_busy(bool)) );
         //蜂鸣器
         connect(ae1_widget,SIGNAL(beep(int,int)),this,SLOT(do_beep(int,int)));
+        //包络线
+//        connect(fifodata,SIGNAL(ae1_update(VectorList)), ae1_widget,SLOT(add_ae_data(VectorList)));
+        connect(fifodata,SIGNAL(ae1_update()), ae1_widget,SLOT(add_ae_data()));
+        ae1_widget->reload(3);
     }
     if(ae2_widget != NULL){
         connect(this, SIGNAL(send_key(quint8)), ae2_widget, SLOT(trans_key(quint8)) );
         connect(ae2_widget,SIGNAL(fresh_parent()), this, SLOT(fresh_menu_icon()) );
+        //录波
+        connect(ae2_widget,SIGNAL(startRecWave(MODE,int)),fifodata,SIGNAL(startRecWave(MODE,int)) );
+        connect(fifodata,SIGNAL(waveData(VectorList,MODE)),ae2_widget,SLOT(showWaveData(VectorList,MODE)) );
+        //重载数据
+        connect(ui->tabWidget,SIGNAL(currentChanged(int)), ae2_widget, SLOT(reload(int)) );
+        //菊花
+        connect(ae2_widget,SIGNAL(show_indicator(bool)), this, SLOT(show_busy(bool)) );
         //蜂鸣器
         connect(ae2_widget,SIGNAL(beep(int,int)),this,SLOT(do_beep(int,int)));
+        //包络线
+//        connect(fifodata,SIGNAL(ae2_update(VectorList)), ae2_widget,SLOT(add_ae_data(VectorList)));
+        connect(fifodata,SIGNAL(ae2_update()), ae2_widget,SLOT(add_ae_data()));
+        ae2_widget->reload(4);
     }
 }
 
@@ -944,8 +968,7 @@ void MainWindow::system_sleep()
 void MainWindow::screen_dark()
 {
     qDebug()<<"screen will darken immediately!";
-//    data->set_send_para(sp_backlight_reg,0);
-    data->set_send_para(sp_backlight_reg,8);
+    data->set_send_para(sp_backlight_reg,0);
     data->set_send_para(sp_rec_on,0);               //关闭录波
     data->set_send_para(sp_keyboard_backlight,0);   //关闭键盘背光
 }
@@ -998,9 +1021,6 @@ void MainWindow::do_sync(uint offset)
 
 void MainWindow::do_beep(int menu_index, int red_alert)
 {
-//    if(buzzer->isRunning()){
-//        qDebug()<<"buzzer->isRunning()";
-//    }
     if(sqlcfg->get_para()->buzzer_on && menu_index == ui->tabWidget->currentIndex() && !buzzer->isRunning()){
         if(red_alert == 2){
             buzzer->red();
@@ -1008,7 +1028,6 @@ void MainWindow::do_beep(int menu_index, int red_alert)
         else if(red_alert == 1){
             buzzer->yellow();
         }
-
     }
 }
 

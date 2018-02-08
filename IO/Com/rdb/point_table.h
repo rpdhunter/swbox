@@ -35,43 +35,70 @@ enum yx_e {
 enum yc_e {
 /* 起始地址0x4000 */
 
+    //读
 	TEV1_amplitude = 0,			            //0x4001	TEV1幅值	
 	TEV1_num,                               //0x4002	TEV1脉冲个数
 	TEV1_severity,                          //0x4003	TEV1严重度
-	TEV2_amplitude,                         //0x4004	TEV2幅值
-	TEV2_num,                               //0x4005	TEV2脉冲个数
-	TEV2_severity,                          //0x4006	TEV2严重度
-	AA_amplitude,                           //0x4007	AA幅值
-	AA_severity,                            //0x4008	AA严重度
-	HFCT1_amplitude,                        //0x4009	HFCT1幅值
-	HFCT1_num,                              //0x400a	HFCT1脉冲个数
-	HFCT1_severity,                         //0x400b	HFCT1严重度
-	HFCT2_amplitude,                        //0x400c	HFCT2幅值
-	HFCT2_num,                              //0x400d	HFCT2脉冲个数
-	HFCT2_severity,                         //0x400e	HFCT2严重度
-	TEV1_center_biased_adv,                 //0x4020	TEV1中心偏置建议值
-	TEV1_noise_biased_adv,                  //0x4021	TEV1噪声偏置建议值
-	TEV2_center_biased_adv,                 //0x4022	TEV2中心偏置建议值
-	TEV2_noise_biased_adv,                  //0x4023	TEV2噪声偏置建议值
-	AA_biased_adv,                          //0x4024	AA偏置建议值
-	HFCT1_center_biased_adv,                //0x4025	HFCT1中心偏置建议值
-	HFCT1_noise_biased_adv,                 //0x4026	HFCT1噪声偏置建议值
-	HFCT2_center_biased_adv,                //0x4027	HFCT2中心偏置建议值
-	HFCT2_noise_biased_adv,                 //0x4028	HFCT2噪声偏置建议值
+    TEV1_center_biased_adv,                 //0x4004	TEV1中心偏置建议值
+    TEV1_noise_biased_adv,                  //0x4005	TEV1噪声偏置建议值
+    TEV2_amplitude,                         //0x4006	TEV2幅值
+    TEV2_num,                               //0x4007	TEV2脉冲个数
+    TEV2_severity,                          //0x4008	TEV2严重度
+    TEV2_center_biased_adv,                 //0x4009	TEV2中心偏置建议值
+    TEV2_noise_biased_adv,                  //0x400a	TEV2噪声偏置建议值
+
+    HFCT1_amplitude,                        //0x400b	HFCT1幅值
+    HFCT1_num,                              //0x400c	HFCT1脉冲个数
+    HFCT1_severity,                         //0x400d	HFCT1严重度
+    HFCT1_center_biased_adv,                //0x400e	HFCT1中心偏置建议值
+    HFCT1_noise_biased_adv,                 //0x4010	HFCT1噪声偏置建议值
+    HFCT2_amplitude,                        //0x4011	HFCT2幅值
+    HFCT2_num,                              //0x4012	HFCT2脉冲个数
+    HFCT2_severity,                         //0x4013	HFCT2严重度
+    HFCT2_center_biased_adv,                //0x4014	HFCT2中心偏置建议值
+    HFCT2_noise_biased_adv,                 //0x4015	HFCT2噪声偏置建议值
+
+    AA1_amplitude,                           //0x4016	AA1幅值
+    AA1_severity,                            //0x4017	AA1严重度
+    AA1_biased_adv,                          //0x4018	AA1偏置建议值
+    AA2_amplitude,                           //0x4019	AA2幅值
+    AA2_severity,                            //0x401a	AA2严重度
+    AA2_biased_adv,                          //0x401b	AA2偏置建议值
+
+    AE1_amplitude,                           //0x401c	AE1幅值
+    AE1_severity,                            //0x401d	AE1严重度
+    AE1_biased_adv,                          //0x401e	AE1偏置建议值
+    AE2_amplitude,                           //0x401f	AE2幅值
+    AE2_severity,                            //0x4020	AE2严重度
+    AE2_biased_adv,                          //0x4021	AE2偏置建议值
+
+
+    //写
 	TEV1_gain=47,                           //0x4030	TEV1增益
 	TEV1_center_biased,                     //0x4031	TEV1中心偏置
 	TEV1_noise_biased,                      //0x4032	TEV1噪声偏置
 	TEV2_gain,                              //0x4033	TEV2增益
 	TEV2_center_biased,                     //0x4034	TEV2中心偏置
 	TEV2_noise_biased,                      //0x4035	TEV2噪声偏置
-	AA_gain,                                //0x4036	AA增益
-	AA_biased,                              //0x4037	AA偏置
+
 	HFCT1_gain,                             //0x4038	HFCT1增益
 	HFCT1_center_biased,                    //0x4039	HFCT 1中心偏置
 	HFCT1_noise_biased,                     //0x403a	HFCT 1噪声偏置
 	HFCT2_gain,                             //0x403b	HFCT 2增益
 	HFCT2_center_biased,                    //0x403c	HFCT 2中心偏置
 	HFCT2_noise_biased,                     //0x403d	HFCT 2噪声偏置
+
+    AA1_gain,                               //0x4036	AA1增益
+    AA1_biased,                             //0x4037	AA1偏置
+    AA2_gain,                               //0x4036	AA2增益
+    AA2_biased,                             //0x4037	AA2偏置
+
+    AE1_gain,                               //0x4036	AE1增益
+    AE1_biased,                             //0x4037	AE1偏置
+    AE2_gain,                               //0x4036	AE2增益
+    AE2_biased,                             //0x4037	AE2偏置
+
+
 	version=95,                             //0x4060	版本
 
 

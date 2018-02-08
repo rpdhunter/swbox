@@ -100,6 +100,8 @@ void RecControl::recv_rec_data()
         this->_mode = Double_Channel;
     }
 
+//    qDebug()<<"data->recv_para_rec.recComplete = "<<data->recv_para_rec.recComplete;
+
     if (x > 255 || x <= 0) {
         mode = Disable;
     }

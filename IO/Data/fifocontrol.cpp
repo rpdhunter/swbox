@@ -52,11 +52,14 @@ QString FifoControl::send_para_to_string(int val)
     case sp_sleeping:
         tmp = "sleeping";
         break;
-//    case sp_working_mode:
-//        tmp = "working_mode";
-//        break;
     case sp_filter_mode:
         tmp = "filter_mode";
+        break;
+    case sp_l1_channnel_mode:
+        tmp = "l1_channnel_mode";
+        break;
+    case sp_l2_channnel_mode:
+        tmp = "l2_channnel_mode";
         break;
     case sp_tev1_zero:
         tmp = "tev1_zero";
@@ -82,11 +85,14 @@ QString FifoControl::send_para_to_string(int val)
     case sp_hfct2_threshold:
         tmp = "hfct2_threshold";
         break;
-    case sp_aa_vol:
-        tmp = "aa_vol";
+    case sp_vol_l1:
+        tmp = "vol_l1";
         break;
     case sp_aa_record_play:
         tmp = "aa_record_play";
+        break;
+    case sp_vol_l2:
+        tmp = "vol_l2";
         break;
     case sp_rec_start_h1:
         tmp = "sp_rec_start_h1";
@@ -127,6 +133,12 @@ QString FifoControl::send_para_to_string(int val)
     case sp_read_fpga_hfct2:
         tmp = "read_fpga_hfct2";
         break;
+    case sp_read_fpga_ae1:
+        tmp = "read_fpga_ae1";
+        break;
+    case sp_read_fpga_ae2:
+        tmp = "read_fpga_ae2";
+        break;
     default:
         break;
     }
@@ -141,26 +153,34 @@ int FifoControl::read_normal_data()
 
 int FifoControl::read_prpd1_data()
 {
-//    read_fpga(sp_read_fpga_prpd1);
-    return recv_data (vbase_prpd1, (unsigned int *)&(tdata->recv_para_prpd1));
+//    return recv_data (vbase_prpd1, (unsigned int *)&(tdata->recv_para_prpd1));
 }
 
 int FifoControl::read_prpd2_data()
 {
-//    read_fpga(sp_read_fpga_prpd2);
-    return recv_data (vbase_prpd2, (unsigned int *)&(tdata->recv_para_prpd2));
+//    return recv_data (vbase_prpd2, (unsigned int *)&(tdata->recv_para_prpd2));
 }
 
-int FifoControl::read_hfct1_data()
+int FifoControl::read_short1_data()
 {
 //    read_fpga(sp_read_fpga_hfct1);
     return recv_data (vbase_hfct1, (unsigned int *)&(tdata->recv_para_short1));
 }
 
-int FifoControl::read_hfct2_data()
+int FifoControl::read_short2_data()
 {
 //    read_fpga(sp_read_fpga_hfct2);
     return recv_data (vbase_hfct2, (unsigned int *)&(tdata->recv_para_short2));
+}
+
+int FifoControl::read_ae1_data()
+{
+    return recv_data (vbase_ae1, (unsigned int *)&(tdata->recv_para_ae1));
+}
+
+int FifoControl::read_ae2_data()
+{
+    return recv_data (vbase_ae2, (unsigned int *)&(tdata->recv_para_ae2));
 }
 
 int FifoControl::read_rec_data()
@@ -202,10 +222,16 @@ void FifoControl::base_init()
         if ((vbase_hfct2 = init_vbase (fd, AXI_STREAM_BASE6, AXI_STREAM_SIZE)) == NULL) {
             break;
         }
-        if ((vbase_prpd1 = init_vbase (fd, AXI_STREAM_BASE7, AXI_STREAM_SIZE)) == NULL) {
+//        if ((vbase_prpd1 = init_vbase (fd, AXI_STREAM_BASE7, AXI_STREAM_SIZE)) == NULL) {
+//            break;
+//        }
+//        if ((vbase_prpd2 = init_vbase (fd, AXI_STREAM_BASE8, AXI_STREAM_SIZE)) == NULL) {
+//            break;
+//        }
+        if ((vbase_ae1 = init_vbase (fd, AXI_STREAM_BASE10, AXI_STREAM_SIZE)) == NULL) {
             break;
         }
-        if ((vbase_prpd2 = init_vbase (fd, AXI_STREAM_BASE8, AXI_STREAM_SIZE)) == NULL) {
+        if ((vbase_ae2 = init_vbase (fd, AXI_STREAM_BASE11, AXI_STREAM_SIZE)) == NULL) {
             break;
         }
         if ((vbase_rec = init_vbase (fd, AXI_STREAM_BASE9, AXI_STREAM_SIZE)) == NULL) {
@@ -258,35 +284,18 @@ void FifoControl::regs_init()
     tdata->set_send_para (sp_backlight_reg, sqlcfg->get_para()->backlight);
     tdata->set_send_para (sp_keyboard_backlight, sqlcfg->get_para()->key_backlight);
 
-//    tdata->set_send_para (sp_working_mode, sqlcfg->get_working_mode((MODE)sqlcfg->get_para()->menu_h1, (MODE)sqlcfg->get_para()->menu_h2) );
-    tdata->set_send_para (sp_filter_mode, 0);//to be
+//    tdata->set_send_para (sp_filter_mode, 0);//to be
     tdata->set_send_para (sp_buzzer_freq, 100000000/800/2/16);
+//    tdata->set_send_para (sp_aa_record_play, 2);        //耳机送2通道
 
-    Common::write_fpga_offset(tdata);
+    Common::write_fpga_offset_debug(tdata);
 
-//    tdata->set_send_para (sp_tev1_zero, 0x8000 - sqlcfg->get_para()->tev1_sql.fpga_zero);
-//    tdata->set_send_para (sp_tev1_threshold, sqlcfg->get_para()->tev1_sql.fpga_threshold);
-//    tdata->set_send_para (sp_tev2_zero, 0x8000 - sqlcfg->get_para()->tev2_sql.fpga_zero);
-//    tdata->set_send_para (sp_tev2_threshold, sqlcfg->get_para()->tev2_sql.fpga_threshold);
-//    tdata->set_send_para (sp_hfct1_zero, 0x8000 - sqlcfg->get_para()->hfct1_sql.fpga_zero);
-//    tdata->set_send_para (sp_hfct1_threshold, sqlcfg->get_para()->hfct1_sql.fpga_threshold);
-//    tdata->set_send_para (sp_hfct2_zero, 0x8000 - sqlcfg->get_para()->hfct2_sql.fpga_zero);
-//    tdata->set_send_para (sp_hfct2_threshold, sqlcfg->get_para()->hfct2_sql.fpga_threshold);
-
-//    tdata->set_send_para (sp_buzzer,1);
-    tdata->set_send_para (sp_buzzer_freq, 100000000/200/2/16);
-
-    tdata->set_send_para (sp_aa_vol, sqlcfg->get_para ()->aa2_sql.vol);
-    tdata->set_send_para (sp_aa_record_play, 0);
-
-
-    tdata->set_send_para (sp_auto_rec, 0);//to be
-    tdata->set_send_para (sp_rec_on, 0);
+    tdata->set_send_para (sp_auto_rec, 0);
+    tdata->set_send_para (sp_rec_on, 1);
+    tdata->set_send_para (sp_sleeping,1);
 
     tdata->set_send_para (sp_rec_start_h1, 3);        //初始化使用
     tdata->set_send_para (sp_rec_start_h2, 3);
-//    tdata->set_send_para (sp_rec_start_hfct1, 3);
-//    tdata->set_send_para (sp_rec_start_hfct2, 3);
 
 //    tdata->set_send_para (sp_fpga_sleep, 0);//xwt
 
@@ -327,9 +336,9 @@ void FifoControl::check_send_param(RPARA pp[], int index, unsigned int data_mask
         temp = (data_mask << 16) | pp[index].rval;
         send_data (vbase_send, &temp, 1);
         if(index != sp_read_fpga_normal && index != sp_read_fpga_rec && index != sp_group_num
-//                && index != sp_rec_start_h1 && index != sp_rec_start_h2
-                && index != sp_read_fpga_prpd1 && index != sp_read_fpga_hfct1
-                && index != sp_read_fpga_prpd2 && index != sp_read_fpga_hfct2
+                && index != sp_rec_start_h1 && index != sp_rec_start_h2
+                && index != sp_read_fpga_prpd1 && index != sp_read_fpga_hfct1 && index != sp_read_fpga_ae1
+                && index != sp_read_fpga_prpd2 && index != sp_read_fpga_hfct2 && index != sp_read_fpga_ae2
                 ){
 //            qDebug("WRITE_REG = 0x%08x", temp);
             qDebug().noquote() << QString("%1 = 0x%2").arg(send_para_to_string(index)).arg(temp,8,16, QLatin1Char('0'));
@@ -365,7 +374,7 @@ unsigned int FifoControl::recv_data(volatile unsigned int *vbase, unsigned int *
     len = read_axi_reg (vbase + RLR);
     len >>= 2;
 
-    //    qDebug()<<"len = "<<len;
+//        qDebug()<<"len = "<<len;
 
     if (len > 0) {
         for (i = 0; i < len; i++) {
@@ -413,8 +422,8 @@ void FifoControl::play_voice_data()
             }
             while (len == 0);
 
-            //t = wave.length () / 320000;
-            emit playVoiceProgress (j * 100 * 16 * 256 / 320000 , wave.length() * 100 / 320000, true);        //播放进度
+            //t = wave.length () / 400000;
+            emit playVoiceProgress (j * 100 * 16 * 256 / 400000 , wave.length() * 100 / 400000, true);        //播放进度
 
             if (!play_voice_flag) {     //接到终止信号
                 break;
@@ -433,7 +442,7 @@ void FifoControl::play_voice_data()
         temp = (AA_RECORD_PLAY << 16) | 0;
         send_data (vbase_send, &temp, 1);
 
-        emit playVoiceProgress (wave.length () * 100 / 320000, wave.length () * 100 / 320000 , false);        //播放进度
+        emit playVoiceProgress (wave.length () * 100 / 400000, wave.length () * 100 / 400000 , false);        //播放进度
 
         this->play_voice_flag = false;
     }

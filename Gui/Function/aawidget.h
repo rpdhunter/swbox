@@ -16,7 +16,6 @@ class AAWidget;
 }
 
 class QTimer;
-class BarChart;
 
 class AAWidget : public QFrame
 {
@@ -40,13 +39,13 @@ signals:
 
 private slots:
     void fresh(bool f); //刷新数据核
-    void fresh_1();
-    void fresh_2();
+    void fresh_slow();
+    void fresh_fast();
 
 private:
     void fresh_setting();
     void maxReset();
-    void calc_aa_value (double * aa_val, double * aa_db, int * offset);
+//    void calc_aa_value (double * aa_val, double * aa_db, int * offset);
     void do_key_up_down(int d);
     void do_key_left_right(int d);
 
@@ -59,10 +58,10 @@ private:
     G_PARA *data;
     int menu_index;
     SQL_PARA sql_para;
-    AA_SQL *aaultra_sql;
+    L_CHANNEL_SQL *aaultra_sql;
     MODE mode;
 
-    QTimer *timer1 , *timer2;    
+    QTimer *timer_100ms , *timer_1000ms;
     BarChart *chart;
     RecWaveForm *recWaveForm;
     LogTools *logtools;

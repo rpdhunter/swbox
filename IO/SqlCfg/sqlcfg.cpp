@@ -91,9 +91,10 @@ SQL_PARA *SqlCfg::get_para(void)
 
 SQL_PARA *SqlCfg::default_config(void)
 {
+    qDebug()<<"111111111";
     /* TEV mode */
     sql_para.tev1_sql.mode = continuous;					//default series
-    sql_para.tev1_sql.mode_chart = BASIC;
+    sql_para.tev1_sql.chart = BASIC;
     sql_para.tev1_sql.high = TEV_HIGH;						//default high
     sql_para.tev1_sql.low = TEV_LOW;						//default low
     sql_para.tev1_sql.gain = 1.0;							//TEV增益
@@ -101,11 +102,11 @@ SQL_PARA *SqlCfg::default_config(void)
     sql_para.tev1_sql.fpga_threshold = FPGA_THRESHOLD;
     sql_para.tev1_sql.auto_rec = false;						//自动录波默认关闭
     sql_para.tev1_sql.time = 5;
-    sql_para.tev1_sql.tev_offset1 = 0;						//TEV偏置1
-    sql_para.tev1_sql.tev_offset2 = 0;						//TEV偏置2
+    sql_para.tev1_sql.offset_noise = 0;						//TEV偏置1
+    sql_para.tev1_sql.offset_linearity = 0;						//TEV偏置2
 
     sql_para.tev2_sql.mode = continuous;					//default series
-    sql_para.tev2_sql.mode_chart = BASIC;
+    sql_para.tev2_sql.chart = BASIC;
     sql_para.tev2_sql.high = TEV_HIGH;						//default high
     sql_para.tev2_sql.low = TEV_LOW;						//default low
     sql_para.tev2_sql.gain = 1.0;							//TEV增益
@@ -113,12 +114,12 @@ SQL_PARA *SqlCfg::default_config(void)
     sql_para.tev2_sql.fpga_threshold = FPGA_THRESHOLD;
     sql_para.tev2_sql.auto_rec = false;						//自动录波默认关闭
     sql_para.tev2_sql.time = 5;
-    sql_para.tev2_sql.tev_offset1 = 0;						//TEV偏置1
-    sql_para.tev2_sql.tev_offset2 = 0;						//TEV偏置2
+    sql_para.tev2_sql.offset_noise = 0;						//TEV偏置1
+    sql_para.tev2_sql.offset_linearity = 0;						//TEV偏置2
 
     /* HFCT mode */
     sql_para.hfct1_sql.mode = continuous;
-    sql_para.hfct1_sql.mode_chart = BASIC;
+    sql_para.hfct1_sql.chart = BASIC;
     sql_para.hfct1_sql.high = HFCT_HIGH;					//default high
     sql_para.hfct1_sql.low = HFCT_LOW;						//default low
     sql_para.hfct1_sql.gain = 1.0;
@@ -129,7 +130,7 @@ SQL_PARA *SqlCfg::default_config(void)
     sql_para.hfct1_sql.filter = NONE;
 
     sql_para.hfct2_sql.mode = continuous;
-    sql_para.hfct2_sql.mode_chart = BASIC;
+    sql_para.hfct2_sql.chart = BASIC;
     sql_para.hfct2_sql.high = HFCT_HIGH;					//default high
     sql_para.hfct2_sql.low = HFCT_LOW;						//default low
     sql_para.hfct2_sql.gain = 1.0;
@@ -143,29 +144,57 @@ SQL_PARA *SqlCfg::default_config(void)
     sql_para.location_sql.mode = continuous;
     sql_para.location_sql.time = 2;
     sql_para.location_sql.channel = Double;
-    sql_para.location_sql.chart_mode = CURVE;
+    sql_para.location_sql.chart = CURVE;
 
 
     /* aaultrasonic mode */
     sql_para.aa1_sql.mode = continuous;
+    sql_para.aa1_sql.chart = BASIC;
     sql_para.aa1_sql.vol = AA_VOL_DEFAULT;
     sql_para.aa1_sql.gain = 1.0;
     sql_para.aa1_sql.high = AA_HIGH;					//default high
     sql_para.aa1_sql.low = AA_LOW;						//default low
     sql_para.aa1_sql.time = TIME_MIN;					//default time length
-    sql_para.aa1_sql.aa_step = 2;
-    sql_para.aa1_sql.aa_offset = 0;
+    sql_para.aa1_sql.step = 2;
+    sql_para.aa1_sql.offset = 0;
+    sql_para.aa1_sql.envelope = 1;                      //默认使用包络线
+    sql_para.aa1_sql.fpga_threshold = FPGA_THRESHOLD;
 
     sql_para.aa2_sql.mode = continuous;
+    sql_para.aa2_sql.chart = BASIC;
     sql_para.aa2_sql.vol = AA_VOL_DEFAULT;
     sql_para.aa2_sql.gain = 1.0;
     sql_para.aa2_sql.high = AA_HIGH;					//default high
     sql_para.aa2_sql.low = AA_LOW;						//default low
     sql_para.aa2_sql.time = TIME_MIN;					//default time length
-    sql_para.aa2_sql.aa_step = 2;
-    sql_para.aa2_sql.aa_offset = 0;
+    sql_para.aa2_sql.step = 2;
+    sql_para.aa2_sql.offset = 0;
+    sql_para.aa2_sql.envelope = 1;                      //默认使用包络线
+    sql_para.aa2_sql.fpga_threshold = FPGA_THRESHOLD;
 
+    sql_para.ae1_sql.mode = continuous;
+    sql_para.ae1_sql.chart = BASIC;
+    sql_para.ae1_sql.vol = AA_VOL_DEFAULT;
+    sql_para.ae1_sql.gain = 1.0;
+    sql_para.ae1_sql.high = AA_HIGH;					//default high
+    sql_para.ae1_sql.low = AA_LOW;						//default low
+    sql_para.ae1_sql.time = TIME_MIN;					//default time length
+    sql_para.ae1_sql.step = 2;
+    sql_para.ae1_sql.offset = 0;
+    sql_para.ae1_sql.envelope = 1;                      //默认使用包络线
+    sql_para.ae1_sql.fpga_threshold = FPGA_THRESHOLD;
 
+    sql_para.ae2_sql.mode = continuous;
+    sql_para.ae2_sql.chart = BASIC;
+    sql_para.ae2_sql.vol = AA_VOL_DEFAULT;
+    sql_para.ae2_sql.gain = 1.0;
+    sql_para.ae2_sql.high = AA_HIGH;					//default high
+    sql_para.ae2_sql.low = AA_LOW;						//default low
+    sql_para.ae2_sql.time = TIME_MIN;					//default time length
+    sql_para.ae2_sql.step = 2;
+    sql_para.ae2_sql.offset = 0;
+    sql_para.ae2_sql.envelope = 1;                      //默认使用包络线
+    sql_para.ae2_sql.fpga_threshold = FPGA_THRESHOLD;
 
     /* setting para */
     sql_para.freq_val = SYSTEM_FREQ;						//default 50Hz
@@ -192,6 +221,7 @@ SQL_PARA *SqlCfg::default_config(void)
     sql_para.menu_double = Double_Channel;
     sql_para.menu_l1 = AA1;
     sql_para.menu_l2 = AE2;
+//    sql_para.menu_l2 = AA2;
 
     sql_para.sync_mode = SYNC_NONE;
     sql_para.sync_internal_val = 0;

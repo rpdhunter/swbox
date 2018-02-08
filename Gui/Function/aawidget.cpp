@@ -33,14 +33,13 @@ AAWidget::AAWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu_ind
     chart = new BarChart(ui->qwtPlot, &db, &aaultra_sql->high, &aaultra_sql->low);
     chart->resize(200, 140);
 
-    timer1 = new QTimer(this);
-    timer1->setInterval(100);
-    connect(timer1, SIGNAL(timeout()), this, SLOT(fresh_2()));   //每0.1秒刷新一次数据状态，明显的变化需要快速显示
+    timer_100ms = new QTimer(this);
+    timer_100ms->setInterval(100);
+    connect(timer_100ms, SIGNAL(timeout()), this, SLOT(fresh_fast()));   //每0.1秒刷新一次数据状态，明显的变化需要快速显示
 
-    timer2 = new QTimer(this);
-    timer2->setInterval(1000);
-    connect(timer2, SIGNAL(timeout()), this, SLOT(fresh_1()));   //每1秒刷新一次数据状态
-    connect(timer2, &QTimer::timeout, chart, &BarChart::fresh);
+    timer_1000ms = new QTimer(this);
+    timer_1000ms->setInterval(1000);
+    connect(timer_1000ms, SIGNAL(timeout()), this, SLOT(fresh_slow()));   //每1秒刷新一次数据状态
 
     recWaveForm = new RecWaveForm(menu_index,this);
     connect(this, SIGNAL(send_key(quint8)), recWaveForm, SLOT(trans_key(quint8)));
@@ -48,8 +47,6 @@ AAWidget::AAWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu_ind
 
     logtools = new LogTools(mode);      //日志保存模块
     connect(this,SIGNAL(aa_log_data(double,int,double)),logtools,SLOT(dealLog(double,int,double)));
-
-
 
     reload(menu_index);
 }
@@ -66,21 +63,28 @@ void AAWidget::reload(int index)
     if(mode == AA1){
         aaultra_sql = &sql_para.aa1_sql;
     }
-    else{
+    else if(mode == AA2){
         aaultra_sql = &sql_para.aa2_sql;
     }
 
     //构造函数中计时器不启动
     if(index == menu_index){
-        if(!timer1->isActive()){
-            timer1->start();
+        if(!timer_100ms->isActive()){
+            timer_100ms->start();
         }
-        if(!timer2->isActive()){
-            timer2->start();
+        if(!timer_1000ms->isActive()){
+            timer_1000ms->start();
         }
-        data->set_send_para (sp_aa_vol, aaultra_sql->vol);  //重置声音
+
+        if(mode == AA1){
+            data->set_send_para (sp_vol_l1, aaultra_sql->vol);
+            data->set_send_para (sp_aa_record_play, 0);        //耳机送1通道
+        }
+        else if(mode == AA2){
+            data->set_send_para (sp_vol_l2, aaultra_sql->vol);
+            data->set_send_para (sp_aa_record_play, 2);        //耳机送2通道
+        }
         data->set_send_para(sp_auto_rec, 0);        //关闭自动录波
-//        qDebug()<<"vol changed!";
         fresh_setting();
     }
 }
@@ -121,7 +125,7 @@ void AAWidget::trans_key(quint8 key_code)
         key_val->grade.val2 = 0;
         break;
     case KEY_CANCEL:
-        reload(menu_index);        //重置默认数据
+        reload(-1);        //重置默认数据
         key_val->grade.val1 = 0;
         key_val->grade.val2 = 0;
         break;
@@ -190,34 +194,30 @@ void AAWidget::showWaveData(VectorList buf, MODE mod)
     }
 }
 
-void AAWidget::calc_aa_value (double * aa_val, double * aa_db, int * offset)
-{
-    int d;
-    if(mode == AA1){
-        d = (int)data->recv_para_normal.ldata0_max - (int)data->recv_para_normal.ldata0_min ;      //最大值-最小值=幅值
-//        qDebug()<<  "AA1"<<(int)data->recv_para_normal.ldata0_max << '\t'<<(int)data->recv_para_normal.ldata0_min<< '\t'<<d;
-    }
-    else{
-        d = (int)data->recv_para_normal.ldata1_max - (int)data->recv_para_normal.ldata1_min ;      //最大值-最小值=幅值
-//        qDebug()<< "AA2"<<(int)data->recv_para_normal.ldata1_max << '\t'<<(int)data->recv_para_normal.ldata1_min<< '\t'<<d;
-    }
+//void AAWidget::calc_aa_value (double * aa_val, double * aa_db, int * offset)
+//{
+//    int d;
+//    if(mode == AA1){
+//        d = (int)data->recv_para_normal.ldata0_max - (int)data->recv_para_normal.ldata0_min ;      //最大值-最小值=幅值
+////        qDebug()<<  "AA1"<<(int)data->recv_para_normal.ldata0_max << '\t'<<(int)data->recv_para_normal.ldata0_min<< '\t'<<d;
+//    }
+//    else  if(mode == AA2){
+//        d = (int)data->recv_para_normal.ldata1_max - (int)data->recv_para_normal.ldata1_min ;      //最大值-最小值=幅值
+////        qDebug()<< "AA2"<<(int)data->recv_para_normal.ldata1_max << '\t'<<(int)data->recv_para_normal.ldata1_min<< '\t'<<d;
+//    }
 
-    * offset = ( d - 1 / aaultra_sql->gain / AA_FACTOR ) / 100;
-    * aa_val = (d - aaultra_sql->aa_offset * 100) * aaultra_sql->gain * AA_FACTOR;
-    * aa_db = 20 * log10 (* aa_val);
-}
+//    * offset = ( d - 1 / aaultra_sql->gain / AA_FACTOR ) / 100;
+//    * aa_val = (d - aaultra_sql->offset * 100) * aaultra_sql->gain * AA_FACTOR;
+//    * aa_db = 20 * log10 (* aa_val);
+//}
 
 void AAWidget::fresh(bool f)
 {
     int offset;
     double val,val_db;
 
-//    if (aaultra_sql->mode == single) {
-//        timer1->stop();
-//        timer2->stop();
-//    }
-
-	calc_aa_value (&val, &val_db, &offset);
+//	calc_aa_value (&val, &val_db, &offset);
+    Common::calc_aa_value(data,mode,aaultra_sql,&val, &val_db, &offset);
 
 
     if(db < int(val_db)){
@@ -246,19 +246,34 @@ void AAWidget::fresh(bool f)
         emit aa_log_data(val_db,0,0);
 
         yc_data_type temp_data;
-        temp_data.f_val = val_db;
-        yc_set_value(AA_amplitude, &temp_data, 0, NULL,0);
-        temp_data.f_val = 0;
-        yc_set_value(AA_severity, &temp_data, 0, NULL,0);
-        temp_data.f_val = aaultra_sql->gain;
-        yc_set_value(AA_gain, &temp_data, 0, NULL,0);
-        temp_data.f_val = aaultra_sql->aa_offset;
-        yc_set_value(AA_biased, &temp_data, 0, NULL,0);
-        temp_data.f_val = offset;
-        yc_set_value(AA_biased_adv, &temp_data, 0, NULL,0);
+        if(mode == AA1){
+            temp_data.f_val = val_db;
+            yc_set_value(AA1_amplitude, &temp_data, 0, NULL,0);
+            temp_data.f_val = 0;
+            yc_set_value(AA1_severity, &temp_data, 0, NULL,0);
+            temp_data.f_val = aaultra_sql->gain;
+            yc_set_value(AA1_gain, &temp_data, 0, NULL,0);
+            temp_data.f_val = aaultra_sql->offset;
+            yc_set_value(AA1_biased, &temp_data, 0, NULL,0);
+            temp_data.f_val = offset;
+            yc_set_value(AA1_biased_adv, &temp_data, 0, NULL,0);
+        }
+        else if(mode == AA2){
+            temp_data.f_val = val_db;
+            yc_set_value(AA2_amplitude, &temp_data, 0, NULL,0);
+            temp_data.f_val = 0;
+            yc_set_value(AA2_severity, &temp_data, 0, NULL,0);
+            temp_data.f_val = aaultra_sql->gain;
+            yc_set_value(AA2_gain, &temp_data, 0, NULL,0);
+            temp_data.f_val = aaultra_sql->offset;
+            yc_set_value(AA2_biased, &temp_data, 0, NULL,0);
+            temp_data.f_val = offset;
+            yc_set_value(AA2_biased_adv, &temp_data, 0, NULL,0);
+        }
+
     }
     else{   //条件显示
-        if(qAbs(val_db-temp_db ) >= aaultra_sql->aa_step){
+        if(qAbs(val_db-temp_db ) >= aaultra_sql->step){
             ui->label_val->setText(QString::number(val_db, 'f', 1));
             if ( val_db > aaultra_sql->high) {
                 ui->label_val->setStyleSheet("QLabel {font-family:WenQuanYi Micro Hei;font-size:60px;color:red}");
@@ -269,7 +284,7 @@ void AAWidget::fresh(bool f)
             }
             yc_data_type temp_data;
             temp_data.f_val = val_db;
-            yc_set_value(AA_amplitude, &temp_data, 0, NULL,0);
+            yc_set_value(AA1_amplitude, &temp_data, 0, NULL,0);
         }
     }
 
@@ -295,13 +310,14 @@ void AAWidget::fresh(bool f)
 //    ui->label_range->setText(QString("%1").arg(data->recv_para.ldata1_max * 4 * aaultra_sql->gain * AA_FACTOR));
 }
 
-void AAWidget::fresh_1()
+void AAWidget::fresh_slow()
 {
     fresh(true);
+    chart->fresh();
     ui->qwtPlot->replot();
 }
 
-void AAWidget::fresh_2()
+void AAWidget::fresh_fast()
 {
     fresh(false);
 }
@@ -310,19 +326,18 @@ void AAWidget::maxReset()
 {
     max_db = 0;
     ui->label_max->setText(tr("最大值: ") + QString::number(max_db));
-    qDebug()<<"AAUltrasonic max reset!";
 }
 
 void AAWidget::fresh_setting()
 {
     if (aaultra_sql->mode == single) {
         ui->comboBox->setItemText(0,tr("检测模式\t[单次]"));
-        timer1->setSingleShot(true);
-        timer2->setSingleShot(true);
+        timer_100ms->setSingleShot(true);
+        timer_1000ms->setSingleShot(true);
     } else {
         ui->comboBox->setItemText(0,tr("检测模式\t[连续]"));
-        timer1->setSingleShot(false);
-        timer2->setSingleShot(false);
+        timer_100ms->setSingleShot(false);
+        timer_1000ms->setSingleShot(false);
     }
 
     ui->comboBox->setItemText(1,tr("增益调节\t[×%1]").arg(QString::number(aaultra_sql->gain, 'f', 1)) );

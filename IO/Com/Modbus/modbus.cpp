@@ -476,7 +476,7 @@ int Modbus::set_reg_value(unsigned short reg, unsigned short val)
         qDebug()<<"tev_gain changed! val = "<<val / 10.0;
         break;
     case md_rw_reg_tev_noise_bias:
-        sql_para->tev1_sql.tev_offset1 = val;
+        sql_para->tev1_sql.offset_noise = val;
         qDebug()<<"tev1_noise changed! val = "<<val;
         break;
     case md_rw_reg_tev_zero_bias:
@@ -489,7 +489,7 @@ int Modbus::set_reg_value(unsigned short reg, unsigned short val)
         qDebug()<<"aa_gain changed! val = "<<val / 10.0;
         break;
     case md_rw_reg_aa_bias:
-        sql_para->aa2_sql.aa_offset = val;
+        sql_para->aa2_sql.offset = val;
         qDebug()<<"aa_offset changed! val = "<<val;
         break;
     case md_wr_reg_start:
@@ -525,7 +525,7 @@ void Modbus::transData()
     yc_get_value(0,TEV1_num,1, &temp_data, b, a);
     data_stand[md_rd_reg_tev_cnt] = temp_data.f_val;
 
-    yc_get_value(0,AA_amplitude,1, &temp_data, b, a);
+    yc_get_value(0,AA1_amplitude,1, &temp_data, b, a);
     data_stand[md_rd_reg_aa_mag] = temp_data.f_val;
 
     yc_get_value(0,TEV1_center_biased_adv,1, &temp_data, b, a);
@@ -534,7 +534,7 @@ void Modbus::transData()
     yc_get_value(0,TEV1_noise_biased_adv,1, &temp_data, b, a);
     data_stand[md_rd_reg_tev_noise_sug] = temp_data.f_val;
 
-    yc_get_value(0,AA_biased_adv,1, &temp_data, b, a);
+    yc_get_value(0,AA1_biased_adv,1, &temp_data, b, a);
     data_stand[md_rd_reg_aa_bias_sug] = temp_data.f_val;
 
     //逻辑判断
@@ -563,11 +563,11 @@ void Modbus::transData()
 
     //从SQL中读取
     data_stand[md_rw_reg_tev_gain] = sql_para->tev1_sql.gain;
-    data_stand[md_rw_reg_tev_noise_bias] = sql_para->tev1_sql.tev_offset1;
-    data_stand[md_rw_reg_tev_zero_bias] = sql_para->tev1_sql.tev_offset2;
+    data_stand[md_rw_reg_tev_noise_bias] = sql_para->tev1_sql.offset_noise;
+    data_stand[md_rw_reg_tev_zero_bias] = sql_para->tev1_sql.offset_linearity;
 
     data_stand[md_rw_reg_aa_gain] = sql_para->aa2_sql.gain;
-    data_stand[md_rw_reg_aa_bias] = sql_para->aa2_sql.aa_offset;
+    data_stand[md_rw_reg_aa_bias] = sql_para->aa2_sql.offset;
 
 }
 

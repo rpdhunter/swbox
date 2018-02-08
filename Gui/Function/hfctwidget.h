@@ -52,6 +52,7 @@ private slots:
     void fresh_1000ms();
     void fresh_200ms();
     void fresh_1ms();
+    void add_token();
 
 private:
     struct PC_DATA {
@@ -71,6 +72,8 @@ private:
     MODE mode;
     int menu_index;
     LogTools *logtools;
+    uint token;
+
     void do_key_up_down(int d);
     void do_key_left_right(int d);
     void chart_ini();

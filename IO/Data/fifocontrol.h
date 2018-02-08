@@ -21,8 +21,10 @@ public:
     int read_normal_data();
     int read_prpd1_data();
     int read_prpd2_data();
-    int read_hfct1_data();
-    int read_hfct2_data();
+    int read_short1_data();
+    int read_short2_data();
+    int read_ae1_data();
+    int read_ae2_data();
     int read_rec_data();
     void play_voice_data();   //向FPGA发送声音数据
 
@@ -49,6 +51,8 @@ private:
         BUZZER,
         BUZZER_FREQ,
         FILTER_MODE,
+        L1_CHANNEL_MODE,
+        L2_CHANNEL_MODE,
         //通道参数
         TEV1_ZERO,
         TEV1_THRESHOLD,
@@ -58,14 +62,13 @@ private:
         HFCT1_THRESHOLD,
         HFCT2_ZERO,
         HFCT2_THRESHOLD,
-        AA_VOL,
+        VOL_L1,
         AA_RECORD_PLAY,
+        VOL_L2,
         //录波
         REC_ON,
         REC_START_H1,
         REC_START_H2,
-//        REC_START_HFCT1,
-//        REC_START_HFCT2,
         REC_START_L1,
         REC_START_L2,
         GROUP_NUM,
@@ -77,6 +80,8 @@ private:
         READ_FPGA_PRPD2,
         READ_FPGA_HFCT1,
         READ_FPGA_HFCT2,
+        READ_FPGA_AE1,
+        READ_FPGA_AE2,
 
 //        FPGA_SLEEP,
     };
@@ -108,6 +113,7 @@ private:
     volatile quint32 *vbase_sync;
     volatile quint32 *vbase_hfct1, *vbase_hfct2;
     volatile quint32 *vbase_prpd1, *vbase_prpd2;
+    volatile quint32 *vbase_ae1, *vbase_ae2;
     volatile quint32 *vbase_rec;
 
     bool play_voice_flag;     //是否播放声音

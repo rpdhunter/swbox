@@ -226,12 +226,23 @@ void RecWaveForm::setData(VectorList buf, MODE mod)
             break;
         case AA1:
             v_real = (buf.at(i) * 4 ) * sqlcfg->get_para()->aa1_sql.gain * AA_FACTOR;
-            p = QPointF(i/320.0, v_real);
+//            p = QPointF(i/320.0, v_real);
+            p = QPointF(i/400.0, v_real);
             wave1.append(p);
             break;
         case AA2:
             v_real = (buf.at(i) * 4 ) * sqlcfg->get_para()->aa2_sql.gain * AA_FACTOR;
-            p = QPointF(i/320.0, v_real);
+            p = QPointF(i/400.0, v_real);
+            wave1.append(p);
+            break;
+        case AE1:
+            v_real = (buf.at(i) * 4 ) * sqlcfg->get_para()->ae1_sql.gain * AA_FACTOR;
+            p = QPointF(i/400.0, v_real);
+            wave1.append(p);
+            break;
+        case AE2:
+            v_real = (buf.at(i) * 4 ) * sqlcfg->get_para()->ae2_sql.gain * AA_FACTOR;
+            p = QPointF(i/400.0, v_real);
             wave1.append(p);
             break;
         case Double_Channel:

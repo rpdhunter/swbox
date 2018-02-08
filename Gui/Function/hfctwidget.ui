@@ -192,6 +192,11 @@
    </item>
    <item>
     <property name="text">
+     <string>脉冲触发     [15]mV</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
      <string>连续录波     [5]s</string>
     </property>
    </item>

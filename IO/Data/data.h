@@ -7,9 +7,9 @@
 
 //定义一些全局数据类型，和一些全局宏
 #define PROGRAM_DIR     "/root"
-#define USB_DIR         "/mmc/usb_dev_mount"
-//#define DATA_DIR        USB_DIR"/data"
-#define DATA_DIR        PROGRAM_DIR"/data"
+#define USB_DIR         "/mmc/mmc2"
+#define DATA_DIR        USB_DIR"/data"
+//#define DATA_DIR        PROGRAM_DIR"/data"
 #define WAVE_DIR        DATA_DIR "/WaveForm"
 #define FAVORITE_DIR    WAVE_DIR "/favorite"
 #define DATALOG_DIR     DATA_DIR "/DataLog"
@@ -33,6 +33,8 @@
 #define AA_FACTOR   ( RESOLUTION_AD_LOW * 1000000 / AMP_FACTOR_J27_1N )
 
 #define TEV_FACTOR  (2.0*1000/65536)
+
+#define TOKEN_MAX   50          //最大允许一次处理的数据量(TEV 和 HFCT通道使用)
 
 #define VERSION_MAJOR   1       //软件版本号
 #define VERSION_MINOR   4
@@ -97,6 +99,17 @@ struct G_RECV_PARA_REC {
     quint32 data [BUFF_DATA_SIZE];   //录播数据256
 };
 
+//录波数据
+//适用通道：TEV1，TEV2，HFCT1，HFCT2，AA
+//更新时间：立刻更新
+struct G_RECV_PARA_AE {
+    quint32 recComplete;    //录播完成(1为完成)
+    quint32 groupNum;       //组号(0-15)
+    quint32 time;           //时标（0-2M对应0-360°）
+    quint32 data [BUFF_DATA_SIZE];   //录播数据256
+    quint32 readComplete;   //处理完成（测试）
+};
+
 
 /* fifo send data */
 //G_SEND_PARA.data_changed参数引入是为了保证有需要写入FPGA的数据时，才调用写操作
@@ -119,6 +132,8 @@ typedef struct G_PARA {
     G_RECV_PARA_PRPD recv_para_prpd2;       //脉冲数据(低频2)
     G_RECV_PARA_SHORT recv_para_short1;     //短波形数据(高频1)
     G_RECV_PARA_SHORT recv_para_short2;     //短波形数据(高频2)
+    G_RECV_PARA_AE recv_para_ae1;          //包络线数据（低频1）
+    G_RECV_PARA_AE recv_para_ae2;          //包络线数据（低频2）
     G_SEND_PARA send_para;
 
 public:

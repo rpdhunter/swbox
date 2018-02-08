@@ -5,6 +5,7 @@
 #include "zynq.h"
 #include "data.h"
 #include "IO/Other/filetools.h"
+#include "IO/SqlCfg/sqlcfg.h"
 #include "reccontrol.h"
 #include "fifocontrol.h"
 
@@ -32,6 +33,10 @@ signals:
     void send_sync(uint);
     void short1_update();       //高频1通道数据更新
     void short2_update();       //高频1通道数据更新
+//    void ae1_update(VectorList);       //包络线数据更新（低频1）
+//    void ae2_update(VectorList);       //包络线数据更新（低频2）
+    void ae1_update();       //包络线数据更新（低频1）
+    void ae2_update();       //包络线数据更新（低频2）
 
 private slots:
     void do_slow();

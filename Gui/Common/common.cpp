@@ -282,12 +282,6 @@ double Common::physical_value(int code_value, MODE mode)
     case TEV2_CONTINUOUS:
         v_real = code_value * sqlcfg->get_para()->tev2_sql.gain * TEV_FACTOR;
         break;
-    case AA1:
-        v_real = (code_value * 4) * sqlcfg->get_para()->aa1_sql.gain * AA_FACTOR;
-        break;
-    case AA2:
-        v_real = (code_value * 4) * sqlcfg->get_para()->aa2_sql.gain * AA_FACTOR;
-        break;
     case HFCT1:
     case HFCT1_CONTINUOUS:
         v_real = code_value * sqlcfg->get_para()->hfct1_sql.gain * TEV_FACTOR;
@@ -295,6 +289,18 @@ double Common::physical_value(int code_value, MODE mode)
     case HFCT2:
     case HFCT2_CONTINUOUS:
         v_real = code_value * sqlcfg->get_para()->hfct2_sql.gain * TEV_FACTOR;
+        break;
+    case AA1:
+        v_real = (code_value * 4) * sqlcfg->get_para()->aa1_sql.gain * AA_FACTOR;
+        break;
+    case AA2:
+        v_real = (code_value * 4) * sqlcfg->get_para()->aa2_sql.gain * AA_FACTOR;
+        break;
+    case AE1:
+        v_real = (code_value * 4) * sqlcfg->get_para()->ae1_sql.gain * AA_FACTOR;
+        break;
+    case AE2:
+        v_real = (code_value * 4) * sqlcfg->get_para()->ae2_sql.gain * AA_FACTOR;
         break;
     default:
         break;
@@ -314,12 +320,6 @@ int Common::code_value(double physical_value, MODE mode)
     case TEV2_CONTINUOUS:
         v_code = physical_value / sqlcfg->get_para()->tev2_sql.gain / TEV_FACTOR;
         break;
-    case AA1:
-        v_code = physical_value / 4 / sqlcfg->get_para()->aa1_sql.gain / AA_FACTOR;
-        break;
-    case AA2:
-        v_code = physical_value / 4 / sqlcfg->get_para()->aa2_sql.gain / AA_FACTOR;
-        break;
     case HFCT1:
     case HFCT1_CONTINUOUS:
         v_code = physical_value / sqlcfg->get_para()->hfct1_sql.gain / TEV_FACTOR;
@@ -327,6 +327,18 @@ int Common::code_value(double physical_value, MODE mode)
     case HFCT2:
     case HFCT2_CONTINUOUS:
         v_code = physical_value / sqlcfg->get_para()->hfct2_sql.gain / TEV_FACTOR;
+        break;
+    case AA1:
+        v_code = physical_value / 4 / sqlcfg->get_para()->aa1_sql.gain / AA_FACTOR;
+        break;
+    case AA2:
+        v_code = physical_value / 4 / sqlcfg->get_para()->aa2_sql.gain / AA_FACTOR;
+        break;
+    case AE1:
+        v_code = physical_value / 4 / sqlcfg->get_para()->ae1_sql.gain / AA_FACTOR;
+        break;
+    case AE2:
+        v_code = physical_value / 4 / sqlcfg->get_para()->ae2_sql.gain / AA_FACTOR;
         break;
     default:
         break;
@@ -356,6 +368,19 @@ double Common::physical_threshold(MODE mode)
         break;
     case Double_Channel:        //to be
         v_real = physical_value(sqlcfg->get_para()->tev1_sql.fpga_threshold, TEV1);
+        break;
+    case AA1:
+        v_real = physical_value(sqlcfg->get_para()->aa1_sql.fpga_threshold, AA1);
+        break;
+    case AA2:
+        v_real = physical_value(sqlcfg->get_para()->aa2_sql.fpga_threshold, AA2);
+        break;
+    case AE1:
+        v_real = physical_value(sqlcfg->get_para()->ae1_sql.fpga_threshold, AE1);
+        break;
+    case AE2:
+        v_real = physical_value(sqlcfg->get_para()->ae2_sql.fpga_threshold, AE2);
+        break;
     default:
         break;
     }
@@ -417,17 +442,16 @@ QString Common::MODE_toString(MODE val)
     return tmpStr;
 }
 
-void Common::write_fpga_offset(G_PARA *data)
+void Common::write_fpga_offset_debug(G_PARA *data)
 {
     switch (sqlcfg->get_para()->menu_h1) {
     case TEV1:
-        data->set_send_para (sp_tev1_zero, 0x8000 - sqlcfg->get_para()->tev1_sql.fpga_zero);
-        data->set_send_para (sp_tev1_threshold, sqlcfg->get_para()->tev1_sql.fpga_threshold);
-
+        data->set_send_para (sp_tev1_zero, 0x8000 - code_value(sqlcfg->get_para()->tev1_sql.fpga_zero,TEV1) );
+        data->set_send_para (sp_tev1_threshold, code_value(sqlcfg->get_para()->tev1_sql.fpga_threshold, TEV1) );
         break;
     case HFCT1:
-        data->set_send_para (sp_hfct1_zero, 0x8000 - sqlcfg->get_para()->hfct1_sql.fpga_zero);
-        data->set_send_para (sp_hfct1_threshold, sqlcfg->get_para()->hfct1_sql.fpga_threshold);
+        data->set_send_para (sp_hfct1_zero, 0x8000 - code_value(sqlcfg->get_para()->hfct1_sql.fpga_zero,HFCT1) );
+        data->set_send_para (sp_hfct1_threshold, code_value(sqlcfg->get_para()->hfct1_sql.fpga_zero,HFCT1) );
         break;
     case UHF1:
 
@@ -438,12 +462,12 @@ void Common::write_fpga_offset(G_PARA *data)
 
     switch (sqlcfg->get_para()->menu_h2) {
     case TEV2:
-        data->set_send_para (sp_tev2_zero, 0x8000 - sqlcfg->get_para()->tev2_sql.fpga_zero);
-        data->set_send_para (sp_tev2_threshold, sqlcfg->get_para()->tev2_sql.fpga_threshold);
+        data->set_send_para (sp_tev2_zero, 0x8000 - code_value(sqlcfg->get_para()->tev2_sql.fpga_zero,TEV2) );
+        data->set_send_para (sp_tev2_threshold, code_value(sqlcfg->get_para()->tev2_sql.fpga_threshold, TEV2) );
         break;
     case HFCT2:
-        data->set_send_para (sp_hfct2_zero, 0x8000 - sqlcfg->get_para()->hfct2_sql.fpga_zero);
-        data->set_send_para (sp_hfct2_threshold, sqlcfg->get_para()->hfct2_sql.fpga_threshold);
+        data->set_send_para (sp_hfct2_zero, 0x8000 - code_value(sqlcfg->get_para()->hfct2_sql.fpga_zero,HFCT2) );
+        data->set_send_para (sp_hfct2_threshold, code_value(sqlcfg->get_para()->hfct2_sql.fpga_zero,HFCT2) );
         break;
     case UHF2:
 
@@ -451,4 +475,113 @@ void Common::write_fpga_offset(G_PARA *data)
     default:
         break;
     }
+
+    switch (sqlcfg->get_para()->menu_l1) {
+    case AA1:
+//        data->set_send_para (sp_vol_l1, sqlcfg->get_para()->aa1_sql.vol);
+        data->set_send_para (sp_l1_channnel_mode, sqlcfg->get_para()->aa1_sql.envelope);
+        break;
+    case AE1:
+//        data->set_send_para (sp_vol_l1, sqlcfg->get_para()->ae1_sql.vol);
+        data->set_send_para (sp_l1_channnel_mode, sqlcfg->get_para()->ae1_sql.envelope);
+        break;
+    default:
+        break;
+    }
+
+    switch (sqlcfg->get_para()->menu_l2) {
+    case AA2:
+//        data->set_send_para (sp_vol_l2, sqlcfg->get_para()->aa2_sql.vol);
+        data->set_send_para (sp_l2_channnel_mode, sqlcfg->get_para()->aa2_sql.envelope);
+        break;
+    case AE2:
+//        data->set_send_para (sp_vol_l2, sqlcfg->get_para()->ae2_sql.vol);
+        data->set_send_para (sp_l2_channnel_mode, sqlcfg->get_para()->ae2_sql.envelope);
+        break;
+    default:
+        break;
+    }
 }
+
+void Common::calc_aa_value(G_PARA *data, MODE mode, L_CHANNEL_SQL *x_sql, double *aa_val, double *aa_db, int *offset)
+{
+    int d;
+//    AA_SQL *x_sql;
+//    switch (mode) {
+//    case AA1:
+//        d = (int)data->recv_para_normal.ldata0_max - (int)data->recv_para_normal.ldata0_min ;      //最大值-最小值=幅值
+//        x_sql = &sqlcfg->get_para()->aa1_sql;
+//        break;
+//    case AA2:
+//        d = (int)data->recv_para_normal.ldata1_max - (int)data->recv_para_normal.ldata1_min ;      //最大值-最小值=幅值
+//        x_sql = &sqlcfg->get_para()->aa2_sql;
+//        break;
+//    case AE1:
+//        d = (int)data->recv_para_normal.ldata0_max - (int)data->recv_para_normal.ldata0_min ;      //最大值-最小值=幅值
+//        x_sql = &sqlcfg->get_para()->ae1_sql;
+//        break;
+//    case AE2:
+//        d = (int)data->recv_para_normal.ldata1_max - (int)data->recv_para_normal.ldata1_min ;      //最大值-最小值=幅值
+//        x_sql = &sqlcfg->get_para()->ae2_sql;
+//        break;
+//    default:
+//        break;
+//    }
+
+    if(mode == AA1 || mode == AE1){
+        d = (int)data->recv_para_normal.ldata0_max - (int)data->recv_para_normal.ldata0_min ;      //最大值-最小值=幅值
+    }
+    else {
+        d = (int)data->recv_para_normal.ldata1_max - (int)data->recv_para_normal.ldata1_min ;      //最大值-最小值=幅值
+    }
+    * offset = ( d - 1 / x_sql->gain / AA_FACTOR ) / 100;
+    * aa_val = (d - x_sql->offset * 100) * x_sql->gain * AA_FACTOR;
+    * aa_db = 20 * log10 (* aa_val);
+}
+
+//在给定数组中，根据给定的阈值判定脉冲
+QVector<QPoint> Common::calc_pulse_list(QVector<int> datalist, QVector<int> timelist, int threshold)
+{
+    QVector<QPoint> pulse_list;
+    QPoint p;
+    for (int i = 1; i < datalist.count()-1; ++i) {
+        //注意判定当前点为峰值点的条件为【大于阈值】【大于前点，大于等于后点】，这样避免了方波出现连续波峰的情况，又不会遗漏
+        if(datalist.at(i) > threshold && datalist.at(i)-datalist.at(i-1) > 0 && datalist.at(i) - datalist.at(i+1) >= 0){
+            p.setX( timelist.at(i/128) + (i%128)*(320000/128) );
+            p.setY( datalist.at(i) );
+//            p.setX( i );
+            pulse_list.append(p);
+        }
+    }
+    return pulse_list;
+}
+
+int Common::time_to_phase(int x)
+{
+    if(sqlcfg->get_para()->freq_val == 50){
+        x = x % 2000000;    //取余数
+        x = x * 360 /2000000;
+    }
+    else if(sqlcfg->get_para()->freq_val == 60){
+        x = x % 1666667;
+        x = x * 360 /1666667;
+    }
+    return x;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

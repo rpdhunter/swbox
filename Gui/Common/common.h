@@ -92,7 +92,10 @@ public:
     static int code_value(double physical_value, MODE mode);        //根据物理值返回码值
     static double physical_threshold(MODE mode);                    //返回各模式下的物理阈值
     static QString MODE_toString(MODE val);
-    static void write_fpga_offset(G_PARA *data);        //根据当前通道设置fpga参数
+    static void write_fpga_offset_debug(G_PARA *data);                    //根据当前通道设置fpga参数，debug界面中设置的fpga参数
+    static void calc_aa_value (G_PARA *data, MODE mode, L_CHANNEL_SQL *x_sql, double * aa_val, double * aa_db, int * offset);
+    static QVector<QPoint> calc_pulse_list(QVector<int> datalist, QVector<int> timelist, int threshold);          //根据给出的序列和阈值计算脉冲序列
+    static int time_to_phase(int x);             //时标到相位转换
 
 };
 
