@@ -71,6 +71,7 @@
 #define VOL_L1					0x0018          //超声音量通道1（0-15变化，7为原始音量）
 #define AA_RECORD_PLAY			0x0019          //播放声音标志(之后发送声音数据至FPGA)（0直播L1,1重播,2直播L2）
 #define VOL_L2					0x001a          //超声音量通道2（0-15变化，7为原始音量）
+//#define KALMAN_KG               0x001b          //卡尔曼滤波器的kg参数（0-8/64,1-1/64,...,7/64）
 
 
 //录波
@@ -120,6 +121,7 @@ enum send_params {
     sp_vol_l1,
     sp_aa_record_play,
     sp_vol_l2,
+//    sp_kalman_kg,
     //录波
     sp_rec_on,
     sp_rec_start_h1,

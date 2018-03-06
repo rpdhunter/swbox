@@ -39,13 +39,13 @@ HFCTWidget::HFCTWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu
     timer_1000ms->setInterval(1000);      //每隔1秒，刷新一次主界面
     connect(timer_1000ms, SIGNAL(timeout()), this, SLOT(fresh_1000ms()));
 
-//    timer_1ms = new QTimer(this);
-//    timer_1ms->setInterval(1);         //1ms读取一次数据
-//    connect(timer_1ms, SIGNAL(timeout()), this, SLOT(fresh_1ms()));
+    timer_1ms = new QTimer(this);
+    timer_1ms->setInterval(1);         //1ms读取一次数据
+    connect(timer_1ms, SIGNAL(timeout()), this, SLOT(add_token()));
 
-    timer_200ms = new QTimer(this);
-    timer_200ms->setInterval(200);       //200ms刷新一次PRPD图
-    connect(timer_200ms, SIGNAL(timeout()), this, SLOT(fresh_200ms()));
+    timer_100ms = new QTimer(this);
+    timer_100ms->setInterval(100);       //200ms刷新一次PRPD图
+    connect(timer_100ms, SIGNAL(timeout()), this, SLOT(fresh_100ms()));
 
     timer_freeze = new QTimer(this);            //timer_freeze设置了一个界面手动退出后的锁定期,便于操作
     timer_freeze->setInterval(FREEZE_TIME);      //5秒内不出现新录波界面
@@ -104,11 +104,11 @@ void HFCTWidget::reload(int index)
         if(!timer_1000ms->isActive()){
             timer_1000ms->start();
         }
-//        if(!timer_1ms->isActive()){
-//            timer_1ms->start();
-//        }
-        if(!timer_200ms->isActive()){
-            timer_200ms->start();
+        if(!timer_1ms->isActive()){
+            timer_1ms->start();
+        }
+        if(!timer_100ms->isActive()){
+            timer_100ms->start();
         }
         //设置自动录波
         if( hfct_sql->auto_rec == true ){
@@ -166,7 +166,7 @@ void HFCTWidget::trans_key(quint8 key_code)
 //            }
 //            break;
         case 7:
-            emit startRecWave(mode_continuous,hfct_sql->time);     //开始连续录波
+            emit startRecWave(mode_continuous,hfct_sql->rec_time);     //开始连续录波
             emit show_indicator(true);
             isBusy = true;
             return;
@@ -236,7 +236,7 @@ void HFCTWidget::do_key_left_right(int d)
         hfct_sql->auto_rec = !hfct_sql->auto_rec;
         break;
     case 7:
-        Common::change_index(hfct_sql->time, d, 20, 1 );
+        Common::change_index(hfct_sql->rec_time, d, 20, 1 );
         break;
     default:
         break;
@@ -294,7 +294,7 @@ void HFCTWidget::chart_ini()
     plot_Histogram = new QwtPlot(ui->widget);
     plot_Histogram->resize(200, 140);
     d_histogram = new QwtPlotHistogram;
-    Common::set_histogram_style(plot_Histogram,d_histogram);
+    Common::set_histogram_style(plot_Histogram,d_histogram,-60,60,0,100,"");
 
 }
 
@@ -311,10 +311,10 @@ void HFCTWidget::PRPDReset()
     points_PRPD.clear();
     map_TF.clear();
     points_TF.clear();
-    fresh_200ms();
+    fresh_100ms();
 }
 
-void HFCTWidget::fresh_200ms()
+void HFCTWidget::fresh_100ms()
 {
     MyKey key_PRPD, key_TF;
     QVector<QPointF> PRPS_point_list;
@@ -707,7 +707,7 @@ void HFCTWidget::fresh_setting()
         ui->comboBox->setItemText(5,tr("自动录波\t[关闭]") );
     }
 
-    ui->comboBox->setItemText(6,tr("连续录波\t[%1]s").arg(QString::number(hfct_sql->time)));
+    ui->comboBox->setItemText(6,tr("连续录波\t[%1]s").arg(QString::number(hfct_sql->rec_time)));
 
     ui->comboBox->setCurrentIndex(key_val->grade.val2-1);
 
@@ -786,7 +786,7 @@ HFCTWidget::PC_DATA HFCTWidget::compute_pc_1node(QVector<double> list, int x_ori
 
     //    qDebug()<<"t1="<<t1<<"\ts="<<s<<"\tt2="<<t2<<"\t"<<list << "simpson :"<<list.mid(first,last - first + 1);
 
-    pc_data.pc_value = hfct_sql->gain * TEV_FACTOR * (t1 + s + t2);
+    pc_data.pc_value = hfct_sql->gain * H_C_FACTOR * (t1 + s + t2);
     pc_data.phase = x_origin;
 
     pc_data.rise_time = 10 * (peak - first_zero);       //单位为ns

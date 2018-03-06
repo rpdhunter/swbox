@@ -52,7 +52,7 @@ private slots:
     void fresh_Histogram();
 
     void fresh_1000ms();
-    void fresh_200ms();
+    void fresh_100ms();
     void fresh_1ms();
 
     void add_token();
@@ -66,7 +66,7 @@ private:
     G_PARA *data;
     G_RECV_PARA_SHORT *short_data;
     SQL_PARA sql_para;
-    TEV_SQL *tev_sql;
+    H_CHANNEL_SQL *tev_sql;
     MODE mode;
     int menu_index;     //位于主菜单的位置索引
     LogTools *logtools;
@@ -79,17 +79,17 @@ private:
     void fresh_setting();
 
     //定时器
-    QTimer *timer_1ms, *timer_200ms, *timer_1000ms, *timer_freeze, *timer_rec_close_delay;
+    QTimer *timer_1ms, *timer_100ms, *timer_1000ms, *timer_freeze, *timer_rec_close_delay;
 
     //基本数据
     int db;
     int max_db;
-    int db_last1, db_last2;
-    quint32 pulse_cnt_last; //上一秒秒冲数
+    int db_last1;
+    QVector<int> pulse_cnt_list;
     quint32 group_num;   //用于判别PRPD图数据有效性的组号(0-3变化)
-    void calc_tev_value (double * tev_val, double * tev_db, int * sug_central_offset, int * sug_offset);
-    QVector<QPoint> pulse_200ms;      //200ms的脉冲数据,分析的基准
-    int pulse_number;
+    void calc_tev_value (double &tev_db, int &pulse_cnt_show, double &degree, int &sug_central_offset, int &sug_offset);
+    QVector<QPoint> pulse_100ms;      //200ms的脉冲数据,分析的基准
+    QVector<double> amp_1000ms;         //1s内的平均幅值序列（pulse_100ms每次清零时保存一个平均幅值，1s的时候再算总平均幅值）
     uint token;
 
     //时序图

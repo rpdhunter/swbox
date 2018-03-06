@@ -7,7 +7,7 @@
 
 #define SETTING_NUM 9           //设置菜单条目数
 #define VALUE_MAX 60
-#define TEST
+//#define TEST
 
 AEWidget::AEWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu_index, QWidget *parent) :
     QFrame(parent),
@@ -34,7 +34,7 @@ AEWidget::AEWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu_ind
 
 
     timer_100ms = new QTimer(this);
-    timer_100ms->setInterval(100);
+    timer_100ms->setInterval(500);
     connect(timer_100ms, SIGNAL(timeout()), this, SLOT(fresh_100ms()));   //每0.1秒刷新一次数据状态，明显的变化需要快速显示
 
     timer_1000ms = new QTimer(this);
@@ -70,11 +70,11 @@ void AEWidget::add_ae_data()
 void AEWidget::fresh_1000ms()
 {
     fresh(true);
-    fresh_Histogram();
+//    fresh_Histogram();
     d_BarChart->fresh();
     plot_Barchart->replot();
-    plot_PRPD->replot();
-    plot_Histogram->replot();
+//    plot_PRPD->replot();
+//    plot_Histogram->replot();
 
 #ifdef TEST
     qDebug()<<QTime::currentTime();
@@ -86,10 +86,10 @@ void AEWidget::fresh_1000ms()
 //    qDebug()<<ae_datalist.mid(0,100);
 
     //时标显示
-    for (int i = ae_timelist.count()-1; i > 0; i--) {
-        ae_timelist[i] = ae_timelist.at(i) - ae_timelist.at(i-1);
-    }
-    qDebug()<<"ae_timelist\t"<<ae_timelist.count() << "\t"<< ae_timelist;
+//    for (int i = ae_timelist.count()-1; i > 0; i--) {
+//        ae_timelist[i] = ae_timelist.at(i) - ae_timelist.at(i-1);
+//    }
+//    qDebug()<<"ae_timelist\t"<<ae_timelist.count() << "\t"<< ae_timelist;
 
     ae_timelist.clear();
     ae_datalist.clear();
@@ -103,24 +103,61 @@ void AEWidget::fresh_100ms()
 
 //    qDebug()<<"ae_datalist\t"<<ae_datalist.count() << "\t"<< ae_datalist.count()/128.0;
 #ifndef TEST
-    QVector<QPoint> pulse_100ms = Common::calc_pulse_list(ae_datalist,ae_timelist,aeultra_sql->fpga_threshold);
-//    foreach (QPoint p, pulse_100ms) {
-//        qDebug()<<"all"<<p;
+//    QVector<QPoint> pulse_100ms = Common::calc_pulse_list(ae_datalist,ae_timelist,aeultra_sql->fpga_threshold);
+//    ae_datalist = Common::smooth_2(ae_datalist, 8);
+//    qDebug()<<"before"<<ae_datalist.mid(0,30);
+    ae_datalist = Common::kalman_filter(ae_datalist);
+//    qDebug()<<"after"<<ae_datalist.mid(0,30);
+
+    QVector<QPoint> pulse_100ms = Common::calc_pulse_list(ae_datalist,aeultra_sql->fpga_threshold);
+//    foreach (QPoint P, pulse_100ms) {
+//        qDebug()<<P;
 //    }
+
+
+    int space;      //相邻两次脉冲的间隔时间
+    int temp;
+    if(pulse_100ms.count() > 1){
+        for (int i = 1; i < pulse_100ms.count(); ++i) {
+            temp = pulse_100ms.at(i).x() - pulse_100ms.at(i-1).x();
+            if(temp > 20){
+                 qDebug()<<temp;
+            }
+            space = (pulse_100ms.at(i).x() - pulse_100ms.at(i-1).x() ) * 320000.0 / 128 / 100000;
+//            qDebug()<<space;
+            if(space >= 3 && space <= 60){
+                histogram_map[space]++;
+            }
+        }
+    }
+    histogram_data.clear();
+
+    for(int i=0;i<60;i++){
+        QwtInterval interval( i * 0.1 , (i+1) * 0.1 );
+        interval.setBorderFlags( QwtInterval::ExcludeMaximum );
+        histogram_data.append( QwtIntervalSample( histogram_map[i], interval ) );
+    }
+
+    d_histogram->setData(new QwtIntervalSeriesData( histogram_data ));
+
+    plot_Histogram->replot();
+
+
 
     int x,y;
     double _y;
     for(int i=0; i<pulse_100ms.count(); i++){
-        x = Common::time_to_phase(pulse_100ms.at(i).x() );              //时标
+//        x = Common::time_to_phase(pulse_100ms.at(i).x() );              //时标
+        x = Common::time_to_phase(pulse_100ms.at(i).x() * 320000 / 128 + ae_timelist.first() );              //时标(待定)
         _y = Common::physical_value(pulse_100ms.at(i).y(),mode);         //强度
         y = (int)20*log(qAbs(_y) );
 
 
         if(x<360 && x>=0 && y<=60 &&y>=-60){
-            QwtPoint3D p0(x,y,map[x][y+60]);
-            map[x][y+60]++;
-            QwtPoint3D p1(x,y,map[x][y+60]);
-            if(map[x][y+60]>1){
+            QwtPoint3D p0(x,y,prpd_map[x][y+60]);
+            prpd_map[x][y+60]++;
+            QwtPoint3D p1(x,y,prpd_map[x][y+60]);
+            if(prpd_map[x][y+60]>1){
                 int n = prpd_samples.indexOf(p0);
                 prpd_samples[n] = p1;
             }
@@ -129,7 +166,7 @@ void AEWidget::fresh_100ms()
             }
         }
         else{
-            qDebug()<<QPointF(x,y) << "\t"<< pulse_100ms.at(i);
+//            qDebug()<<QPointF(x,y) << "\t"<< pulse_100ms.at(i);
         }
     }
 
@@ -298,10 +335,8 @@ void AEWidget::chart_ini()
     plot_Histogram = new QwtPlot(ui->widget);
     plot_Histogram->resize(200, 140);
     d_histogram = new QwtPlotHistogram;
-    Common::set_histogram_style(plot_Histogram,d_histogram);
-//    plot_Histogram->setAxisScale(QwtPlot::xBottom, 0, 6);
-//    plot_Histogram->setAxisScale(QwtPlot::yLeft, 0, 50);
-//    plot_Histogram->axisWidget(QwtPlot::xBottom)->setTitle("");
+    Common::set_histogram_style(plot_Histogram,d_histogram,0,6,0,100,"");
+
 
 }
 
@@ -309,11 +344,16 @@ void AEWidget::PRPDReset()
 {
     for(int i=0;i<360;i++){
         for(int j=0;j<121;j++){
-            map[i][j]=0;
+            prpd_map[i][j]=0;
         }
     }
     emit ae_PRPD_data(prpd_samples);
     prpd_samples.clear();
+
+    for (int i = 0; i < 60; ++i) {
+        histogram_map[i]=0;
+    }
+    histogram_data.clear();
 }
 
 void AEWidget::fresh_Histogram()
@@ -325,7 +365,7 @@ void AEWidget::fresh_Histogram()
     for(int j=0;j<121;j++){
         tmp = 0;
         for(int i=0;i<360;i++){
-            tmp += map[i][j];
+            tmp += prpd_map[i][j];
         }
         QwtInterval interval( j - 60.0 , j - 59.0 );
         interval.setBorderFlags( QwtInterval::ExcludeMaximum );
@@ -347,7 +387,14 @@ void AEWidget::showWaveData(VectorList buf, MODE mod)
         key_val->grade.val5 = 1;
         emit fresh_parent();
         ui->comboBox->hidePopup();
+
         recWaveForm->working(key_val,buf,mod);
+//        recWaveForm->working(key_val,Common::smooth(Common::smooth(Common::smooth(buf,8),8),1),mod);
+//        recWaveForm->working(key_val,Common::smooth_2(buf,4),mod);
+//        qDebug()<<"before"<<buf.mid(0,30);
+        VectorList res = Common::kalman_filter(buf);
+//        qDebug()<<"after"<<res.mid(0,30);
+//        recWaveForm->working(key_val,res,mod);
     }
 }
 
@@ -357,6 +404,7 @@ void AEWidget::fresh(bool f)
     double val,val_db;
 
     Common::calc_aa_value(data,mode,aeultra_sql,&val, &val_db, &offset);
+//    qDebug()<<"val="<<val<<"\tval_db="<<val_db;
 
 
     if(db < int(val_db)){

@@ -242,12 +242,12 @@ void FaultLocation::setData(VectorList buf)
     double v_real = 0;
     for (int i = 0; i < buf.length(); ++i) {
         if(i < buf.length()/2){     //TEV1
-            v_real = sqlcfg->get_para()->tev1_sql.gain * TEV_FACTOR * buf.at(i);
+            v_real = sqlcfg->get_para()->tev1_sql.gain * H_C_FACTOR * buf.at(i);
             p = QPointF(i*0.01, v_real);
             wave1.append(p);
         }
         else{                       //TEV2
-            v_real = sqlcfg->get_para()->tev2_sql.gain * TEV_FACTOR * buf.at(i);
+            v_real = sqlcfg->get_para()->tev2_sql.gain * H_C_FACTOR * buf.at(i);
             p = QPointF((i-buf.length()/2)*0.01, v_real);
             wave2.append(p);
         }

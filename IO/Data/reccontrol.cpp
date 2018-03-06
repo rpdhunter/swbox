@@ -241,7 +241,7 @@ void RecControl::rec_wave_complete(VectorList wave, MODE mode)
     else if(this->_mode == Disable){
 //        this->_mode = mode;
     }
-    else if(this->_mode != Disable){
+    else if(this->_mode != Disable){            //这里开启波形保存
         emit waveData(wave,mode);
         this->_mode = Disable;
         //这里插入FFT测试程序

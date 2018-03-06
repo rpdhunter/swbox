@@ -65,6 +65,7 @@ private:
         VOL_L1,
         AA_RECORD_PLAY,
         VOL_L2,
+//        KALMAN_KG,
         //录波
         REC_ON,
         REC_START_H1,

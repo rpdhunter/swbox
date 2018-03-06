@@ -50,7 +50,7 @@ signals:
 
 private slots:
     void fresh_1000ms();
-    void fresh_200ms();
+    void fresh_100ms();
     void fresh_1ms();
     void add_token();
 
@@ -68,7 +68,7 @@ private:
     G_PARA *data;
     G_RECV_PARA_SHORT *short_data;
     SQL_PARA sql_para;
-    HFCT_SQL *hfct_sql;
+    H_CHANNEL_SQL *hfct_sql;
     MODE mode;
     int menu_index;
     LogTools *logtools;
@@ -80,7 +80,7 @@ private:
     void fresh_setting(void);
 
     //定时器
-    QTimer *timer_1ms, *timer_200ms, *timer_1000ms, *timer_freeze;
+    QTimer *timer_1ms, *timer_100ms, *timer_1000ms, *timer_freeze;
 
     //数据流
     quint32 group_num;                  //有效数据校验

@@ -62,8 +62,10 @@ private:
     void saveCfgFile();         //生成配置文件
     void saveWavFile();         //保存声音文件
     void wavToMp3();
+    void wav_add_filter();
 
     void spaceControl(QString str); //空间管理
+    void mode_envelope_modify();        //根据实际情况修正mode
 };
 
 #endif // FILETOOLS_H

@@ -130,11 +130,13 @@ void FifoData::run(void)
             }
         }
 
-        if(data->recv_para_ae2.readComplete == 1 && sqlcfg->get_para()->menu_l1 == AE2){
+        if(data->recv_para_ae2.readComplete == 1 && sqlcfg->get_para()->menu_l2 == AE2){
             fifocontrol->read_fpga(sp_read_fpga_ae2);
             ret = fifocontrol->read_ae2_data();
             if(ret > 100){
                 data->recv_para_ae2.readComplete = 0;
+//                                qDebug()<<"AE2 len = "<<ret<<"\trecComplete = "<<data->recv_para_ae2.recComplete
+//                                                          <<"\tgroup = "<<data->recv_para_ae2.groupNum;
                 emit ae2_update();
             }
         }
@@ -145,6 +147,7 @@ void FifoData::run(void)
         usleep(delay_time);
         ret = fifocontrol->read_rec_data();
         if(data->recv_para_rec.recComplete > 0 && data->recv_para_rec.recComplete < 255){
+//            qDebug()<<"data->recv_para_rec.recComplete:"<<data->recv_para_rec.recComplete;
             reccontrol->recv_rec_data();
         }
 
@@ -155,7 +158,8 @@ void FifoData::run(void)
         fifocontrol->send_para();
 
         //延迟设置
-        if(data->recv_para_rec.recComplete == 16 || data->recv_para_ae1.recComplete == 2 || data->recv_para_ae2.recComplete == 2 ){
+        if(data->recv_para_rec.recComplete == 16 || data->recv_para_rec.recComplete == 32
+                || data->recv_para_ae1.recComplete == 2 || data->recv_para_ae2.recComplete == 2 ){
             delay_time = DELAY_TIME_MID;
         }
         else if(reccontrol->mode() != Disable || data->recv_para_short1.empty == 0 || data->recv_para_short2.empty == 0

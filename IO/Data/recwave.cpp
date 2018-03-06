@@ -1,6 +1,7 @@
 #include "recwave.h"
 #include <QtDebug>
 #include "IO/SqlCfg/sqlcfg.h"
+#include "Gui/Common/common.h"
 
 #define REC_NUM             500
 #define GROUP_NUM_MAX       8              //组号最大值
@@ -124,7 +125,7 @@ void RecWave::h_channel_rec_core()
 {
     if (data->recv_para_rec.groupNum + groupNum_Offset == data->send_para.send_params [sp_group_num].rval) {      //收发相匹配，拷贝数据
         for (int i = 0; i < REC_NUM; i++) {
-            _data.append((qint32)data->recv_para_rec.data[ i + 2 ] - 0x8000);
+            _data.append((qint32)data->recv_para_rec.data[ i + 2 ] - 0x8000 - Common::offset_zero_code(mode));      //录波时就减掉了偏置
         }
 //        qDebug()<<"h_channel receive data succeed! send groupNum = "<<data->send_para.send_params [sp_group_num].rval;
         groupNum++;

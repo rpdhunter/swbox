@@ -72,6 +72,11 @@
    </item>
    <item>
     <property name="text">
+     <string>脉冲计数时长[1]s</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
      <string>自动录波     [开启]</string>
     </property>
    </item>
@@ -82,12 +87,7 @@
    </item>
    <item>
     <property name="text">
-     <string>最大值重置</string>
-    </property>
-   </item>
-   <item>
-    <property name="text">
-     <string>PRPD图重置</string>
+     <string>测量值重置</string>
     </property>
    </item>
   </widget>

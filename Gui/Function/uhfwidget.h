@@ -67,7 +67,7 @@ private:
     int db_last1, db_last2;
     quint32 pulse_cnt_last; //上一秒秒冲数
     SQL_PARA sql_para;
-    TEV_SQL *tev_sql;
+    H_CHANNEL_SQL *tev_sql;
 
     QTimer *timer1, *timer2 , *timer_freeze;
     quint32 groupNum;   //用于判别PRPD图数据有效性的组号(0-3变化)

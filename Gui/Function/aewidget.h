@@ -81,7 +81,7 @@ private:
     QwtPlot *plot_PRPD;                 //PRPD图
     QwtPlotSpectroCurve *d_PRPD;        //PRPD曲线
     QVector<QwtPoint3D> prpd_samples;   //PRPD数据
-    int map[360][121];                  //PRPD存储中介(数据点图)
+    int prpd_map[360][121];                  //PRPD存储中介(数据点图)
     QPoint transData(int x, int y);     //将原始脉冲转换成可显示的DB值
     void PRPDReset();
 
@@ -89,6 +89,7 @@ private:
     QwtPlot *plot_Histogram;
     QwtPlotHistogram *d_histogram;   //Histogram图
     QVector<QwtIntervalSample> histogram_data;
+    int histogram_map[60];          //Histogram存储中介(数据点图)
     void fresh_Histogram();
 };
 

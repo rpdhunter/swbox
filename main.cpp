@@ -39,7 +39,8 @@ int main(int argc, char *argv[])
     splash->show();
 
     print_centor();
-    sqlite3_init();
+//    sqlite3_init();
+    sqlcfg = new SqlCfg();
 
 //    return 1;
 

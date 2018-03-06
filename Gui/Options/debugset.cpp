@@ -211,12 +211,16 @@ void DebugSet::reload()
 {
     //TEV
     ui->lineEdit_TEV1_line->setText(QString("%1 mV").arg((int)Common::physical_value(sql_para.tev1_sql.offset_linearity, TEV1) ) );
-    ui->lineEdit_TEV1_ZERO->setText(QString("%1").arg((int)Common::physical_value(sql_para.tev1_sql.fpga_zero, TEV1) ) );
-    ui->lineEdit_TEV1_NOISE->setText(QString("%1").arg((int)Common::physical_value(sql_para.tev1_sql.offset_noise, TEV1) ) );
+//    ui->lineEdit_TEV1_ZERO->setText(QString("%1").arg((int)Common::physical_value(sql_para.tev1_sql.fpga_zero, TEV1) ) );
+//    ui->lineEdit_TEV1_NOISE->setText(QString("%1").arg((int)Common::physical_value(sql_para.tev1_sql.offset_noise, TEV1) ) );
+    ui->lineEdit_TEV1_ZERO->setText(QString("%1").arg(sql_para.tev1_sql.fpga_zero ) );
+    ui->lineEdit_TEV1_NOISE->setText(QString("%1").arg(sql_para.tev1_sql.offset_noise ) );
 
     ui->lineEdit_TEV2_line->setText(QString("%1 mV").arg((int)Common::physical_value(sql_para.tev2_sql.offset_linearity, TEV2) ) );
-    ui->lineEdit_TEV2_ZERO->setText(QString("%1").arg((int)Common::physical_value(sql_para.tev2_sql.fpga_zero, TEV2) ) );
-    ui->lineEdit_TEV2_NOISE->setText(QString("%1").arg((int)Common::physical_value(sql_para.tev2_sql.offset_noise, TEV2) ) );
+//    ui->lineEdit_TEV2_ZERO->setText(QString("%1").arg((int)Common::physical_value(sql_para.tev2_sql.fpga_zero, TEV2) ) );
+//    ui->lineEdit_TEV2_NOISE->setText(QString("%1").arg((int)Common::physical_value(sql_para.tev2_sql.offset_noise, TEV2) ) );
+    ui->lineEdit_TEV2_ZERO->setText(QString("%1").arg(sql_para.tev2_sql.fpga_zero ) );
+    ui->lineEdit_TEV2_NOISE->setText(QString("%1").arg(sql_para.tev2_sql.offset_noise ) );
 
     //HFCT
     ui->lineEdit_HFCT1_THRESHOLD->setText(QString("%1 mV").arg((int)Common::physical_value(sql_para.hfct1_sql.fpga_threshold, HFCT1) ) );
@@ -452,24 +456,24 @@ void DebugSet::do_key_left_right(int d)
                 sql_para.tev1_sql.offset_linearity += Common::code_value(1,TEV1) * d;
                 break;
             case 2:
-//                sql_para.tev1_sql.fpga_zero += d;
-                sql_para.tev1_sql.fpga_zero += Common::code_value(1,TEV1) * d;
+                sql_para.tev1_sql.fpga_zero += d;
+//                sql_para.tev1_sql.fpga_zero += Common::code_value(1,TEV1) * d;
                 break;
             case 3:
-//                sql_para.tev1_sql.offset_noise += d;
-                sql_para.tev1_sql.offset_noise += Common::code_value(1,TEV1) * d;
+                sql_para.tev1_sql.offset_noise += d;
+//                sql_para.tev1_sql.offset_noise += Common::code_value(1,TEV1) * d;
                 break;
             case 4:
 //                sql_para.tev2_sql.fpga_threshold += Common::code_value(1,TEV2) * d;
                 sql_para.tev2_sql.offset_linearity += Common::code_value(1,TEV2) * d;
                 break;
             case 5:
-//                sql_para.tev2_sql.fpga_zero += d;
-                sql_para.tev2_sql.fpga_zero += Common::code_value(1,TEV2) * d;
+                sql_para.tev2_sql.fpga_zero += d;
+//                sql_para.tev2_sql.fpga_zero += Common::code_value(1,TEV2) * d;
                 break;
             case 6:
-//                sql_para.tev2_sql.offset_noise += d;
-                sql_para.tev2_sql.offset_noise += Common::code_value(1,TEV2) * d;
+                sql_para.tev2_sql.offset_noise += d;
+//                sql_para.tev2_sql.offset_noise += Common::code_value(1,TEV2) * d;
                 break;
             default:
                 break;

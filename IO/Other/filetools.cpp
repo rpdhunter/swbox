@@ -14,12 +14,14 @@ FileTools::FileTools(VectorList data, MODE mode, FileMode filemode)
     _data = data;
     _mode = mode;
     _fileMode = filemode;
+    mode_envelope_modify();
 }
 
 FileTools::FileTools(QString str,FileTools::FileMode filemode)
 {
     getReadFilePath(str);
     _fileMode = filemode;
+    mode_envelope_modify();
 }
 
 FileTools::~FileTools()
@@ -34,9 +36,11 @@ void FileTools::run()
         saveDataFile();         //保存数据文件
         saveCfgFile();          //生成对应的配置文件
 
-        if(_mode == AA1 || _mode == AA2 || _mode == AE1 || _mode == AE2){
+        if(_mode == AA1 || _mode == AA2 || _mode == AE1 || _mode == AE2
+                || _mode == AA1_ENVELOPE || _mode == AA2_ENVELOPE || _mode == AE1_ENVELOPE || _mode == AE2_ENVELOPE){
             saveWavFile();      //生成声音文件
             wavToMp3();         //mp3转换
+//            wav_add_filter();       //TEST
         }
 
         //空间管理
@@ -70,9 +74,39 @@ void FileTools::run()
             }
         }
         emit readFinished(_data, _mode);
+
+//        if(_mode == AA1 || _mode == AA2 || _mode == AE1 || _mode == AE2         //TEST
+//                || _mode == AA1_ENVELOPE || _mode == AA2_ENVELOPE || _mode == AE1_ENVELOPE || _mode == AE2_ENVELOPE){
+//            if(filepath.contains("_env")){
+//                saveWavFile();      //生成声音文件
+//                wavToMp3();         //mp3转换
+//            }
+//            else{
+//                wav_add_filter();       //TEST
+//            }
+
+//        }
+
     }
 
 
+}
+
+
+void FileTools::mode_envelope_modify()
+{
+    if(_mode == AA1 && sqlcfg->get_para()->aa1_sql.envelope == true){
+        _mode = AA1_ENVELOPE;
+    }
+    else if(_mode == AA2 && sqlcfg->get_para()->aa2_sql.envelope == true){
+        _mode = AA2_ENVELOPE;
+    }
+    else if(_mode == AE1 && sqlcfg->get_para()->ae1_sql.envelope == true){
+        _mode = AE1_ENVELOPE;
+    }
+    else if(_mode == AE2 && sqlcfg->get_para()->ae2_sql.envelope == true){
+        _mode = AE2_ENVELOPE;
+    }
 }
 
 void FileTools::getReadFilePath(QString str)
@@ -159,6 +193,18 @@ void FileTools::getWriteFilePath()
         break;
     case HFCT2_CONTINUOUS:
         filename.prepend("HFCT2_CONTINUOUS_");
+        break;
+    case AA1_ENVELOPE:
+        filename.prepend("AA1_ENVELOPE_");
+        break;
+    case AA2_ENVELOPE:
+        filename.prepend("AA2_ENVELOPE_");
+        break;
+    case AE1_ENVELOPE:
+        filename.prepend("AE1_ENVELOPE_");
+        break;
+    case AE2_ENVELOPE:
+        filename.prepend("AE2_ENVELOPE_");
         break;
     default:
         break;
@@ -286,11 +332,11 @@ void FileTools::saveCfgFile()
         out << "1" << "\n";
         if(_mode == AA1 || _mode == AA2 || _mode == AE1 || _mode == AE2){
 //            out << "400000," << _data.length()/2 << "\n";     //点数可变
-            out << "4000," << _data.length()/2 << "\n";     //点数可变
+            out << "4000," << _data.length() << "\n";     //点数可变
         }
         else{
 //            out << "1000000000," << _data.length()/2 << "\n";     //点数可变
-            out << "4000," << _data.length()/2 << "\n";     //点数可变
+            out << "4000," << _data.length() << "\n";     //点数可变
         }
     }
 
@@ -332,8 +378,14 @@ void FileTools::saveWavFile()
     wfh1->ByteFilter = 16;
     wfh1->Format = 1;
     wfh1->Channel = 1;
-//    wfh1->SampleFreq = 400000;
-    wfh1->SampleFreq = 40000;       //临时测试时使用
+    if(_mode == AA1 || _mode == AA2 || _mode == AE1 || _mode == AE2 ){
+//        wfh1->SampleFreq = 400000;
+        wfh1->SampleFreq = 40000;   //临时测试时使用
+    }
+    else if( _mode == AA1_ENVELOPE || _mode == AA2_ENVELOPE || _mode == AE1_ENVELOPE || _mode == AE2_ENVELOPE){
+        wfh1->SampleFreq = 40000;
+    }
+
     wfh1->PCMBitSize = 16;
     wfh1->ByteFreq   = wfh1->PCMBitSize * wfh1->Channel * wfh1->SampleFreq / 8;     //640000
     wfh1->BlockAlign = wfh1->PCMBitSize * wfh1->Channel / 8;
@@ -343,7 +395,8 @@ void FileTools::saveWavFile()
 
     QFile file("out.wav");
     //    file.setFileName(filepath + ".wav");
-    file.setFileName("/tmp/out.wav");
+//    file.setFileName("/tmp/out.wav");
+    file.setFileName("/root/out.wav");
 
     if (!file.open(QIODevice::WriteOnly))
         return;
@@ -391,8 +444,9 @@ void FileTools::wavToMp3()
 {
     QString program = "/root/lame";
     QStringList arguments1,arguments2;
-    arguments1 << "/tmp/out.wav" << filepath+".mp3";
-    arguments2 << "/tmp/out.wav" << filepath_SD +".mp3";
+//    arguments1 << "/tmp/out.wav" << filepath+".mp3";
+//    arguments2 << "/tmp/out.wav" << filepath_SD +".mp3";
+    arguments1 << "/root/out.wav" << filepath+".mp3";
 
     QProcess *myProcess1 = new QProcess;
     myProcess1->start(program, arguments1);
@@ -406,6 +460,25 @@ void FileTools::wavToMp3()
     }
 #endif
     qDebug()<<"mp3 file saved!";
+}
+
+void FileTools::wav_add_filter()
+{
+    QString program = "/root/check_envelop";
+    QStringList arguments1;
+    if(filepath.contains(".DAT")){
+        arguments1 << filepath << "-k";
+    }
+    else{
+        arguments1 << filepath + ".DAT" << "-k";
+    }
+
+//    qDebug()<<filepath + ".DAT";
+
+    QProcess *myProcess1 = new QProcess;
+    myProcess1->start(program, arguments1);
+    QObject::connect(myProcess1,SIGNAL(finished(int)),myProcess1,SLOT(deleteLater()));
+    qDebug()<<" wav_add_filter!";
 }
 
 void FileTools::spaceControl(QString str)
@@ -426,6 +499,7 @@ void FileTools::spaceControl(QString str)
 //        system ("sync");
     }
 }
+
 
 
 

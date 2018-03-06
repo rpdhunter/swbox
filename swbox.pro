@@ -129,44 +129,7 @@ HEADERS  += \
     Gui/Function/uhfwidget.h \
     IO/Other/buzzer.h
 
-
-RESOURCES += \
-    resource/resource.qrc
-
-################################################################################
-INCLUDEPATH += \
-    /usr/local/qwt-6.1.3/include \
-    /usr/local/sqlite3/include
-
-LIBS += \
-    -L"/usr/local/qwt-6.1.3/lib" -lqwt \
-    -L"/usr/local/sqlite3/lib" -lsqlite3
-
-unix:!macx: LIBS += -L$$PWD/../../../../pub/toolchain/arm-xilinx-linux-gnueabi-4.9.2/arm-xilinx-linux-gnueabi/libc/usr/lib/ -lpthread
-
-INCLUDEPATH += $$PWD/../../../../pub/toolchain/arm-xilinx-linux-gnueabi-4.9.2/arm-xilinx-linux-gnueabi/libc/usr/include
-DEPENDPATH += $$PWD/../../../../pub/toolchain/arm-xilinx-linux-gnueabi-4.9.2/arm-xilinx-linux-gnueabi/libc/usr/include
-
-unix:!macx: PRE_TARGETDEPS += $$PWD/../../../../pub/toolchain/arm-xilinx-linux-gnueabi-4.9.2/arm-xilinx-linux-gnueabi/libc/usr/lib/libpthread.a
-
-unix:!macx: LIBS += -L$$PWD/lib/ -lNE10
-
-INCLUDEPATH += $$PWD/lib/NE10
-DEPENDPATH += $$PWD/lib/NE10
-
-unix:!macx: PRE_TARGETDEPS += $$PWD/lib/libNE10.a
-
-#INCLUDEPATH += \
-#    /usr/local/qwtplot3d/include
-
-#LIBS += \
-#    -L/usr/local/qwtplot3d/lib -lqwtplot3d -lGLU
-
-DISTFILES += \
-    BOOT.bin \
-    trans/en.ts
-
-FORMS += \    
+FORMS += \
     Gui/Function/tevwidget.ui \
     Gui/Function/hfctwidget.ui \
     Gui/Function/faultlocation.ui \
@@ -178,6 +141,44 @@ FORMS += \
     Gui/Options/debugui.ui \
     Gui/mainwindow.ui \
     Gui/Function/uhfwidget.ui
+
+
+RESOURCES += \
+    resource/resource.qrc
+
+DISTFILES += \
+    BOOT.bin \
+    trans/en.ts
+
+################################################################################
+
+#qwt
+INCLUDEPATH += \
+    /usr/local/qwt-6.1.3/include \
+    /usr/local/sqlite3/include
+LIBS += \
+    -L"/usr/local/qwt-6.1.3/lib" -lqwt \
+    -L"/usr/local/sqlite3/lib" -lsqlite3
+
+#Linux线程
+unix:!macx: LIBS += -L$$PWD/../../../../pub/toolchain/arm-xilinx-linux-gnueabi-4.9.2/arm-xilinx-linux-gnueabi/libc/usr/lib/ -lpthread
+INCLUDEPATH += $$PWD/../../../../pub/toolchain/arm-xilinx-linux-gnueabi-4.9.2/arm-xilinx-linux-gnueabi/libc/usr/include
+DEPENDPATH += $$PWD/../../../../pub/toolchain/arm-xilinx-linux-gnueabi-4.9.2/arm-xilinx-linux-gnueabi/libc/usr/include
+unix:!macx: PRE_TARGETDEPS += $$PWD/../../../../pub/toolchain/arm-xilinx-linux-gnueabi-4.9.2/arm-xilinx-linux-gnueabi/libc/usr/lib/libpthread.a
+
+#NE10
+unix:!macx: LIBS += -L$$PWD/lib/ -lNE10
+INCLUDEPATH += $$PWD/lib/NE10
+DEPENDPATH += $$PWD/lib/NE10
+unix:!macx: PRE_TARGETDEPS += $$PWD/lib/libNE10.a
+
+#小波变换
+unix:!macx: LIBS += -L$$PWD/../../../disk1/lib/SP++3.0/lib/ -lfftw3
+INCLUDEPATH += $$PWD/../../../disk1/lib/SP++3.0/include
+DEPENDPATH += $$PWD/../../../disk1/lib/SP++3.0/include
+unix:!macx: PRE_TARGETDEPS += $$PWD/../../../disk1/lib/SP++3.0/lib/libfftw3.a
+
+
 
 
 

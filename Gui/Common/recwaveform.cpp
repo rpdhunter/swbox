@@ -43,10 +43,23 @@ RecWaveForm::RecWaveForm(int menu_index, QWidget *parent) :
     d_marker_peak = new QwtPlotMarker();
     d_marker_peak->setValue( 0.0, 0.0 );
     d_marker_peak->setLineStyle( QwtPlotMarker::VLine);
-    d_marker_peak->setLabelAlignment( Qt::AlignRight | Qt::AlignBottom );
+    d_marker_peak->setLabelAlignment( Qt::AlignRight | Qt::AlignCenter );
     d_marker_peak->setLinePen( Qt::green, 0, Qt::DashDotLine );
     d_marker_peak->attach(plot);
 
+    d_marker_peak_max = new QwtPlotMarker();
+    d_marker_peak_max->setValue( 0.0, 0.0 );
+    d_marker_peak_max->setLineStyle( QwtPlotMarker::VLine);
+    d_marker_peak_max->setLabelAlignment( Qt::AlignRight | Qt::AlignTop);
+    d_marker_peak_max->setLinePen( Qt::yellow, 0, Qt::DashDotDotLine );
+    d_marker_peak_max->attach(plot);
+
+    d_marker_peak_min = new QwtPlotMarker();
+    d_marker_peak_min->setValue( 0.0, 0.0 );
+    d_marker_peak_min->setLineStyle( QwtPlotMarker::VLine);
+    d_marker_peak_min->setLabelAlignment( Qt::AlignRight | Qt::AlignBottom );
+    d_marker_peak_min->setLinePen( Qt::yellow, 0, Qt::DashDotDotLine );
+    d_marker_peak_min->attach(plot);
 
     d_marker_threshold1 = new QwtPlotMarker();
     d_marker_threshold1->setValue( 0.0, PEAK_JUDGE );
@@ -54,7 +67,6 @@ RecWaveForm::RecWaveForm(int menu_index, QWidget *parent) :
     d_marker_threshold1->setLabelAlignment( Qt::AlignRight | Qt::AlignTop );
     d_marker_threshold1->setLinePen( Qt::green, 0, Qt::DashDotLine );
     d_marker_threshold1->attach(plot);
-
 
     d_marker_threshold2 = new QwtPlotMarker();
     d_marker_threshold2->setValue( 0.0, -PEAK_JUDGE );
@@ -68,6 +80,11 @@ RecWaveForm::RecWaveForm(int menu_index, QWidget *parent) :
     max=0;
     min=0;
     scale = 1.0;
+    max_i = 0;
+    min_i = 0;
+    max_show_flag = true;
+    min_show_flag = true;
+//    peak_show_flag = false;
 
     this->hide();
 }
@@ -116,13 +133,18 @@ void RecWaveForm::working(CURRENT_KEY_VALUE *val,VectorList buf, MODE mod)
 void RecWaveForm::start_work(VectorList buf, MODE mode)
 {
     setData(buf, mode);
+    set_canvas();
+    fresh();
+
+    max_show_flag = true;
+    min_show_flag = true;
+
     emit show_indicator(false);
     this->show();
 }
 
 void RecWaveForm::trans_key(quint8 key_code)
 {
-    //    qDebug()<<"BBBBB"<<key_val->grade.val5;
     if (key_val == NULL) {
         return;
     }
@@ -136,7 +158,22 @@ void RecWaveForm::trans_key(quint8 key_code)
 
     switch (key_code) {
     case KEY_OK:
-        find_peaks();
+        d_marker_threshold1->show();
+        d_marker_threshold2->show();
+        d_marker_peak_max->show();
+        d_marker_peak_min->show();
+        if(max_show_flag){
+            show_max();
+        }
+        else if(min_show_flag){
+            show_min();
+        }
+        else if(peak_show_flag){
+            find_peaks();
+        }
+        else{
+            show_max();
+        }
         break;
     case KEY_CANCEL:
         this->hide();
@@ -163,9 +200,7 @@ void RecWaveForm::trans_key(quint8 key_code)
         else{
             x = x -100;
         }
-
         break;
-
     case KEY_RIGHT:
         if(x<wave1.length()-400){
             x = x +100;
@@ -173,12 +208,10 @@ void RecWaveForm::trans_key(quint8 key_code)
         else{
             x = wave1.length() - 300;
         }
-
         break;
     default:
         break;
     }
-
     fresh();
 }
 
@@ -189,8 +222,10 @@ void RecWaveForm::setData(VectorList buf, MODE mod)
     curve2->detach();
     wave1.clear();
     wave2.clear();
-    max=0;
-    min=0;
+    max = Common::physical_value(buf.at(0), mode);
+    min = max;
+    max_i = 0;
+    min_i = 0;
     double v_real = 0, temp = 0;
     int length = buf.length();
     if( mode == Double_Channel){
@@ -202,57 +237,39 @@ void RecWaveForm::setData(VectorList buf, MODE mod)
         switch (mode) {
         case TEV1:
         case TEV1_CONTINUOUS:
-            v_real = sqlcfg->get_para()->tev1_sql.gain * TEV_FACTOR * buf.at(i);
-            p = QPointF(i*0.01, v_real);
-            wave1.append(p);
-            break;
         case TEV2:
         case TEV2_CONTINUOUS:
-            v_real = sqlcfg->get_para()->tev2_sql.gain * TEV_FACTOR * buf.at(i);
-            p = QPointF(i*0.01, v_real);
-            wave1.append(p);
-            break;
         case HFCT1:
         case HFCT1_CONTINUOUS:
-            v_real = sqlcfg->get_para()->hfct1_sql.gain * TEV_FACTOR * buf.at(i);
-            p = QPointF(i*0.01, v_real);
-            wave1.append(p);
-            break;
         case HFCT2:
         case HFCT2_CONTINUOUS:
-            v_real = sqlcfg->get_para()->hfct2_sql.gain * TEV_FACTOR * buf.at(i);
+            v_real = Common::physical_value(buf.at(i), mode);
             p = QPointF(i*0.01, v_real);
             wave1.append(p);
             break;
         case AA1:
-            v_real = (buf.at(i) * 4 ) * sqlcfg->get_para()->aa1_sql.gain * AA_FACTOR;
-//            p = QPointF(i/320.0, v_real);
-            p = QPointF(i/400.0, v_real);
-            wave1.append(p);
-            break;
         case AA2:
-            v_real = (buf.at(i) * 4 ) * sqlcfg->get_para()->aa2_sql.gain * AA_FACTOR;
-            p = QPointF(i/400.0, v_real);
-            wave1.append(p);
-            break;
         case AE1:
-            v_real = (buf.at(i) * 4 ) * sqlcfg->get_para()->ae1_sql.gain * AA_FACTOR;
+        case AE2:
+            v_real = Common::physical_value(buf.at(i), mode);
             p = QPointF(i/400.0, v_real);
             wave1.append(p);
             break;
-        case AE2:
-            v_real = (buf.at(i) * 4 ) * sqlcfg->get_para()->ae2_sql.gain * AA_FACTOR;
-            p = QPointF(i/400.0, v_real);
+        case AA1_ENVELOPE:
+        case AA2_ENVELOPE:
+        case AE1_ENVELOPE:
+        case AE2_ENVELOPE:
+            v_real = Common::physical_value(buf.at(i), mode);
+            p = QPointF(i/40.0, v_real);
             wave1.append(p);
             break;
         case Double_Channel:
-            v_real = buf.at(i * 2) * sqlcfg->get_para()->tev1_sql.gain * TEV_FACTOR;
+            v_real = Common::physical_value(buf.at(i * 2), TEV1);
             p = QPointF(i*0.01,v_real);
             wave1.append(p);
-            temp = buf.at(i * 2 + 1) * sqlcfg->get_para()->tev2_sql.gain * TEV_FACTOR;
+            temp = Common::physical_value(buf.at(i * 2 + 1), TEV2);
             p = QPointF(i*0.01,temp);
             wave2.append(p);
-//            curve2->attach(plot);
             v_real = MAX(v_real,temp);
             break;
         default:
@@ -261,26 +278,42 @@ void RecWaveForm::setData(VectorList buf, MODE mod)
 
         if(v_real>max){
             max = v_real;
+            max_i = i;
         }
         else if(v_real<min){
             min = v_real;
+            min_i = i;
         }
 
     }
-
-    set_canvas();
-//    plot->setTitle(tr("\n按OK键寻找峰值"));
-    fresh();
 }
 
 void RecWaveForm::set_canvas()
 {
+    if(min > d_marker_threshold2->yValue() && max < d_marker_threshold1->yValue()){
+        peak_show_flag = false;
+    }
+    else{
+        peak_show_flag = true;
+    }
     if(min > -SHOW_FACTOR){
         min = -SHOW_FACTOR;
     }
     if(max < SHOW_FACTOR ){
         max = SHOW_FACTOR;
     }
+
+    d_marker_peak_max->setValue(wave1.at(max_i));
+    QString label;
+    label.sprintf( "max %.3g", wave1.at(max_i).y() );
+    QwtText text( label );
+    text.setColor( Qt::darkYellow );
+    d_marker_peak_max->setLabel( text );
+
+    d_marker_peak_min->setValue(wave1.at(min_i));
+    label.sprintf( "min %.3g", wave1.at(min_i).y() );
+    text.setText(label);
+    d_marker_peak_min->setLabel( text );
 
     plot->setAxisScale(QwtPlot::yLeft, min, max);
     /* remove gap */
@@ -301,6 +334,8 @@ void RecWaveForm::set_canvas()
     d_marker_peak->hide();    
     d_marker_threshold1->hide();    
     d_marker_threshold2->hide();
+    d_marker_peak_max->hide();
+    d_marker_peak_min->hide();
 
     x = 0;   //开始显示最左边数据
     scale = 1.0;    //纵坐标拉伸因子为1
@@ -308,9 +343,6 @@ void RecWaveForm::set_canvas()
 
 void RecWaveForm::find_peaks()
 {
-    d_marker_threshold1->show();
-    d_marker_threshold2->show();
-
     int j, j1, j2;
     bool a,b;
 
@@ -340,19 +372,40 @@ void RecWaveForm::find_peaks()
             }
             d_marker_peak->setValue(wave1.at(j));
             QString label;
-            label.sprintf( " peak = %.3g", wave1.at(j).y() );
+            label.sprintf( "peak %.3g", wave1.at(j).y() );
             QwtText text( label );
             text.setColor( Qt::darkGreen );
             d_marker_peak->setLabel( text );
             qDebug()<<"find peaks!"<<wave1.at(j);
             d_marker_peak->show();
             break;
-
         }
     }
-    fresh();
 }
 
+void RecWaveForm::show_max()
+{
+    x = max_i-100;
+    if(x < 0){
+        x = 0;
+    }
+    max_show_flag = false;
+    if(!peak_show_flag){
+        min_show_flag = true;
+    }
+}
+
+void RecWaveForm::show_min()
+{
+    x = min_i-100;
+    if(x < 0){
+        x = 0;
+    }
+    min_show_flag = false;
+    if(!peak_show_flag){
+        max_show_flag = true;
+    }
+}
 
 void RecWaveForm::setScroll(int value)
 {
@@ -365,14 +418,10 @@ void RecWaveForm::setScroll(int value)
             curve2->setSamples(wave2.mid(value,300));
         }
 
-        //        qDebug()<<"w.first().x() = "<<w.first().x()<<"\tw.last().x() = "<<w.last().x();
-
         plot->setAxisScale(QwtPlot::xBottom, w.first().x(), w.last().x());
         plot->replot();
     }
 }
-
-
 
 void RecWaveForm::fresh()
 {

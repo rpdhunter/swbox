@@ -30,9 +30,9 @@
 #define AMP_FACTOR_J27_680P 22560.0f
 #define AMP_FACTOR_J27_1N   12200.0f
 #define RESOLUTION_AD_LOW   (5.0/262144.0)
-#define AA_FACTOR   ( RESOLUTION_AD_LOW * 1000000 / AMP_FACTOR_J27_1N )
+#define L_C_FACTOR   ( RESOLUTION_AD_LOW * 1000000 / AMP_FACTOR_J27_1N )
 
-#define TEV_FACTOR  (2.0*1000/65536)
+#define H_C_FACTOR  (2.0*1000/65536)
 
 #define TOKEN_MAX   50          //最大允许一次处理的数据量(TEV 和 HFCT通道使用)
 
@@ -172,6 +172,10 @@ enum MODE{
     TEV2_CONTINUOUS,        //连续录波
     HFCT1_CONTINUOUS,        //连续录波
     HFCT2_CONTINUOUS,        //连续录波
+    AA1_ENVELOPE,       //包络线
+    AA2_ENVELOPE,       //包络线
+    AE1_ENVELOPE,       //包络线
+    AE2_ENVELOPE,       //包络线
     Options_Mode,
 };
 

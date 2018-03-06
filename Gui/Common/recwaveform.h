@@ -35,13 +35,15 @@ private:
     QwtPlot *plot;
     QVector<QPointF> wave1, wave2;
     QwtPlotCurve *curve1, *curve2;
-    QwtPlotMarker *d_marker_peak, *d_marker_threshold1, *d_marker_threshold2;
+    QwtPlotMarker *d_marker_peak, *d_marker_peak_max, *d_marker_peak_min, *d_marker_threshold1, *d_marker_threshold2;
 
     void setData(VectorList buf, MODE mod);
 
     void set_canvas();
 
     void find_peaks();      //寻找峰值
+    void show_max();
+    void show_min();
 
     void setScroll(int value);      //根据数值不同，改变显示内容
 
@@ -49,12 +51,12 @@ private:
 
     MODE mode;
 
-    double x, min, max;
+    int x;              //当前显示的横坐标
+    double min, max;    //最大值和最小值（物理值）
+    int min_i, max_i;   //最大值和最小值的坐标
+    bool max_show_flag, min_show_flag, peak_show_flag;  //最大值、最小值和峰值的显示标志
 
     double scale;
-
-//    G_PARA *data;
-//    SQL_PARA *sql_para;
 };
 
 #endif // RECWAVEFORM_H

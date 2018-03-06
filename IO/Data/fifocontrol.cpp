@@ -93,18 +93,21 @@ QString FifoControl::send_para_to_string(int val)
         break;
     case sp_vol_l2:
         tmp = "vol_l2";
-        break;
+        break;        
+//    case sp_kalman_kg:
+//        tmp = "kalman_kg";
+//        break;
     case sp_rec_start_h1:
-        tmp = "sp_rec_start_h1";
+        tmp = "rec_start_h1";
         break;
     case sp_rec_start_h2:
-        tmp = "sp_rec_start_h2";
+        tmp = "rec_start_h2";
         break;
     case sp_rec_start_l1:
-        tmp = "sp_rec_start_l1";
+        tmp = "rec_start_l1";
         break;
     case sp_rec_start_l2:
-        tmp = "sp_rec_start_l2";
+        tmp = "rec_start_l2";
         break;
     case sp_group_num:
         tmp = "group_num";
@@ -290,9 +293,12 @@ void FifoControl::regs_init()
 
     Common::write_fpga_offset_debug(tdata);
 
+//    tdata->set_send_para (sp_kalman_kg, 4);
+
     tdata->set_send_para (sp_auto_rec, 0);
     tdata->set_send_para (sp_rec_on, 1);
     tdata->set_send_para (sp_sleeping,1);
+    tdata->set_send_para (sp_group_num,0);
 
     tdata->set_send_para (sp_rec_start_h1, 3);        //初始化使用
     tdata->set_send_para (sp_rec_start_h2, 3);

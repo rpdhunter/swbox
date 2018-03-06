@@ -85,18 +85,30 @@ public:
     static void set_barchart_style(QwtPlot *plot, int v_max);                  //完成barchart的样式设置
     static void set_PRPD_style(QwtPlot *plot, QwtPlotSpectroCurve *d_PRPD, int max_value);                      //完成PRPD的样式设置
     static void set_TF_style(QwtPlot *plot, QwtPlotSpectroCurve *d_PRPD, int max_value);                      //完成TF的样式设置
-    static void set_histogram_style(QwtPlot *plot, QwtPlotHistogram *d_histogram);                      //完成histogram的样式设置
+    static void set_histogram_style(QwtPlot *plot, QwtPlotHistogram *d_histogram, int xBottom_min, int xBottom_max,
+                                    int yLeft_min, int yLeft_max, QString title);                      //完成histogram的样式设置
     static void setTab(QLabel *label);              //设置tabwidget的标签格式
 
     static double physical_value(int code_value, MODE mode);        //根据码值返回物理值
     static int code_value(double physical_value, MODE mode);        //根据物理值返回码值
     static double physical_threshold(MODE mode);                    //返回各模式下的物理阈值
+    static qint32 offset_zero_code(MODE mode);                      //返回各模式下的零偏置（码值）
     static QString MODE_toString(MODE val);
     static void write_fpga_offset_debug(G_PARA *data);                    //根据当前通道设置fpga参数，debug界面中设置的fpga参数
     static void calc_aa_value (G_PARA *data, MODE mode, L_CHANNEL_SQL *x_sql, double * aa_val, double * aa_db, int * offset);
     static QVector<QPoint> calc_pulse_list(QVector<int> datalist, QVector<int> timelist, int threshold);          //根据给出的序列和阈值计算脉冲序列
+    static QVector<QPoint> calc_pulse_list(QVector<int> datalist, int threshold);          //根据给出的序列和阈值计算脉冲序列
     static int time_to_phase(int x);             //时标到相位转换
+    static QVector<int> smooth(QVector<int> datalist, int n);             //平滑滤波
+    static QVector<int> smooth_2(QVector<int> datalist, int n);             //2阶平滑滤波
 
+    #define KALMAN_Q 0.02       //Q:过程噪声，Q增大，动态响应变快，收敛稳定性变坏
+    #define KALMAN_R 12.0000     //R:测量噪声，R增大，动态响应变慢，收敛稳定性变好
+    /* 卡尔曼滤波处理 */
+    static float kalman_filter_core (float ResrcData, float ProcessNiose_Q, float MeasureNoise_R, float &x_last, float &p_last);
+    static QVector<int> kalman_filter (QVector<int> wave);
+    static double avrage(QVector<double> list);
+    static QString secton_three(int n);     //三位分节法显示数字
 };
 
 #if 0
