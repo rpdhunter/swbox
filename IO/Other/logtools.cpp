@@ -102,6 +102,12 @@ QString LogTools::getFileName()
     case HFCT2:
         pre = "HFCT2";
         break;
+    case UHF1:
+        pre = "UHF1";
+        break;
+    case UHF2:
+        pre = "UHF2";
+        break;
     case AA1:
         pre = "AA1";
         break;

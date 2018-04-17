@@ -27,9 +27,10 @@
 //#define BUFF_DATA_SIZE			1030
 #define BUFF_DATA_SIZE			520
 
-#define AMP_FACTOR_J27_680P 22560.0f
-#define AMP_FACTOR_J27_1N   12200.0f
-#define RESOLUTION_AD_LOW   (5.0/262144.0)
+#define AMP_FACTOR_J27_680P     22560.0f
+#define AMP_FACTOR_J27_1N       12200.0f
+#define AMP_FACTOR_J27_470P     8131.0f
+#define RESOLUTION_AD_LOW       (10.0/262144.0)
 #define L_C_FACTOR   ( RESOLUTION_AD_LOW * 1000000 / AMP_FACTOR_J27_1N )
 
 #define H_C_FACTOR  (2.0*1000/65536)
@@ -172,10 +173,13 @@ enum MODE{
     TEV2_CONTINUOUS,        //连续录波
     HFCT1_CONTINUOUS,        //连续录波
     HFCT2_CONTINUOUS,        //连续录波
+    UHF1_CONTINUOUS,        //连续录波
+    UHF2_CONTINUOUS,        //连续录波
     AA1_ENVELOPE,       //包络线
     AA2_ENVELOPE,       //包络线
     AE1_ENVELOPE,       //包络线
     AE2_ENVELOPE,       //包络线
+    ASSET,              //资产管理
     Options_Mode,
 };
 

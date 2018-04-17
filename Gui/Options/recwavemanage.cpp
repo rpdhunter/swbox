@@ -27,7 +27,7 @@ RecWaveManage::RecWaveManage(QWidget *parent) : QFrame(parent), ui(new Ui::Form)
     tableWidget->setGridStyle(Qt::NoPen);
     tableWidget->setStyleSheet("alternate-background-color: lightGray;");
 
-    recWaveForm = new RecWaveForm(5,this);
+    recWaveForm = new RecWaveForm(6,this);
     connect(this, SIGNAL(send_key(quint8)), recWaveForm, SLOT(trans_key(quint8)));
     connect(recWaveForm,SIGNAL(show_indicator(bool)),this,SIGNAL(show_indicator(bool)) );
 
@@ -369,10 +369,23 @@ void RecWaveManage::readVoiceData()
     connect(filetools,SIGNAL(readFinished(VectorList,MODE)),this,SLOT(start_play(VectorList,MODE)) );
 }
 
-void RecWaveManage::start_play(VectorList list,MODE)
+void RecWaveManage::start_play(VectorList list,MODE mode)
 {
-    emit show_indicator(false);
-    emit play_voice(list);
+    //包络线需要做数据扩展，匹配播放频率
+    if(mode == AA1_ENVELOPE || mode == AA2_ENVELOPE || mode == AE1_ENVELOPE || mode == AE2_ENVELOPE ){
+        VectorList l;
+        l.resize(list.count()*10);
+        for (int i = 0; i < list.count(); ++i) {
+            for (int j = 0; j < 10; ++j) {
+                l[i*10+j] = list.at(i);
+            }
+        }
+        emit play_voice(l);
+    }
+    else{
+        emit play_voice(list);
+    }
+    emit show_indicator(false);    
 }
 
 void RecWaveManage::refresh()

@@ -9,7 +9,7 @@
 #define GRADE_2_NORMAL      6
 #define GRADE_2_WIFI        2
 #define GRADE_2_ADVANCED    6
-#define SYNC_WIFI_DISABLE   0       //关闭复杂功能
+#define SYNC_WIFI_DISABLE   1       //关闭复杂功能
 
 
 Options::Options(QWidget *parent, G_PARA *g_data, int serial_fd) : QFrame(parent),ui(new Ui::OptionUi)
@@ -167,7 +167,7 @@ void Options::working(CURRENT_KEY_VALUE *val)
 
 void Options::trans_key(quint8 key_code)
 {
-    if (key_val == NULL || key_val->grade.val0 != 5 || key_val->grade.val1 != 1) {
+    if (key_val == NULL || key_val->grade.val0 != 6 || key_val->grade.val1 != 1) {
         return;
     }
 
@@ -395,7 +395,7 @@ void Options::do_key_left_right(int d)
             data->set_send_para (sp_keyboard_backlight, sql_para.key_backlight);
             break;
         case 5:         //关机
-            Common::change_index(sql_para.close_time,d,60,0);
+            Common::change_index(sql_para.close_time,d,120,0);
             break;
         case 6:         //语言
             Common::change_value(sql_para.language, EN, CN);

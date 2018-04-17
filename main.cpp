@@ -10,6 +10,7 @@
 #include "IO/SqlCfg/sqlcfg.h"
 #include "Gui/Qml/quickview.h"
 
+#include <QSqlDatabase>
 
 void print_centor();
 
@@ -24,6 +25,8 @@ int main(int argc, char *argv[])
     QPixmap pixmap(":/widgetphoto/bk/amg.png");
 #elif ZDIT
     QPixmap pixmap(":/widgetphoto/bk/zdit.png");
+#elif XDP_II
+    QPixmap pixmap(":/widgetphoto/bk/xdp2.png");
 #else
     QPixmap pixmap(":/widgetphoto/bk/powersystem.png");
 #endif
@@ -40,6 +43,19 @@ int main(int argc, char *argv[])
 
     print_centor();
 //    sqlite3_init();
+//    qDebug()<<QSqlDatabase::drivers();
+//    QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
+//    db.setDatabaseName(":memory:");
+//    if (!db.open()) {
+//        qDebug("Unable to establish a database connection.\n"
+//               "This example needs SQLite support. Please read "
+//               "the Qt SQL driver documentation for information how "
+//               "to build it.\n\n"
+//               "Click Cancel to exit.");
+//    }
+//    else{
+//        qDebug()<<"open sqlite3 successed";
+//    }
     sqlcfg = new SqlCfg();
 
 //    return 1;

@@ -16,6 +16,7 @@ class AEWidget;
 }
 
 class QTimer;
+class FFT;
 
 class AEWidget : public QFrame
 {
@@ -43,6 +44,7 @@ private slots:
     void fresh_1000ms();
     void fresh_100ms();
     void add_ae_data();     //处理256个点的AE数据（1/160秒的数据）
+    void fly_Reset();
 
 private:
     Ui::AEWidget *ui;    
@@ -57,7 +59,7 @@ private:
     double max_db;  //最大值
     double temp_db; //显示值缓冲区，用于减缓刷新
 
-    QTimer *timer_100ms , *timer_1000ms;
+    QTimer *timer_100ms , *timer_1000ms, *timer_10000ms;
     RecWaveForm *recWaveForm;
     LogTools *logtools;
     bool isBusy;            //菊花状态
@@ -65,6 +67,8 @@ private:
 
     QVector<int> ae_datalist;
     QVector<int> ae_timelist;
+    QVector<int> ae_fftlist;
+    FFT *fft;
 
     void fresh_setting();
     void maxReset();
@@ -85,6 +89,13 @@ private:
     QPoint transData(int x, int y);     //将原始脉冲转换成可显示的DB值
     void PRPDReset();
 
+    //飞行图
+    QwtPlot *plot_fly;                 //飞行图
+    QwtPlotSpectroCurve *d_fly;        //飞行曲线
+    QVector<QwtPoint3D> fly_samples;   //飞行数据
+    int fly_number;                    //飞行周期计数（目前20个周期重置）
+
+
     //柱状图
     QwtPlot *plot_Histogram;
     QwtPlotHistogram *d_histogram;   //Histogram图
@@ -94,3 +105,11 @@ private:
 };
 
 #endif // AEWIDGET_H
+
+
+
+
+
+
+
+

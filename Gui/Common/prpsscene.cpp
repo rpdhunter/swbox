@@ -64,7 +64,7 @@ void PRPSScene::axisInit(int hfct_max)
     addLine(QLineF(P0+P_shadow/2, Py_max+P_shadow/2),pen_gray);
 
     QPointF P_adjust(-25,-10);
-    if(mode == TEV1 || mode == TEV2){
+    if(mode == TEV1 || mode == TEV2 || mode == UHF1 || UHF2){
         data_max = 60;
 //        setText(QString("%1").arg(data_max), Py_max+P_shadow + P_adjust);
 //        setText(QString("%1").arg(data_max/2), (Py_max + P0)/2 + P_shadow + P_adjust);
@@ -125,7 +125,7 @@ void PRPSScene::addPRPD(QVector<QPointF> list)
     //新建
     foreach (QPointF P, list) {
         if(P.x()>360 || P.x()<0 || qAbs(P.y()) > data_max){
-            qDebug()<<"PRPS input data error! P.y="<<qAbs(P.y());
+//            qDebug()<<"PRPS input data error! P.y="<<qAbs(P.y());
             return;
         }
         P.setY(qAbs(P.y()) );
@@ -148,6 +148,14 @@ void PRPSScene::addPRPD(QVector<QPointF> list)
         case HFCT2:
             high = sqlcfg->get_para()->hfct2_sql.high;
             low = sqlcfg->get_para()->hfct2_sql.low;
+            break;
+        case UHF1:
+            high = sqlcfg->get_para()->uhf1_sql.high;
+            low = sqlcfg->get_para()->uhf1_sql.low;
+            break;
+        case UHF2:
+            high = sqlcfg->get_para()->uhf2_sql.high;
+            low = sqlcfg->get_para()->uhf2_sql.low;
             break;
         default:
             break;

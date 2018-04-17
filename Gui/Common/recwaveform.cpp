@@ -178,7 +178,7 @@ void RecWaveForm::trans_key(quint8 key_code)
     case KEY_CANCEL:
         this->hide();
         key_val->grade.val5 = 0;
-        if(key_val->grade.val0 != 5){
+        if(key_val->grade.val0 != 6){
             key_val->grade.val1 = 0;
             key_val->grade.val2 = 0;
             emit fresh_parent();
@@ -243,6 +243,10 @@ void RecWaveForm::setData(VectorList buf, MODE mod)
         case HFCT1_CONTINUOUS:
         case HFCT2:
         case HFCT2_CONTINUOUS:
+        case UHF1:
+        case UHF1_CONTINUOUS:
+        case UHF2:
+        case UHF2_CONTINUOUS:
             v_real = Common::physical_value(buf.at(i), mode);
             p = QPointF(i*0.01, v_real);
             wave1.append(p);
@@ -264,10 +268,10 @@ void RecWaveForm::setData(VectorList buf, MODE mod)
             wave1.append(p);
             break;
         case Double_Channel:
-            v_real = Common::physical_value(buf.at(i * 2), TEV1);
+            v_real = Common::physical_value(buf.at(i * 2), (MODE)sqlcfg->get_para()->menu_h1);
             p = QPointF(i*0.01,v_real);
             wave1.append(p);
-            temp = Common::physical_value(buf.at(i * 2 + 1), TEV2);
+            temp = Common::physical_value(buf.at(i * 2 + 1), (MODE)sqlcfg->get_para()->menu_h2);
             p = QPointF(i*0.01,temp);
             wave2.append(p);
             v_real = MAX(v_real,temp);

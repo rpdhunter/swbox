@@ -18,6 +18,7 @@ SqlCfg::SqlCfg()
 
     /* mutex lock sql opt */
     pthread_mutex_lock(&sql_mutex);
+    //打开数据库，并关联句柄pDB。文件名不需要一定存在，如果此文件不存在，sqlite会自动建立它。如果它存在，就尝试把它当数据库文件来打开。
     if (sqlite3_open(SQL_PATH, &pDB) != SQLITE_OK) {
         /* mutex unlock */
         pthread_mutex_unlock(&sql_mutex);
@@ -25,8 +26,10 @@ SqlCfg::SqlCfg()
         exit(-1);
     }
 
+    //查询是否有is_default=1的条目，有则读取，没有则新建
     c_str = "SELECT * FROM device_config where is_default=1";
     if (sqlite3_prepare_v2(pDB , c_str , strlen(c_str) , &stmt , NULL) != SQLITE_OK) {
+        //新建数据库device_config，数据库存在3个字段：name,data,is_default
         printf("Table device_config is no exist and create!\n");
         c_str = "create table if not exists device_config (name text, data blob, is_default int primary key);";
         if (sqlite3_exec (pDB, c_str, NULL, NULL, &err_msg) != SQLITE_OK) {
@@ -34,24 +37,24 @@ SqlCfg::SqlCfg()
             goto exit;
         }
 
+        //数据库初始化
         default_config();
-
         c_str = "insert into device_config (name, data, is_default) values (:name, :data, :is_default)";
         if (sqlite3_prepare_v2 (pDB , c_str , strlen(c_str) , &stmt , NULL) != SQLITE_OK) {
             printf ("Insert into device_config error!\n");
             goto exit;
         }
-
+        //插入第一字段:name
         if (sqlite3_bind_text (stmt, 1, "default_config", strlen(c_str), NULL)) {
             printf("Sqlite3_bind_text error!\n");
             goto exit;
         }
-
+        //插入第二字段:data
         if (sqlite3_bind_blob (stmt, 2, &sql_para, sizeof (sql_para), NULL) != SQLITE_OK) {
             printf ("Sqlite3_bind_blob error!\n");
             goto exit;
         }
-
+        //插入第三字段:is_default
         if (sqlite3_bind_int (stmt, 3, 1)) {
             printf ("Sqlite3_bind_int error!\n");
             goto exit;
@@ -61,10 +64,11 @@ SqlCfg::SqlCfg()
             printf ("Sqlite3_bind_blob error!\n");
             goto exit;
         }
-    } else {
+    }
+    else {
 //        qDebug("Table device_config is exist! [LINE:%d] [FILE:%s]", __LINE__, __FILE__);
         while (sqlite3_step (stmt) == SQLITE_ROW) {
-            dev = (SQL_PARA *)(sqlite3_column_blob (stmt, 1));
+            dev = (SQL_PARA *)(sqlite3_column_blob (stmt, 1));      //读取sqlite3中的blob数据
             memcpy (&sql_para, dev, sizeof (SQL_PARA));
         }        
     }

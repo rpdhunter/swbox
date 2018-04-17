@@ -55,11 +55,16 @@
         <file>Busy.qml</file>
         <file>widgetphoto/menu/UHF2_2.png</file>
         <file>widgetphoto/menu/UHF2_1.png</file>
-        <file>widgetphoto/menu/UHF2_0 .png</file>
         <file>widgetphoto/menu/UHF1_2.png</file>
         <file>widgetphoto/menu/UHF1_1.png</file>
         <file>widgetphoto/menu/UHF1_0.png</file>
         <file>widgetphoto/bk/zdit_low.png</file>
         <file>widgetphoto/bk/zdit.png</file>
+        <file>widgetphoto/menu/UHF2_0.png</file>
+        <file>widgetphoto/bk/xdp2_low.png</file>
+        <file>widgetphoto/bk/xdp2.png</file>
+        <file>widgetphoto/menu/ASSET_2.png</file>
+        <file>widgetphoto/menu/ASSET_1.png</file>
+        <file>widgetphoto/menu/ASSET_0.png</file>
     </qresource>
 </RCC>

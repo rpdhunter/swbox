@@ -12,7 +12,7 @@
 
 #define TEV_HIGH			40
 #define TEV_LOW				20
-#define FPGA_THRESHOLD		0x200
+#define FPGA_THRESHOLD		0x80
 
 #define AA_VOL_DEFAULT				8
 #define AA_HIGH				40

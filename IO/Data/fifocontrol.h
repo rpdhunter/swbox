@@ -54,18 +54,17 @@ private:
         L1_CHANNEL_MODE,
         L2_CHANNEL_MODE,
         //通道参数
-        TEV1_ZERO,
-        TEV1_THRESHOLD,
-        TEV2_ZERO,
-        TEV2_THRESHOLD,
-        HFCT1_ZERO,
-        HFCT1_THRESHOLD,
-        HFCT2_ZERO,
-        HFCT2_THRESHOLD,
+        H1_ZERO,
+        H1_THRESHOLD,
+        H2_ZERO,
+        H2_THRESHOLD,
         VOL_L1,
         AA_RECORD_PLAY,
         VOL_L2,
-//        KALMAN_KG,
+        KALMAN_L1,
+        KALMAN_L2,
+        L1_THRESHOLD,
+        L2_THRESHOLD,
         //录波
         REC_ON,
         REC_START_H1,
@@ -84,7 +83,7 @@ private:
         READ_FPGA_AE1,
         READ_FPGA_AE2,
 
-//        FPGA_SLEEP,
+        TEMP_TEST,
     };
 
     QString send_para_to_string(int val);

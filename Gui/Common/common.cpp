@@ -83,6 +83,7 @@ void Common::change_index(int &index, int d_index, QList<int> list)
     }
     else{
         qDebug()<<"input error in Common::change_index()"<<list;
+        index = list.first();
     }
 }
 
@@ -200,7 +201,19 @@ void Common::set_PRPD_style(QwtPlot *plot, QwtPlotSpectroCurve *d_PRPD, int max_
     d_PRPD->attach(plot);
 }
 
-void Common::set_TF_style(QwtPlot *plot, QwtPlotSpectroCurve *d_PRPD, int max_value)
+void Common::set_fly_style(QwtPlot *plot, QwtPlotSpectroCurve *d_fly, int max_value)
+{
+    plot->setStyleSheet("background:transparent;color:gray;");
+
+    plot->setAxisScale(QwtPlot::xBottom, 0, 200);
+    plot->setAxisScale(QwtPlot::yLeft, 0, max_value);
+    /* remove gap */
+    plot->axisWidget(QwtPlot::xBottom)->setMargin(0);
+    plot->axisWidget(QwtPlot::yLeft)->setMargin(0);
+    d_fly->attach(plot);
+}
+
+void Common::set_TF_style(QwtPlot *plot, QwtPlotSpectroCurve *d_TF, int max_value)
 {
     plot->setStyleSheet("background:transparent;color:gray;");
 
@@ -223,8 +236,8 @@ void Common::set_TF_style(QwtPlot *plot, QwtPlotSpectroCurve *d_PRPD, int max_va
     colorMap->setColorInterval(Qt::blue,Qt::red);
     colorMap->addColorStop(0.3,Qt::green);
     colorMap->addColorStop(0.6,Qt::yellow);
-    d_PRPD->setColorMap(colorMap);
-    d_PRPD->setColorRange(QwtInterval(1,6));
+    d_TF->setColorMap(colorMap);
+    d_TF->setColorRange(QwtInterval(1,6));
     QwtScaleWidget *rightAxis = plot->axisWidget( QwtPlot::yRight );
     rightAxis->setColorBarEnabled( true );
     rightAxis->setColorMap(QwtInterval(1,6),colorMap);
@@ -233,7 +246,7 @@ void Common::set_TF_style(QwtPlot *plot, QwtPlotSpectroCurve *d_PRPD, int max_va
     plot->enableAxis( QwtPlot::yRight );
 
     plot->plotLayout()->setAlignCanvasToScales( true );
-    d_PRPD->attach(plot);
+    d_TF->attach(plot);
 }
 
 void Common::set_histogram_style(QwtPlot *plot, QwtPlotHistogram *d_histogram, int xBottom_min, int xBottom_max,
@@ -291,6 +304,14 @@ double Common::physical_value(int code_value, MODE mode)
     case HFCT2_CONTINUOUS:
         v_real = code_value * sqlcfg->get_para()->hfct2_sql.gain * H_C_FACTOR;
         break;
+    case UHF1:
+    case UHF1_CONTINUOUS:
+        v_real = code_value * sqlcfg->get_para()->uhf1_sql.gain * H_C_FACTOR;
+        break;
+    case UHF2:
+    case UHF2_CONTINUOUS:
+        v_real = code_value * sqlcfg->get_para()->uhf2_sql.gain * H_C_FACTOR;
+        break;
     case AA1:
     case AA1_ENVELOPE:
         v_real = (code_value * 4) * sqlcfg->get_para()->aa1_sql.gain * L_C_FACTOR;
@@ -333,6 +354,14 @@ int Common::code_value(double physical_value, MODE mode)
     case HFCT2_CONTINUOUS:
         v_code = physical_value / sqlcfg->get_para()->hfct2_sql.gain / H_C_FACTOR;
         break;
+    case UHF1:
+    case UHF1_CONTINUOUS:
+        v_code = physical_value / sqlcfg->get_para()->uhf1_sql.gain / H_C_FACTOR;
+        break;
+    case UHF2:
+    case UHF2_CONTINUOUS:
+        v_code = physical_value / sqlcfg->get_para()->uhf2_sql.gain / H_C_FACTOR;
+        break;
     case AA1:
         v_code = physical_value / 4 / sqlcfg->get_para()->aa1_sql.gain / L_C_FACTOR;
         break;
@@ -370,6 +399,14 @@ double Common::physical_threshold(MODE mode)
     case HFCT2:
     case HFCT2_CONTINUOUS:
         v_real = physical_value(sqlcfg->get_para()->hfct2_sql.fpga_threshold, HFCT2);
+        break;
+    case UHF1:
+    case UHF1_CONTINUOUS:
+        v_real = physical_value(sqlcfg->get_para()->uhf1_sql.fpga_threshold, UHF1);
+        break;
+    case UHF2:
+    case UHF2_CONTINUOUS:
+        v_real = physical_value(sqlcfg->get_para()->uhf2_sql.fpga_threshold, UHF2);
         break;
     case Double_Channel:        //to be
         v_real = physical_value(sqlcfg->get_para()->tev1_sql.fpga_threshold, TEV1);
@@ -416,6 +453,14 @@ qint32 Common::offset_zero_code(MODE mode)
     case HFCT2_CONTINUOUS:
         v_code = sqlcfg->get_para()->hfct2_sql.fpga_zero;
         break;
+    case UHF1:
+    case UHF1_CONTINUOUS:
+        v_code = sqlcfg->get_para()->uhf1_sql.fpga_zero;
+        break;
+    case UHF2:
+    case UHF2_CONTINUOUS:
+        v_code = sqlcfg->get_para()->uhf2_sql.fpga_zero;
+        break;
     default:
         break;
     }
@@ -440,6 +485,12 @@ QString Common::MODE_toString(MODE val)
         break;
     case HFCT2:
         tmpStr = "HFCT2";
+        break;
+    case UHF1:
+        tmpStr = "UHF1";
+        break;
+    case UHF2:
+        tmpStr = "UHF2";
         break;
     case AA1:
         tmpStr = "AA1";
@@ -481,15 +532,13 @@ void Common::write_fpga_offset_debug(G_PARA *data)
 {
     switch (sqlcfg->get_para()->menu_h1) {
     case TEV1:
-        data->set_send_para (sp_tev1_zero, 0x8000 + code_value(sqlcfg->get_para()->tev1_sql.fpga_zero,TEV1) );
-//        data->set_send_para (sp_tev1_threshold, code_value(sqlcfg->get_para()->tev1_sql.fpga_threshold, TEV1) );
+        data->set_send_para (sp_h1_zero, 0x8000 + sqlcfg->get_para()->tev1_sql.fpga_zero );
         break;
     case HFCT1:
-        data->set_send_para (sp_hfct1_zero, 0x8000 + code_value(sqlcfg->get_para()->hfct1_sql.fpga_zero,HFCT1) );
-//        data->set_send_para (sp_hfct1_threshold, code_value(sqlcfg->get_para()->hfct1_sql.fpga_zero,HFCT1) );
+        data->set_send_para (sp_h1_zero, 0x8000 + sqlcfg->get_para()->hfct1_sql.fpga_zero );
         break;
     case UHF1:
-
+        data->set_send_para (sp_h1_zero, 0x8000 + sqlcfg->get_para()->uhf1_sql.fpga_zero );
         break;
     default:
         break;
@@ -497,15 +546,13 @@ void Common::write_fpga_offset_debug(G_PARA *data)
 
     switch (sqlcfg->get_para()->menu_h2) {
     case TEV2:
-        data->set_send_para (sp_tev2_zero, 0x8000 + code_value(sqlcfg->get_para()->tev2_sql.fpga_zero,TEV2) );
-//        data->set_send_para (sp_tev2_threshold, code_value(sqlcfg->get_para()->tev2_sql.fpga_threshold, TEV2) );
+        data->set_send_para (sp_h2_zero, 0x8000 + sqlcfg->get_para()->tev2_sql.fpga_zero );
         break;
     case HFCT2:
-        data->set_send_para (sp_hfct2_zero, 0x8000 + code_value(sqlcfg->get_para()->hfct2_sql.fpga_zero,HFCT2) );
-//        data->set_send_para (sp_hfct2_threshold, code_value(sqlcfg->get_para()->hfct2_sql.fpga_zero,HFCT2) );
+        data->set_send_para (sp_h2_zero, 0x8000 + sqlcfg->get_para()->hfct2_sql.fpga_zero );
         break;
     case UHF2:
-
+        data->set_send_para (sp_h2_zero, 0x8000 + sqlcfg->get_para()->uhf2_sql.fpga_zero );
         break;
     default:
         break;
@@ -541,37 +588,22 @@ void Common::write_fpga_offset_debug(G_PARA *data)
 void Common::calc_aa_value(G_PARA *data, MODE mode, L_CHANNEL_SQL *x_sql, double *aa_val, double *aa_db, int *offset)
 {
     int d;
-//    AA_SQL *x_sql;
-//    switch (mode) {
-//    case AA1:
-//        d = (int)data->recv_para_normal.ldata0_max - (int)data->recv_para_normal.ldata0_min ;      //最大值-最小值=幅值
-//        x_sql = &sqlcfg->get_para()->aa1_sql;
-//        break;
-//    case AA2:
-//        d = (int)data->recv_para_normal.ldata1_max - (int)data->recv_para_normal.ldata1_min ;      //最大值-最小值=幅值
-//        x_sql = &sqlcfg->get_para()->aa2_sql;
-//        break;
-//    case AE1:
-//        d = (int)data->recv_para_normal.ldata0_max - (int)data->recv_para_normal.ldata0_min ;      //最大值-最小值=幅值
-//        x_sql = &sqlcfg->get_para()->ae1_sql;
-//        break;
-//    case AE2:
-//        d = (int)data->recv_para_normal.ldata1_max - (int)data->recv_para_normal.ldata1_min ;      //最大值-最小值=幅值
-//        x_sql = &sqlcfg->get_para()->ae2_sql;
-//        break;
-//    default:
-//        break;
-//    }
 
     if(mode == AA1 || mode == AE1){
-        d = ((int)data->recv_para_normal.ldata0_max - (int)data->recv_para_normal.ldata0_min) / 4 ;      //最大值-最小值=幅值
+        d = ((int)data->recv_para_normal.ldata0_max - (int)data->recv_para_normal.ldata0_min) / 2 ;      //最大值-最小值=幅值
     }
     else {
-        d = ((int)data->recv_para_normal.ldata1_max - (int)data->recv_para_normal.ldata1_min) / 4 ;      //最大值-最小值=幅值
+        d = ((int)data->recv_para_normal.ldata1_max - (int)data->recv_para_normal.ldata1_min) / 2 ;      //最大值-最小值=幅值
     }
-//    qDebug()<<"d="<<d<<"\t ph value="<<Common::physical_value(d,mode);
+//    if(mode == AE1 || mode == AE2){
+//        qDebug()<<"d="<<d<<"\t ph value="<<Common::physical_value(d,mode)/4;
+//    }
+
     * offset = ( d - 1 / x_sql->gain / L_C_FACTOR ) / 100;
     * aa_val = (d - x_sql->offset * 100) * x_sql->gain * L_C_FACTOR;
+    if(* aa_val < 0.1){         //保证结果有值，最小是-20dB
+        * aa_val = 0.1;
+    }
     * aa_db = 20 * log10 (* aa_val);
 }
 

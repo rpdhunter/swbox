@@ -37,7 +37,7 @@ signals:
     void show_indicator(bool);      //显示菊花
 
 private slots:
-    void start_play(VectorList list,MODE);
+    void start_play(VectorList list, MODE mode);
 
 private:
     CURRENT_KEY_VALUE *key_val;

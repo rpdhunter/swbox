@@ -130,7 +130,7 @@ void RecControl::recv_rec_data()
 //                qDebug()<<"init timer_interval";
             }
             if(timer_interval->remainingTime() > 0){        //触发间隔
-                qDebug()<<"tringer the interval! remain timer:"<<timer_interval->remainingTime();
+//                qDebug()<<"tringer the interval! remain timer:"<<timer_interval->remainingTime();
                 data->set_send_para(sp_rec_start_h1, 2);
                 data->set_send_para(sp_rec_start_h2, 2);
                 fifocontrol->send_para();

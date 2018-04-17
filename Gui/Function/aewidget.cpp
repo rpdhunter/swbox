@@ -4,10 +4,11 @@
 #include <QLineEdit>
 #include <QTimer>
 #include "IO/Com/rdb/rdb.h"
+#include "Gui/Common/fft.h"
 
 #define SETTING_NUM 9           //设置菜单条目数
 #define VALUE_MAX 60
-//#define TEST
+//#define TEST_ae
 
 AEWidget::AEWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu_index, QWidget *parent) :
     QFrame(parent),
@@ -25,21 +26,27 @@ AEWidget::AEWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu_ind
     this->menu_index = menu_index;
 
     reload(-1);
+    fft = new FFT;
     temp_db = 0;
     db = 0;
     isBusy = false;
+    fly_number = 0;
 
     //图形设置
     chart_ini();
 
 
     timer_100ms = new QTimer(this);
-    timer_100ms->setInterval(500);
+    timer_100ms->setInterval(100);
     connect(timer_100ms, SIGNAL(timeout()), this, SLOT(fresh_100ms()));   //每0.1秒刷新一次数据状态，明显的变化需要快速显示
 
     timer_1000ms = new QTimer(this);
     timer_1000ms->setInterval(1000);
     connect(timer_1000ms, SIGNAL(timeout()), this, SLOT(fresh_1000ms()));   //每1秒刷新一次数据状态
+
+    timer_10000ms = new QTimer(this);
+    timer_10000ms->setInterval(20000);
+    connect(timer_10000ms, SIGNAL(timeout()), this, SLOT(fly_Reset()));   //每20秒刷新一次数据状态
 
     recWaveForm = new RecWaveForm(menu_index,this);
     connect(this, SIGNAL(send_key(quint8)), recWaveForm, SLOT(trans_key(quint8)));
@@ -76,7 +83,7 @@ void AEWidget::fresh_1000ms()
 //    plot_PRPD->replot();
 //    plot_Histogram->replot();
 
-#ifdef TEST
+#ifdef TEST_ae
     qDebug()<<QTime::currentTime();
 
     //数据量显示
@@ -102,18 +109,24 @@ void AEWidget::fresh_100ms()
     fresh(false);
 
 //    qDebug()<<"ae_datalist\t"<<ae_datalist.count() << "\t"<< ae_datalist.count()/128.0;
-#ifndef TEST
+#ifndef TEST_ae
 //    QVector<QPoint> pulse_100ms = Common::calc_pulse_list(ae_datalist,ae_timelist,aeultra_sql->fpga_threshold);
-//    ae_datalist = Common::smooth_2(ae_datalist, 8);
-//    qDebug()<<"before"<<ae_datalist.mid(0,30);
+
     ae_datalist = Common::kalman_filter(ae_datalist);
-//    qDebug()<<"after"<<ae_datalist.mid(0,30);
+
+
+    //为一个工频周期选取32个点，用于fft变换
+    for (int i = 0; i < ae_datalist.count(); ++i) {
+        if(i%25 == 0){
+            ae_fftlist.append(ae_datalist.at(i));
+        }
+    }
 
     QVector<QPoint> pulse_100ms = Common::calc_pulse_list(ae_datalist,aeultra_sql->fpga_threshold);
-//    foreach (QPoint P, pulse_100ms) {
-//        qDebug()<<P;
-//    }
 
+
+
+//    fly_number
 
     int space;      //相邻两次脉冲的间隔时间
     int temp;
@@ -121,7 +134,7 @@ void AEWidget::fresh_100ms()
         for (int i = 1; i < pulse_100ms.count(); ++i) {
             temp = pulse_100ms.at(i).x() - pulse_100ms.at(i-1).x();
             if(temp > 20){
-                 qDebug()<<temp;
+//                 qDebug()<<temp;
             }
             space = (pulse_100ms.at(i).x() - pulse_100ms.at(i-1).x() ) * 320000.0 / 128 / 100000;
 //            qDebug()<<space;
@@ -144,11 +157,12 @@ void AEWidget::fresh_100ms()
 
 
 
-    int x,y;
+    int x,y, time;
     double _y;
     for(int i=0; i<pulse_100ms.count(); i++){
 //        x = Common::time_to_phase(pulse_100ms.at(i).x() );              //时标
-        x = Common::time_to_phase(pulse_100ms.at(i).x() * 320000 / 128 + ae_timelist.first() );              //时标(待定)
+        time = pulse_100ms.at(i).x() * 320000 / 128 + ae_timelist.first();  //时标
+        x = Common::time_to_phase(time );              //时标(待定)
         _y = Common::physical_value(pulse_100ms.at(i).y(),mode);         //强度
         y = (int)20*log(qAbs(_y) );
 
@@ -168,11 +182,18 @@ void AEWidget::fresh_100ms()
         else{
 //            qDebug()<<QPointF(x,y) << "\t"<< pulse_100ms.at(i);
         }
+        time /= 200000;
+        if(time > 200){
+            time -= 200;
+        }
+        fly_samples.append(QwtPoint3D(time, y, 1));
     }
+
 
     d_PRPD->setSamples(prpd_samples);
     plot_PRPD->replot();
-
+    d_fly->setSamples(fly_samples);
+    plot_fly->replot();
     ae_timelist.clear();
     ae_datalist.clear();
 #endif
@@ -200,7 +221,9 @@ void AEWidget::reload(int index)
         if(!timer_1000ms->isActive()){
             timer_1000ms->start();
         }
-
+        if(!timer_10000ms->isActive()){
+            timer_10000ms->start();
+        }
         if(mode == AE1){
             data->set_send_para (sp_vol_l1, aeultra_sql->vol);
             data->set_send_para (sp_aa_record_play, 0);        //耳机送1通道
@@ -245,6 +268,7 @@ void AEWidget::trans_key(quint8 key_code)
         case 9:
             maxReset();
             PRPDReset();
+            fly_Reset();
             break;
         default:
             break;
@@ -331,6 +355,13 @@ void AEWidget::chart_ini()
     Common::set_PRPD_style(plot_PRPD,d_PRPD,VALUE_MAX);
     PRPDReset();
 
+    //飞行图
+    plot_fly = new QwtPlot(ui->widget);
+    plot_fly->resize(200, 140);
+    d_fly = new QwtPlotSpectroCurve;
+    Common::set_fly_style(plot_fly,d_fly,VALUE_MAX);
+    fly_Reset();
+
     //histogram
     plot_Histogram = new QwtPlot(ui->widget);
     plot_Histogram->resize(200, 140);
@@ -354,6 +385,11 @@ void AEWidget::PRPDReset()
         histogram_map[i]=0;
     }
     histogram_data.clear();
+}
+
+void AEWidget::fly_Reset()
+{
+    fly_samples.clear();
 }
 
 void AEWidget::fresh_Histogram()
@@ -407,6 +443,7 @@ void AEWidget::fresh(bool f)
 //    qDebug()<<"val="<<val<<"\tval_db="<<val_db;
 
 
+
     if(db < int(val_db)){
         db = int(val_db);      //每秒的最大值
     }
@@ -418,6 +455,29 @@ void AEWidget::fresh(bool f)
     }
 
     if(f){  //直接显示（1s一次）
+
+        QVector<qint32> fft_result;
+        QVector<double> fft_50Hz, fft_100Hz;
+//        qDebug()<<"ae_fftlist number
+        for (int i = 0; i < ae_fftlist.count() / 32; ++i) {
+            fft_result = fft->fft32(ae_fftlist.mid(i*32,32));
+            fft_50Hz.append(fft_result.at(1));
+            fft_100Hz.append(fft_result.at(2));
+        }
+//        qDebug()<<fft_50Hz;
+//        qDebug()<<fft_100Hz;
+
+        int v_50Hz = Common::avrage(fft_50Hz);
+        int v_100Hz = Common::avrage(fft_100Hz);
+        ui->label_50Hz->setText(QString("%1mV").arg(v_50Hz));
+        ui->label_100Hz->setText(QString("%1mV").arg(v_100Hz));
+
+        ui->progressBar_50Hz->setValue(v_50Hz);
+        ui->progressBar_100Hz->setValue(v_100Hz);
+
+        ae_fftlist.clear();
+
+
         ui->label_val->setText(QString::number(val_db, 'f', 1));
         temp_db = val_db;
         //彩色显示
@@ -499,27 +559,30 @@ void AEWidget::fresh_setting()
     if (aeultra_sql->chart == PRPD) {
         ui->comboBox->setItemText(1,tr("图形显示\t[PRPD]"));
         plot_PRPD->show();
+        plot_fly->hide();
         plot_Barchart->hide();
         plot_Histogram->hide();
 
     } else if(aeultra_sql->chart == BASIC){
         ui->comboBox->setItemText(1,tr("图形显示 \t[时序图]"));
         plot_PRPD->hide();
+        plot_fly->hide();
         plot_Barchart->show();
         plot_Histogram->hide();
 
     } else if(aeultra_sql->chart == FLY){
         ui->comboBox->setItemText(1,tr("图形显示 \t[飞行图]"));
         plot_PRPD->hide();
+        plot_fly->show();
         plot_Barchart->hide();
         plot_Histogram->hide();
 
     } else if(aeultra_sql->chart == Exponent){
         ui->comboBox->setItemText(1,tr("图形显示  [特征指数]"));
         plot_PRPD->hide();
+        plot_fly->hide();
         plot_Barchart->hide();
         plot_Histogram->show();
-
     }
     ui->comboBox->setItemText(2,tr("增益调节\t[×%1]").arg(QString::number(aeultra_sql->gain, 'f', 1)) );
     ui->comboBox->setItemText(3,tr("音量调节\t[×%1]").arg(QString::number(aeultra_sql->vol)));

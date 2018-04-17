@@ -104,10 +104,10 @@ void TEVWidget::reload(int index)
             data->set_send_para(sp_auto_rec, 0);
         }
         if(mode == TEV1){
-            data->set_send_para(sp_tev1_threshold, tev_sql->fpga_threshold);
+            data->set_send_para(sp_h1_threshold, tev_sql->fpga_threshold);
         }
         else if(mode == TEV2){
-            data->set_send_para(sp_tev2_threshold, tev_sql->fpga_threshold);
+            data->set_send_para(sp_h2_threshold, tev_sql->fpga_threshold);
         }
         fresh_setting();
     }
@@ -307,7 +307,7 @@ void TEVWidget::calc_tev_value (double &tev_db, int &pulse_cnt_show, double &deg
     tev_db = 20 * log10 (tev_val);      //对数运算，来自工具链的函数
 
     //脉冲数多时，进入测试模式^^
-    if(pulse_cnt > 1000 && !amp_1000ms.isEmpty()){
+    if(pulse_cnt > 500000 && !amp_1000ms.isEmpty()){
         tev_db = Common::avrage(amp_1000ms);
     }
     amp_1000ms.clear();
@@ -320,14 +320,14 @@ void TEVWidget::calc_tev_value (double &tev_db, int &pulse_cnt_show, double &deg
 //    }
 
     //用于稳定测量值
-    if(qAbs(tev_db - db_last1) <15){
-        if(db_last1 > 16){
-            tev_db = (int)MAX(db_last1,tev_db);
-        }
-        else{
-            tev_db = (int)MIN(db_last1,tev_db);
-        }
-    }
+//    if(qAbs(tev_db - db_last1) <15){
+//        if(db_last1 > 16){
+//            tev_db = (int)MAX(db_last1,tev_db);
+//        }
+//        else{
+//            tev_db = (int)MIN(db_last1,tev_db);
+//        }
+//    }
     db_last1 = tev_db;
 
     //严重度

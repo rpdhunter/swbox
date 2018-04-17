@@ -4,18 +4,19 @@
 #
 #-------------------------------------------------
 
-QT  += core gui widgets network
+QT  += core gui widgets  #network
 QT  += serialport sql qml quick quickwidgets
 #QT += opengl
 
 TARGET = swbox
 TEMPLATE = app
 
-#DEFINES += QT_NO_DEBUG_OUTPUT
+#DEFINES += TEST
 #DEFINES += PRINTSCREEN     #截屏
-DEFINES += AMG          #OEM
-#DEFINES += OHV          #OEM
-#DEFINES += ZDIT          #OEM
+#DEFINES += AMG           #OEM
+#DEFINES += XDP_II        #OEM
+DEFINES += OHV          #OEM
+#DEFINES += ZDIT         #OEM
 
 TRANSLATIONS += trans/en.ts
 
@@ -70,7 +71,11 @@ SOURCES += \
     Gui/Common/prpsscene.cpp \
     Gui/Common/fft.cpp \
     Gui/Function/uhfwidget.cpp \
-    IO/Other/buzzer.cpp
+    IO/Other/buzzer.cpp \
+    Gui/Function/assetwidget.cpp \
+    Gui/Function/Asset/assetview.cpp \
+    Gui/Function/Asset/assetmodel.cpp \
+    Gui/Function/Asset/assetsql.cpp
 
 
 HEADERS  += \
@@ -127,7 +132,11 @@ HEADERS  += \
     Gui/Common/prpsscene.h \
     Gui/Common/fft.h \
     Gui/Function/uhfwidget.h \
-    IO/Other/buzzer.h
+    IO/Other/buzzer.h \
+    Gui/Function/assetwidget.h \
+    Gui/Function/Asset/assetview.h \
+    Gui/Function/Asset/assetmodel.h \
+    Gui/Function/Asset/assetsql.h
 
 FORMS += \
     Gui/Function/tevwidget.ui \
@@ -140,7 +149,8 @@ FORMS += \
     Gui/Options/optionui.ui \
     Gui/Options/debugui.ui \
     Gui/mainwindow.ui \
-    Gui/Function/uhfwidget.ui
+    Gui/Function/uhfwidget.ui \
+    Gui/Function/assetwidget.ui
 
 
 RESOURCES += \

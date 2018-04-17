@@ -97,70 +97,6 @@
     </rect>
    </property>
   </widget>
-  <widget class="QComboBox" name="comboBox">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>131</width>
-     <height>25</height>
-    </rect>
-   </property>
-   <property name="styleSheet">
-    <string notr="true"/>
-   </property>
-   <property name="editable">
-    <bool>true</bool>
-   </property>
-   <property name="currentIndex">
-    <number>0</number>
-   </property>
-   <item>
-    <property name="text">
-     <string>检测模式          [单次]</string>
-    </property>
-   </item>
-   <item>
-    <property name="text">
-     <string>图形显示  [柱状图]</string>
-    </property>
-   </item>
-   <item>
-    <property name="text">
-     <string>增益系数     [×1.0]</string>
-    </property>
-   </item>
-   <item>
-    <property name="text">
-     <string>黄色报警阈值[20]dB</string>
-    </property>
-   </item>
-   <item>
-    <property name="text">
-     <string>红色报警阈值[40]dB</string>
-    </property>
-   </item>
-   <item>
-    <property name="text">
-     <string>自动录波     [开启]</string>
-    </property>
-   </item>
-   <item>
-    <property name="text">
-     <string>单次录波</string>
-    </property>
-   </item>
-   <item>
-    <property name="text">
-     <string>最大值重置</string>
-    </property>
-   </item>
-   <item>
-    <property name="text">
-     <string>PRPD图重置</string>
-    </property>
-   </item>
-  </widget>
   <widget class="QWidget" name="layoutWidget1">
    <property name="geometry">
     <rect>
@@ -208,6 +144,75 @@
      </widget>
     </item>
    </layout>
+  </widget>
+  <widget class="QComboBox" name="comboBox">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>131</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true"/>
+   </property>
+   <property name="editable">
+    <bool>true</bool>
+   </property>
+   <property name="currentIndex">
+    <number>0</number>
+   </property>
+   <item>
+    <property name="text">
+     <string>检测模式          [单次]</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>图形显示  [柱状图]</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>增益系数     [×1.0]</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>黄色报警阈值[20]dB</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>红色报警阈值[40]dB</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>阈值触发     [15]mV</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>脉冲计数时长[1]s</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>自动录波     [开启]</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>单次录波</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>测量值重置</string>
+    </property>
+   </item>
   </widget>
  </widget>
  <resources/>

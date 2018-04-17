@@ -21,6 +21,7 @@
 #include "Function/faultlocation.h"
 #include "Function/aawidget.h"
 #include "Function/aewidget.h"
+#include "Function/assetwidget.h"
 
 #include "Options/debugset.h"
 #include "Options/factoryreset.h"
@@ -94,6 +95,7 @@ private:
     FaultLocation *double_widget;
     AAWidget *aa1_widget, *aa2_widget;
     AEWidget *ae1_widget, *ae2_widget;
+    AssetWidget *asset_widget;
 
     //5个设置界面
     Options *options;
@@ -103,7 +105,7 @@ private:
     RecWaveManage *recwavemanage;
 
     //自定义Tab图标
-    QLabel *menu_icon0, *menu_icon1, *menu_icon2, *menu_icon3, *menu_icon4, *menu_icon5;
+    QLabel *menu_icon0, *menu_icon1, *menu_icon2, *menu_icon3, *menu_icon4, *menu_icon5, *menu_icon6;
 
     //状态栏
     QTimer *timer_time;                 //系统时间和系统关机倒计时

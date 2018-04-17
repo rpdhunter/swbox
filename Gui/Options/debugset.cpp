@@ -4,12 +4,10 @@
 #include <QDir>
 #include "../Common/common.h"
 #include "IO/Com/rdb/rdb.h"
-
 #include <sys/time.h>    // for gettimeofday()
 
-#define SETTING_NUM             6           //设置菜单条目数
-#define SETTING_NUM_TEV         6
-#define SETTING_NUM_HFCT        4
+#define SETTING_NUM             5           //设置菜单条目数
+#define SETTING_NUM_TEV         4
 #define SETTING_NUM_AA          6
 #define SETTING_NUM_AE          6
 #define SETTING_NUM_CHANNEL     5
@@ -32,8 +30,8 @@ DebugSet::DebugSet(G_PARA *g_data,QWidget *parent) : QFrame(parent),ui(new Ui::D
     connect(timer_rdb, SIGNAL(timeout()), this, SLOT(fresh_rdb_data()) );
 
     timer_hardware = new QTimer;
-    timer_hardware->start(5000);        //5秒检测一次硬件及同步
-//    timer_hardware->start(20000);
+    timer_hardware->start(4995);        //5秒检测一次硬件及同步
+//    timer_hardware->start(1000);
     connect(timer_hardware, SIGNAL(timeout()), this, SLOT(fresh_hardware_status()) );
 
     timer_sync = new QTimer();
@@ -43,9 +41,7 @@ DebugSet::DebugSet(G_PARA *g_data,QWidget *parent) : QFrame(parent),ui(new Ui::D
     iniUi();
     reload();
     iniPasswordUi();            //密码部件
-
     ui->tabWidget->setCurrentIndex(0);
-
     this->hide();
 }
 
@@ -56,51 +52,39 @@ void DebugSet::iniUi()
                                  "QTabBar::tab:!selected{ background:transparent;   }"
                                  "QTabWidget::pane{border-width:0px;}"
                                  );
-    tab0 = new QLabel(tr("地电波"),ui->tabWidget->tabBar());
+
+    tab0 = new QLabel(tr("高频通道"),ui->tabWidget->tabBar());
     Common::setTab(tab0);
-    tab1 = new QLabel(tr("高频CT"),ui->tabWidget->tabBar());
+    tab1 = new QLabel(tr("AA超声"),ui->tabWidget->tabBar());
     Common::setTab(tab1);
-    tab2 = new QLabel(tr("AA超声"),ui->tabWidget->tabBar());
+    tab2 = new QLabel(tr("AE超声"),ui->tabWidget->tabBar());
     Common::setTab(tab2);
-    tab3 = new QLabel(tr("AE超声"),ui->tabWidget->tabBar());
+    tab3 = new QLabel(tr("通道设置"),ui->tabWidget->tabBar());
     Common::setTab(tab3);
-    tab4 = new QLabel(tr("通道设置"),ui->tabWidget->tabBar());
+    tab4 = new QLabel(tr("硬件监测"),ui->tabWidget->tabBar());
     Common::setTab(tab4);
-    tab5 = new QLabel(tr("硬件监测"),ui->tabWidget->tabBar());
-    Common::setTab(tab5);
 
     ui->tabWidget->tabBar()->setTabButton(0,QTabBar::LeftSide,tab0);
     ui->tabWidget->tabBar()->setTabButton(1,QTabBar::LeftSide,tab1);
     ui->tabWidget->tabBar()->setTabButton(2,QTabBar::LeftSide,tab2);
     ui->tabWidget->tabBar()->setTabButton(3,QTabBar::LeftSide,tab3);
     ui->tabWidget->tabBar()->setTabButton(4,QTabBar::LeftSide,tab4);
-    ui->tabWidget->tabBar()->setTabButton(5,QTabBar::LeftSide,tab5);
 
     for (int i = 0; i < ui->tabWidget->count(); ++i) {
         ui->tabWidget->widget(i)->setStyleSheet("QWidget {background-color:lightGray;}");
     }
 
     QString style = "QLabel {font-family:WenQuanYi Micro Hei;font: bold; font-size:16px;color:green}";
-    switch (sqlcfg->get_para()->menu_h1) {
-    case TEV1:
-        ui->label_TEV1->setStyleSheet(style);
-        break;
-    case HFCT1:
-        ui->label_HF1->setStyleSheet(style);
-        break;
-    default:
-        break;
+    if(sqlcfg->get_para()->menu_h1 == TEV1 || sqlcfg->get_para()->menu_h1 == HFCT1 || sqlcfg->get_para()->menu_h1 == UHF1){
+        ui->label_H1->setStyleSheet(style);
+        ui->label_H1->setText(Common::MODE_toString((MODE)sqlcfg->get_para()->menu_h1));
     }
-    switch (sqlcfg->get_para()->menu_h2) {
-    case TEV2:
-        ui->label_TEV2->setStyleSheet(style);
-        break;
-    case HFCT2:
-        ui->label_HF2->setStyleSheet(style);
-        break;
-    default:
-        break;
+    if(sqlcfg->get_para()->menu_h2 == TEV2 || sqlcfg->get_para()->menu_h2 == HFCT2 || sqlcfg->get_para()->menu_h2 == UHF2){
+        ui->label_H2->setStyleSheet(style);
+        ui->label_H2->setText(Common::MODE_toString((MODE)sqlcfg->get_para()->menu_h2));
     }
+
+
     switch (sqlcfg->get_para()->menu_l1) {
     case AA1:
         ui->label_AA1->setStyleSheet(style);
@@ -209,25 +193,38 @@ void DebugSet::saveSql()
 
 void DebugSet::reload()
 {
-    //TEV
-    ui->lineEdit_TEV1_line->setText(QString("%1 mV").arg((int)Common::physical_value(sql_para.tev1_sql.offset_linearity, TEV1) ) );
-//    ui->lineEdit_TEV1_ZERO->setText(QString("%1").arg((int)Common::physical_value(sql_para.tev1_sql.fpga_zero, TEV1) ) );
-//    ui->lineEdit_TEV1_NOISE->setText(QString("%1").arg((int)Common::physical_value(sql_para.tev1_sql.offset_noise, TEV1) ) );
-    ui->lineEdit_TEV1_ZERO->setText(QString("%1").arg(sql_para.tev1_sql.fpga_zero ) );
-    ui->lineEdit_TEV1_NOISE->setText(QString("%1").arg(sql_para.tev1_sql.offset_noise ) );
-
-    ui->lineEdit_TEV2_line->setText(QString("%1 mV").arg((int)Common::physical_value(sql_para.tev2_sql.offset_linearity, TEV2) ) );
-//    ui->lineEdit_TEV2_ZERO->setText(QString("%1").arg((int)Common::physical_value(sql_para.tev2_sql.fpga_zero, TEV2) ) );
-//    ui->lineEdit_TEV2_NOISE->setText(QString("%1").arg((int)Common::physical_value(sql_para.tev2_sql.offset_noise, TEV2) ) );
-    ui->lineEdit_TEV2_ZERO->setText(QString("%1").arg(sql_para.tev2_sql.fpga_zero ) );
-    ui->lineEdit_TEV2_NOISE->setText(QString("%1").arg(sql_para.tev2_sql.offset_noise ) );
-
-    //HFCT
-    ui->lineEdit_HFCT1_THRESHOLD->setText(QString("%1 mV").arg((int)Common::physical_value(sql_para.hfct1_sql.fpga_threshold, HFCT1) ) );
-    ui->lineEdit_HFCT1_ZERO->setText(QString("%1").arg(sql_para.hfct1_sql.fpga_zero) );
-
-    ui->lineEdit_HFCT2_THRESHOLD->setText(QString("%1 mV").arg((int)Common::physical_value(sql_para.hfct2_sql.fpga_threshold, HFCT2) ) );
-    ui->lineEdit_HFCT2_ZERO->setText(QString("%1").arg(sql_para.hfct2_sql.fpga_zero) );
+    switch (sqlcfg->get_para()->menu_h1) {
+    case TEV1:
+        ui->lineEdit_H1_ZERO->setText(QString("%1").arg(sql_para.tev1_sql.fpga_zero ) );
+        ui->lineEdit_H1_NOISE->setText(QString("%1").arg(sql_para.tev1_sql.offset_noise ) );
+        break;
+    case HFCT1:
+        ui->lineEdit_H1_ZERO->setText(QString("%1").arg(sql_para.hfct1_sql.fpga_zero ) );
+        ui->lineEdit_H1_NOISE->setText(QString("%1").arg(sql_para.hfct1_sql.offset_noise ) );
+        break;
+    case UHF1:
+        ui->lineEdit_H1_ZERO->setText(QString("%1").arg(sql_para.uhf1_sql.fpga_zero ) );
+        ui->lineEdit_H1_NOISE->setText(QString("%1").arg(sql_para.uhf1_sql.offset_noise ) );
+        break;
+    default:
+        break;
+    }
+    switch (sqlcfg->get_para()->menu_h2) {
+    case TEV2:
+        ui->lineEdit_H2_ZERO->setText(QString("%1").arg(sql_para.tev2_sql.fpga_zero ) );
+        ui->lineEdit_H2_NOISE->setText(QString("%1").arg(sql_para.tev2_sql.offset_noise ) );
+        break;
+    case HFCT2:
+        ui->lineEdit_H2_ZERO->setText(QString("%1").arg(sql_para.hfct2_sql.fpga_zero ) );
+        ui->lineEdit_H2_NOISE->setText(QString("%1").arg(sql_para.hfct2_sql.offset_noise ) );
+        break;
+    case UHF2:
+        ui->lineEdit_H2_ZERO->setText(QString("%1").arg(sql_para.uhf2_sql.fpga_zero ) );
+        ui->lineEdit_H2_NOISE->setText(QString("%1").arg(sql_para.uhf2_sql.offset_noise ) );
+        break;
+    default:
+        break;
+    }
 
     //AA
     ui->lineEdit_AA1_Step->setText(QString("%1").arg(sql_para.aa1_sql.step));
@@ -442,62 +439,79 @@ void DebugSet::trans_key(quint8 key_code)
 
 void DebugSet::do_key_left_right(int d)
 {
-    if(key_val->grade.val4 == 0 && key_val->grade.val3 != 0 && d > 0){   //必须第三层处于工作状态
+    if(key_val->grade.val4 == 0 && key_val->grade.val3 != 0 && key_val->grade.val3 != 5 && d > 0){   //必须第三层处于工作状态
         key_val->grade.val4 =1;
     }
     else{
         QList<int> list;
-
         switch (key_val->grade.val3) {
-        case 1:         //TEV
+        case 1:         //高频
             switch (key_val->grade.val4) {
             case 1:
-//                sql_para.tev1_sql.fpga_threshold += Common::code_value(1,TEV1) * d;
-                sql_para.tev1_sql.offset_linearity += Common::code_value(1,TEV1) * d;
+                switch (sqlcfg->get_para()->menu_h1) {
+                case TEV1:
+                    sql_para.tev1_sql.fpga_zero += d;
+                    break;
+                case HFCT1:
+                    sql_para.hfct1_sql.fpga_zero += d;
+                    break;
+                case UHF1:
+                    sql_para.uhf1_sql.fpga_zero += d;
+                    break;
+                default:
+                    break;
+                }
                 break;
             case 2:
-                sql_para.tev1_sql.fpga_zero += d;
-//                sql_para.tev1_sql.fpga_zero += Common::code_value(1,TEV1) * d;
+                switch (sqlcfg->get_para()->menu_h1) {
+                case TEV1:
+                    sql_para.tev1_sql.offset_noise += d;
+                    break;
+                case HFCT1:
+                    sql_para.hfct1_sql.offset_noise += d;
+                    break;
+                case UHF1:
+                    sql_para.uhf1_sql.offset_noise += d;
+                    break;
+                default:
+                    break;
+                }
                 break;
             case 3:
-                sql_para.tev1_sql.offset_noise += d;
-//                sql_para.tev1_sql.offset_noise += Common::code_value(1,TEV1) * d;
+                switch (sqlcfg->get_para()->menu_h2) {
+                case TEV2:
+                    sql_para.tev2_sql.fpga_zero += d;
+                    break;
+                case HFCT2:
+                    sql_para.hfct2_sql.fpga_zero += d;
+                    break;
+                case UHF2:
+                    sql_para.uhf2_sql.fpga_zero += d;
+                    break;
+                default:
+                    break;
+                }
                 break;
             case 4:
-//                sql_para.tev2_sql.fpga_threshold += Common::code_value(1,TEV2) * d;
-                sql_para.tev2_sql.offset_linearity += Common::code_value(1,TEV2) * d;
-                break;
-            case 5:
-                sql_para.tev2_sql.fpga_zero += d;
-//                sql_para.tev2_sql.fpga_zero += Common::code_value(1,TEV2) * d;
-                break;
-            case 6:
-                sql_para.tev2_sql.offset_noise += d;
-//                sql_para.tev2_sql.offset_noise += Common::code_value(1,TEV2) * d;
+                switch (sqlcfg->get_para()->menu_h2) {
+                case TEV2:
+                    sql_para.tev2_sql.offset_noise += d;
+                    break;
+                case HFCT2:
+                    sql_para.hfct2_sql.offset_noise += d;
+                    break;
+                case UHF2:
+                    sql_para.uhf2_sql.offset_noise += d;
+                    break;
+                default:
+                    break;
+                }
                 break;
             default:
                 break;
             }
             break;
-        case 2:         //HFCT
-            switch (key_val->grade.val4) {
-            case 1:
-                sql_para.hfct1_sql.fpga_threshold += Common::code_value(1,HFCT1) * d;
-                break;
-            case 2:
-                sql_para.hfct1_sql.fpga_zero += d;
-                break;
-            case 3:
-                sql_para.hfct2_sql.fpga_threshold += Common::code_value(1,HFCT1) * d;
-                break;
-            case 4:
-                sql_para.hfct2_sql.fpga_zero += d;
-                break;
-            default:
-                break;
-            }
-            break;
-        case 3:     //AA
+        case 2:     //AA
             switch (key_val->grade.val4) {
             case 1:
                 Common::change_index(sql_para.aa1_sql.step, 0.5 * d, 10, 0.5);
@@ -521,7 +535,7 @@ void DebugSet::do_key_left_right(int d)
                 break;
             }
             break;
-        case 4:     //AE
+        case 3:     //AE
             switch (key_val->grade.val4) {
             case 1:
                 Common::change_index(sql_para.ae1_sql.step, 0.5 * d, 10, 0.5);
@@ -545,7 +559,7 @@ void DebugSet::do_key_left_right(int d)
                 break;
             }
             break;
-        case 5:     //通道
+        case 4:     //通道
             list.clear();
             switch (key_val->grade.val4) {
             case 1:     //高频通道1                
@@ -585,19 +599,16 @@ void DebugSet::do_key_up_down(int d)
     }
     else{                           //判断在三级菜单
         switch (key_val->grade.val3) {
-        case 1:                     //TEV
+        case 1:                     //高频
             Common::change_index(key_val->grade.val4, d, SETTING_NUM_TEV, 1);
             break;
-        case 2:                     //HFCT
-            Common::change_index(key_val->grade.val4, d, SETTING_NUM_HFCT, 1);
-            break;
-        case 3:                     //AA
+        case 2:                     //AA
             Common::change_index(key_val->grade.val4, d, SETTING_NUM_AA, 1);
             break;
-        case 4:                     //AE
+        case 3:                     //AE
             Common::change_index(key_val->grade.val4, d, SETTING_NUM_AE, 1);
             break;
-        case 5:                     //通道
+        case 4:                     //通道
             Common::change_index(key_val->grade.val4, d, SETTING_NUM_CHANNEL, 1);
             break;
         default:
@@ -611,21 +622,51 @@ void DebugSet::fresh_rdb_data()
     yc_data_type temp_data;
     unsigned char a[1],b[1];
 
-    yc_get_value(0,TEV1_center_biased_adv,1, &temp_data, b, a);
-    ui->lab_offset_zero_tev1->setText(QString("%1").arg(temp_data.f_val));
-    yc_get_value(0,TEV1_noise_biased_adv,1, &temp_data, b, a);
-    ui->lab_offset_noise_tev1->setText(QString("%1").arg(temp_data.f_val));;
+    switch (sqlcfg->get_para()->menu_h1) {
+    case TEV1:
+        yc_get_value(0,TEV1_center_biased_adv,1, &temp_data, b, a);
+        ui->lab_offset_zero_h1->setText(QString("%1").arg(temp_data.f_val));
+        yc_get_value(0,TEV1_noise_biased_adv,1, &temp_data, b, a);
+        ui->lab_offset_noise_h1->setText(QString("%1").arg(temp_data.f_val));;
+        break;
+    case HFCT1:
+        yc_get_value(0,HFCT1_center_biased_adv,1, &temp_data, b, a);
+        ui->lab_offset_zero_h1->setText(QString("%1").arg(temp_data.f_val));
+        yc_get_value(0,HFCT1_noise_biased_adv,1, &temp_data, b, a);
+        ui->lab_offset_noise_h1->setText(QString("%1").arg(temp_data.f_val));;
+        break;
+    case UHF1:
+        yc_get_value(0,UHF1_center_biased_adv,1, &temp_data, b, a);
+        ui->lab_offset_zero_h1->setText(QString("%1").arg(temp_data.f_val));
+        yc_get_value(0,UHF1_noise_biased_adv,1, &temp_data, b, a);
+        ui->lab_offset_noise_h1->setText(QString("%1").arg(temp_data.f_val));;
+        break;
+    default:
+        break;
+    }
 
-    yc_get_value(0,TEV2_center_biased_adv,1, &temp_data, b, a);
-    ui->lab_offset_zero_tev2->setText(QString("%1").arg(temp_data.f_val));
-    yc_get_value(0,TEV2_noise_biased_adv,1, &temp_data, b, a);
-    ui->lab_offset_noise_tev2->setText(QString("%1").arg(temp_data.f_val));;
-
-    yc_get_value(0,HFCT1_center_biased_adv,1, &temp_data, b, a);
-    ui->lab_offset_zero_hfct1->setText(QString("%1").arg(temp_data.f_val));
-
-    yc_get_value(0,HFCT2_center_biased_adv,1, &temp_data, b, a);
-    ui->lab_offset_zero_hfct2->setText(QString("%1").arg(temp_data.f_val));
+    switch (sqlcfg->get_para()->menu_h2) {
+    case TEV2:
+        yc_get_value(0,TEV2_center_biased_adv,1, &temp_data, b, a);
+        ui->lab_offset_zero_h2->setText(QString("%1").arg(temp_data.f_val));
+        yc_get_value(0,TEV2_noise_biased_adv,1, &temp_data, b, a);
+        ui->lab_offset_noise_h2->setText(QString("%1").arg(temp_data.f_val));;
+        break;
+    case HFCT2:
+        yc_get_value(0,HFCT2_center_biased_adv,1, &temp_data, b, a);
+        ui->lab_offset_zero_h2->setText(QString("%1").arg(temp_data.f_val));
+        yc_get_value(0,HFCT2_noise_biased_adv,1, &temp_data, b, a);
+        ui->lab_offset_noise_h2->setText(QString("%1").arg(temp_data.f_val));;
+        break;
+    case UHF2:
+        yc_get_value(0,UHF2_center_biased_adv,1, &temp_data, b, a);
+        ui->lab_offset_zero_h2->setText(QString("%1").arg(temp_data.f_val));
+        yc_get_value(0,UHF2_noise_biased_adv,1, &temp_data, b, a);
+        ui->lab_offset_noise_h2->setText(QString("%1").arg(temp_data.f_val));;
+        break;
+    default:
+        break;
+    }
 
     yc_get_value(0,AA1_biased_adv,1, &temp_data, b, a);
     ui->lab_offset_noise_aa1->setText(QString("%1").arg(temp_data.f_val));
@@ -653,10 +694,10 @@ void DebugSet::fresh_hardware_status()
     cpu_status->get_vvpn(&sync);
 
 //    qDebug()<<"sync = "<< sync << "mV";
-//    if(qAbs(sync) > 100){
+    if(qAbs(sync) > 50){
         gettimeofday( &last_zero, NULL );
-//        timer_sync->start();
-//    }
+        timer_sync->start();
+    }
 }
 
 void DebugSet::fresh_sync()
@@ -666,6 +707,7 @@ void DebugSet::fresh_sync()
     cpu_status->get_vvpn(&temp_data.vcc);
     gettimeofday( &temp_data.t, NULL );
     sync_data.append(temp_data);
+//    qDebug()<<"sync = "<< temp_data.vcc << "mV\ttime = "<<temp_data.t.tv_usec;
 
     int interval, offset, time_interval;
 
@@ -697,11 +739,15 @@ void DebugSet::fresh_sync()
             if(qAbs(offset) < 1000){
 //                qDebug()<< "sync interval =" << interval << "\toffset = "<< offset /*<< "\trate = " << 100.0*offset/interval << "%"*/;
 //                qDebug()<< "sync begin!!!!!!!";
-                offset += 500;
+//                offset += 500;
+//                offset -= 2000;
                 if(offset < 0){
                     offset += 1000000 / sqlcfg->get_para()->freq_val;
                 }
-                emit send_sync(100 * offset );
+                emit send_sync( 100 * offset );
+//                emit send_sync(100 * (zero_time.tv_usec % 20000 ));
+
+                qDebug()<< "sync time: "<< zero_time.tv_usec % 20000;
                 timer_sync->stop();
 
             }
@@ -727,16 +773,13 @@ void DebugSet::fresh()
         tab2->setStyleSheet("QLabel{border: 0px solid darkGray;}");
         tab3->setStyleSheet("QLabel{border: 0px solid darkGray;}");
         tab4->setStyleSheet("QLabel{border: 0px solid darkGray;}");
-        tab5->setStyleSheet("QLabel{border: 0px solid darkGray;}");
 
         switch (key_val->grade.val3) {
-        case 1:         //TEV
-            ui->lineEdit_TEV1_line->deselect();
-            ui->lineEdit_TEV1_ZERO->deselect();
-            ui->lineEdit_TEV1_NOISE->deselect();
-            ui->lineEdit_TEV2_line->deselect();
-            ui->lineEdit_TEV2_ZERO->deselect();
-            ui->lineEdit_TEV2_NOISE->deselect();
+        case 1:         //高频
+            ui->lineEdit_H1_ZERO->deselect();
+            ui->lineEdit_H1_NOISE->deselect();
+            ui->lineEdit_H2_ZERO->deselect();
+            ui->lineEdit_H2_NOISE->deselect();
             switch (key_val->grade.val4) {
             case 0:
                 tab0->setStyleSheet("QLabel{border: 1px solid darkGray;}");
@@ -744,62 +787,24 @@ void DebugSet::fresh()
                 tab2->setStyleSheet("QLabel{border: 0px solid darkGray;}");
                 tab3->setStyleSheet("QLabel{border: 0px solid darkGray;}");
                 tab4->setStyleSheet("QLabel{border: 0px solid darkGray;}");
-                tab5->setStyleSheet("QLabel{border: 0px solid darkGray;}");
                 break;
             case 1:
-                ui->lineEdit_TEV1_line->selectAll();
+                ui->lineEdit_H1_ZERO->selectAll();
                 break;
             case 2:
-                ui->lineEdit_TEV1_ZERO->selectAll();
+                ui->lineEdit_H1_NOISE->selectAll();
                 break;
             case 3:
-                ui->lineEdit_TEV1_NOISE->selectAll();
+                ui->lineEdit_H2_ZERO->selectAll();
                 break;
             case 4:
-                ui->lineEdit_TEV2_line->selectAll();
-                break;
-            case 5:
-                ui->lineEdit_TEV2_ZERO->selectAll();
-                break;
-            case 6:
-                ui->lineEdit_TEV2_NOISE->selectAll();
+                ui->lineEdit_H2_NOISE->selectAll();
                 break;
             default:
                 break;
             }
             break;
-        case 2:         //HFCT
-            ui->lineEdit_HFCT1_THRESHOLD->deselect();
-            ui->lineEdit_HFCT1_ZERO->deselect();
-            ui->lineEdit_HFCT2_THRESHOLD->deselect();
-            ui->lineEdit_HFCT2_ZERO->deselect();
-            switch (key_val->grade.val4) {
-            case 0:
-                tab0->setStyleSheet("QLabel{border: 0px solid darkGray;}");
-                tab1->setStyleSheet("QLabel{border: 1px solid darkGray;}");
-                tab2->setStyleSheet("QLabel{border: 0px solid darkGray;}");
-                tab3->setStyleSheet("QLabel{border: 0px solid darkGray;}");
-                tab4->setStyleSheet("QLabel{border: 0px solid darkGray;}");
-                tab4->setStyleSheet("QLabel{border: 0px solid darkGray;}");
-                tab5->setStyleSheet("QLabel{border: 0px solid darkGray;}");
-                break;
-            case 1:
-                ui->lineEdit_HFCT1_THRESHOLD->selectAll();
-                break;
-            case 2:
-                ui->lineEdit_HFCT1_ZERO->selectAll();
-                break;
-            case 3:
-                ui->lineEdit_HFCT2_THRESHOLD->selectAll();
-                break;
-            case 4:
-                ui->lineEdit_HFCT2_ZERO->selectAll();
-                break;
-            default:
-                break;
-            }
-            break;
-        case 3:         //AA
+        case 2:         //AA
             ui->lineEdit_AA1_Step->deselect();
             ui->lineEdit_AA1_offset->deselect();
             ui->lineEdit_AA2_Step->deselect();
@@ -807,11 +812,10 @@ void DebugSet::fresh()
             switch (key_val->grade.val4) {
             case 0:
                 tab0->setStyleSheet("QLabel{border: 0px solid darkGray;}");
-                tab1->setStyleSheet("QLabel{border: 0px solid darkGray;}");
-                tab2->setStyleSheet("QLabel{border: 1px solid darkGray;}");
+                tab1->setStyleSheet("QLabel{border: 1px solid darkGray;}");
+                tab2->setStyleSheet("QLabel{border: 0px solid darkGray;}");
                 tab3->setStyleSheet("QLabel{border: 0px solid darkGray;}");
                 tab4->setStyleSheet("QLabel{border: 0px solid darkGray;}");
-                tab5->setStyleSheet("QLabel{border: 0px solid darkGray;}");
                 break;
             case 1:
                 ui->lineEdit_AA1_Step->selectAll();
@@ -829,7 +833,7 @@ void DebugSet::fresh()
                 break;
             }
             break;
-        case 4:         //AE
+        case 3:         //AE
             ui->lineEdit_AE1_Step->deselect();
             ui->lineEdit_AE1_offset->deselect();
             ui->lineEdit_AE2_Step->deselect();
@@ -838,10 +842,9 @@ void DebugSet::fresh()
             case 0:
                 tab0->setStyleSheet("QLabel{border: 0px solid darkGray;}");
                 tab1->setStyleSheet("QLabel{border: 0px solid darkGray;}");
-                tab2->setStyleSheet("QLabel{border: 0px solid darkGray;}");
-                tab3->setStyleSheet("QLabel{border: 1px solid darkGray;}");
+                tab2->setStyleSheet("QLabel{border: 1px solid darkGray;}");
+                tab3->setStyleSheet("QLabel{border: 0px solid darkGray;}");
                 tab4->setStyleSheet("QLabel{border: 0px solid darkGray;}");
-                tab5->setStyleSheet("QLabel{border: 0px solid darkGray;}");
                 break;
             case 1:
                 ui->lineEdit_AE1_Step->selectAll();
@@ -859,7 +862,7 @@ void DebugSet::fresh()
                 break;
             }
             break;
-        case 5:         //通道
+        case 4:         //通道
             ui->pbt_HC1->setChecked(false);
             ui->pbt_HC2->setChecked(false);
             ui->pbt_LC1->setChecked(false);
@@ -870,9 +873,8 @@ void DebugSet::fresh()
                 tab0->setStyleSheet("QLabel{border: 0px solid darkGray;}");
                 tab1->setStyleSheet("QLabel{border: 0px solid darkGray;}");
                 tab2->setStyleSheet("QLabel{border: 0px solid darkGray;}");
-                tab3->setStyleSheet("QLabel{border: 0px solid darkGray;}");
-                tab4->setStyleSheet("QLabel{border: 1px solid darkGray;}");
-                tab5->setStyleSheet("QLabel{border: 0px solid darkGray;}");
+                tab3->setStyleSheet("QLabel{border: 1px solid darkGray;}");
+                tab4->setStyleSheet("QLabel{border: 0px solid darkGray;}");
                 break;
             case 1:
                 ui->pbt_HC1->setChecked(true);
@@ -893,13 +895,12 @@ void DebugSet::fresh()
                 break;
             }
             break;
-        case 6:         //状态监测
+        case 5:         //状态监测
             tab0->setStyleSheet("QLabel{border: 0px solid darkGray;}");
             tab1->setStyleSheet("QLabel{border: 0px solid darkGray;}");
             tab2->setStyleSheet("QLabel{border: 0px solid darkGray;}");
             tab3->setStyleSheet("QLabel{border: 0px solid darkGray;}");
-            tab4->setStyleSheet("QLabel{border: 0px solid darkGray;}");
-            tab5->setStyleSheet("QLabel{border: 1px solid darkGray;}");
+            tab4->setStyleSheet("QLabel{border: 1px solid darkGray;}");
             break;
         default:
             break;

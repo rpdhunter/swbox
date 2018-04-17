@@ -21,9 +21,9 @@ class CPUStatus
 public:
     CPUStatus();
 
-    int get_cpu_temp (float * cpu_temp);
-    int get_cpu_vcc (float * cpu_vcc);
-    int get_vvpn (float* vvpn);
+    int get_cpu_temp (float * cpu_temp);        //CPU温度
+    int get_cpu_vcc (float * cpu_vcc);          //CPU电压
+    int get_vvpn (float* vvpn);                 //同步电压(0.489V是中心点，范围是0-1V)
 
 private:
     struct command

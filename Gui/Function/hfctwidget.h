@@ -84,7 +84,9 @@ private:
 
     //数据流
     quint32 group_num;                  //有效数据校验
-    QVector<PC_DATA> pclist_200ms;      //200ms的脉冲数据,HFCT分析的基准
+    QVector<PC_DATA> pclist_100ms;      //100ms的脉冲数据,HFCT分析的基准
+    QVector<double> pclist_1000ms;
+    QVector<int> pulse_cnt_list;        //脉冲序列，配合脉冲计数时长
     QVector<PC_DATA> compute_pc_1ms(QVector<double> list, int x_origin);        //计算1ms数据的HFCT数据
     PC_DATA compute_pc_1node(QVector<double> list, int x_origin);           //计算一个脉冲节点的HFCT数据
     double simpson(QVector<double> list);

@@ -61,29 +61,17 @@ QString FifoControl::send_para_to_string(int val)
     case sp_l2_channnel_mode:
         tmp = "l2_channnel_mode";
         break;
-    case sp_tev1_zero:
-        tmp = "tev1_zero";
+    case sp_h1_zero:
+        tmp = "h1_zero";
         break;
-    case sp_tev1_threshold:
-        tmp = "tev1_threshold";
+    case sp_h1_threshold:
+        tmp = "h1_threshold";
         break;
-    case sp_tev2_zero:
-        tmp = "tev2_zero";
+    case sp_h2_zero:
+        tmp = "h2_zero";
         break;
-    case sp_tev2_threshold:
-        tmp = "tev2_threshold";
-        break;
-    case sp_hfct1_zero:
-        tmp = "hfct1_zero";
-        break;
-    case sp_hfct1_threshold:
-        tmp = "hfct1_threshold";
-        break;
-    case sp_hfct2_zero:
-        tmp = "hfct2_zero";
-        break;
-    case sp_hfct2_threshold:
-        tmp = "hfct2_threshold";
+    case sp_h2_threshold:
+        tmp = "h2_threshold";
         break;
     case sp_vol_l1:
         tmp = "vol_l1";
@@ -93,10 +81,19 @@ QString FifoControl::send_para_to_string(int val)
         break;
     case sp_vol_l2:
         tmp = "vol_l2";
-        break;        
-//    case sp_kalman_kg:
-//        tmp = "kalman_kg";
-//        break;
+        break;
+    case sp_kalman_l1:
+        tmp = "kalman_l1";
+        break;
+    case sp_kalman_l2:
+        tmp = "kalman_l2";
+        break;
+    case sp_l1_threshold:
+        tmp = "l1_threshold";
+        break;
+    case sp_l2_threshold:
+        tmp = "l2_threshold";
+        break;
     case sp_rec_start_h1:
         tmp = "rec_start_h1";
         break;
@@ -304,6 +301,15 @@ void FifoControl::regs_init()
     tdata->set_send_para (sp_rec_start_h2, 3);
 
 //    tdata->set_send_para (sp_fpga_sleep, 0);//xwt
+
+    tdata->set_send_para (sp_kalman_l1, 1);
+    tdata->set_send_para (sp_kalman_l2, 1);
+
+    tdata->set_send_para (sp_l1_threshold, 200);
+    tdata->set_send_para (sp_l2_threshold, 200);
+
+    tdata->set_send_para (sp_temp_test, 10);        //（0-63，代表0-63/40秒）
+
 
     send_para();
 }

@@ -87,7 +87,7 @@ private:
     int db_last1;
     QVector<int> pulse_cnt_list;
     quint32 group_num;   //用于判别PRPD图数据有效性的组号(0-3变化)
-    void calc_tev_value (double &tev_db, int &pulse_cnt_show, double &degree, int &sug_central_offset, int &sug_offset);
+    void calc_tev_value (double &tev_db, int &pulse_cnt_show, double &degree, int &sug_central_offset, int &sug_noise_offset);
     QVector<QPoint> pulse_100ms;      //200ms的脉冲数据,分析的基准
     QVector<double> amp_1000ms;         //1s内的平均幅值序列（pulse_100ms每次清零时保存一个平均幅值，1s的时候再算总平均幅值）
     uint token;

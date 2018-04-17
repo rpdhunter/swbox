@@ -133,16 +133,16 @@ background:transparent;color:gray;</string>
     <string notr="true">QLabel {color:white;}</string>
    </property>
    <property name="text">
-    <string notr="true"/>
+    <string notr="true">最大值:</string>
    </property>
   </widget>
   <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
      <x>220</x>
-     <y>140</y>
+     <y>120</y>
      <width>211</width>
-     <height>41</height>
+     <height>62</height>
     </rect>
    </property>
    <layout class="QGridLayout" name="gridLayout">
@@ -157,13 +157,19 @@ background:transparent;color:gray;</string>
      </widget>
     </item>
     <item row="1" column="1">
-     <widget class="QProgressBar" name="progressBar_2">
+     <widget class="QProgressBar" name="progressBar_100Hz">
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>15</height>
+       </size>
+      </property>
       <property name="styleSheet">
        <string notr="true">QProgressBar{border:1px solid gray;background:transparent;}
 QProgressBar::chunk{&quot;background-color:skyblue;&quot;}</string>
       </property>
       <property name="value">
-       <number>24</number>
+       <number>0</number>
       </property>
       <property name="textVisible">
        <bool>false</bool>
@@ -171,13 +177,19 @@ QProgressBar::chunk{&quot;background-color:skyblue;&quot;}</string>
      </widget>
     </item>
     <item row="0" column="1">
-     <widget class="QProgressBar" name="progressBar">
+     <widget class="QProgressBar" name="progressBar_50Hz">
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>15</height>
+       </size>
+      </property>
       <property name="styleSheet">
        <string notr="true">QProgressBar{border:1px solid gray;background:transparent;}
 QProgressBar::chunk{&quot;background-color:skyblue;&quot;}</string>
       </property>
       <property name="value">
-       <number>24</number>
+       <number>0</number>
       </property>
       <property name="textVisible">
        <bool>false</bool>
@@ -191,6 +203,26 @@ QProgressBar::chunk{&quot;background-color:skyblue;&quot;}</string>
       </property>
       <property name="text">
        <string notr="true">50Hz</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="2">
+     <widget class="QLabel" name="label_50Hz">
+      <property name="styleSheet">
+       <string notr="true">QLabel {color:white;}</string>
+      </property>
+      <property name="text">
+       <string notr="true">20mV</string>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="2">
+     <widget class="QLabel" name="label_100Hz">
+      <property name="styleSheet">
+       <string notr="true">QLabel {color:white;}</string>
+      </property>
+      <property name="text">
+       <string notr="true">10mV</string>
       </property>
      </widget>
     </item>

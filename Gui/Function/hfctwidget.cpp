@@ -4,7 +4,7 @@
 #include <QTimer>
 #include "IO/Com/rdb/rdb.h"
 
-#define VALUE_MAX       6000           //RPPD最大值
+#define VALUE_MAX       9999           //RPPD最大值
 #define PC_MAX          VALUE_MAX
 #define SETTING_NUM     10           //设置菜单条目数
 
@@ -40,7 +40,7 @@ HFCTWidget::HFCTWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu
     connect(timer_1000ms, SIGNAL(timeout()), this, SLOT(fresh_1000ms()));
 
     timer_1ms = new QTimer(this);
-    timer_1ms->setInterval(1);         //1ms读取一次数据
+    timer_1ms->setInterval(2);         //1ms读取一次数据
     connect(timer_1ms, SIGNAL(timeout()), this, SLOT(add_token()));
 
     timer_100ms = new QTimer(this);
@@ -64,18 +64,6 @@ HFCTWidget::HFCTWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu
     connect(this,SIGNAL(hfct_PRPD_data(QVector<QwtPoint3D>)),logtools,SLOT(dealRPRDLog(QVector<QwtPoint3D>)));
 
     reload(menu_index);
-//    //设置自动录波
-//    if( hfct_sql->auto_rec == true ){
-//        data->set_send_para (sp_rec_on, 1);
-//        data->set_send_para(sp_auto_rec, menu_index + 1);
-//    }
-//    else{
-//        data->set_send_para (sp_rec_on, 0);
-//        data->set_send_para(sp_auto_rec, 0);
-//    }
-//    //设置滤波器
-//    data->set_send_para (sp_filter_mode, hfct_sql->filter);
-//    fresh_setting();
 }
 
 HFCTWidget::~HFCTWidget()
@@ -118,10 +106,10 @@ void HFCTWidget::reload(int index)
             data->set_send_para(sp_auto_rec, 0);
         }
         if(mode == HFCT1){
-            data->set_send_para(sp_tev1_threshold, hfct_sql->fpga_threshold);
+            data->set_send_para(sp_h1_threshold, hfct_sql->fpga_threshold);
         }
         else if(mode == HFCT2){
-            data->set_send_para(sp_tev2_threshold, hfct_sql->fpga_threshold);
+            data->set_send_para(sp_h2_threshold, hfct_sql->fpga_threshold);
         }
         //设置滤波器
         //滤波模式设定，高八位控制H2,低八位控制H1,0无滤波，2为1.8M高通，1为500K高通
@@ -150,34 +138,17 @@ void HFCTWidget::trans_key(quint8 key_code)
         sqlcfg->sql_save(&sql_para);        //保存SQL
         reload(menu_index);                 //重置默认数据
         switch (key_val->grade.val2) {
-//        case 4:
-//            //设置滤波器
-//            data->set_send_para (sp_filter_mode, hfct_sql->filter);
-//            break;
-//        case 6:
-//            //设置自动录波
-//            if( hfct_sql->auto_rec == true ){
-//                data->set_send_para (sp_rec_on, 1);
-//                data->set_send_para(sp_auto_rec, menu_index + 1);
-//            }
-//            else{
-//                data->set_send_para (sp_rec_on, 0);
-//                data->set_send_para(sp_auto_rec, 0);
-//            }
-//            break;
-        case 7:
+        case 8:
             emit startRecWave(mode_continuous,hfct_sql->rec_time);     //开始连续录波
             emit show_indicator(true);
             isBusy = true;
             return;
-        case 8:
+        case 9:
             emit startRecWave(mode,0);     //开始录波
             manual = true;
             break;
-        case 9:
-            maxReset();
-            break;
         case 10:
+            maxReset();
             PRPDReset();
             break;
         default:
@@ -216,12 +187,14 @@ void HFCTWidget::do_key_up_down(int d)
 
 void HFCTWidget::do_key_left_right(int d)
 {
+    QList<int> list;
     switch (key_val->grade.val2) {
     case 1:
         hfct_sql->mode = !hfct_sql->mode;
         break;
     case 2:
-        Common::change_index(hfct_sql->chart,d,TF,BASIC);
+        list << BASIC << PRPD << PRPS << TF;
+        Common::change_index(hfct_sql->chart,d,list);
         break;
     case 3:
         Common::change_index(hfct_sql->gain, d * 0.1, 20, 0.1 );
@@ -233,9 +206,12 @@ void HFCTWidget::do_key_left_right(int d)
         hfct_sql->fpga_threshold += Common::code_value(1,mode) * d;
         break;
     case 6:
-        hfct_sql->auto_rec = !hfct_sql->auto_rec;
+        Common::change_index(hfct_sql->pulse_time, d, MAX_PULSE_CNT, 1 );
         break;
     case 7:
+        hfct_sql->auto_rec = !hfct_sql->auto_rec;
+        break;
+    case 8:
         Common::change_index(hfct_sql->rec_time, d, 20, 1 );
         break;
     default:
@@ -321,7 +297,7 @@ void HFCTWidget::fresh_100ms()
     int temp_x = 0;
     double k;   //TF计算中使用的系数
 
-    foreach (PC_DATA point, pclist_200ms) {
+    foreach (PC_DATA point, pclist_100ms) {
         if(sql_para.freq_val == 50){            //x坐标变换
             temp_x = point.phase % 2000000;    //取余数
             key_PRPD = MyKey(temp_x * 360 / 2000000 , (int)point.pc_value );       //y做处理，为了使重复点更多，节省空间
@@ -382,14 +358,15 @@ void HFCTWidget::fresh_100ms()
     //插入TF图,柱状图代码
 
     //刷新200ms内的db和脉冲数
-    foreach (PC_DATA node, pclist_200ms) {
+    foreach (PC_DATA node, pclist_100ms) {
         if(db < qAbs(node.pc_value) ){
             db = qAbs(node.pc_value);
         }
+        pclist_1000ms.append(qAbs(node.pc_value));
     }
-    pulse_number += pclist_200ms.length();
+    pulse_number += pclist_100ms.length();
 
-    pclist_200ms.clear();
+    pclist_100ms.clear();
 
 }
 
@@ -554,7 +531,7 @@ void HFCTWidget::fresh_1ms()
             //切割 计算 筛选
             QVector<PC_DATA> pclist_1ms = compute_pc_1ms(list,short_data->time);
             //累计数据
-            pclist_200ms.append(pclist_1ms);
+            pclist_100ms.append(pclist_1ms);
         }
     }
 }
@@ -572,19 +549,43 @@ void HFCTWidget::fresh_1000ms()
         db = 9999;
     }
 
+    quint32 pulse_cnt;
+    if(mode == HFCT1){
+        pulse_cnt = data->recv_para_normal.hpulse0_totol;
+    }
+    else{
+        pulse_cnt = data->recv_para_normal.hpulse1_totol;
+    }
+    pulse_cnt_list.append(pulse_cnt);
+    if(pulse_cnt_list.count() > MAX_PULSE_CNT){
+        pulse_cnt_list.removeFirst();
+    }
+    int pulse_cnt_show = 0;
+    for (int i = 0; i < hfct_sql->pulse_time && pulse_cnt_list.count() >= i+1; ++i) {
+        pulse_cnt_show += pulse_cnt_list.at(pulse_cnt_list.count() - 1 - i);
+    }
 
-    double degree = db * pulse_number * 1.0 / sqlcfg->get_para()->freq_val;
+//    double degree = db * pulse_number * 1.0 / sqlcfg->get_para()->freq_val;
+    double degree = db * pulse_cnt * 1.0 / sqlcfg->get_para()->freq_val;
 
     ui->label_val->setText(QString("%1").arg(db));
-    ui->label_pluse->setText(tr("脉冲数: %1").arg(pulse_number));
+//    ui->label_pluse->setText(tr("脉冲数: %1").arg(pulse_number));
+    ui->label_pluse->setText(tr("脉冲数: ") + Common::secton_three(pulse_cnt_show) );//按三位分节法显示脉冲计数
     ui->label_degree->setText(tr("严重度: %1").arg(degree));
+//    ui->label_degree->setText(tr("测试: %1pc").arg(Common::avrage(pclist_1000ms)));   //测试
+    pclist_1000ms.clear();
 
-    if(db >= 4000){
-        emit beep(menu_index, 2);        //蜂鸣器报警
+    if ( db >= hfct_sql->high) {
+        ui->label_val->setStyleSheet("QLabel {font-family:WenQuanYi Micro Hei;font-size:60px;color:red}");
+        emit beep(menu_index,2);        //蜂鸣器报警
+    } else if (db >= hfct_sql->low) {
+        ui->label_val->setStyleSheet("QLabel {font-family:WenQuanYi Micro Hei;font-size:60px;color:yellow}");
+        emit beep(menu_index,1);
+    } else {
+        ui->label_val->setStyleSheet("QLabel {font-family:WenQuanYi Micro Hei;font-size:60px;color:green}");
     }
-    else if( db >= 2000){
-        emit beep(menu_index, 1);
-    }
+
+    int d_max, d_min;
 
     yc_data_type temp_data;
     if(mode == HFCT1){
@@ -598,7 +599,9 @@ void HFCTWidget::fresh_1000ms()
         yc_set_value(HFCT1_gain, &temp_data, 0, NULL,0);
         temp_data.f_val = 0;
         yc_set_value(HFCT1_center_biased, &temp_data, 0, NULL,0);
-        temp_data.f_val = 0;
+        d_max = data->recv_para_normal.hdata0.ad.ad_max;
+        d_min = data->recv_para_normal.hdata0.ad.ad_min;
+        temp_data.f_val = ((d_max + d_min) / 2) - 0x8000;
         yc_set_value(HFCT1_center_biased_adv, &temp_data, 0, NULL,0);
         temp_data.f_val = 0;
         yc_set_value(HFCT1_noise_biased, &temp_data, 0, NULL,0);
@@ -616,7 +619,9 @@ void HFCTWidget::fresh_1000ms()
         yc_set_value(HFCT2_gain, &temp_data, 0, NULL,0);
         temp_data.f_val = 0;
         yc_set_value(HFCT2_center_biased, &temp_data, 0, NULL,0);
-        temp_data.f_val = 0;
+        d_max = data->recv_para_normal.hdata1.ad.ad_max;
+        d_min = data->recv_para_normal.hdata1.ad.ad_min;
+        temp_data.f_val = ((d_max + d_min) / 2) - 0x8000;
         yc_set_value(HFCT2_center_biased_adv, &temp_data, 0, NULL,0);
         temp_data.f_val = 0;
         yc_set_value(HFCT2_noise_biased, &temp_data, 0, NULL,0);
@@ -699,15 +704,16 @@ void HFCTWidget::fresh_setting()
     }
 
     ui->comboBox->setItemText(4,tr("脉冲触发\t[%1]mV").arg(QString::number((int)Common::physical_value(hfct_sql->fpga_threshold,mode) )));
+    ui->comboBox->setItemText(5,tr("脉冲计数时长\t[%1]s").arg(QString::number(hfct_sql->pulse_time)) );
 
     if(hfct_sql->auto_rec == true){
-        ui->comboBox->setItemText(5,tr("自动录波\t[开启]") );
+        ui->comboBox->setItemText(6,tr("自动录波\t[开启]") );
     }
     else{
-        ui->comboBox->setItemText(5,tr("自动录波\t[关闭]") );
+        ui->comboBox->setItemText(6,tr("自动录波\t[关闭]") );
     }
 
-    ui->comboBox->setItemText(6,tr("连续录波\t[%1]s").arg(QString::number(hfct_sql->rec_time)));
+    ui->comboBox->setItemText(7,tr("连续录波\t[%1]s").arg(QString::number(hfct_sql->rec_time)));
 
     ui->comboBox->setCurrentIndex(key_val->grade.val2-1);
 

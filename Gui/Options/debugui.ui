@@ -77,28 +77,6 @@
          <property name="verticalSpacing">
           <number>0</number>
          </property>
-         <item row="0" column="2">
-          <widget class="QLineEdit" name="lineEdit_TEV1_line">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>80</width>
-             <height>22</height>
-            </size>
-           </property>
-           <property name="text">
-            <string notr="true">200</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignCenter</set>
-           </property>
-          </widget>
-         </item>
          <item row="2" column="1">
           <widget class="QLabel" name="lab_Tev_offset2">
            <property name="text">
@@ -120,7 +98,7 @@
           </widget>
          </item>
          <item row="2" column="4">
-          <widget class="QLabel" name="lab_offset_noise_tev1">
+          <widget class="QLabel" name="lab_offset_noise_h1">
            <property name="baseSize">
             <size>
              <width>20</width>
@@ -142,7 +120,7 @@
           </widget>
          </item>
          <item row="2" column="2">
-          <widget class="QLineEdit" name="lineEdit_TEV1_NOISE">
+          <widget class="QLineEdit" name="lineEdit_H1_NOISE">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -164,7 +142,7 @@
           </widget>
          </item>
          <item row="1" column="2">
-          <widget class="QLineEdit" name="lineEdit_TEV1_ZERO">
+          <widget class="QLineEdit" name="lineEdit_H1_ZERO">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -185,18 +163,8 @@
            </property>
           </widget>
          </item>
-         <item row="0" column="1">
-          <widget class="QLabel" name="lab_TEV_Gain">
-           <property name="text">
-            <string>线性补偿</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignCenter</set>
-           </property>
-          </widget>
-         </item>
          <item row="1" column="4">
-          <widget class="QLabel" name="lab_offset_zero_tev1">
+          <widget class="QLabel" name="lab_offset_zero_h1">
            <property name="baseSize">
             <size>
              <width>20</width>
@@ -227,8 +195,8 @@
            </property>
           </widget>
          </item>
-         <item row="0" column="0">
-          <widget class="QLabel" name="label_TEV1">
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_H1">
            <property name="text">
             <string>TEV1</string>
            </property>
@@ -265,7 +233,7 @@
           </widget>
          </item>
          <item row="1" column="2">
-          <widget class="QLineEdit" name="lineEdit_TEV2_ZERO">
+          <widget class="QLineEdit" name="lineEdit_H2_ZERO">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -297,7 +265,7 @@
           </widget>
          </item>
          <item row="1" column="4">
-          <widget class="QLabel" name="lab_offset_zero_tev2">
+          <widget class="QLabel" name="lab_offset_zero_h2">
            <property name="frameShape">
             <enum>QFrame::Panel</enum>
            </property>
@@ -323,7 +291,7 @@
           </widget>
          </item>
          <item row="2" column="2">
-          <widget class="QLineEdit" name="lineEdit_TEV2_NOISE">
+          <widget class="QLineEdit" name="lineEdit_H2_NOISE">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -345,7 +313,7 @@
           </widget>
          </item>
          <item row="2" column="4">
-          <widget class="QLabel" name="lab_offset_noise_tev2">
+          <widget class="QLabel" name="lab_offset_noise_h2">
            <property name="frameShape">
             <enum>QFrame::Panel</enum>
            </property>
@@ -360,40 +328,8 @@
            </property>
           </widget>
          </item>
-         <item row="0" column="2">
-          <widget class="QLineEdit" name="lineEdit_TEV2_line">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>80</width>
-             <height>22</height>
-            </size>
-           </property>
-           <property name="text">
-            <string notr="true">200</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="1">
-          <widget class="QLabel" name="lab_TEV_Gain_3">
-           <property name="text">
-            <string>线性补偿</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="0">
-          <widget class="QLabel" name="label_TEV2">
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_H2">
            <property name="text">
             <string>TEV2</string>
            </property>
@@ -413,259 +349,6 @@
           <size>
            <width>20</width>
            <height>40</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="tab_HFCT">
-      <attribute name="title">
-       <string/>
-      </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout">
-       <property name="leftMargin">
-        <number>20</number>
-       </property>
-       <property name="rightMargin">
-        <number>15</number>
-       </property>
-       <item>
-        <layout class="QGridLayout" name="gridLayout_19">
-         <property name="horizontalSpacing">
-          <number>10</number>
-         </property>
-         <property name="verticalSpacing">
-          <number>0</number>
-         </property>
-         <item row="1" column="3">
-          <widget class="QLabel" name="label_31">
-           <property name="text">
-            <string>参考值</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="4">
-          <widget class="QLabel" name="lab_offset_zero_hfct1">
-           <property name="baseSize">
-            <size>
-             <width>20</width>
-             <height>0</height>
-            </size>
-           </property>
-           <property name="frameShape">
-            <enum>QFrame::Panel</enum>
-           </property>
-           <property name="frameShadow">
-            <enum>QFrame::Sunken</enum>
-           </property>
-           <property name="text">
-            <string notr="true">0</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="2">
-          <widget class="QLineEdit" name="lineEdit_HFCT1_THRESHOLD">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>80</width>
-             <height>22</height>
-            </size>
-           </property>
-           <property name="text">
-            <string notr="true">200</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="2">
-          <widget class="QLineEdit" name="lineEdit_HFCT1_ZERO">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>80</width>
-             <height>22</height>
-            </size>
-           </property>
-           <property name="text">
-            <string notr="true">0</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="1">
-          <widget class="QLabel" name="lab_TEV_Gain_7">
-           <property name="text">
-            <string>脉冲触发</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="1">
-          <widget class="QLabel" name="lab_Tev_offset1_7">
-           <property name="text">
-            <string>中心偏置</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="0">
-          <widget class="QLabel" name="label_HF1">
-           <property name="text">
-            <string>HFCT1</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <widget class="Line" name="line_4">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <layout class="QGridLayout" name="gridLayout_20">
-         <property name="horizontalSpacing">
-          <number>10</number>
-         </property>
-         <property name="verticalSpacing">
-          <number>0</number>
-         </property>
-         <item row="1" column="1">
-          <widget class="QLabel" name="lab_Tev_offset1_8">
-           <property name="text">
-            <string>中心偏置</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="2">
-          <widget class="QLineEdit" name="lineEdit_HFCT2_ZERO">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>80</width>
-             <height>22</height>
-            </size>
-           </property>
-           <property name="text">
-            <string notr="true">0</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="2">
-          <widget class="QLineEdit" name="lineEdit_HFCT2_THRESHOLD">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>80</width>
-             <height>22</height>
-            </size>
-           </property>
-           <property name="text">
-            <string notr="true">200</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="1">
-          <widget class="QLabel" name="lab_TEV_Gain_8">
-           <property name="text">
-            <string>脉冲触发</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="3">
-          <widget class="QLabel" name="label_32">
-           <property name="text">
-            <string>参考值</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="4">
-          <widget class="QLabel" name="lab_offset_zero_hfct2">
-           <property name="frameShape">
-            <enum>QFrame::Panel</enum>
-           </property>
-           <property name="frameShadow">
-            <enum>QFrame::Sunken</enum>
-           </property>
-           <property name="text">
-            <string notr="true">0</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="0">
-          <widget class="QLabel" name="label_HF2">
-           <property name="text">
-            <string>HFCT2</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <spacer name="verticalSpacer_7">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>43</height>
           </size>
          </property>
         </spacer>
@@ -983,6 +666,13 @@
         </layout>
        </item>
        <item>
+        <widget class="Line" name="line_5">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
         <layout class="QGridLayout" name="gridLayout_8">
          <item row="0" column="1">
           <widget class="QLabel" name="label_11">
@@ -1077,13 +767,6 @@
           </widget>
          </item>
         </layout>
-       </item>
-       <item>
-        <widget class="Line" name="line_3">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-        </widget>
        </item>
       </layout>
      </widget>

@@ -58,19 +58,30 @@ enum yc_e {
     HFCT2_center_biased_adv,                //0x4014	HFCT2中心偏置建议值
     HFCT2_noise_biased_adv,                 //0x4015	HFCT2噪声偏置建议值
 
-    AA1_amplitude,                           //0x4016	AA1幅值
-    AA1_severity,                            //0x4017	AA1严重度
-    AA1_biased_adv,                          //0x4018	AA1偏置建议值
-    AA2_amplitude,                           //0x4019	AA2幅值
-    AA2_severity,                            //0x401a	AA2严重度
-    AA2_biased_adv,                          //0x401b	AA2偏置建议值
+    UHF1_amplitude,                         //0x4016	UHF1幅值
+    UHF1_num,                               //0x4017	UHF1脉冲个数
+    UHF1_severity,                          //0x4018	UHF1严重度
+    UHF1_center_biased_adv,                 //0x4019	UHF1中心偏置建议值
+    UHF1_noise_biased_adv,                  //0x401a	UHF1噪声偏置建议值
+    UHF2_amplitude,                         //0x401b	UHF2幅值
+    UHF2_num,                               //0x401c	UHF2脉冲个数
+    UHF2_severity,                          //0x401d	UHF2严重度
+    UHF2_center_biased_adv,                 //0x401f	UHF2中心偏置建议值
+    UHF2_noise_biased_adv,                  //0x4020	UHF2噪声偏置建议值
 
-    AE1_amplitude,                           //0x401c	AE1幅值
-    AE1_severity,                            //0x401d	AE1严重度
-    AE1_biased_adv,                          //0x401e	AE1偏置建议值
-    AE2_amplitude,                           //0x401f	AE2幅值
-    AE2_severity,                            //0x4020	AE2严重度
-    AE2_biased_adv,                          //0x4021	AE2偏置建议值
+    AA1_amplitude,                           //0x4021	AA1幅值
+    AA1_severity,                            //0x4022	AA1严重度
+    AA1_biased_adv,                          //0x4023	AA1偏置建议值
+    AA2_amplitude,                           //0x4024	AA2幅值
+    AA2_severity,                            //0x4025	AA2严重度
+    AA2_biased_adv,                          //0x4026	AA2偏置建议值
+
+    AE1_amplitude,                           //0x4027	AE1幅值
+    AE1_severity,                            //0x4028	AE1严重度
+    AE1_biased_adv,                          //0x4029	AE1偏置建议值
+    AE2_amplitude,                           //0x402a	AE2幅值
+    AE2_severity,                            //0x402b	AE2严重度
+    AE2_biased_adv,                          //0x402c	AE2偏置建议值
 
 
     //写
@@ -82,21 +93,28 @@ enum yc_e {
 	TEV2_noise_biased,                      //0x4035	TEV2噪声偏置
 
 	HFCT1_gain,                             //0x4038	HFCT1增益
-	HFCT1_center_biased,                    //0x4039	HFCT 1中心偏置
-	HFCT1_noise_biased,                     //0x403a	HFCT 1噪声偏置
-	HFCT2_gain,                             //0x403b	HFCT 2增益
-	HFCT2_center_biased,                    //0x403c	HFCT 2中心偏置
-	HFCT2_noise_biased,                     //0x403d	HFCT 2噪声偏置
+    HFCT1_center_biased,                    //0x4039	HFCT1中心偏置
+    HFCT1_noise_biased,                     //0x403a	HFCT1噪声偏置
+    HFCT2_gain,                             //0x403b	HFCT2增益
+    HFCT2_center_biased,                    //0x403c	HFCT2中心偏置
+    HFCT2_noise_biased,                     //0x403d	HFCT2噪声偏置
 
-    AA1_gain,                               //0x4036	AA1增益
-    AA1_biased,                             //0x4037	AA1偏置
-    AA2_gain,                               //0x4036	AA2增益
-    AA2_biased,                             //0x4037	AA2偏置
+    UHF1_gain,                              //0x403e	UHF1增益
+    UHF1_center_biased,                     //0x403f	UHF1中心偏置
+    UHF1_noise_biased,                      //0x4040	UHF1噪声偏置
+    UHF2_gain,                              //0x4041	UHF2增益
+    UHF2_center_biased,                     //0x4042	UHF2中心偏置
+    UHF2_noise_biased,                      //0x4043	UHF2噪声偏置
 
-    AE1_gain,                               //0x4036	AE1增益
-    AE1_biased,                             //0x4037	AE1偏置
-    AE2_gain,                               //0x4036	AE2增益
-    AE2_biased,                             //0x4037	AE2偏置
+    AA1_gain,                               //0x4044	AA1增益
+    AA1_biased,                             //0x4045	AA1偏置
+    AA2_gain,                               //0x4046	AA2增益
+    AA2_biased,                             //0x4047	AA2偏置
+
+    AE1_gain,                               //0x4048	AE1增益
+    AE1_biased,                             //0x4049	AE1偏置
+    AE2_gain,                               //0x4050	AE2增益
+    AE2_biased,                             //0x4051	AE2偏置
 
 
 	version=95,                             //0x4060	版本

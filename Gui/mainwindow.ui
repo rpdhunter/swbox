@@ -38,7 +38,7 @@
     <string notr="true"/>
    </property>
    <property name="currentIndex">
-    <number>0</number>
+    <number>5</number>
    </property>
    <property name="iconSize">
     <size>
@@ -79,6 +79,14 @@
     </attribute>
    </widget>
    <widget class="QWidget" name="L_Channel2">
+    <property name="autoFillBackground">
+     <bool>true</bool>
+    </property>
+    <attribute name="title">
+     <string/>
+    </attribute>
+   </widget>
+   <widget class="QWidget" name="Asset">
     <property name="autoFillBackground">
      <bool>true</bool>
     </property>
@@ -292,29 +300,6 @@ background:transparent;
     <string notr="true">50Hz</string>
    </property>
   </widget>
-  <widget class="QLabel" name="lab_logo">
-   <property name="geometry">
-    <rect>
-     <x>350</x>
-     <y>250</y>
-     <width>122</width>
-     <height>22</height>
-    </rect>
-   </property>
-   <property name="styleSheet">
-    <string notr="true">QLabel {
-color:white;
-background:transparent;
-}
-</string>
-   </property>
-   <property name="text">
-    <string/>
-   </property>
-   <property name="pixmap">
-    <pixmap resource="../resource/resource.qrc">:/widgetphoto/bk/ohv_gary.png</pixmap>
-   </property>
-  </widget>
   <widget class="QLabel" name="lab_time">
    <property name="geometry">
     <rect>
@@ -393,8 +378,6 @@ background:transparent;
    </property>
   </widget>
  </widget>
- <resources>
-  <include location="../resource/resource.qrc"/>
- </resources>
+ <resources/>
  <connections/>
 </ui>

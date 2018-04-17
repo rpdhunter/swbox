@@ -68,7 +68,7 @@ private:
     QVector<SYNC_DATA> sync_data;       //同步数据信号
     struct timeval start, end , last_zero;          //测试用计时
 
-    QLabel *tab0, *tab1, *tab2, *tab3, *tab4, *tab5;  //tab标签
+    QLabel *tab0, *tab1, *tab2, *tab3, *tab4;  //tab标签
 
     QWidget *widget_password;        //密码窗口
     QLabel *lab1, *lab2;

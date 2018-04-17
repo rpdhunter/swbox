@@ -123,6 +123,12 @@ void FileTools::getReadFilePath(QString str)
     else if(str.contains("HFCT2_")){
         _mode = HFCT2;
     }
+    else if(str.contains("UHF1_")){
+        _mode = UHF1;
+    }
+    else if(str.contains("UHF2_")){
+        _mode = UHF2;
+    }
     else if(str.contains("AA1_")){
         _mode = AA1;
     }
@@ -182,6 +188,12 @@ void FileTools::getWriteFilePath()
     case HFCT2:
         filename.prepend("HFCT2_");
         break;
+    case UHF1:
+        filename.prepend("UHF1_");
+        break;
+    case UHF2:
+        filename.prepend("UHF2_");
+        break;
     case TEV1_CONTINUOUS:
         filename.prepend("TEV1_CONTINUOUS_");
         break;
@@ -193,6 +205,12 @@ void FileTools::getWriteFilePath()
         break;
     case HFCT2_CONTINUOUS:
         filename.prepend("HFCT2_CONTINUOUS_");
+        break;
+    case UHF1_CONTINUOUS:
+        filename.prepend("UHF1_CONTINUOUS_");
+        break;
+    case UHF2_CONTINUOUS:
+        filename.prepend("UHF2_CONTINUOUS_");
         break;
     case AA1_ENVELOPE:
         filename.prepend("AA1_ENVELOPE_");

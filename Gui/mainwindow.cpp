@@ -10,6 +10,8 @@
 #endif
 
 #define LOW_POWER_TIMES     3
+#define TAB_NUM     7       //通道数量
+#define SETTING_NUM 5       //设置条目数
 
 
 MainWindow::MainWindow(QSplashScreen *sp, QWidget *parent ) :
@@ -104,6 +106,8 @@ void MainWindow::menu_init()
     menu_icon4->resize(41, 24);
     menu_icon5 = new QLabel(this);
     menu_icon5->resize(41, 24);
+    menu_icon6 = new QLabel(this);
+    menu_icon6->resize(41, 24);
 
     ui->tabWidget->tabBar()->setTabButton(0,QTabBar::LeftSide,menu_icon0);
     ui->tabWidget->tabBar()->setTabButton(1,QTabBar::LeftSide,menu_icon1);
@@ -111,6 +115,11 @@ void MainWindow::menu_init()
     ui->tabWidget->tabBar()->setTabButton(3,QTabBar::LeftSide,menu_icon3);
     ui->tabWidget->tabBar()->setTabButton(4,QTabBar::LeftSide,menu_icon4);
     ui->tabWidget->tabBar()->setTabButton(5,QTabBar::LeftSide,menu_icon5);
+    ui->tabWidget->tabBar()->setTabButton(6,QTabBar::LeftSide,menu_icon6);
+
+#ifndef TEST
+    menu_icon5->resize(0, 0);
+#endif
 
     //设置每个通道界面的背景，由于使用样式表，会造成子部件背景色混乱，改用调色板设置
     QPalette Pal(this->palette());
@@ -152,18 +161,6 @@ void MainWindow::statusbar_init()
     connect(timer_dark, SIGNAL(timeout()), this, SLOT(screen_dark()) );
 
     fresh_batt();       //立刻显示一次电量
-
-
-#ifdef OHV
-    ui->lab_logo->setPixmap(QPixmap(":/widgetphoto/bk/ohv_gary.png").scaled(ui->lab_logo->size()));     //logo
-#elif AMG
-    ui->lab_logo->hide();
-#elif ZDIT
-    ui->lab_logo->hide();
-#else
-    ui->lab_logo->hide();
-#endif
-
 }
 
 void MainWindow::function_init(QSplashScreen *sp)
@@ -179,6 +176,7 @@ void MainWindow::function_init(QSplashScreen *sp)
     aa2_widget = NULL;
     ae1_widget = NULL;
     ae2_widget = NULL;
+    asset_widget = NULL;
 
     sp->showMessage(tr("正在初始化高频通道..."),Qt::AlignBottom|Qt::AlignLeft);
     channel_init((MODE)sqlcfg->get_para()->menu_h1,0);
@@ -187,6 +185,14 @@ void MainWindow::function_init(QSplashScreen *sp)
     sp->showMessage(tr("正在初始化低频通道..."),Qt::AlignBottom|Qt::AlignLeft);
     channel_init((MODE)sqlcfg->get_para()->menu_l1,3);
     channel_init((MODE)sqlcfg->get_para()->menu_l2,4);
+#if TEST
+    asset_widget = new AssetWidget(&key_val,5,ui->Asset);
+    mode_list.append(ASSET);
+    connect(this, SIGNAL(send_key(quint8)), asset_widget, SLOT(trans_key(quint8)) );
+    connect(asset_widget,SIGNAL(fresh_parent()), this, SLOT(fresh_menu_icon()) );
+#else
+    mode_list.append(Disable);
+#endif
     mode_list.append(Options_Mode);
 
     if(tev1_widget != NULL){
@@ -253,8 +259,8 @@ void MainWindow::function_init(QSplashScreen *sp)
         connect(fifodata,SIGNAL(waveData(VectorList,MODE)),uhf1_widget,SLOT(showWaveData(VectorList,MODE)) );
         //重载数据
         connect(ui->tabWidget,SIGNAL(currentChanged(int)), uhf1_widget, SLOT(reload(int)) );
-        //菊花
-        connect(uhf1_widget,SIGNAL(show_indicator(bool)), this, SLOT(show_busy(bool)) );
+        //短录波
+        connect(fifodata,SIGNAL(short1_update()), uhf1_widget,SLOT(fresh_1ms()));
         //蜂鸣器
         connect(uhf1_widget,SIGNAL(beep(int,int)),this,SLOT(do_beep(int,int)));
     }
@@ -266,8 +272,8 @@ void MainWindow::function_init(QSplashScreen *sp)
         connect(fifodata,SIGNAL(waveData(VectorList,MODE)),uhf2_widget,SLOT(showWaveData(VectorList,MODE)) );
         //重载数据
         connect(ui->tabWidget,SIGNAL(currentChanged(int)), uhf2_widget, SLOT(reload(int)) );
-        //菊花
-        connect(uhf2_widget,SIGNAL(show_indicator(bool)), this, SLOT(show_busy(bool)) );
+        //短录波
+        connect(fifodata,SIGNAL(short2_update()), uhf2_widget,SLOT(fresh_1ms()));
         //蜂鸣器
         connect(uhf2_widget,SIGNAL(beep(int,int)),this,SLOT(do_beep(int,int)));
     }
@@ -413,7 +419,6 @@ void MainWindow::channel_init(MODE mode, int index)
     default:
         break;
     }
-
     mode_list.append(mode);
 }
 
@@ -469,7 +474,7 @@ void MainWindow::trans_key(quint8 key_code)
 {
     set_reboot_time();          //接到任何按键，重置重启计时器
 
-    if(key_val.grade.val0 == 5 && key_val.grade.val2 !=0 ){
+    if(key_val.grade.val0 == TAB_NUM - 1 && key_val.grade.val2 !=0 ){
         emit send_key(key_code);
         return;
     }
@@ -478,7 +483,7 @@ void MainWindow::trans_key(quint8 key_code)
     case KEY_LEFT:
         if(key_val.grade.val1 == 0 ){
             do{
-                Common::change_index(key_val.grade.val0, -1, 5, 0);
+                Common::change_index(key_val.grade.val0, -1, TAB_NUM - 1, 0);
             }
             while(mode_list.at(key_val.grade.val0) == Disable);
             ui->tabWidget->setCurrentIndex(key_val.grade.val0);
@@ -487,14 +492,14 @@ void MainWindow::trans_key(quint8 key_code)
     case KEY_RIGHT:
         if(key_val.grade.val1 == 0 ){
             do{
-                Common::change_index(key_val.grade.val0, 1, 5, 0);
+                Common::change_index(key_val.grade.val0, 1, TAB_NUM - 1, 0);
             }
             while(mode_list.at(key_val.grade.val0) == Disable);
             ui->tabWidget->setCurrentIndex(key_val.grade.val0);
         }
         break;
     case KEY_OK:
-        if(key_val.grade.val0 == 5){
+        if(key_val.grade.val0 == TAB_NUM - 1){
             switch (key_val.grade.val1) {
             case 1:
                 key_val.grade.val2 = 1;
@@ -523,19 +528,19 @@ void MainWindow::trans_key(quint8 key_code)
         }
         break;
     case KEY_UP:
-        if (key_val.grade.val0 == 5) {
-            Common::change_index(key_val.grade.val1,-1,5,1);
+        if (key_val.grade.val0 == TAB_NUM - 1) {
+            Common::change_index(key_val.grade.val1,-1,SETTING_NUM,1);
         }
         break;
     case KEY_DOWN:
-        if (key_val.grade.val0 == 5) {
-            Common::change_index(key_val.grade.val1,1,5,1);
+        if (key_val.grade.val0 == TAB_NUM - 1) {
+            Common::change_index(key_val.grade.val1,1,SETTING_NUM,1);
         }
         break;
     case KEY_CANCEL:
         if (key_val.grade.val1 > 0){
             key_val.grade.val1 = 0;
-            emit send_key(key_code);
+//            emit send_key(key_code);
         }
         break;
     default:
@@ -544,9 +549,9 @@ void MainWindow::trans_key(quint8 key_code)
 
     fresh_grade1();
     fresh_menu_icon();
-    if(key_val.grade.val0 != 5 /*&& key_val.grade.val1 !=0*/ ){
+    if(key_val.grade.val0 != TAB_NUM - 1 ){
         emit send_key(key_code);
-        return;
+//        return;
     }
 }
 
@@ -631,7 +636,11 @@ void MainWindow::fresh_menu_icon()
         }
         break;
     case 5:
-        menu_icon5->setPixmap(QPixmap(":/widgetphoto/menu/Option_1.png"));
+        menu_icon5->setPixmap(QPixmap(":/widgetphoto/menu/ASSET_1.png"));
+        ui->lab_imformation->setText(tr("资产管理"));
+        break;
+    case 6:
+        menu_icon6->setPixmap(QPixmap(":/widgetphoto/menu/Option_1.png"));
         ui->lab_imformation->setText(tr("系统设置"));
         if (!key_val.grade.val1) {
             ui->lab_imformation->setText(tr("系统设置"));
@@ -720,7 +729,8 @@ void MainWindow::set_non_current_menu_icon()
         break;
     }
 
-    menu_icon5->setPixmap(QPixmap(":/widgetphoto/menu/Option_2.png"));
+    menu_icon5->setPixmap(QPixmap(":/widgetphoto/menu/ASSET_2.png"));
+    menu_icon6->setPixmap(QPixmap(":/widgetphoto/menu/Option_2.png"));
 }
 
 //禁用菜单
@@ -784,7 +794,8 @@ void MainWindow::set_disable_menu_icon()
         break;
     }
 
-    menu_icon5->setPixmap(QPixmap(":/widgetphoto/menu/Option_0.png"));
+    menu_icon5->setPixmap(QPixmap(":/widgetphoto/menu/ASSET_0.png"));
+    menu_icon6->setPixmap(QPixmap(":/widgetphoto/menu/Option_0.png"));
 }
 
 //刷新系统设置页面的二级菜单
@@ -1017,6 +1028,8 @@ void MainWindow::do_sync(uint offset)
 {
     emit send_sync(offset);
     ui->lab_sync->setText(tr("同步源:工频量 状态:已同步"));
+
+//    buzzer->yellow();       //test
 }
 
 void MainWindow::do_beep(int menu_index, int red_alert)

@@ -22,6 +22,9 @@ SystemInfo::SystemInfo(QWidget *parent) : QFrame(parent),ui(new Ui::SystemInfoUi
 #elif ZDIT
     ui->label_logo_text->setText("copyright © 2016-2017 ZIT(Nanjing) Technology Co., Ltd\nAll rights reserved.");
     ui->label_logo->setPixmap(QPixmap(":/widgetphoto/bk/zdit_low.png"));
+#elif XDP_II
+    ui->label_logo_text->setText("\nAll rights reserved.");
+    ui->label_logo->setPixmap(QPixmap(":/widgetphoto/bk/xdp2_low.png"));
 #else
     ui->label_logo_text->setText("");
 #endif
@@ -45,6 +48,8 @@ SystemInfo::SystemInfo(QWidget *parent) : QFrame(parent),ui(new Ui::SystemInfoUi
             line = "PDcable";
 #elif ZDIT
             line = "PD3000";
+#elif XDP_II
+            line = "XDP-II";
 #else
             line = "PD3000";
 #endif
@@ -60,9 +65,11 @@ SystemInfo::SystemInfo(QWidget *parent) : QFrame(parent),ui(new Ui::SystemInfoUi
 #ifdef OHV
             line = "\ncopyright © 2014-2017 Ohv Diagnostic GmbH, Ltd";
 #elif AMG
-            line = "\ncopyright © 2016-2017 Australian Microgrid Technology Pty Lte";
+            line = "\ncopyright © 2016-2017 Australian Microgrid Technology Pty Ltd";
 #elif ZDIT
             line = "\ncopyright © 2016-2017 ZIT(Nanjing) Technology Co., Ltd";
+#elif XDP_II
+            line = "\n";
 #else
             line = "\n";
 #endif

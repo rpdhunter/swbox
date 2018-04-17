@@ -84,7 +84,8 @@ public:
     static void set_comboBox_style(QComboBox *comboBox);                  //完成QComboBox的样式设置
     static void set_barchart_style(QwtPlot *plot, int v_max);                  //完成barchart的样式设置
     static void set_PRPD_style(QwtPlot *plot, QwtPlotSpectroCurve *d_PRPD, int max_value);                      //完成PRPD的样式设置
-    static void set_TF_style(QwtPlot *plot, QwtPlotSpectroCurve *d_PRPD, int max_value);                      //完成TF的样式设置
+    static void set_fly_style(QwtPlot *plot, QwtPlotSpectroCurve *d_fly, int max_value);                      //完成飞行图的样式设置
+    static void set_TF_style(QwtPlot *plot, QwtPlotSpectroCurve *d_TF, int max_value);                      //完成TF的样式设置
     static void set_histogram_style(QwtPlot *plot, QwtPlotHistogram *d_histogram, int xBottom_min, int xBottom_max,
                                     int yLeft_min, int yLeft_max, QString title);                      //完成histogram的样式设置
     static void setTab(QLabel *label);              //设置tabwidget的标签格式
@@ -138,7 +139,7 @@ public:
 #define OHV_PD_MODEL		OHV_PD_MOD_TEV
 
 /* amg定义 */
-#define AMG_NAME			"Australian Microgrid Technology Pty Lte"
+#define AMG_NAME			"Australian Microgrid Technology Pty Ltd"
 #define AMG_NAME_SHORT		"AMG"
 #define AMG_LOGO_PATH		LOGO_DIR"/amg/"LOGO_NAME
 #define AMG_LOGO_SML_PATH	LOGO_DIR"/amg/"LOGO_SML_NAME
