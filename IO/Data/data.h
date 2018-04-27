@@ -9,6 +9,7 @@
 #define PROGRAM_DIR     "/root"
 #define USB_DIR         "/mmc/mmc2"
 #define DATA_DIR        USB_DIR"/data"
+#define ASSET_DIR       DATA_DIR"/asset"
 //#define DATA_DIR        PROGRAM_DIR"/data"
 #define WAVE_DIR        DATA_DIR "/WaveForm"
 #define FAVORITE_DIR    WAVE_DIR "/favorite"

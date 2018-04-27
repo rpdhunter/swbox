@@ -75,17 +75,14 @@ void FileTools::run()
         }
         emit readFinished(_data, _mode);
 
-//        if(_mode == AA1 || _mode == AA2 || _mode == AE1 || _mode == AE2         //TEST
-//                || _mode == AA1_ENVELOPE || _mode == AA2_ENVELOPE || _mode == AE1_ENVELOPE || _mode == AE2_ENVELOPE){
-//            if(filepath.contains("_env")){
-//                saveWavFile();      //生成声音文件
-//                wavToMp3();         //mp3转换
-//            }
-//            else{
-//                wav_add_filter();       //TEST
-//            }
+        if(_mode == AA1 || _mode == AA2 || _mode == AE1 || _mode == AE2         //TEST
+                || _mode == AA1_ENVELOPE || _mode == AA2_ENVELOPE || _mode == AE1_ENVELOPE || _mode == AE2_ENVELOPE){
+            if(filepath.contains("_env")){
+                saveWavFile();      //生成声音文件
+                wavToMp3();         //mp3转换
+            }
 
-//        }
+        }
 
     }
 

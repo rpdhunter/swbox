@@ -306,10 +306,13 @@ void TEVWidget::calc_tev_value (double &tev_db, int &pulse_cnt_show, double &deg
     double tev_val = tev_sql->gain * (MAX (qAbs (a), qAbs (b)) - tev_sql->offset_noise * 10) * H_C_FACTOR;
     tev_db = 20 * log10 (tev_val);      //对数运算，来自工具链的函数
 
+
+//    qDebug()<<"max : "<<tev_db << "db";
     //脉冲数多时，进入测试模式^^
     if(pulse_cnt > 500000 && !amp_1000ms.isEmpty()){
         tev_db = Common::avrage(amp_1000ms);
     }
+//    qDebug()<<"avrage : "<<tev_db << "db";
     amp_1000ms.clear();
 
     if(tev_db < 0){

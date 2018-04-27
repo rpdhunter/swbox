@@ -79,7 +79,8 @@ Rectangle {
 //            console.log("recv:\t" + pointer.x + '\t' + pointer.y)
         }
         onInputClear: {
-            textInput.text = str
+            textInput.text = str1
+            preText.text = str2
             preText.visible = true
         }
     }

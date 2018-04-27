@@ -190,6 +190,10 @@ void MainWindow::function_init(QSplashScreen *sp)
     mode_list.append(ASSET);
     connect(this, SIGNAL(send_key(quint8)), asset_widget, SLOT(trans_key(quint8)) );
     connect(asset_widget,SIGNAL(fresh_parent()), this, SLOT(fresh_menu_icon()) );
+    //键盘
+    connect(asset_widget,SIGNAL(show_input(QString,QString)),this,SIGNAL(show_input(QString,QString)));
+    connect(asset_widget,SIGNAL(send_input_key(quint8)),this,SIGNAL(send_input_key(quint8)) );
+    connect(this, SIGNAL(input_str(QString)), asset_widget, SLOT(input_finished(QString)) );
 #else
     mode_list.append(Disable);
 #endif
@@ -450,7 +454,7 @@ void MainWindow::options_init()
     connect(recwavemanage,SIGNAL(stop_play_voice()),fifodata,SIGNAL(stop_play_voice()));
     connect(fifodata,SIGNAL(playVoiceProgress(int,int,bool)),recwavemanage,SLOT(playVoiceProgress(int,int,bool)));
     //键盘
-    connect(options,SIGNAL(show_input(QString)),this,SIGNAL(show_input(QString)));
+    connect(options,SIGNAL(show_input(QString,QString)),this,SIGNAL(show_input(QString,QString)));
     connect(options,SIGNAL(send_input_key(quint8)),this,SIGNAL(send_input_key(quint8)) );
     connect(this, SIGNAL(input_str(QString)), options, SLOT(input_finished(QString)) );
     //菊花

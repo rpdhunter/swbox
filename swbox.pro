@@ -11,7 +11,7 @@ QT  += serialport sql qml quick quickwidgets
 TARGET = swbox
 TEMPLATE = app
 
-#DEFINES += TEST
+DEFINES += TEST
 #DEFINES += PRINTSCREEN     #截屏
 #DEFINES += AMG           #OEM
 #DEFINES += XDP_II        #OEM
@@ -72,10 +72,10 @@ SOURCES += \
     Gui/Common/fft.cpp \
     Gui/Function/uhfwidget.cpp \
     IO/Other/buzzer.cpp \
-    Gui/Function/assetwidget.cpp \
     Gui/Function/Asset/assetview.cpp \
     Gui/Function/Asset/assetmodel.cpp \
-    Gui/Function/Asset/assetsql.cpp
+    Gui/Function/Asset/assetsql.cpp \
+    Gui/Function/Asset/assetwidget.cpp
 
 
 HEADERS  += \
@@ -133,10 +133,10 @@ HEADERS  += \
     Gui/Common/fft.h \
     Gui/Function/uhfwidget.h \
     IO/Other/buzzer.h \
-    Gui/Function/assetwidget.h \
     Gui/Function/Asset/assetview.h \
     Gui/Function/Asset/assetmodel.h \
-    Gui/Function/Asset/assetsql.h
+    Gui/Function/Asset/assetsql.h \
+    Gui/Function/Asset/assetwidget.h
 
 FORMS += \
     Gui/Function/tevwidget.ui \
@@ -150,7 +150,7 @@ FORMS += \
     Gui/Options/debugui.ui \
     Gui/mainwindow.ui \
     Gui/Function/uhfwidget.ui \
-    Gui/Function/assetwidget.ui
+    Gui/Function/Asset/assetwidget.ui
 
 
 RESOURCES += \

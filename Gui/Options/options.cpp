@@ -9,7 +9,7 @@
 #define GRADE_2_NORMAL      6
 #define GRADE_2_WIFI        2
 #define GRADE_2_ADVANCED    6
-#define SYNC_WIFI_DISABLE   1       //关闭复杂功能
+#define SYNC_WIFI_DISABLE   0       //关闭复杂功能
 
 
 Options::Options(QWidget *parent, G_PARA *g_data, int serial_fd) : QFrame(parent),ui(new Ui::OptionUi)
@@ -72,13 +72,10 @@ void Options::optionIni()
     Common::setTab(tab1);
     tab2 = new QLabel(tr("高级设置"),ui->tabWidget->tabBar());
     Common::setTab(tab2);
-//    tab3 = new QLabel(tr("硬件监测"),ui->tabWidget->tabBar());
-//    Common::setTab(tab3);
 
     ui->tabWidget->tabBar()->setTabButton(0,QTabBar::RightSide,tab0);
     ui->tabWidget->tabBar()->setTabButton(1,QTabBar::RightSide,tab1);
     ui->tabWidget->tabBar()->setTabButton(2,QTabBar::RightSide,tab2);
-//    ui->tabWidget->tabBar()->setTabButton(3,QTabBar::RightSide,tab3);
 
     for (int i = 0; i < ui->tabWidget->count(); ++i) {
         ui->tabWidget->widget(i)->setStyleSheet("QWidget {background-color:lightGray;}");
@@ -100,7 +97,7 @@ void Options::wifi_connect()
     //通过密码本查找密码(to be)
 
     if(password.isEmpty()){     //没找到,开启虚拟键盘
-        emit show_input("");
+        emit show_input("",tr("请输入wifi密码"));
         inputStatus = true;
     }
     else{
@@ -110,24 +107,24 @@ void Options::wifi_connect()
 
 void Options::input_finished(QString str)
 {
-    inputStatus = false;
-    if(key_val->grade.val2 == 2 && key_val->grade.val3 == 1){       //wifi设置
-//    wifi_connect(ui->listWidget->currentItem()->text(),str);
-        wifi_connect(ui->listWidget->currentItem()->text(),"zdit.com.cn");
-    }
-    else if(key_val->grade.val2 == 2 && key_val->grade.val3 == 2 && !str.isEmpty()){
-        if(key_val->grade.val4 == 1){
-            ui->lineEdit_wifi_hot_name->setText(str);
-            ui->lineEdit_wifi_hot_name->selectAll();
+    if(inputStatus){            //保证不会收到非此界面的键盘输入
+        inputStatus = false;
+        if(key_val->grade.val2 == 2 && key_val->grade.val3 == 1){       //wifi设置
+            wifi_connect(ui->listWidget->currentItem()->text(),"zdit.com.cn");
         }
-        else if(key_val->grade.val4 == 2){
-            ui->lineEdit_wifi_hot_password->setText(str);
-            ui->lineEdit_wifi_hot_password->selectAll();
+        else if(key_val->grade.val2 == 2 && key_val->grade.val3 == 2 && !str.isEmpty()){
+            if(key_val->grade.val4 == 1){
+                ui->lineEdit_wifi_hot_name->setText(str);
+                ui->lineEdit_wifi_hot_name->selectAll();
+            }
+            else if(key_val->grade.val4 == 2){
+                ui->lineEdit_wifi_hot_password->setText(str);
+                ui->lineEdit_wifi_hot_password->selectAll();
+            }
+
         }
-
+        refresh();
     }
-    refresh();
-
 }
 
 void Options::wifi_connect(QString name, QString password)
@@ -221,11 +218,11 @@ void Options::trans_key(quint8 key_code)
                         QThreadPool::globalInstance()->start(tools);
                         break;
                     case 1:         //修改名称
-                        emit show_input(ui->lineEdit_wifi_hot_name->text());
+                        emit show_input(ui->lineEdit_wifi_hot_name->text(),tr("请输入wifi名称"));
                         inputStatus = true;
                         break;
                     case 2:         //修改密码
-                        emit show_input(ui->lineEdit_wifi_hot_password->text());
+                        emit show_input(ui->lineEdit_wifi_hot_password->text(),tr("请输入wifi密码"));
                         inputStatus = true;
                         break;
                     default:

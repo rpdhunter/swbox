@@ -318,7 +318,12 @@ void AEWidget::do_key_left_right(int d)
         Common::change_index(aeultra_sql->chart, d, list);
         break;
     case 3:
-        Common::change_index(aeultra_sql->gain, d * 0.1, 20, 0.1 );
+        if( (aeultra_sql->gain<9.95 && d>0) || (aeultra_sql->gain<10.15 && d<0) ){
+            Common::change_index(aeultra_sql->gain, d * 0.1, 100, 0.1 );
+        }
+        else{
+            Common::change_index(aeultra_sql->gain, d * 10, 100, 0.1 );
+        }
         break;
     case 4:
         Common::change_index(aeultra_sql->vol, d, VOL_MAX, VOL_MIN );

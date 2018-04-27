@@ -1,8 +1,8 @@
 #include "cpustatus.h"
 
 //#define VVPN_ZERO   0
-#define VVPN_ZERO   489
-//#define VVPN_ZERO   1000
+//#define VVPN_ZERO   489
+#define VVPN_ZERO   498
 
 CPUStatus::CPUStatus()
 {

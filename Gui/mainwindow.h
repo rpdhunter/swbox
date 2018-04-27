@@ -21,7 +21,7 @@
 #include "Function/faultlocation.h"
 #include "Function/aawidget.h"
 #include "Function/aewidget.h"
-#include "Function/assetwidget.h"
+#include "Function/Asset/assetwidget.h"
 
 #include "Options/debugset.h"
 #include "Options/factoryreset.h"
@@ -51,7 +51,7 @@ public slots:
 
 signals:
     void send_key(quint8);
-    void show_input(QString);
+    void show_input(QString,QString);
     void send_input_key(quint8);
     void input_str(QString str);
     void send_sync(uint);

@@ -85,13 +85,13 @@ void QuickView::press2()
 }
 
 //初始化
-void QuickView::show_input(QString str)
+void QuickView::show_input(QString str1,QString str2)
 {
     this->show();
     isWorking = true;
     _x = X_INIT;
     _y = Y_INIT;
-    emit inputClear(str);
+    emit inputClear(str1, str2);
     refresh();
 }
 

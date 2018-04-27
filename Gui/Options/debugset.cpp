@@ -31,7 +31,7 @@ DebugSet::DebugSet(G_PARA *g_data,QWidget *parent) : QFrame(parent),ui(new Ui::D
 
     timer_hardware = new QTimer;
     timer_hardware->start(4995);        //5秒检测一次硬件及同步
-//    timer_hardware->start(1000);
+//    timer_hardware->start(1);
     connect(timer_hardware, SIGNAL(timeout()), this, SLOT(fresh_hardware_status()) );
 
     timer_sync = new QTimer();
@@ -694,7 +694,7 @@ void DebugSet::fresh_hardware_status()
     cpu_status->get_vvpn(&sync);
 
 //    qDebug()<<"sync = "<< sync << "mV";
-    if(qAbs(sync) > 50){
+    if(qAbs(sync) > 25){            //15毫伏触发（对应约150w的负载）
         gettimeofday( &last_zero, NULL );
         timer_sync->start();
     }
@@ -722,12 +722,13 @@ void DebugSet::fresh_sync()
                 time_interval += 1000000;
             }
 //            qDebug()<<time_interval;
+            //算出过零点
             zero_time.tv_usec -=  time_interval * sync_data.at(5).vcc / (sync_data.at(5).vcc - sync_data.at(0).vcc);
             if(zero_time.tv_usec < 0){
                 zero_time.tv_sec -= 1;
                 zero_time.tv_usec += 1000000;
             }
-            interval = zero_time.tv_usec - last_zero.tv_usec;
+            interval = zero_time.tv_usec - last_zero.tv_usec;       //过零时间-上次过零时间时间 = 周期
             if(interval<0){
                 interval += 1000000;
             }

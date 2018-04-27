@@ -36,7 +36,7 @@ signals:
     void closeTimeChanged(int);
     void update_statusBar(QString);
 
-    void show_input(QString);
+    void show_input(QString,QString);
     void send_input_key(quint8);    //专门的虚拟键盘事件
 
     void show_indicator(bool);      //显示菊花
