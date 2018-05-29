@@ -1,4 +1,4 @@
-#include "fifodata.h"
+﻿#include "fifodata.h"
 #include <QThreadPool>
 #include <QtDebug>
 //#include <QTime>
@@ -38,8 +38,8 @@ FifoData::FifoData(G_PARA *g_data)
     connect(this,SIGNAL(send_sync(uint)),fifocontrol,SLOT(send_sync(uint)) );
 
     /* Start qthread */
-    this->start();
-    this->setPriority(QThread::TimeCriticalPriority);
+//    this->start();
+//    this->setPriority(QThread::TimeCriticalPriority);
 }
 
 void FifoData::do_slow()
@@ -119,7 +119,7 @@ void FifoData::run(void)
 
 
         //包络线数据
-        if(data->recv_para_ae1.readComplete == 1 && sqlcfg->get_para()->menu_l1 == AE1){
+        if(data->recv_para_ae1.readComplete == 1 ){
             fifocontrol->read_fpga(sp_read_fpga_ae1);
             ret = fifocontrol->read_ae1_data();
             if(ret > 100){
@@ -130,7 +130,7 @@ void FifoData::run(void)
             }
         }
 
-        if(data->recv_para_ae2.readComplete == 1 && sqlcfg->get_para()->menu_l2 == AE2){
+        if(data->recv_para_ae2.readComplete == 1){
             fifocontrol->read_fpga(sp_read_fpga_ae2);
             ret = fifocontrol->read_ae2_data();
             if(ret > 100){

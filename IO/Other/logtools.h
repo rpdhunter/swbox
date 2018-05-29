@@ -1,4 +1,4 @@
-#ifndef LOGTOOLS_H
+﻿#ifndef LOGTOOLS_H
 #define LOGTOOLS_H
 
 #include "IO/Data/data.h"
@@ -17,8 +17,9 @@ public:
     explicit LogTools(MODE mode, QObject *parent = 0);
 
 public slots:
-    void dealLog(double val, int pulse, double degree);     //处理日志文件（管理，保存）
+    void dealLog(double val, int pulse, double degree, int is_current = 0);     //处理日志文件（管理，保存）
     void dealRPRDLog(QVector<QwtPoint3D> points);
+    void change_current_asset_dir();
 
 private:
     struct LOG_DATA {
@@ -26,16 +27,27 @@ private:
         double val;             //测量值
         int pulse;              //2秒内脉冲数
         double degree;          //严重度
+        uint is_current;        //是否是前台数据，1-前台，2-后台
     };
 
     MODE mode;                  //日志文件模式（由文件名辨识）
-    QVector<LOG_DATA> data;     //保存的链表
+    QVector<LOG_DATA> data_normal;     //保存的链表
+    QVector<LOG_DATA> data_asset;     //资产数据
     int log_timer;
 
-    void logFileInit();
-    QString getFileName();
-    void readFile();
-    void writeFile();
+    QString path_normal;               //文件路径
+    QString path_asset;         //资产文件路径
+
+    void read_normal_log(QString path, QVector<LOG_DATA> &log_data);
+    void write_normal_log(QString path, QVector<LOG_DATA> log_data);
 };
 
 #endif // LOGTOOLS_H
+
+
+
+
+
+
+
+

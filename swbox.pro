@@ -11,12 +11,13 @@ QT  += serialport sql qml quick quickwidgets
 TARGET = swbox
 TEMPLATE = app
 
-DEFINES += TEST
-#DEFINES += PRINTSCREEN     #截屏
-#DEFINES += AMG           #OEM
-#DEFINES += XDP_II        #OEM
-DEFINES += OHV          #OEM
-#DEFINES += ZDIT         #OEM
+#DEFINES += PRINTSCREEN      #截屏
+
+#DEFINES += AMG             #OEM
+#DEFINES += XDP_II          #OEM
+DEFINES += OHV             #OEM
+#DEFINES += ZDIT            #OEM
+#DEFINES += NO_OEM           #OEM
 
 TRANSLATIONS += trans/en.ts
 

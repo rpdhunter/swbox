@@ -1,4 +1,4 @@
-#include "debugset.h"
+﻿#include "debugset.h"
 #include "ui_debugui.h"
 #include <QButtonGroup>
 #include <QDir>
@@ -10,7 +10,7 @@
 #define SETTING_NUM_TEV         4
 #define SETTING_NUM_AA          6
 #define SETTING_NUM_AE          6
-#define SETTING_NUM_CHANNEL     5
+#define SETTING_NUM_CHANNEL     6
 #define THRESHOLD_STEP          10
 
 DebugSet::DebugSet(G_PARA *g_data,QWidget *parent) : QFrame(parent),ui(new Ui::DebugUi)
@@ -106,6 +106,8 @@ void DebugSet::iniUi()
         break;
     }
 
+    ui->lineEdit_CompileTime->setText(QString("%1 %2").arg(__TIME__).arg(__DATE__));
+
     QButtonGroup *group1 = new QButtonGroup(this);
     QButtonGroup *group2 = new QButtonGroup(this);
     QButtonGroup *group3 = new QButtonGroup(this);
@@ -114,6 +116,7 @@ void DebugSet::iniUi()
     QButtonGroup *group6 = new QButtonGroup(this);
     QButtonGroup *group7 = new QButtonGroup(this);
     QButtonGroup *group8 = new QButtonGroup(this);
+    QButtonGroup *group9 = new QButtonGroup(this);
     group1->addButton( ui->rb_HC1_TEV );
     group1->addButton( ui->rb_HC1_HFCT );;
     group1->addButton( ui->rb_HC1_UHF );
@@ -128,14 +131,16 @@ void DebugSet::iniUi()
     group4->addButton( ui->rb_LC2_AA );
     group4->addButton( ui->rb_LC2_AE );    
     group4->addButton( ui->rb_LC2_Disable );
-    group5->addButton( ui->rbt_AA1_envelope );
-    group5->addButton( ui->rbt_AA1_original );
-    group6->addButton( ui->rbt_AA2_envelope );
-    group6->addButton( ui->rbt_AA2_original );
-    group7->addButton( ui->rbt_AE1_envelope );
-    group7->addButton( ui->rbt_AE1_original );
-    group8->addButton( ui->rbt_AE2_envelope );
-    group8->addButton( ui->rbt_AE2_original );
+    group5->addButton( ui->rb_Double_Enable );
+    group5->addButton( ui->rb_Double_Disable );
+    group6->addButton( ui->rbt_AA1_envelope );
+    group6->addButton( ui->rbt_AA1_original );
+    group7->addButton( ui->rbt_AA2_envelope );
+    group7->addButton( ui->rbt_AA2_original );
+    group8->addButton( ui->rbt_AE1_envelope );
+    group8->addButton( ui->rbt_AE1_original );
+    group9->addButton( ui->rbt_AE2_envelope );
+    group9->addButton( ui->rbt_AE2_original );
 }
 
 void DebugSet::iniPasswordUi()
@@ -176,7 +181,7 @@ void DebugSet::saveSql()
     bool flag = true;      //判断是否需要重启标志
     if(sql_para.menu_l1 == sqlcfg->get_para()->menu_l1 && sql_para.menu_l2 == sqlcfg->get_para()->menu_l2
             && sql_para.menu_h1 == sqlcfg->get_para()->menu_h1 && sql_para.menu_h2 == sqlcfg->get_para()->menu_h2
-            && sql_para.menu_double == sqlcfg->get_para()->menu_double){
+            && sql_para.menu_double == sqlcfg->get_para()->menu_double && sql_para.menu_asset == sqlcfg->get_para()->menu_asset){
         flag = false;
     }
     sqlcfg->sql_save(&sql_para);
@@ -238,12 +243,12 @@ void DebugSet::reload()
     ui->rbt_AA2_original->setChecked(!sql_para.aa2_sql.envelope);
 
     //AE
-    ui->lineEdit_AE1_Step->setText(QString("%1").arg(sql_para.ae1_sql.step));
+    ui->lineEdit_AE1_Sensor->setText(QString("%1").arg(sql_para.ae1_sql.sensor_freq));
     ui->lineEdit_AE1_offset->setText(QString("%1").arg(sql_para.ae1_sql.offset));
     ui->rbt_AE1_envelope->setChecked(sql_para.ae1_sql.envelope);
     ui->rbt_AE1_original->setChecked(!sql_para.ae1_sql.envelope);
 
-    ui->lineEdit_AE2_Step->setText(QString("%1").arg(sql_para.ae2_sql.step));
+    ui->lineEdit_AE2_Sensor->setText(QString("%1").arg(sql_para.ae2_sql.sensor_freq));
     ui->lineEdit_AE2_offset->setText(QString("%1").arg(sql_para.ae2_sql.offset));
     ui->rbt_AE2_envelope->setChecked(sql_para.ae2_sql.envelope);
     ui->rbt_AE2_original->setChecked(!sql_para.ae2_sql.envelope);
@@ -317,6 +322,17 @@ void DebugSet::reload()
         break;
     case Disable:
         ui->rb_Double_Disable->setChecked(true);
+        break;
+    default:
+        break;
+    }
+
+    switch (sql_para.menu_asset) {
+    case ASSET:
+        ui->rb_Asset_Enable->setChecked(true);
+        break;
+    case Disable:
+        ui->rb_Asset_Disable->setChecked(true);
         break;
     default:
         break;
@@ -538,7 +554,7 @@ void DebugSet::do_key_left_right(int d)
         case 3:     //AE
             switch (key_val->grade.val4) {
             case 1:
-                Common::change_index(sql_para.ae1_sql.step, 0.5 * d, 10, 0.5);
+                Common::change_index(sql_para.ae1_sql.sensor_freq, 10 * d, 90, 30);
                 break;
             case 2:
                 sql_para.ae1_sql.offset += d;
@@ -547,7 +563,7 @@ void DebugSet::do_key_left_right(int d)
                 sql_para.ae1_sql.envelope = !sql_para.ae1_sql.envelope;
                 break;
             case 4:
-                Common::change_index(sql_para.ae2_sql.step, 0.5 * d, 10, 0.5);
+                Common::change_index(sql_para.ae2_sql.sensor_freq, 10 * d, 90, 30);
                 break;
             case 5:
                 sql_para.ae2_sql.offset += d;
@@ -581,6 +597,10 @@ void DebugSet::do_key_left_right(int d)
             case 5:
                 list << Disable << Double_Channel;
                 Common::change_index(sql_para.menu_double, d, list);
+                break;
+            case 6:
+                list << Disable << ASSET;
+                Common::change_index(sql_para.menu_asset, d, list);
                 break;
             default:
                 break;
@@ -835,9 +855,9 @@ void DebugSet::fresh()
             }
             break;
         case 3:         //AE
-            ui->lineEdit_AE1_Step->deselect();
+            ui->lineEdit_AE1_Sensor->deselect();
             ui->lineEdit_AE1_offset->deselect();
-            ui->lineEdit_AE2_Step->deselect();
+            ui->lineEdit_AE2_Sensor->deselect();
             ui->lineEdit_AE2_offset->deselect();
             switch (key_val->grade.val4) {
             case 0:
@@ -848,13 +868,13 @@ void DebugSet::fresh()
                 tab4->setStyleSheet("QLabel{border: 0px solid darkGray;}");
                 break;
             case 1:
-                ui->lineEdit_AE1_Step->selectAll();
+                ui->lineEdit_AE1_Sensor->selectAll();
                 break;
             case 2:
                 ui->lineEdit_AE1_offset->selectAll();
                 break;
             case 4:
-                ui->lineEdit_AE2_Step->selectAll();
+                ui->lineEdit_AE2_Sensor->selectAll();
                 break;
             case 5:
                 ui->lineEdit_AE2_offset->selectAll();
@@ -869,6 +889,7 @@ void DebugSet::fresh()
             ui->pbt_LC1->setChecked(false);
             ui->pbt_LC2->setChecked(false);
             ui->pbt_Double->setChecked(false);
+            ui->pbt_Asset->setChecked(false);
             switch (key_val->grade.val4) {
             case 0:
                 tab0->setStyleSheet("QLabel{border: 0px solid darkGray;}");
@@ -891,6 +912,9 @@ void DebugSet::fresh()
                 break;
             case 5:
                 ui->pbt_Double->setChecked(true);
+                break;
+            case 6:
+                ui->pbt_Asset->setChecked(true);
                 break;
             default:
                 break;

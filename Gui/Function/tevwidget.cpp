@@ -1,4 +1,4 @@
-#include "tevwidget.h"
+﻿#include "tevwidget.h"
 #include "ui_tevwidget.h"
 #include <QTimer>
 #include <QLineEdit>
@@ -60,15 +60,27 @@ TEVWidget::TEVWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu_i
     connect(recWaveForm, SIGNAL(fresh_parent()), timer_freeze, SLOT(start()) );
 
     logtools = new LogTools(mode);      //日志保存模块
-    connect(this,SIGNAL(tev_log_data(double,int,double)),logtools,SLOT(dealLog(double,int,double)));
+    connect(this,SIGNAL(tev_log_data(double,int,double,int)),logtools,SLOT(dealLog(double,int,double,int)));
     connect(this,SIGNAL(tev_PRPD_data(QVector<QwtPoint3D>)),logtools,SLOT(dealRPRDLog(QVector<QwtPoint3D>)));
 
     reload(menu_index);
+
+//    logtools->deal_test();
 }
 
 TEVWidget::~TEVWidget()
 {
     delete ui;
+}
+
+void TEVWidget::change_log_dir()
+{
+    logtools->change_current_asset_dir();
+}
+
+void TEVWidget::save_channel()
+{
+    PRPDReset();
 }
 
 void TEVWidget::reload(int index)
@@ -311,6 +323,9 @@ void TEVWidget::calc_tev_value (double &tev_db, int &pulse_cnt_show, double &deg
     //脉冲数多时，进入测试模式^^
     if(pulse_cnt > 500000 && !amp_1000ms.isEmpty()){
         tev_db = Common::avrage(amp_1000ms);
+        double k = Common::tev_freq_compensation(pulse_cnt);
+        qDebug()<<"k="<<k;
+        tev_db += 20 * log10 (k);
     }
 //    qDebug()<<"avrage : "<<tev_db << "db";
     amp_1000ms.clear();
@@ -318,19 +333,7 @@ void TEVWidget::calc_tev_value (double &tev_db, int &pulse_cnt_show, double &deg
     if(tev_db < 0){
         tev_db = 0;
     }
-//    if(tev_db > 60){
-//        tev_db = 60;
-//    }
 
-    //用于稳定测量值
-//    if(qAbs(tev_db - db_last1) <15){
-//        if(db_last1 > 16){
-//            tev_db = (int)MAX(db_last1,tev_db);
-//        }
-//        else{
-//            tev_db = (int)MIN(db_last1,tev_db);
-//        }
-//    }
     db_last1 = tev_db;
 
     //严重度
@@ -362,45 +365,33 @@ void TEVWidget::fresh_plot()
     ui->label_pluse->setText(tr("脉冲数: ") + Common::secton_three(pulse_cnt_show) );//按三位分节法显示脉冲计数
     ui->label_degree->setText(tr("严重度: ") + QString::number(degree, 'f', 2));
 
-    emit tev_log_data(db,pulse_cnt_show,degree);
+    int is_current = 0;
+    if((int)key_val->grade.val0 == menu_index){
+        is_current = 1;
+    }
 
-    //实时数据库
-    yc_data_type temp_data;
+    emit tev_log_data(db,pulse_cnt_show,degree,is_current);
+
+    //实时数据库    
     if(mode == TEV1){
-        temp_data.f_val = db;
-        yc_set_value(TEV1_amplitude, &temp_data, 0, NULL,0);
-        temp_data.f_val = pulse_cnt_show;
-        yc_set_value(TEV1_num, &temp_data, 0, NULL,0);
-        temp_data.f_val = degree;
-        yc_set_value(TEV1_severity, &temp_data, 0, NULL,0);
-        temp_data.f_val = tev_sql->gain;
-        yc_set_value(TEV1_gain, &temp_data, 0, NULL,0);
-        temp_data.f_val = tev_sql->fpga_zero;
-        yc_set_value(TEV1_center_biased, &temp_data, 0, NULL,0);
-        temp_data.f_val = tev_sql->offset_noise;
-        yc_set_value(TEV1_noise_biased, &temp_data, 0, NULL,0);
-        temp_data.f_val = sug_zero_offset;
-        yc_set_value(TEV1_center_biased_adv, &temp_data, 0, NULL,0);
-        temp_data.f_val = sug_noise_offset;
-        yc_set_value(TEV1_noise_biased_adv, &temp_data, 0, NULL,0);
+        Common::rdb_set_value(TEV1_amplitude,db,is_current);
+        Common::rdb_set_value(TEV1_num,pulse_cnt_show,is_current);
+        Common::rdb_set_value(TEV1_severity,degree,is_current);
+        Common::rdb_set_value(TEV1_gain,tev_sql->gain,is_current);
+        Common::rdb_set_value(TEV1_center_biased,tev_sql->fpga_zero,is_current);
+        Common::rdb_set_value(TEV1_noise_biased,tev_sql->offset_noise,is_current);
+        Common::rdb_set_value(TEV1_center_biased_adv,sug_zero_offset,is_current);
+        Common::rdb_set_value(TEV1_noise_biased_adv,sug_noise_offset,is_current);
     }
     else{
-        temp_data.f_val = db;
-        yc_set_value(TEV2_amplitude, &temp_data, 0, NULL,0);
-        temp_data.f_val = pulse_cnt_show;
-        yc_set_value(TEV2_num, &temp_data, 0, NULL,0);
-        temp_data.f_val = degree;
-        yc_set_value(TEV2_severity, &temp_data, 0, NULL,0);
-        temp_data.f_val = tev_sql->gain;
-        yc_set_value(TEV2_gain, &temp_data, 0, NULL,0);
-        temp_data.f_val = tev_sql->fpga_zero;
-        yc_set_value(TEV2_center_biased, &temp_data, 0, NULL,0);
-        temp_data.f_val = tev_sql->offset_noise;
-        yc_set_value(TEV2_noise_biased, &temp_data, 0, NULL,0);
-        temp_data.f_val = sug_zero_offset;
-        yc_set_value(TEV2_center_biased_adv, &temp_data, 0, NULL,0);
-        temp_data.f_val = sug_noise_offset;
-        yc_set_value(TEV2_noise_biased_adv, &temp_data, 0, NULL,0);
+        Common::rdb_set_value(TEV2_amplitude,db,is_current);
+        Common::rdb_set_value(TEV2_num,pulse_cnt_show,is_current);
+        Common::rdb_set_value(TEV2_severity,degree,is_current);
+        Common::rdb_set_value(TEV2_gain,tev_sql->gain,is_current);
+        Common::rdb_set_value(TEV2_center_biased,tev_sql->fpga_zero,is_current);
+        Common::rdb_set_value(TEV2_noise_biased,tev_sql->offset_noise,is_current);
+        Common::rdb_set_value(TEV2_center_biased_adv,sug_zero_offset,is_current);
+        Common::rdb_set_value(TEV2_noise_biased_adv,sug_noise_offset,is_current);
     }
 
     plot_PRPD->replot();

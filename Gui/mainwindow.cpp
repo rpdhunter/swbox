@@ -1,4 +1,4 @@
-#include "mainwindow.h"
+﻿#include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <QtDebug>
 #include <QQuickItem>
@@ -26,12 +26,9 @@ MainWindow::MainWindow(QSplashScreen *sp, QWidget *parent ) :
     this->setPalette(Pal);
 
 //    sqlcfg->sql_save(sqlcfg->default_config());       //用于程序崩溃时重置数据
-    sqlcfg->get_para()->tev1_sql.auto_rec = false;
-    sqlcfg->get_para()->tev2_sql.auto_rec = false;
-    sqlcfg->get_para()->hfct1_sql.auto_rec = false;
-    sqlcfg->get_para()->hfct2_sql.auto_rec = false;
 
     key_val.val = 0;
+    close_time_flag = 0;
     data = new G_PARA;
     memset(data, 0, sizeof(G_PARA));
     buzzer = new Buzzer(data);
@@ -41,22 +38,27 @@ MainWindow::MainWindow(QSplashScreen *sp, QWidget *parent ) :
 
     sp->showMessage(tr("正在初始化按键..."),Qt::AlignBottom|Qt::AlignLeft);
     keydetect = new KeyDetect(this);
+    connect(keydetect, SIGNAL(sendkey(quint8)), this, SLOT(trans_key(quint8)));
 
     sp->showMessage(tr("正在设置FPGA..."),Qt::AlignBottom|Qt::AlignLeft);
     fifodata = new FifoData(data);
+    connect(this, SIGNAL(send_sync(uint)), fifodata, SIGNAL(send_sync(uint)) );
+
 
     sp->showMessage(tr("正在初始化通信..."),Qt::AlignBottom|Qt::AlignLeft);
-    modbus = new Modbus(this,data);
-    serial_fd = modbus->get_serial_fd();    //获取串口fd,便于统一管理
+
+    qDebug()<<"\n";
+
+//    modbus = new Modbus(this,data);
+//    connect(modbus,SIGNAL(closeTimeChanged(int)),this,SLOT(set_reboot_time()) );
+//    serial_fd = modbus->get_serial_fd();    //获取串口fd,便于统一管理
+    serial_fd = -1;
 //    rtu = new Rtu(serial_fd);
+
 
     //注册两个自定义类型
     qRegisterMetaType<VectorList>("VectorList");
     qRegisterMetaType<MODE>("MODE");
-
-    connect(keydetect, &KeyDetect::sendkey, this, &MainWindow::trans_key);
-    connect(modbus,SIGNAL(closeTimeChanged(int)),this,SLOT(set_reboot_time()) );
-    connect(this, SIGNAL(send_sync(uint)), fifodata, SIGNAL(send_sync(uint)) );
 
     sp->showMessage(tr("正在初始化主菜单..."),Qt::AlignBottom|Qt::AlignLeft);
     menu_init();
@@ -69,6 +71,7 @@ MainWindow::MainWindow(QSplashScreen *sp, QWidget *parent ) :
     connect(timer_time,SIGNAL(timeout()),this,SLOT(printSc()));  //截屏
 #endif
 
+    set_asset_dir(AssetWidget::normal_asset_dir_init());        //初始化资产路径
     for (int i = 0; i < mode_list.count(); ++i) {           //寻找有效的初始通道
         if(mode_list.at(i) != Disable){
             key_val.grade.val0 = i;
@@ -78,7 +81,8 @@ MainWindow::MainWindow(QSplashScreen *sp, QWidget *parent ) :
         }
     }
 
-    fifodata->start();
+    fifodata->start();                                      //开启数据线程
+    keydetect->start();
 }
 
 MainWindow::~MainWindow()
@@ -93,33 +97,13 @@ void MainWindow::menu_init()
                                  "QTabBar::tab:!selected{ background:transparent;   }"
                                  "QTabWidget::pane{border-width:0px;}"
                                  );
-    ui->tabWidget->setFocusPolicy(Qt::NoFocus);
-    menu_icon0 = new QLabel(this);
-    menu_icon0->resize(41, 24);
-    menu_icon1 = new QLabel(this);
-    menu_icon1->resize(41, 24);
-    menu_icon2 = new QLabel(this);
-    menu_icon2->resize(41, 24);
-    menu_icon3 = new QLabel(this);
-    menu_icon3->resize(41, 24);
-    menu_icon4 = new QLabel(this);
-    menu_icon4->resize(41, 24);
-    menu_icon5 = new QLabel(this);
-    menu_icon5->resize(41, 24);
-    menu_icon6 = new QLabel(this);
-    menu_icon6->resize(41, 24);
-
-    ui->tabWidget->tabBar()->setTabButton(0,QTabBar::LeftSide,menu_icon0);
-    ui->tabWidget->tabBar()->setTabButton(1,QTabBar::LeftSide,menu_icon1);
-    ui->tabWidget->tabBar()->setTabButton(2,QTabBar::LeftSide,menu_icon2);
-    ui->tabWidget->tabBar()->setTabButton(3,QTabBar::LeftSide,menu_icon3);
-    ui->tabWidget->tabBar()->setTabButton(4,QTabBar::LeftSide,menu_icon4);
-    ui->tabWidget->tabBar()->setTabButton(5,QTabBar::LeftSide,menu_icon5);
-    ui->tabWidget->tabBar()->setTabButton(6,QTabBar::LeftSide,menu_icon6);
-
-#ifndef TEST
-    menu_icon5->resize(0, 0);
-#endif
+    menu_icon0 = Common::set_mainwindow_lab(new QLabel(this),0,ui->tabWidget);
+    menu_icon1 = Common::set_mainwindow_lab(new QLabel(this),1,ui->tabWidget);
+    menu_icon2 = Common::set_mainwindow_lab(new QLabel(this),2,ui->tabWidget);
+    menu_icon3 = Common::set_mainwindow_lab(new QLabel(this),3,ui->tabWidget);
+    menu_icon4 = Common::set_mainwindow_lab(new QLabel(this),4,ui->tabWidget);
+    menu_icon5 = Common::set_mainwindow_lab(new QLabel(this),5,ui->tabWidget);
+    menu_icon6 = Common::set_mainwindow_lab(new QLabel(this),6,ui->tabWidget);
 
     //设置每个通道界面的背景，由于使用样式表，会造成子部件背景色混乱，改用调色板设置
     QPalette Pal(this->palette());
@@ -160,6 +144,10 @@ void MainWindow::statusbar_init()
     connect(timer_sleep, SIGNAL(timeout()), this, SLOT(system_sleep()) );
     connect(timer_dark, SIGNAL(timeout()), this, SLOT(screen_dark()) );
 
+    if(sqlcfg->get_para()->menu_asset == Disable){          //没配置资产，则状态栏资产图标隐藏
+        ui->lab_asset->hide();
+    }
+
     fresh_batt();       //立刻显示一次电量
 }
 
@@ -182,21 +170,11 @@ void MainWindow::function_init(QSplashScreen *sp)
     channel_init((MODE)sqlcfg->get_para()->menu_h1,0);
     channel_init((MODE)sqlcfg->get_para()->menu_h2,1);
     channel_init((MODE)sqlcfg->get_para()->menu_double,2);
+
     sp->showMessage(tr("正在初始化低频通道..."),Qt::AlignBottom|Qt::AlignLeft);
     channel_init((MODE)sqlcfg->get_para()->menu_l1,3);
     channel_init((MODE)sqlcfg->get_para()->menu_l2,4);
-#if TEST
-    asset_widget = new AssetWidget(&key_val,5,ui->Asset);
-    mode_list.append(ASSET);
-    connect(this, SIGNAL(send_key(quint8)), asset_widget, SLOT(trans_key(quint8)) );
-    connect(asset_widget,SIGNAL(fresh_parent()), this, SLOT(fresh_menu_icon()) );
-    //键盘
-    connect(asset_widget,SIGNAL(show_input(QString,QString)),this,SIGNAL(show_input(QString,QString)));
-    connect(asset_widget,SIGNAL(send_input_key(quint8)),this,SIGNAL(send_input_key(quint8)) );
-    connect(this, SIGNAL(input_str(QString)), asset_widget, SLOT(input_finished(QString)) );
-#else
-    mode_list.append(Disable);
-#endif
+    channel_init((MODE)sqlcfg->get_para()->menu_asset,5);
     mode_list.append(Options_Mode);
 
     if(tev1_widget != NULL){
@@ -301,6 +279,8 @@ void MainWindow::function_init(QSplashScreen *sp)
         connect(aa1_widget,SIGNAL(show_indicator(bool)), this, SLOT(show_busy(bool)) );
         //蜂鸣器
         connect(aa1_widget,SIGNAL(beep(int,int)),this,SLOT(do_beep(int,int)));
+        //包络线
+        connect(fifodata,SIGNAL(ae1_update()), aa1_widget,SLOT(add_ae_data()));
     }
     if(aa2_widget != NULL){
         connect(this, SIGNAL(send_key(quint8)), aa2_widget, SLOT(trans_key(quint8)) );
@@ -314,6 +294,8 @@ void MainWindow::function_init(QSplashScreen *sp)
         connect(aa2_widget,SIGNAL(show_indicator(bool)), this, SLOT(show_busy(bool)) );
         //蜂鸣器
         connect(aa2_widget,SIGNAL(beep(int,int)),this,SLOT(do_beep(int,int)));
+        //包络线
+        connect(fifodata,SIGNAL(ae2_update()), aa1_widget,SLOT(add_ae_data()));
     }
     if(ae1_widget != NULL){
         connect(this, SIGNAL(send_key(quint8)), ae1_widget, SLOT(trans_key(quint8)) );
@@ -328,7 +310,6 @@ void MainWindow::function_init(QSplashScreen *sp)
         //蜂鸣器
         connect(ae1_widget,SIGNAL(beep(int,int)),this,SLOT(do_beep(int,int)));
         //包络线
-//        connect(fifodata,SIGNAL(ae1_update(VectorList)), ae1_widget,SLOT(add_ae_data(VectorList)));
         connect(fifodata,SIGNAL(ae1_update()), ae1_widget,SLOT(add_ae_data()));
         ae1_widget->reload(3);
     }
@@ -345,9 +326,18 @@ void MainWindow::function_init(QSplashScreen *sp)
         //蜂鸣器
         connect(ae2_widget,SIGNAL(beep(int,int)),this,SLOT(do_beep(int,int)));
         //包络线
-//        connect(fifodata,SIGNAL(ae2_update(VectorList)), ae2_widget,SLOT(add_ae_data(VectorList)));
         connect(fifodata,SIGNAL(ae2_update()), ae2_widget,SLOT(add_ae_data()));
         ae2_widget->reload(4);
+    }
+    if(asset_widget != NULL){
+        connect(this, SIGNAL(send_key(quint8)), asset_widget, SLOT(trans_key(quint8)) );
+        connect(asset_widget,SIGNAL(fresh_parent()), this, SLOT(fresh_menu_icon()) );
+        //状态栏
+        connect(asset_widget,SIGNAL(current_asset_changed(QString,QString)),this,SLOT(set_current_equ(QString,QString)));
+        //软键盘
+        connect(asset_widget,SIGNAL(show_input(QString,QString)),this,SIGNAL(show_input(QString,QString)));
+        connect(asset_widget,SIGNAL(send_input_key(quint8)),this,SIGNAL(send_input_key(quint8)) );
+        connect(this, SIGNAL(input_str(QString)), asset_widget, SLOT(input_finished(QString)) );
     }
 }
 
@@ -367,6 +357,7 @@ void MainWindow::channel_init(MODE mode, int index)
             break;
         default:
             mode = Disable;
+            menu_icon0->resize(0, 0);
             break;
         }
         break;
@@ -383,6 +374,7 @@ void MainWindow::channel_init(MODE mode, int index)
             break;
         default:
             mode = Disable;
+            menu_icon1->resize(0, 0);
             break;
         }
         break;
@@ -392,6 +384,7 @@ void MainWindow::channel_init(MODE mode, int index)
         }
         else{
             mode = Disable;
+            menu_icon2->resize(0, 0);
         }
         break;
     case 3:
@@ -404,6 +397,7 @@ void MainWindow::channel_init(MODE mode, int index)
             break;
         default:
             mode = Disable;
+            menu_icon3->resize(0, 0);
             break;
         }
         break;
@@ -417,7 +411,17 @@ void MainWindow::channel_init(MODE mode, int index)
             break;
         default:
             mode = Disable;
+            menu_icon4->resize(0, 0);
             break;
+        }
+        break;
+    case 5:
+        if(mode == ASSET){
+            asset_widget = new AssetWidget(&key_val,5,ui->Asset);
+        }
+        else{
+            mode = Disable;
+            menu_icon5->resize(0, 0);
         }
         break;
     default:
@@ -477,6 +481,8 @@ void MainWindow::qml_init()
 void MainWindow::trans_key(quint8 key_code)
 {
     set_reboot_time();          //接到任何按键，重置重启计时器
+
+//    qDebug()<<"key_code"<<key_code;
 
     if(key_val.grade.val0 == TAB_NUM - 1 && key_val.grade.val2 !=0 ){
         emit send_key(key_code);
@@ -542,9 +548,15 @@ void MainWindow::trans_key(quint8 key_code)
         }
         break;
     case KEY_CANCEL:
-        if (key_val.grade.val1 > 0){
+        if (key_val.grade.val0 == TAB_NUM - 1 && key_val.grade.val1 > 0){       //只针对设置界面
             key_val.grade.val1 = 0;
-//            emit send_key(key_code);
+        }
+        break;
+    case KEY_POWER:
+        close_time_flag++;
+        qDebug()<<"close_time_flag"<<close_time_flag;
+        if(close_time_flag == 2){
+            save_channel();
         }
         break;
     default:
@@ -733,7 +745,15 @@ void MainWindow::set_non_current_menu_icon()
         break;
     }
 
-    menu_icon5->setPixmap(QPixmap(":/widgetphoto/menu/ASSET_2.png"));
+    switch (mode_list.at(5)) {
+    case ASSET:
+        menu_icon5->setPixmap(QPixmap(":/widgetphoto/menu/ASSET_2.png"));
+        break;
+    default:
+        menu_icon5->setPixmap(QPixmap(":/widgetphoto/menu/ASSET_0.png"));
+        break;
+    }
+
     menu_icon6->setPixmap(QPixmap(":/widgetphoto/menu/Option_2.png"));
 }
 
@@ -829,6 +849,82 @@ void MainWindow::fresh_grade1()
         break;
     default:
         break;
+    }
+}
+
+//保存各通道数据
+//生成测试报告
+void MainWindow::save_channel()
+{
+    if(tev1_widget != NULL){
+        tev1_widget->save_channel();
+    }
+    if(tev2_widget != NULL){
+        tev2_widget->save_channel();
+    }
+    if(hfct1_widget != NULL){
+        hfct1_widget->save_channel();
+    }
+    if(hfct2_widget != NULL){
+        hfct2_widget->save_channel();
+    }
+    if(uhf1_widget != NULL){
+        uhf1_widget->save_channel();
+    }
+    if(uhf2_widget != NULL){
+        uhf2_widget->save_channel();
+    }
+    if(aa1_widget != NULL){
+        aa1_widget->save_channel();
+    }
+    if(aa2_widget != NULL){
+        aa2_widget->save_channel();
+    }
+    if(ae1_widget != NULL){
+        ae1_widget->save_channel();
+    }
+    if(ae2_widget != NULL){
+        ae2_widget->save_channel();
+    }
+}
+
+void MainWindow::set_asset_dir(QString new_path)
+{
+    //修改当前ASSET目录
+    strcpy(sqlcfg->get_para()->current_dir, new_path.toLocal8Bit().data());
+
+//    printf("current dir (2): %s\n", sqlcfg->get_para()->current_dir);
+
+    //通知各界面改变存储路径
+    if(tev1_widget != NULL){
+        tev1_widget->change_log_dir();
+    }
+    if(tev2_widget != NULL){
+        tev2_widget->change_log_dir();
+    }
+    if(hfct1_widget != NULL){
+        hfct1_widget->change_log_dir();
+    }
+    if(hfct2_widget != NULL){
+        hfct2_widget->change_log_dir();
+    }
+    if(uhf1_widget != NULL){
+        uhf1_widget->change_log_dir();
+    }
+    if(uhf2_widget != NULL){
+        uhf2_widget->change_log_dir();
+    }
+    if(aa1_widget != NULL){
+        aa1_widget->change_log_dir();
+    }
+    if(aa2_widget != NULL){
+        aa2_widget->change_log_dir();
+    }
+    if(ae1_widget != NULL){
+        ae1_widget->change_log_dir();
+    }
+    if(ae2_widget != NULL){
+        ae2_widget->change_log_dir();
     }
 }
 
@@ -968,6 +1064,7 @@ void MainWindow::fresh_batt()
 void MainWindow::system_reboot()
 {
     qDebug()<<"system will reboot immediately!";
+    save_channel();
     system("reboot");
 }
 
@@ -1007,7 +1104,6 @@ void MainWindow::set_wifi_icon(int w)
         break;
     case WIFI_HOTPOT:
         ui->lab_wifi->setPixmap(QPixmap(":/widgetphoto/wifi/wifi_hot.png").scaled(ui->lab_wifi->size()));
-//        ui->lab_wifi->setPixmap(QPixmap(":/widgetphoto/wifi/wifi_hot.png") );
         break;
     case WIFI_SYNC:
 
@@ -1032,8 +1128,6 @@ void MainWindow::do_sync(uint offset)
 {
     emit send_sync(offset);
     ui->lab_sync->setText(tr("同步源:工频量 状态:已同步"));
-
-//    buzzer->yellow();       //test
 }
 
 void MainWindow::do_beep(int menu_index, int red_alert)
@@ -1048,10 +1142,32 @@ void MainWindow::do_beep(int menu_index, int red_alert)
     }
 }
 
+void MainWindow::set_current_equ(QString new_equ, QString new_path)
+{
+    //显示
+    ui->lab_asset->setText(new_equ);
+    if(new_equ == tr("未指定")){
+        ui->lab_asset->setStyleSheet("QLabel {color:white;}");
+    }
+    else{
+        ui->lab_asset->setStyleSheet("QLabel {color:green;}");
+    }
+
+    //转换资产目录前的保存工作(AA没有PRPD，不需要保存)
+    save_channel();
+
+//    printf("current dir (1): %s\n", new_path.toLocal8Bit().data());
+
+    //设置新的资产路径
+    set_asset_dir(new_path);
+
+}
+
 #ifdef PRINTSCREEN
 void MainWindow::printSc()
 {
     //    QPixmap fullScreenPixmap = this->grab(this->rect());                      //老的截屏方式，只能截取指定Wdiget及其子类
+    Common::mk_dir("/root/ScreenShots");
     QPixmap fullScreenPixmap = QGuiApplication::primaryScreen()->grabWindow(0);     //新截屏方式更加完美
     bool flag = fullScreenPixmap.save(QString("./ScreenShots/ScreenShots-%1.png").arg(QTime::currentTime().toString("hh-mm-ss")),"PNG");
     if(flag)

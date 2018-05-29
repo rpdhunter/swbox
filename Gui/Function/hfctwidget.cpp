@@ -1,8 +1,9 @@
-#include "hfctwidget.h"
+﻿#include "hfctwidget.h"
 #include "ui_hfctwidget.h"
 #include <QLineEdit>
 #include <QTimer>
 #include "IO/Com/rdb/rdb.h"
+#include "Gui/Common/fft.h"
 
 #define VALUE_MAX       9999           //RPPD最大值
 #define PC_MAX          VALUE_MAX
@@ -34,13 +35,15 @@ HFCTWidget::HFCTWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu
     manual = false;
     isBusy = false;
     token = 0;
+    max_100ms = 0;
+    fft = new FFT;
 
     timer_1000ms = new QTimer(this);
     timer_1000ms->setInterval(1000);      //每隔1秒，刷新一次主界面
     connect(timer_1000ms, SIGNAL(timeout()), this, SLOT(fresh_1000ms()));
 
     timer_1ms = new QTimer(this);
-    timer_1ms->setInterval(2);         //1ms读取一次数据
+    timer_1ms->setInterval(3);         //1ms读取一次数据
     connect(timer_1ms, SIGNAL(timeout()), this, SLOT(add_token()));
 
     timer_100ms = new QTimer(this);
@@ -97,6 +100,7 @@ void HFCTWidget::reload(int index)
         }
         if(!timer_100ms->isActive()){
             timer_100ms->start();
+            qDebug()<<"100ms begin";
         }
         //设置自动录波
         if( hfct_sql->auto_rec == true ){
@@ -158,7 +162,7 @@ void HFCTWidget::trans_key(quint8 key_code)
         key_val->grade.val2 = 0;
         break;
     case KEY_CANCEL:
-        reload(-1);
+//        reload(-1);
         key_val->grade.val1 = 0;
         key_val->grade.val2 = 0;
         break;
@@ -193,7 +197,7 @@ void HFCTWidget::do_key_left_right(int d)
         hfct_sql->mode = !hfct_sql->mode;
         break;
     case 2:
-        list << BASIC << PRPD << PRPS << TF;
+        list << BASIC << PRPD << PRPS << TF << Spectra;
         Common::change_index(hfct_sql->chart,d,list);
         break;
     case 3:
@@ -212,7 +216,7 @@ void HFCTWidget::do_key_left_right(int d)
         hfct_sql->auto_rec = !hfct_sql->auto_rec;
         break;
     case 8:
-        Common::change_index(hfct_sql->rec_time, d, 20, 1 );
+        Common::change_index(hfct_sql->rec_time, d, 5, 1 );
         break;
     default:
         break;
@@ -231,6 +235,11 @@ void HFCTWidget::showWaveData(VectorList buf, MODE mod)
         manual = false;
         recWaveForm->working(key_val,buf,mod);
     }
+}
+
+void HFCTWidget::change_log_dir()
+{
+    logtools->change_current_asset_dir();
 }
 
 void HFCTWidget::chart_ini()
@@ -272,12 +281,46 @@ void HFCTWidget::chart_ini()
     d_histogram = new QwtPlotHistogram;
     Common::set_histogram_style(plot_Histogram,d_histogram,-60,60,0,100,"");
 
+    //Spectra
+    plot_Spectra = new QwtPlot(ui->widget);
+    plot_Spectra->resize(200, 140);
+    d_Spectra = new QwtPlotHistogram;
+    qDebug()<<"d_Spectra init";
+    Common::set_Spectra_style(plot_Spectra,d_Spectra,0,50,0,60,"");
 }
 
 void HFCTWidget::maxReset()
 {
     max_db = 0;
     ui->label_max->setText(tr("最大值: ") + QString::number(max_db) + "dB");
+}
+
+void HFCTWidget::do_Spectra_compute()
+{
+    if(pulse_list_100ms.count() > 64){
+        QVector<qint32> fft_result = fft->fft64(pulse_list_100ms.mid(0,64));
+        for (int i = 0; i < 32 ; ++i) {
+            Spectra_map[i] = fft_result.at(i+1);
+        }
+    }
+    else{
+        for (int i = 0; i < 32 ; ++i) {
+            Spectra_map[i] = 0;
+        }
+    }
+
+    Spectra_data.clear();
+
+    for(int i=0;i<32;i++){
+        QwtInterval interval( 1.5625*(i + 0.2) , 1.5625*(i + 0.8) );
+        interval.setBorderFlags( QwtInterval::ExcludeMaximum );
+        Spectra_data.append( QwtIntervalSample( Spectra_map[i], interval ) );
+    }
+    d_Spectra->setData(new QwtIntervalSeriesData( Spectra_data ));
+    plot_Spectra->replot();
+
+    pulse_list_100ms.clear();
+    max_100ms = 0;
 }
 
 void HFCTWidget::PRPDReset()
@@ -287,7 +330,12 @@ void HFCTWidget::PRPDReset()
     points_PRPD.clear();
     map_TF.clear();
     points_TF.clear();
-    fresh_100ms();
+    //    fresh_100ms();
+}
+
+void HFCTWidget::save_channel()
+{
+    PRPDReset();
 }
 
 void HFCTWidget::fresh_100ms()
@@ -355,6 +403,8 @@ void HFCTWidget::fresh_100ms()
 
     scene->addPRPD(PRPS_point_list);        //PRPS图刷新
 
+    do_Spectra_compute();       //频谱图
+
     //插入TF图,柱状图代码
 
     //刷新200ms内的db和脉冲数
@@ -404,7 +454,7 @@ QVector<int> HFCTWidget::compute_pulse_number(QVector<double> list)
 }
 
 //根据读取到的序列，计算电缆局放值
-double HFCTWidget::compute_list_pC(QVector<double> list , int x_origin)
+double HFCTWidget::compute_list_pC(QVector<int> list , int x_origin)
 {
     if(list.length() < 2 )
         return 0;
@@ -448,9 +498,8 @@ double HFCTWidget::compute_list_pC(QVector<double> list , int x_origin)
     return max;
 }
 
-double HFCTWidget::compute_one_pC(QVector<double> list)
+double HFCTWidget::compute_one_pC(QVector<int> list)
 {
-    //    qDebug()<<list;
     if(list.length() < 2 )
         return 0;
 
@@ -477,13 +526,13 @@ double HFCTWidget::compute_one_pC(QVector<double> list)
 //list是已标准化的脉冲序列（如何标准化，以后探讨）
 //list长度至少为2
 //函数实现用复化辛普生公式求积分
-double HFCTWidget::simpson(QVector<double> list)
+double HFCTWidget::simpson(QVector<int> list)
 {
     if(list.length() < 2 )
         return 0;
 
     if(list.length() == 2)
-        return (list.at(0) + list.at(1)) / 2 ;      //梯形公式
+        return (list.at(0) + list.at(1)) / 2.0 ;      //梯形公式
 
     int n = (list.length()-1) / 2 ;     //n至少为1
     double S = list.at(0) - list.at(2*n);
@@ -491,10 +540,10 @@ double HFCTWidget::simpson(QVector<double> list)
         S += 4*list.at(2*i-1) + 2*list.at(2*i);
     }
     if(list.length() % 2 == 1){     //如果长度为奇数，正好使用复化辛普生公式，否则补上一个梯形公式做结尾
-        return S / 3;
+        return S / 3.0;
     }
     else{
-        return (list.at(2*n) + list.last() )/2 + S/3 ;
+        return (list.at(2*n) + list.last() )/2.0 + S/3.0 ;
     }
 }
 
@@ -502,7 +551,7 @@ double HFCTWidget::simpson(QVector<double> list)
 //d1为靠近序列内部的数据点，d2为序列首（尾）部数据点
 double HFCTWidget::triangle(double d1, double d2)
 {
-    return d1*d1 / (d1 - d2) / 2;
+    return d1*d1 / (d1 - d2) / 2.0;
 }
 
 //读取一次原始数据
@@ -518,6 +567,7 @@ void HFCTWidget::fresh_1ms()
             else{
                 token--;
             }
+#if 0
             //拷贝数据
             QVector<double> list;
             for (int i = 0; i < 256; ++i) {
@@ -528,11 +578,43 @@ void HFCTWidget::fresh_1ms()
                     list.append(((double)short_data->data[i] - 0x8000));
                 }
             }
+
+
+            qint32 max = MAX(max_100ms, list.at(Common::max_at(list)) );
+            if(max > max_100ms ){
+                pulse_list_100ms = list;
+                max_100ms = max;
+            }
+
             //切割 计算 筛选
             QVector<PC_DATA> pclist_1ms = compute_pc_1ms(list,short_data->time);
             //累计数据
             pclist_100ms.append(pclist_1ms);
+        }        
+#endif
+        //拷贝数据
+        QVector<int> list;
+        for (int i = 0; i < 256; ++i) {
+            if(short_data->data[i] == 0x55aa){
+                break;
+            }
+            else{
+                list.append(((int)short_data->data[i] - 0x8000));
+            }
         }
+
+
+        qint32 max = MAX(max_100ms, list.at(Common::max_at(list)) );
+        if(max > max_100ms ){
+            pulse_list_100ms = list;
+            max_100ms = max;
+        }
+
+        //切割 计算 筛选
+        QVector<PC_DATA> pclist_1ms = compute_pc_1ms(list,short_data->time);
+        //累计数据
+        pclist_100ms.append(pclist_1ms);
+    }
     }
 }
 
@@ -565,14 +647,11 @@ void HFCTWidget::fresh_1000ms()
         pulse_cnt_show += pulse_cnt_list.at(pulse_cnt_list.count() - 1 - i);
     }
 
-//    double degree = db * pulse_number * 1.0 / sqlcfg->get_para()->freq_val;
     double degree = db * pulse_cnt * 1.0 / sqlcfg->get_para()->freq_val;
 
     ui->label_val->setText(QString("%1").arg(db));
-//    ui->label_pluse->setText(tr("脉冲数: %1").arg(pulse_number));
     ui->label_pluse->setText(tr("脉冲数: ") + Common::secton_three(pulse_cnt_show) );//按三位分节法显示脉冲计数
     ui->label_degree->setText(tr("严重度: %1").arg(degree));
-//    ui->label_degree->setText(tr("测试: %1pc").arg(Common::avrage(pclist_1000ms)));   //测试
     pclist_1000ms.clear();
 
     if ( db >= hfct_sql->high) {
@@ -585,48 +664,36 @@ void HFCTWidget::fresh_1000ms()
         ui->label_val->setStyleSheet("QLabel {font-family:WenQuanYi Micro Hei;font-size:60px;color:green}");
     }
 
-    int d_max, d_min;
+    int is_current = 0;
+    if((int)key_val->grade.val0 == menu_index){
+        is_current = 1;
+    }
 
-    yc_data_type temp_data;
+    //实时数据库
+    int d_max, d_min;
     if(mode == HFCT1){
-        temp_data.f_val = db;
-        yc_set_value(HFCT1_amplitude, &temp_data, 0, NULL,0);
-        temp_data.f_val = pulse_number;
-        yc_set_value(HFCT1_num, &temp_data, 0, NULL,0);
-        temp_data.f_val = degree;
-        yc_set_value(HFCT1_severity, &temp_data, 0, NULL,0);
-        temp_data.f_val = hfct_sql->gain;
-        yc_set_value(HFCT1_gain, &temp_data, 0, NULL,0);
-        temp_data.f_val = 0;
-        yc_set_value(HFCT1_center_biased, &temp_data, 0, NULL,0);
+        Common::rdb_set_value(HFCT1_amplitude,db,is_current);
+        Common::rdb_set_value(HFCT1_num,pulse_cnt,is_current);
+        Common::rdb_set_value(HFCT1_severity,degree,is_current);
+        Common::rdb_set_value(HFCT1_gain,hfct_sql->gain,is_current);
+        Common::rdb_set_value(HFCT1_center_biased,hfct_sql->fpga_zero,is_current);
         d_max = data->recv_para_normal.hdata0.ad.ad_max;
         d_min = data->recv_para_normal.hdata0.ad.ad_min;
-        temp_data.f_val = ((d_max + d_min) / 2) - 0x8000;
-        yc_set_value(HFCT1_center_biased_adv, &temp_data, 0, NULL,0);
-        temp_data.f_val = 0;
-        yc_set_value(HFCT1_noise_biased, &temp_data, 0, NULL,0);
-        temp_data.f_val = 0;
-        yc_set_value(HFCT1_noise_biased_adv, &temp_data, 0, NULL,0);
+        Common::rdb_set_value(HFCT1_center_biased_adv, ((d_max + d_min) / 2) - 0x8000, is_current);
+        Common::rdb_set_value(HFCT1_noise_biased,0,is_current);
+        Common::rdb_set_value(HFCT1_noise_biased_adv,0,is_current);
     }
     else{
-        temp_data.f_val = db;
-        yc_set_value(HFCT2_amplitude, &temp_data, 0, NULL,0);
-        temp_data.f_val = pulse_number;
-        yc_set_value(HFCT2_num, &temp_data, 0, NULL,0);
-        temp_data.f_val = degree;
-        yc_set_value(HFCT2_severity, &temp_data, 0, NULL,0);
-        temp_data.f_val = hfct_sql->gain;
-        yc_set_value(HFCT2_gain, &temp_data, 0, NULL,0);
-        temp_data.f_val = 0;
-        yc_set_value(HFCT2_center_biased, &temp_data, 0, NULL,0);
+        Common::rdb_set_value(HFCT2_amplitude,db,is_current);
+        Common::rdb_set_value(HFCT2_num,pulse_cnt,is_current);
+        Common::rdb_set_value(HFCT2_severity,degree,is_current);
+        Common::rdb_set_value(HFCT2_gain,hfct_sql->gain,is_current);
+        Common::rdb_set_value(HFCT2_center_biased,hfct_sql->fpga_zero,is_current);
         d_max = data->recv_para_normal.hdata1.ad.ad_max;
         d_min = data->recv_para_normal.hdata1.ad.ad_min;
-        temp_data.f_val = ((d_max + d_min) / 2) - 0x8000;
-        yc_set_value(HFCT2_center_biased_adv, &temp_data, 0, NULL,0);
-        temp_data.f_val = 0;
-        yc_set_value(HFCT2_noise_biased, &temp_data, 0, NULL,0);
-        temp_data.f_val = 0;
-        yc_set_value(HFCT2_noise_biased_adv, &temp_data, 0, NULL,0);
+        Common::rdb_set_value(HFCT2_center_biased_adv, ((d_max + d_min) / 2) - 0x8000, is_current);
+        Common::rdb_set_value(HFCT2_noise_biased,0,is_current);
+        Common::rdb_set_value(HFCT2_noise_biased_adv,0,is_current);
     }
 
     if (max_db < db) {
@@ -634,12 +701,10 @@ void HFCTWidget::fresh_1000ms()
         ui->label_max->setText(tr("最大值: ") + QString::number(max_db) + "pC");
     }
 
-    emit hfct_log_data(db,pulse_number,degree);
+    emit hfct_log_data(db,pulse_cnt,degree,is_current);
 
     plot_BarChart->replot();        //这里replot()包含了db清零的操作
-//    db = 0;
     pulse_number = 0;
-
 }
 
 void HFCTWidget::fresh_setting()
@@ -652,43 +717,33 @@ void HFCTWidget::fresh_setting()
         ui->comboBox->setItemText(0,tr("检测模式\t[连续]"));
     }
 
+    plot_PRPD->hide();
+    plot_BarChart->hide();
+    plot_PRPS->hide();
+    plot_Histogram->hide();
+    plot_TF->hide();
+    plot_Spectra->hide();
     if (hfct_sql->chart == PRPD) {
         ui->comboBox->setItemText(1,tr("图形显示\t[PRPD]"));
         plot_PRPD->show();
-        plot_BarChart->hide();
-        plot_PRPS->hide();
-        plot_Histogram->hide();
-        plot_TF->hide();
     } else if(hfct_sql->chart == BASIC){
         ui->comboBox->setItemText(1,tr("图形显示 \t[时序图]"));
-        plot_PRPD->hide();
         plot_BarChart->show();
-        plot_PRPS->hide();
-        plot_Histogram->hide();
-        plot_TF->hide();
     } else if(hfct_sql->chart == Histogram){
         ui->comboBox->setItemText(1,tr("图形显示 \t[柱状图]"));
-        plot_PRPD->hide();
-        plot_BarChart->hide();
-        plot_PRPS->hide();
         plot_Histogram->show();
-        plot_TF->hide();
     }
     else if(hfct_sql->chart == PRPS){
         ui->comboBox->setItemText(1,tr("图形显示 \t[PRPS]"));
-        plot_PRPD->hide();
-        plot_BarChart->hide();
         plot_PRPS->show();
-        plot_Histogram->hide();
-        plot_TF->hide();
     }
     else if(hfct_sql->chart == TF){
         ui->comboBox->setItemText(1,tr("图形显示 \t[T-F图]"));
-        plot_PRPD->hide();
-        plot_BarChart->hide();
-        plot_PRPS->hide();
-        plot_Histogram->hide();
         plot_TF->show();
+    }
+    else if(hfct_sql->chart == Spectra){
+        ui->comboBox->setItemText(1,tr("图形显示 \t[频谱图]"));
+        plot_Spectra->show();
     }
 
     ui->comboBox->setItemText(2,tr("增益调节\t[×%1]").arg(QString::number(hfct_sql->gain, 'f', 1)));
@@ -727,7 +782,7 @@ void HFCTWidget::fresh_setting()
     ui->comboBox->lineEdit()->setText(tr(" 参 数 设 置"));
 }
 
-QVector<HFCTWidget::PC_DATA> HFCTWidget::compute_pc_1ms(QVector<double> list, int x_origin)
+QVector<HFCTWidget::PC_DATA> HFCTWidget::compute_pc_1ms(QVector<int> list, int x_origin)
 {
     QVector<PC_DATA> pclist_1ms;
 
@@ -756,7 +811,7 @@ QVector<HFCTWidget::PC_DATA> HFCTWidget::compute_pc_1ms(QVector<double> list, in
     return pclist_1ms;
 }
 
-HFCTWidget::PC_DATA HFCTWidget::compute_pc_1node(QVector<double> list, int x_origin)
+HFCTWidget::PC_DATA HFCTWidget::compute_pc_1node(QVector<int> list, int x_origin)
 {
     PC_DATA pc_data;
     pc_data.pc_value = 0;

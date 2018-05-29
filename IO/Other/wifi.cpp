@@ -335,15 +335,11 @@ int WifiConfig::wifi_config_ap_tcp_server(WifiConfig::string_32_t ssid, char *au
     netp_t netp;
     unsigned int ipaddr;
 
-    qDebug()<<"11";
-
     if (check_ap_auth_encry (auth, encry) != 0) {
         printf ("auth: %s, encry: %s is invalid\n", auth, encry);
         return -1;
     }
     ipaddr = ntohl (inet_addr (ip));
-
-    qDebug()<<"22";
 
     wifi_do_cmd (&wifi_at_cmd, WCMD_WMODE, 0, NULL);
     if (strcmp (wifi_at_cmd.wmode.mode, WMODE_AP) != 0) {
@@ -352,8 +348,6 @@ int WifiConfig::wifi_config_ap_tcp_server(WifiConfig::string_32_t ssid, char *au
         wifi_do_cmd (&wifi_at_cmd, WCMD_WMODE, 0, NULL);
         printf (" set wmode: %s\n", wifi_at_cmd.wmode.mode);
     }
-
-    qDebug()<<"33";
 
     wifi_do_cmd (&wifi_at_cmd, WCMD_WAP, 0, NULL);
     if (strcmp (wifi_at_cmd.wap.ssid, ssid) != 0) {

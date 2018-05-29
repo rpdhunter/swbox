@@ -1,4 +1,4 @@
-#include "aewidget.h"
+﻿#include "aewidget.h"
 #include "ui_aewidget.h"
 
 #include <QLineEdit>
@@ -17,7 +17,7 @@ AEWidget::AEWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu_ind
     ui->setupUi(this);
     this->resize(CHANNEL_X, CHANNEL_Y);
     this->move(3, 3);
-    this->setStyleSheet("AEWidget {border-image: url(:/widgetphoto/bk/bk2.png);}");    
+    this->setStyleSheet("AEWidget {border-image: url(:/widgetphoto/bk/bk2.png);}");
     Common::set_comboBox_style(ui->comboBox);
 
     this->data = data;
@@ -55,7 +55,7 @@ AEWidget::AEWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu_ind
     logtools = new LogTools(mode);      //日志保存模块
     connect(this,SIGNAL(ae_log_data(double,int,double)),logtools,SLOT(dealLog(double,int,double)));
     connect(this,SIGNAL(ae_PRPD_data(QVector<QwtPoint3D>)),logtools,SLOT(dealRPRDLog(QVector<QwtPoint3D>)));
-//    reload(menu_index);
+    //    reload(menu_index);
 }
 
 AEWidget::~AEWidget()
@@ -77,11 +77,11 @@ void AEWidget::add_ae_data()
 void AEWidget::fresh_1000ms()
 {
     fresh(true);
-//    fresh_Histogram();
+    //    fresh_Histogram();
     d_BarChart->fresh();
     plot_Barchart->replot();
-//    plot_PRPD->replot();
-//    plot_Histogram->replot();
+    //    plot_PRPD->replot();
+    //    plot_Histogram->replot();
 
 #ifdef TEST_ae
     qDebug()<<QTime::currentTime();
@@ -90,13 +90,13 @@ void AEWidget::fresh_1000ms()
     qDebug()<<"ae_datalist\t"<<ae_datalist.count() << "\t"<< ae_datalist.count()/128.0;
 
     //数据显示
-//    qDebug()<<ae_datalist.mid(0,100);
+    //    qDebug()<<ae_datalist.mid(0,100);
 
     //时标显示
-//    for (int i = ae_timelist.count()-1; i > 0; i--) {
-//        ae_timelist[i] = ae_timelist.at(i) - ae_timelist.at(i-1);
-//    }
-//    qDebug()<<"ae_timelist\t"<<ae_timelist.count() << "\t"<< ae_timelist;
+    //    for (int i = ae_timelist.count()-1; i > 0; i--) {
+    //        ae_timelist[i] = ae_timelist.at(i) - ae_timelist.at(i-1);
+    //    }
+    //    qDebug()<<"ae_timelist\t"<<ae_timelist.count() << "\t"<< ae_timelist;
 
     ae_timelist.clear();
     ae_datalist.clear();
@@ -108,11 +108,11 @@ void AEWidget::fresh_100ms()
 {
     fresh(false);
 
-//    qDebug()<<"ae_datalist\t"<<ae_datalist.count() << "\t"<< ae_datalist.count()/128.0;
+    //    qDebug()<<"ae_datalist\t"<<ae_datalist.count() << "\t"<< ae_datalist.count()/128.0;
 #ifndef TEST_ae
-//    QVector<QPoint> pulse_100ms = Common::calc_pulse_list(ae_datalist,ae_timelist,aeultra_sql->fpga_threshold);
+    //    QVector<QPoint> pulse_100ms = Common::calc_pulse_list(ae_datalist,ae_timelist,aeultra_sql->fpga_threshold);
 
-    ae_datalist = Common::kalman_filter(ae_datalist);
+//    ae_datalist = Common::kalman_filter(ae_datalist);
 
 
     //为一个工频周期选取32个点，用于fft变换
@@ -122,22 +122,24 @@ void AEWidget::fresh_100ms()
         }
     }
 
+    do_Spectra_compute();
+
+
     QVector<QPoint> pulse_100ms = Common::calc_pulse_list(ae_datalist,aeultra_sql->fpga_threshold);
 
 
 
-//    fly_number
-
+    //特征指数图
     int space;      //相邻两次脉冲的间隔时间
     int temp;
     if(pulse_100ms.count() > 1){
         for (int i = 1; i < pulse_100ms.count(); ++i) {
             temp = pulse_100ms.at(i).x() - pulse_100ms.at(i-1).x();
             if(temp > 20){
-//                 qDebug()<<temp;
+                //                 qDebug()<<temp;
             }
             space = (pulse_100ms.at(i).x() - pulse_100ms.at(i-1).x() ) * 320000.0 / 128 / 100000;
-//            qDebug()<<space;
+            //            qDebug()<<space;
             if(space >= 3 && space <= 60){
                 histogram_map[space]++;
             }
@@ -156,11 +158,10 @@ void AEWidget::fresh_100ms()
     plot_Histogram->replot();
 
 
-
     int x,y, time;
     double _y;
     for(int i=0; i<pulse_100ms.count(); i++){
-//        x = Common::time_to_phase(pulse_100ms.at(i).x() );              //时标
+        //        x = Common::time_to_phase(pulse_100ms.at(i).x() );              //时标
         time = pulse_100ms.at(i).x() * 320000 / 128 + ae_timelist.first();  //时标
         x = Common::time_to_phase(time );              //时标(待定)
         _y = Common::physical_value(pulse_100ms.at(i).y(),mode);         //强度
@@ -180,7 +181,7 @@ void AEWidget::fresh_100ms()
             }
         }
         else{
-//            qDebug()<<QPointF(x,y) << "\t"<< pulse_100ms.at(i);
+            //            qDebug()<<QPointF(x,y) << "\t"<< pulse_100ms.at(i);
         }
         time /= 200000;
         if(time > 200){
@@ -252,7 +253,7 @@ void AEWidget::trans_key(quint8 key_code)
         emit send_key(key_code);
         return;
     }
-//    qDebug()<<"val0 = "<<key_val->grade.val0 <<"\nval1 = "<<key_val->grade.val1 <<"\nval2 = "<<key_val->grade.val2 ;
+    //    qDebug()<<"val0 = "<<key_val->grade.val0 <<"\nval1 = "<<key_val->grade.val1 <<"\nval2 = "<<key_val->grade.val2 ;
 
     switch (key_code) {
     case KEY_OK:
@@ -314,7 +315,7 @@ void AEWidget::do_key_left_right(int d)
         aeultra_sql->mode = !aeultra_sql->mode;
         break;
     case 2:
-        list << BASIC << PRPD << FLY << Exponent;
+        list << BASIC << PRPD << FLY << Exponent << Spectra;
         Common::change_index(aeultra_sql->chart, d, list);
         break;
     case 3:
@@ -373,6 +374,11 @@ void AEWidget::chart_ini()
     d_histogram = new QwtPlotHistogram;
     Common::set_histogram_style(plot_Histogram,d_histogram,0,6,0,100,"");
 
+    //Spectra
+    plot_Spectra = new QwtPlot(ui->widget);
+    plot_Spectra->resize(200, 140);
+    d_Spectra = new QwtPlotHistogram;
+    Common::set_Spectra_style(plot_Spectra,d_Spectra,0,4,0,30,"");
 
 }
 
@@ -390,6 +396,11 @@ void AEWidget::PRPDReset()
         histogram_map[i]=0;
     }
     histogram_data.clear();
+}
+
+void AEWidget::save_channel()
+{
+    PRPDReset();
 }
 
 void AEWidget::fly_Reset()
@@ -418,6 +429,33 @@ void AEWidget::fresh_Histogram()
     plot_Histogram->replot();
 }
 
+void AEWidget::fresh_Spectra()
+{
+
+}
+
+//频谱图
+void AEWidget::do_Spectra_compute()
+{
+    if(ae_datalist.count() > 2048){
+        QVector<qint32> fft_result = fft->fft2048(ae_datalist.mid(0,2048));
+        for (int i = 0; i <41 ; ++i) {
+            Spectra_map[i] = Common::avrage(fft_result.mid(i*5 + 1, (i+1)*5) );
+        }
+
+        Spectra_data.clear();
+        for(int i=0;i<40;i++){
+            QwtInterval interval( 0.1*(i + 0.2) , 0.1*(i + 0.8) );
+            interval.setBorderFlags( QwtInterval::ExcludeMaximum );
+            Spectra_data.append( QwtIntervalSample( Spectra_map[i], interval ) );
+        }
+
+        d_Spectra->setData(new QwtIntervalSeriesData( Spectra_data ));
+        plot_Spectra->replot();
+        ae_datalist.clear();
+    }
+}
+
 void AEWidget::showWaveData(VectorList buf, MODE mod)
 {
     if(key_val->grade.val0 == menu_index){       //在超声界面，可以显示
@@ -430,13 +468,18 @@ void AEWidget::showWaveData(VectorList buf, MODE mod)
         ui->comboBox->hidePopup();
 
         recWaveForm->working(key_val,buf,mod);
-//        recWaveForm->working(key_val,Common::smooth(Common::smooth(Common::smooth(buf,8),8),1),mod);
-//        recWaveForm->working(key_val,Common::smooth_2(buf,4),mod);
-//        qDebug()<<"before"<<buf.mid(0,30);
+        //        recWaveForm->working(key_val,Common::smooth(Common::smooth(Common::smooth(buf,8),8),1),mod);
+        //        recWaveForm->working(key_val,Common::smooth_2(buf,4),mod);
+        //        qDebug()<<"before"<<buf.mid(0,30);
         VectorList res = Common::kalman_filter(buf);
-//        qDebug()<<"after"<<res.mid(0,30);
-//        recWaveForm->working(key_val,res,mod);
+        //        qDebug()<<"after"<<res.mid(0,30);
+        //        recWaveForm->working(key_val,res,mod);
     }
+}
+
+void AEWidget::change_log_dir()
+{
+    logtools->change_current_asset_dir();
 }
 
 void AEWidget::fresh(bool f)
@@ -445,7 +488,7 @@ void AEWidget::fresh(bool f)
     double val,val_db;
 
     Common::calc_aa_value(data,mode,aeultra_sql,&val, &val_db, &offset);
-//    qDebug()<<"val="<<val<<"\tval_db="<<val_db;
+    //    qDebug()<<"val="<<val<<"\tval_db="<<val_db;
 
 
 
@@ -461,16 +504,19 @@ void AEWidget::fresh(bool f)
 
     if(f){  //直接显示（1s一次）
 
+//        do_Spectra_compute();
+
+
         QVector<qint32> fft_result;
         QVector<double> fft_50Hz, fft_100Hz;
-//        qDebug()<<"ae_fftlist number
+        //        qDebug()<<"ae_fftlist number
         for (int i = 0; i < ae_fftlist.count() / 32; ++i) {
             fft_result = fft->fft32(ae_fftlist.mid(i*32,32));
             fft_50Hz.append(fft_result.at(1));
             fft_100Hz.append(fft_result.at(2));
         }
-//        qDebug()<<fft_50Hz;
-//        qDebug()<<fft_100Hz;
+        //        qDebug()<<fft_50Hz;
+        //        qDebug()<<fft_100Hz;
 
         int v_50Hz = Common::avrage(fft_50Hz);
         int v_100Hz = Common::avrage(fft_100Hz);
@@ -561,34 +607,37 @@ void AEWidget::fresh_setting()
         timer_1000ms->setSingleShot(false);
     }
 
-    if (aeultra_sql->chart == PRPD) {
-        ui->comboBox->setItemText(1,tr("图形显示\t[PRPD]"));
-        plot_PRPD->show();
-        plot_fly->hide();
-        plot_Barchart->hide();
-        plot_Histogram->hide();
+    plot_Barchart->hide();
+    plot_PRPD->hide();
+    plot_fly->hide();
+    plot_Histogram->hide();
+    plot_Spectra->hide();
 
-    } else if(aeultra_sql->chart == BASIC){
-        ui->comboBox->setItemText(1,tr("图形显示 \t[时序图]"));
-        plot_PRPD->hide();
-        plot_fly->hide();
+    switch (aeultra_sql->chart) {
+    case BASIC:
         plot_Barchart->show();
-        plot_Histogram->hide();
-
-    } else if(aeultra_sql->chart == FLY){
-        ui->comboBox->setItemText(1,tr("图形显示 \t[飞行图]"));
-        plot_PRPD->hide();
+        ui->comboBox->setItemText(1,tr("图形显示 \t[时序图]"));
+        break;
+    case PRPD:
+        plot_PRPD->show();
+        ui->comboBox->setItemText(1,tr("图形显示\t[PRPD]"));
+        break;
+    case FLY:
         plot_fly->show();
-        plot_Barchart->hide();
-        plot_Histogram->hide();
-
-    } else if(aeultra_sql->chart == Exponent){
-        ui->comboBox->setItemText(1,tr("图形显示  [特征指数]"));
-        plot_PRPD->hide();
-        plot_fly->hide();
-        plot_Barchart->hide();
+        ui->comboBox->setItemText(1,tr("图形显示 \t[飞行图]"));
+        break;
+    case Exponent:
         plot_Histogram->show();
+        ui->comboBox->setItemText(1,tr("图形显示 [特征指数]"));
+        break;
+    case Spectra:
+        plot_Spectra->show();
+        ui->comboBox->setItemText(1,tr("图形显示  \t[频谱图]"));
+        break;
+    default:
+        break;
     }
+
     ui->comboBox->setItemText(2,tr("增益调节\t[×%1]").arg(QString::number(aeultra_sql->gain, 'f', 1)) );
     ui->comboBox->setItemText(3,tr("音量调节\t[×%1]").arg(QString::number(aeultra_sql->vol)));
     ui->comboBox->setItemText(4,tr("黄色报警阈值\t[%1]dB").arg(QString::number(aeultra_sql->low)));

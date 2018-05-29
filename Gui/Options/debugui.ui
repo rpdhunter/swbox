@@ -44,7 +44,7 @@
       <enum>QTabWidget::Rounded</enum>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>2</number>
      </property>
      <property name="elideMode">
       <enum>Qt::ElideRight</enum>
@@ -585,7 +585,7 @@
           </widget>
          </item>
          <item row="0" column="2">
-          <widget class="QLineEdit" name="lineEdit_AE1_Step">
+          <widget class="QLineEdit" name="lineEdit_AE1_Sensor">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -597,7 +597,7 @@
          <item row="0" column="1">
           <widget class="QLabel" name="label_15">
            <property name="text">
-            <string>幅值变化门槛</string>
+            <string>传感器中心频率</string>
            </property>
           </widget>
          </item>
@@ -677,7 +677,7 @@
          <item row="0" column="1">
           <widget class="QLabel" name="label_11">
            <property name="text">
-            <string>幅值变化门槛</string>
+            <string>传感器中心频率</string>
            </property>
           </widget>
          </item>
@@ -708,7 +708,7 @@
           </widget>
          </item>
          <item row="0" column="2">
-          <widget class="QLineEdit" name="lineEdit_AE2_Step">
+          <widget class="QLineEdit" name="lineEdit_AE2_Sensor">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -795,6 +795,41 @@
          <property name="spacing">
           <number>0</number>
          </property>
+         <item row="3" column="2">
+          <widget class="QRadioButton" name="rb_LC2_AA">
+           <property name="text">
+            <string>AA</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="3">
+          <widget class="QRadioButton" name="rb_HC1_HFCT">
+           <property name="text">
+            <string notr="true">HFCT</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="3">
+          <widget class="QRadioButton" name="rb_HC2_HFCT">
+           <property name="text">
+            <string notr="true">HFCT</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="4">
+          <widget class="QRadioButton" name="rb_HC1_UHF">
+           <property name="text">
+            <string>UHF</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="4">
+          <widget class="QRadioButton" name="rb_HC2_UHF">
+           <property name="text">
+            <string>UHF</string>
+           </property>
+          </widget>
+         </item>
          <item row="2" column="0">
           <widget class="QPushButton" name="pbt_LC1">
            <property name="minimumSize">
@@ -992,38 +1027,30 @@
            </property>
           </widget>
          </item>
-         <item row="3" column="2">
-          <widget class="QRadioButton" name="rb_LC2_AA">
+         <item row="5" column="0">
+          <widget class="QPushButton" name="pbt_Asset">
            <property name="text">
-            <string>AA</string>
+            <string>资产配置</string>
+           </property>
+           <property name="checkable">
+            <bool>true</bool>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
            </property>
           </widget>
          </item>
-         <item row="0" column="3">
-          <widget class="QRadioButton" name="rb_HC1_HFCT">
+         <item row="5" column="2">
+          <widget class="QRadioButton" name="rb_Asset_Enable">
            <property name="text">
-            <string notr="true">HFCT</string>
+            <string>启用</string>
            </property>
           </widget>
          </item>
-         <item row="1" column="3">
-          <widget class="QRadioButton" name="rb_HC2_HFCT">
+         <item row="5" column="3">
+          <widget class="QRadioButton" name="rb_Asset_Disable">
            <property name="text">
-            <string notr="true">HFCT</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="4">
-          <widget class="QRadioButton" name="rb_HC1_UHF">
-           <property name="text">
-            <string>UHF</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="4">
-          <widget class="QRadioButton" name="rb_HC2_UHF">
-           <property name="text">
-            <string>UHF</string>
+            <string>禁用</string>
            </property>
           </widget>
          </item>
@@ -1065,9 +1092,12 @@
           <widget class="QLineEdit" name="lineEdit_CPU_VCC">
            <property name="minimumSize">
             <size>
-             <width>100</width>
+             <width>150</width>
              <height>0</height>
             </size>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
            </property>
           </widget>
          </item>
@@ -1096,6 +1126,9 @@
              <height>0</height>
             </size>
            </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
           </widget>
          </item>
          <item row="1" column="2">
@@ -1123,6 +1156,9 @@
              <height>0</height>
             </size>
            </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
           </widget>
          </item>
          <item row="2" column="2">
@@ -1139,16 +1175,6 @@
           <widget class="QLabel" name="label_28">
            <property name="text">
             <string>电池实时电流</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="1">
-          <widget class="QLineEdit" name="lineEdit_BATT_CUR">
-           <property name="minimumSize">
-            <size>
-             <width>100</width>
-             <height>0</height>
-            </size>
            </property>
           </widget>
          </item>
@@ -1180,6 +1206,9 @@
            <property name="text">
             <string/>
            </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
           </widget>
          </item>
          <item row="4" column="2">
@@ -1187,6 +1216,33 @@
            <property name="text">
             <string notr="true">W</string>
            </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QLineEdit" name="lineEdit_BATT_CUR">
+           <property name="minimumSize">
+            <size>
+             <width>100</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="0">
+          <widget class="QLabel" name="label_19">
+           <property name="text">
+            <string>编 译 时 间</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="1">
+          <widget class="QLineEdit" name="lineEdit_CompileTime">
            <property name="alignment">
             <set>Qt::AlignCenter</set>
            </property>

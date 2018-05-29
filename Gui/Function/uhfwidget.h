@@ -1,4 +1,4 @@
-#ifndef UHFWIDGET_H
+﻿#ifndef UHFWIDGET_H
 #define UHFWIDGET_H
 
 #include <QFrame>
@@ -32,12 +32,16 @@ public slots:
     void reload(int index);   //重新装载设置
     void trans_key(quint8 key_code);
     void showWaveData(VectorList buf, MODE mod);
+    void change_log_dir();      //改变asset目录
+    void PRPDReset();
+    void save_channel();        //保存通道数据
+
 
 signals:
     void fresh_parent();
     void send_key(quint8);
     void startRecWave(MODE, int);
-    void uhf_log_data(double val, int pulse, double degree);    //发送日志数据
+    void uhf_log_data(double val, int pulse, double degree, int qc);    //发送日志数据
     void uhf_PRPD_data(QVector<QwtPoint3D>);
     void beep(int index, int red_alert);        //蜂鸣器报警(参数：通道，严重程度(0,1,2))
 
@@ -96,7 +100,6 @@ private:
     QVector<QwtPoint3D> prpd_samples;   //PRPD数据
     int map[360][121];                  //PRPD存储中介(数据点图)
     QPoint transData(int x, int y);     //将原始脉冲转换成可显示的DB值
-    void PRPDReset();
 
     //PRPS
     QGraphicsView *plot_PRPS;       //PRPS图

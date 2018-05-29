@@ -1,4 +1,4 @@
-#include "fft.h"
+﻿#include "fft.h"
 
 #include <unistd.h>
 #include <stdio.h>
@@ -16,6 +16,7 @@
 //#define PROT_AC_MAG_FACTOR			(1.0f / ((2048 >> 1) * 1.414f /* 调整为有效值 */))
 #define PROT_AC_MAG_FACTOR			(1.0f / (2048 >> 1))
 
+#include <QtDebug>
 
 FFT::FFT()
 {
@@ -47,17 +48,28 @@ QVector<qint32> FFT::fft2048(int ibuf[])
     return r;
 }
 
+QVector<qint32> FFT::fft2048(QVector<qint32> list)
+{
+    int fft_in[2048];
+    for (int j = 0; j < 2048; ++j) {
+        fft_in[j] = list.at(j);
+    }
+    return fft2048(fft_in);
+}
+
 QVector<qint32> FFT::fft64(QVector<qint32> list)
 {
-    int i, ibuf[32];
-    for (i = 0; i < 32; ++i) {
+    if(list.count() != 64){
+        qDebug()<<"fft64 error! list.count = "<<list.count();
+    }
+    int i, ibuf[64];
+    for (i = 0; i < 64; ++i) {
         ibuf[i] = list.at(i);
     }
 
     ne10_int32_t real, imag;
     int temp;
     QVector<qint32> r;
-
     ne10_fft_r2c_1d_int32_neon (fft_out_64, ibuf, fft_cfg_64, 0);
 
     for (i = 0; i < FFT_OUT_BUF_NUM_64; i++) {
@@ -78,6 +90,9 @@ QVector<qint32> FFT::fft64(QVector<qint32> list)
 
 QVector<qint32> FFT::fft32(QVector<qint32> list)
 {
+    if(list.count() != 32){
+        qDebug()<<"fft32 error! list.count = "<<list.count();
+    }
     int i, ibuf[32];
     for (i = 0; i < 32; ++i) {
         ibuf[i] = list.at(i);

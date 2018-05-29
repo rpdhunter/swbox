@@ -1,4 +1,4 @@
-#ifndef SQLCFG_H
+﻿#ifndef SQLCFG_H
 #define SQLCFG_H
 
 #include <QDebug>
@@ -12,7 +12,7 @@
 
 #define TEV_HIGH			40
 #define TEV_LOW				20
-#define FPGA_THRESHOLD		0x80
+#define FPGA_THRESHOLD		0x120
 
 #define AA_VOL_DEFAULT				8
 #define AA_HIGH				40
@@ -48,6 +48,7 @@ enum DISPLAY {
     TF = 4,         //时频特性图
     FLY = 5,        //飞行图
     Exponent = 6,   //特征指数图
+    Spectra = 7,    //频谱图
 };
 
 enum FILTER {
@@ -121,6 +122,7 @@ typedef struct L_CHANNEL_SQL {
     int offset;                     //偏置值
     bool envelope;                  //包络线模式（需要FPGA同步）
     uint fpga_threshold;            //脉冲阈值（需要FPGA同步）
+    int sensor_freq;                //传感器中心频率
 } L_CHANNEL_SQL;
 
 //typedef struct SYNCMODE_SQL {
@@ -151,10 +153,12 @@ typedef struct SQL_PARA {
     bool buzzer_on;                         //蜂鸣器
     int auto_rec_interval;                  //自动录波间隔
     int menu_h1, menu_h2;                   //高速通道模式
-    int menu_double, menu_l1, menu_l2;      //其他菜单模式
+    int menu_l1, menu_l2;                   //低速通道模式
+    int menu_double, menu_asset;            //其他菜单模式
     int sync_mode;                          //同步模式
     int sync_internal_val;                  //内同步时间
     int sync_external_val;                  //外同步时间
+    char current_dir[500];                    //当前工作目录
 
 } SQL_PARA;
 
@@ -164,7 +168,9 @@ public:
     SqlCfg();
     SQL_PARA *get_para();
     void sql_save(SQL_PARA *sql_para);
-    SQL_PARA *default_config(void);      //初始设置
+    SQL_PARA *default_config(void);         //初始设置
+    double ae1_factor();             //快捷返回AE_FACTOR
+    double ae2_factor();             //快捷返回AE_FACTOR
 
 private:
     SQL_PARA sql_para;
@@ -177,6 +183,7 @@ private:
     void aa_default(L_CHANNEL_SQL &sql);
     void ae_default(L_CHANNEL_SQL &sql);
 
+    void sql_init();                        //每次开机都需要重置的选项（这些选项实际是全局变量的作用）
 };
 
 extern SqlCfg * sqlcfg;

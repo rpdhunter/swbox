@@ -6,16 +6,26 @@
 #include <QSqlError>
 #include <QDir>
 #include "IO/Data/data.h"
+#include "Gui/Common/common.h"
 
 AssetSql::AssetSql(QObject *parent) : QObject(parent)
 {
     create_connection();    //建立数据库
     create_tree();          //数据库生成链表
-    show_tree();            //显示链表
+//    show_tree();            //显示链表
     dir_sync();             //同步文件夹
 }
 
-//以id为唯一关键词修改记录
+
+/*******************************************************
+ * 以id为唯一关键词修改记录
+ * 一个完整的节点操作包含4部分：
+ * 1.视图-模型操作(AssetWidget AssetView AssetModel)
+ * 2.链表操作(AssetModel AssetSql)
+ * 3.sql操作(AssetSql)
+ * 4.文件夹操作(AssetSql)
+ * *****************************************************/
+
 void AssetSql::update_node(Node *n)
 {
     switch (n->type) {
@@ -31,12 +41,19 @@ void AssetSql::update_node(Node *n)
     default:
         break;
     }
+
+    QString new_path = node_to_path(n);
+    Common::rename_dir(n->path, new_path);
+    n->path = new_path;
 }
 
 //插入新记录，必须提供除id以外的所有信息
 //插入的节点，id字段是无效的，需要sqlite自动分配
 QVariant AssetSql::insert_node(Node *n)
 {
+    n->path = node_to_path(n);
+    Common::mk_dir(n->path);
+
     switch (n->type) {
     case Node::Area:
         q->exec(QString("INSERT INTO area (name) VALUES ('%1')").arg(n->name));
@@ -56,6 +73,8 @@ QVariant AssetSql::insert_node(Node *n)
 bool AssetSql::delete_node(Node *n)
 {
 //    qDebug()<<"to be del id ="<<n->id;
+    Common::del_dir(node_to_path(n));
+
     switch (n->type) {
     case Node::Area:
         return q->exec(QString("DELETE FROM area WHERE id=%1").arg(n->id));
@@ -65,7 +84,7 @@ bool AssetSql::delete_node(Node *n)
         return q->exec(QString("DELETE FROM equipment WHERE id=%1").arg(n->id));
     default:
         return false;
-    }
+    }   
 }
 
 bool AssetSql::create_connection()
@@ -185,6 +204,7 @@ void AssetSql::create_tree()
 {
     model_area->select();       //读取片区
     rootNode = new Node;
+
     for (int i = 0; i < model_area->rowCount(); ++i) {
         rootNode->children.append(create_node_area(i,rootNode) );
     }
@@ -250,43 +270,61 @@ void AssetSql::show_tree()
 
 void AssetSql::dir_sync()
 {
-    QString str_area, str_sub, str_equ;
+    QString area_path, sub_path, equ_path;
     Node *n_s, *n_e;
-    QDir dir;
-//    dir.setCurrent(ASSET_DIR);
-    mk_dir(QString(ASSET_DIR), dir);
-
+    Common::mk_dir(QString(DIR_ASSET));
+    rootNode->path = QString(DIR_ASSET);
     for (int i = 0; i < rootNode->children.count(); ++i) {
-        str_area = QString("%1/%2").arg(ASSET_DIR).arg(rootNode->children.at(i)->name);
-        mk_dir(str_area, dir);
+        area_path = DIR_ASSET"/" + rootNode->children.at(i)->name.toUtf8();
+        Common::mk_dir(area_path);
+        rootNode->children.at(i)->path = area_path;
         for (int j = 0; j < rootNode->children.at(i)->children.count(); ++j) {
             n_s = rootNode->children.at(i)->children.at(j);
-            str_sub = QString("%1/%2").arg(str_area).arg(n_s->name);
-            mk_dir(str_sub, dir);
+            sub_path = area_path + "/" + n_s->name;
+            Common::mk_dir(sub_path);
+            n_s->path = sub_path;
             for (int k = 0; k < n_s->children.count(); ++k) {
                 n_e = n_s->children.at(k);
-//                qDebug()<< QString("[%1]").arg(n_e->id) << n_e->name << "\t" << n_e->substation_id;
-                str_equ = QString("%1/%2").arg(str_sub).arg(n_e->name);
-                mk_dir(str_equ, dir);
+                equ_path = sub_path + "/" + n_e->name;
+                Common::mk_dir(equ_path);
+                n_e->path = equ_path;
             }
         }
-//        for (int j = 0; j < rootNode->children.at(i)->children.count(); ++j) {
-//            n_s = rootNode->children.at(i)->children.at(j);
-//            qDebug()<< QString("[%1]").arg(n_s->id) << n_s->name << "\t" << n_s->area_id;
-//            for (int k = 0; k < n_s->children.count(); ++k) {
-//                n_e = n_s->children.at(k);
-//                qDebug()<< QString("[%1]").arg(n_e->id) << n_e->name << "\t" << n_e->substation_id;
-//            }
-//        }
     }
 }
 
-void AssetSql::mk_dir(QString str, QDir &dir)
+
+
+
+
+QString AssetSql::node_to_path(Node *n)
 {
-    qDebug()<<"check dir:"<<str;
-    if(!dir.exists(str) ){
-        dir.mkdir(str);
+    QString e_name, s_name, a_name, path;
+
+    switch (n->type) {
+    case Node::Equipment:
+        e_name = n->name;
+        s_name = n->parent->name;
+        a_name = n->parent->parent->name;
+        path = QString("%1/%2/%3/%4").arg(DIR_ASSET).arg(a_name).arg(s_name).arg(e_name);
+        break;
+    case Node::Substation:
+        s_name = n->name;
+        a_name = n->parent->name;
+        path = QString("%1/%2/%3").arg(DIR_ASSET).arg(a_name).arg(s_name);
+        break;
+    case Node::Area:
+        a_name = n->name;
+        path = QString("%1/%2").arg(DIR_ASSET).arg(a_name);
+        break;
+    case Node::Root:
+        path = QString("%1").arg(DIR_ASSET);
+        break;
+    default:
+        break;
     }
+
+    return path;
 }
 
 
@@ -298,6 +336,7 @@ Node::Node(Node::Type type, int id, QString str)
     this->parent = NULL;
     this->substation_id = -1;
     this->area_id = -1;
+    this->isCurrent = false;
 }
 
 Node::~Node()

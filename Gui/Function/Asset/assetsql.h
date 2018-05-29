@@ -1,4 +1,4 @@
-#ifndef ASSETSQL_H
+﻿#ifndef ASSETSQL_H
 #define ASSETSQL_H
 
 #include <QObject>
@@ -17,12 +17,22 @@ public:
         Root,
     };
 
+    enum NodeRole{
+        TypeRole = Qt::UserRole,
+        CurrentRole,
+        PathRole,
+
+    };
+
     Node(Type type = Root, int id = -1, QString str = "");
     ~Node();
 
-    Type type;
-    int id;
-    QString name;
+    Type type;          //TypeRole
+    int id;             //系统自动分配，不需要设置
+    QString name;       //DisplayRole
+    bool isCurrent;     //CurrentRole
+    QString path;       //PathRole,资产文件路径
+
     Node *parent;
     QList<Node *> children;
     QString type_to_string();
@@ -48,6 +58,8 @@ public:
     void show_tree();                   //打印树
     void dir_sync();                    //树结构和文件夹系统需要一一对应
 
+    QString current_dir;
+
 
 signals:
 
@@ -70,7 +82,14 @@ private:
     Node *create_node_substation(int row, Node *parent);
     Node *create_node_equipment(int row, Node *parent);
 
-    void mk_dir(QString str, QDir &dir);           //创建文件夹
+//    bool rename_dir(QString old_path, QString new_path)
+//    {
+//        QDir dir;
+//        dir.setPath(old_path);
+//        return dir.rename(old_path,new_path);
+//    }                  //重命名文件夹
+
+    QString node_to_path(Node *n);      //从链表节点生成对应的资产路径
 
 };
 

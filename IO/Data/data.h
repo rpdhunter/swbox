@@ -1,4 +1,4 @@
-#ifndef DATA_H
+﻿#ifndef DATA_H
 #define DATA_H
 
 #include <QtGlobal>
@@ -6,15 +6,16 @@
 #include "zynq.h"
 
 //定义一些全局数据类型，和一些全局宏
-#define PROGRAM_DIR     "/root"
-#define USB_DIR         "/mmc/mmc2"
-#define DATA_DIR        USB_DIR"/data"
-#define ASSET_DIR       DATA_DIR"/asset"
-//#define DATA_DIR        PROGRAM_DIR"/data"
-#define WAVE_DIR        DATA_DIR "/WaveForm"
-#define FAVORITE_DIR    WAVE_DIR "/favorite"
-#define DATALOG_DIR     DATA_DIR "/DataLog"
-#define PRPDLOG_DIR     DATA_DIR "/PRPDLog"
+#define DIR_PROGRAM         "/root"
+#define DIR_USB             "/mmc/mmc2"
+#define DIR_DATA            DIR_USB"/data"
+
+#define DIR_WAVE            DIR_DATA"/WaveForm"
+#define DIR_FAVORITE        DIR_WAVE"/favorite"
+#define DIR_DATALOG         DIR_DATA"/DataLog"
+#define DIR_PRPDLOG         DIR_DATA"/PRPDLog"
+#define DIR_ASSET           DIR_DATA"/asset"
+#define DIR_ASSET_NORMAL    DIR_ASSET"/Normal"
 
 #define SDCARD_DIR          "/mmc/sdcard"
 #define WAVE_DIR_SD         SDCARD_DIR "/WaveForm"
@@ -32,7 +33,14 @@
 #define AMP_FACTOR_J27_1N       12200.0f
 #define AMP_FACTOR_J27_470P     8131.0f
 #define RESOLUTION_AD_LOW       (10.0/262144.0)
-#define L_C_FACTOR   ( RESOLUTION_AD_LOW * 1000000 / AMP_FACTOR_J27_1N )
+#define AA_FACTOR       ( RESOLUTION_AD_LOW * 1000000 / AMP_FACTOR_J27_470P )
+#define AE_FACTOR_30K   ( RESOLUTION_AD_LOW * 1000000 / 12670.0f )
+#define AE_FACTOR_40K   ( RESOLUTION_AD_LOW * 1000000 / 13900.0f )
+#define AE_FACTOR_50K   ( RESOLUTION_AD_LOW * 1000000 / 13560.0f )
+#define AE_FACTOR_60K   ( RESOLUTION_AD_LOW * 1000000 / 14530.0f )
+#define AE_FACTOR_70K   ( RESOLUTION_AD_LOW * 1000000 / 13700.0f )
+#define AE_FACTOR_80K   ( RESOLUTION_AD_LOW * 1000000 / 13240.0f )
+#define AE_FACTOR_90K   ( RESOLUTION_AD_LOW * 1000000 / 10210.0f )
 
 #define H_C_FACTOR  (2.0*1000/65536)
 

@@ -1,4 +1,4 @@
-#include "recwavemanage.h"
+﻿#include "recwavemanage.h"
 #include "ui_voiceplayer.h"
 #include <QtDebug>
 #include <QMessageBox>
@@ -43,8 +43,8 @@ RecWaveManage::RecWaveManage(QWidget *parent) : QFrame(parent), ui(new Ui::Form)
 
     contextMenu_num = 3;        //显示菜单条目
 
-    dir = QDir(WAVE_DIR);
-    dir_favorite = QDir(FAVORITE_DIR);
+    dir = QDir(DIR_WAVE);
+    dir_favorite = QDir(DIR_FAVORITE);
     dir_sd = QDir("/mmc/sdcard/WaveForm/");
 
     box = new QMessageBox(QMessageBox::Warning,tr("删除全部文件"),tr("将要删除本机保存的全部波形文件.\n确定要删除吗?"),
@@ -95,8 +95,8 @@ void RecWaveManage::working(CURRENT_KEY_VALUE *val)
 void RecWaveManage::reload_tablewidget()
 {
     //录波数据列表初始化
-    QDir dir = QDir(WAVE_DIR);
-    QDir dir_favorite = QDir(FAVORITE_DIR);
+    QDir dir = QDir(DIR_WAVE);
+    QDir dir_favorite = QDir(DIR_FAVORITE);
 //    int r = tableWidget->currentRow();
     tableWidget->clear();
 
@@ -213,6 +213,9 @@ void RecWaveManage::trans_key(quint8 key_code)
             this->hide();
             emit fresh_parent();
         }
+        if(player->isVisible()){
+            player->setVisible(false);
+        }
 
         break;
     case KEY_UP:
@@ -292,12 +295,12 @@ void RecWaveManage::do_favorite()
     QString filename = tableWidget->currentItem()->text();
     QString filepath, newpath;
     if(filename.contains(QString("☆")) ){
-        filepath = FAVORITE_DIR"/" + filename.remove(QString("☆") );
-        newpath = WAVE_DIR"/" + filename.remove(QString("☆") );
+        filepath = DIR_FAVORITE"/" + filename.remove(QString("☆") );
+        newpath = DIR_WAVE"/" + filename.remove(QString("☆") );
     }
     else {
-        filepath = WAVE_DIR"/" + filename;
-        newpath = FAVORITE_DIR"/" + filename;
+        filepath = DIR_WAVE"/" + filename;
+        newpath = DIR_FAVORITE"/" + filename;
     }
 
     QFile file;

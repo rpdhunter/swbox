@@ -1,8 +1,6 @@
-#include "sqlcfg.h"
+﻿#include "sqlcfg.h"
 
-//pthread_mutex_t sql_mutex;
 SqlCfg *sqlcfg = NULL;
-//sqlite3 *pDB = NULL;
 
 SqlCfg::SqlCfg()
 {
@@ -78,6 +76,8 @@ exit:
     sqlite3_finalize(stmt);
     sqlite3_close(pDB);
 
+    sql_init();         //每次开机初始化
+
     /* mutex unlock */
     pthread_mutex_unlock (&sql_mutex);
     if (system("sync")) {
@@ -128,16 +128,80 @@ SQL_PARA *SqlCfg::default_config(void)
     sql_para.auto_rec_interval = 1;
 
     sql_para.menu_h1 = TEV1;
-    sql_para.menu_h2 = HFCT2;
-    sql_para.menu_double = Double_Channel;
+    sql_para.menu_h2 = HFCT2;    
     sql_para.menu_l1 = AA1;
+#ifdef OHV
+    sql_para.menu_l2 = Disable;
+    sql_para.menu_double = Disable;
+    sql_para.menu_asset = Disable;
+#else
     sql_para.menu_l2 = AE2;
+    sql_para.menu_double = Double_Channel;
+    sql_para.menu_asset = ASSET;
+#endif
+
 
     sql_para.sync_mode = SYNC_NONE;
     sql_para.sync_internal_val = 0;
     sql_para.sync_external_val = 0;
+    strcpy(sql_para.current_dir, DIR_DATA);
 
     return &sql_para;
+}
+
+double SqlCfg::ae1_factor()
+{
+    switch (sql_para.ae1_sql.sensor_freq) {
+    case 30:
+        return AE_FACTOR_30K;
+    case 40:
+        return AE_FACTOR_40K;
+    case 50:
+        return AE_FACTOR_50K;
+    case 60:
+        return AE_FACTOR_60K;
+    case 70:
+        return AE_FACTOR_70K;
+    case 80:
+        return AE_FACTOR_80K;
+    case 90:
+        return AE_FACTOR_90K;
+    default:
+        return AE_FACTOR_30K;
+    }
+}
+
+double SqlCfg::ae2_factor()
+{
+    switch (sql_para.ae2_sql.sensor_freq) {
+    case 30:
+        return AE_FACTOR_30K;
+    case 40:
+        return AE_FACTOR_40K;
+    case 50:
+        return AE_FACTOR_50K;
+    case 60:
+        return AE_FACTOR_60K;
+    case 70:
+        return AE_FACTOR_70K;
+    case 80:
+        return AE_FACTOR_80K;
+    case 90:
+        return AE_FACTOR_90K;
+    default:
+        return AE_FACTOR_30K;
+    }
+}
+
+void SqlCfg::sql_init()
+{
+    sql_para.tev1_sql.auto_rec = false;
+    sql_para.tev2_sql.auto_rec = false;
+    sql_para.hfct1_sql.auto_rec = false;
+    sql_para.hfct2_sql.auto_rec = false;
+    sql_para.uhf1_sql.auto_rec = false;
+    sql_para.uhf2_sql.auto_rec = false;
+    strcpy(sql_para.current_dir, DIR_DATA);      //开机时需要重置当前目录
 }
 
 void SqlCfg::tev_default(H_CHANNEL_SQL &sql)
@@ -204,6 +268,7 @@ void SqlCfg::aa_default(L_CHANNEL_SQL &sql)
     sql.offset = 0;
     sql.envelope = 1;                      //默认使用包络线
     sql.fpga_threshold = FPGA_THRESHOLD;
+    sql.sensor_freq = 40;
 }
 
 void SqlCfg::ae_default(L_CHANNEL_SQL &sql)
@@ -219,6 +284,7 @@ void SqlCfg::ae_default(L_CHANNEL_SQL &sql)
     sql.offset = 0;
     sql.envelope = 1;                      //默认使用包络线
     sql.fpga_threshold = FPGA_THRESHOLD;
+    sql.sensor_freq = 30;                   //默认传感器中心频率
 }
 
 void SqlCfg::sql_save(SQL_PARA *sql_para)

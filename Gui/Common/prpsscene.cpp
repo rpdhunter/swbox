@@ -1,4 +1,4 @@
-#include "prpsscene.h"
+﻿#include "prpsscene.h"
 #include <QGraphicsTextItem>
 #include <QtDebug>
 #include <QtMath>
@@ -64,14 +64,13 @@ void PRPSScene::axisInit(int hfct_max)
     addLine(QLineF(P0+P_shadow/2, Py_max+P_shadow/2),pen_gray);
 
     QPointF P_adjust(-25,-10);
-    if(mode == TEV1 || mode == TEV2 || mode == UHF1 || UHF2){
+    if(mode == TEV1 || mode == TEV2 || mode == UHF1 || mode == UHF2){
         data_max = 60;
-//        setText(QString("%1").arg(data_max), Py_max+P_shadow + P_adjust);
-//        setText(QString("%1").arg(data_max/2), (Py_max + P0)/2 + P_shadow + P_adjust);
     }
     else if(mode == HFCT1 || mode == HFCT2){
         data_max = hfct_max;
     }
+
     if(data_max > 1000){
         setText(QString("%1k").arg(data_max/1000), Py_max+P_shadow + P_adjust);
         setText(QString("%1k").arg(data_max/2000), (Py_max + P0)/2 + P_shadow + P_adjust);

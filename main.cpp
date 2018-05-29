@@ -31,7 +31,6 @@ int main(int argc, char *argv[])
     QPixmap pixmap(":/widgetphoto/bk/powersystem.png");
 #endif
 
-
     QFile file("/root/OEM/logo.png");
     if(file.exists()){
         pixmap.load("/root/OEM/logo.png");
@@ -42,23 +41,7 @@ int main(int argc, char *argv[])
     splash->show();
 
     print_centor();
-//    sqlite3_init();
-//    qDebug()<<QSqlDatabase::drivers();
-//    QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
-//    db.setDatabaseName(":memory:");
-//    if (!db.open()) {
-//        qDebug("Unable to establish a database connection.\n"
-//               "This example needs SQLite support. Please read "
-//               "the Qt SQL driver documentation for information how "
-//               "to build it.\n\n"
-//               "Click Cancel to exit.");
-//    }
-//    else{
-//        qDebug()<<"open sqlite3 successed";
-//    }
     sqlcfg = new SqlCfg();
-
-//    return 1;
 
     splash->showMessage(QObject::tr("正在载入语言模块..."),Qt::AlignBottom|Qt::AlignLeft);
     qDebug("language = %s", sqlcfg->get_para()->language == EN ? "EN" : "CN");

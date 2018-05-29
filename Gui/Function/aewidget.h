@@ -1,4 +1,4 @@
-#ifndef AEWIDGET_H
+﻿#ifndef AEWIDGET_H
 #define AEWIDGET_H
 
 #include <QFrame>
@@ -29,6 +29,9 @@ public slots:
     void reload(int index);
     void trans_key(quint8 key_code);
     void showWaveData(VectorList buf, MODE mod);
+    void change_log_dir();      //改变asset目录
+    void PRPDReset();
+    void save_channel();        //保存通道数据
 
 signals:
     void send_key(quint8);
@@ -87,7 +90,7 @@ private:
     QVector<QwtPoint3D> prpd_samples;   //PRPD数据
     int prpd_map[360][121];                  //PRPD存储中介(数据点图)
     QPoint transData(int x, int y);     //将原始脉冲转换成可显示的DB值
-    void PRPDReset();
+
 
     //飞行图
     QwtPlot *plot_fly;                 //飞行图
@@ -102,6 +105,15 @@ private:
     QVector<QwtIntervalSample> histogram_data;
     int histogram_map[60];          //Histogram存储中介(数据点图)
     void fresh_Histogram();
+
+    //频谱图
+    QwtPlot *plot_Spectra;
+    QwtPlotHistogram *d_Spectra;
+    QVector<QwtIntervalSample> Spectra_data;
+    int Spectra_map[60];          //Spectra存储中介(数据点图)
+    void fresh_Spectra();
+    void do_Spectra_compute();
+
 };
 
 #endif // AEWIDGET_H

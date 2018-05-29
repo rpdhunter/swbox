@@ -1,4 +1,4 @@
-#include "fifocontrol.h"
+﻿#include "fifocontrol.h"
 #include <QtDebug>
 #include <fcntl.h>
 #include <sys/mman.h>
@@ -17,6 +17,7 @@ FifoControl::FifoControl(G_PARA *g_data, QObject *parent) : QObject(parent)
 
 void FifoControl::playVoiceData(VectorList wave)
 {
+    qDebug()<<"play wave:"<<wave.count();
     this->wave = wave;
     this->play_voice_flag = true;
 }
@@ -281,8 +282,8 @@ void FifoControl::regs_init()
     send_para();
 
     tdata->set_send_para (sp_freq_reg, sqlcfg->get_para()->freq_val);
-    tdata->set_send_para (sp_backlight_reg, sqlcfg->get_para()->backlight);
-    tdata->set_send_para (sp_keyboard_backlight, sqlcfg->get_para()->key_backlight);
+//    tdata->set_send_para (sp_backlight_reg, sqlcfg->get_para()->backlight);
+//    tdata->set_send_para (sp_keyboard_backlight, sqlcfg->get_para()->key_backlight);
 
 //    tdata->set_send_para (sp_filter_mode, 0);//to be
     tdata->set_send_para (sp_buzzer_freq, 100000000/800/2/16);
@@ -308,7 +309,7 @@ void FifoControl::regs_init()
     tdata->set_send_para (sp_l1_threshold, 200);
     tdata->set_send_para (sp_l2_threshold, 200);
 
-    tdata->set_send_para (sp_temp_test, 10);        //（0-63，代表0-63/40秒）
+//    tdata->set_send_para (sp_temp_test, 10);        //（0-63，代表0-63/40秒）
 
 
     send_para();
@@ -412,13 +413,13 @@ void FifoControl::play_voice_data()
     if(play_voice_flag){
         int len, i, j;
         unsigned int buff [0x500], temp;
-        //    qDebug()<<"IO thread ID: "<<this->currentThreadId();
 
-        do {
-            len = recv_data (vbase_play_voice_2, buff);
-        } while (len != 0);
+//        do {
+//            len = recv_data (vbase_play_voice_2, buff);
+//        } while (len != 0);
 
         //送开始播放标志
+        recv_data (vbase_play_voice_2, buff);
         temp = (AA_RECORD_PLAY << 16) | 1;
         send_data (vbase_send, &temp, 1);
 
@@ -429,12 +430,13 @@ void FifoControl::play_voice_data()
 
         j = 2;
         while (((j /** 16 * 256*/ << 12) + 16 * 256) < wave.length ()) {
-            do {
-                len = recv_data (vbase_play_voice_2, buff);
-            }
-            while (len == 0);
+//            do {
+//                len = recv_data (vbase_play_voice_2, buff);
+//            }
+//            while (len == 0);
+            usleep(9500);
+            recv_data (vbase_play_voice_2, buff);
 
-            //t = wave.length () / 400000;
             emit playVoiceProgress (j * 100 * 16 * 256 / 400000 , wave.length() * 100 / 400000, true);        //播放进度
 
             if (!play_voice_flag) {     //接到终止信号
@@ -450,7 +452,7 @@ void FifoControl::play_voice_data()
             j++;
         }
 
-        //送开始播放标志
+        //送开始播放标志(结束播放)
         temp = (AA_RECORD_PLAY << 16) | 0;
         send_data (vbase_send, &temp, 1);
 

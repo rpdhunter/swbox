@@ -4,6 +4,7 @@
 #include <QRunnable>
 #include <QObject>
 #include "IO/Data/data.h"
+#include <QProcess>
 
 
 class FileTools : public QObject, public QRunnable
@@ -25,6 +26,9 @@ public:
 
 signals:
     void readFinished(VectorList, MODE);
+
+private slots:
+    void deal_myProcess(QProcess::ProcessState state);
 
 private:
     //wav文件头

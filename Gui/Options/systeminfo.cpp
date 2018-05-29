@@ -1,4 +1,4 @@
-#include "systeminfo.h"
+﻿#include "systeminfo.h"
 #include "ui_systeminfo.h"
 #include <QFile>
 #include <QTime>
@@ -12,6 +12,7 @@ SystemInfo::SystemInfo(QWidget *parent) : QFrame(parent),ui(new Ui::SystemInfoUi
     this->move(3, 3);
 
     key_val = NULL;
+//    ui->label_compiled->setText(QString("%1 %2").arg(__TIME__).arg(__DATE__));
 
 #ifdef OHV
     ui->label_logo_text->setText("copyright © 2014-2017 Ohv Diagnostic GmbH, Ltd\nAll rights reserved.");
@@ -51,7 +52,7 @@ SystemInfo::SystemInfo(QWidget *parent) : QFrame(parent),ui(new Ui::SystemInfoUi
 #elif XDP_II
             line = "XDP-II";
 #else
-            line = "PD3000";
+            line = "TAH-300";
 #endif
             file.write(line);
         }

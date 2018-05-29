@@ -26,20 +26,30 @@ int AssetModel::columnCount(const QModelIndex &parent) const
 
 QVariant AssetModel::data(const QModelIndex &index, int role) const
 {
-    if(role != Qt::DisplayRole)
-        return QVariant();
-
+//    if(role != Qt::DisplayRole)
+//        return QVariant();
     Node *node = node_from_index(index);
     if(!node){
         return QVariant();
     }
-    if(index.column() == 0){
-        return node->name;
+
+    switch (role) {
+    case Qt::DisplayRole:
+        if(index.column() == 0){
+            return node->name;
+        }
+        else if(index.column() == 1){
+            return node->type_to_string();
+        }
+    case Node::TypeRole:
+        return node->type;
+    case Node::CurrentRole:
+        return node->isCurrent;
+    case Node::PathRole:
+        return node->path;
+    default:
+        return QVariant();
     }
-    else if(index.column() == 1){
-        return node->type_to_string();
-    }
-    return QVariant();
 }
 
 QModelIndex AssetModel::index(int row, int column, const QModelIndex &parent) const
@@ -136,7 +146,8 @@ bool AssetModel::setData(const QModelIndex &index, const QVariant &value, int ro
     if(index.isValid()){
         Node *n = static_cast<Node *>(index.internalPointer() );
         switch (role) {
-        case Qt::UserRole:          //设置节点类型时，应当完善areaid,substationid等信息
+//        case Qt::UserRole:          //设置节点类型时，应当完善areaid,substationid等信息
+        case Node::TypeRole:
             n->type = (Node::Type)value.toInt();
             switch (n->type) {
             case Node::Area:
@@ -151,6 +162,9 @@ bool AssetModel::setData(const QModelIndex &index, const QVariant &value, int ro
             default:
                 break;
             }
+            break;
+        case Node::CurrentRole:
+            n->isCurrent = value.toBool();
             break;
         case Qt::EditRole:
             n->name = value.toString();            

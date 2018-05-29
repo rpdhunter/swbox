@@ -10,7 +10,7 @@
 #define PIN_BASE            906
 #define PIN_START           54
 
-#define PIN_POWER           54
+#define PIN_POWER           61
 
 /*
  * HD_V1 : hardware made in 2016

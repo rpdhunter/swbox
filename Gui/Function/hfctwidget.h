@@ -1,4 +1,4 @@
-#ifndef HFCTWIDGET_H
+﻿#ifndef HFCTWIDGET_H
 #define HFCTWIDGET_H
 
 #include <QFrame>
@@ -24,7 +24,7 @@ class QwtPlot;
 class QTimer;
 class BarChart;
 class QwtPlotSpectroCurve;
-
+class FFT;
 
 class HFCTWidget : public QFrame
 {
@@ -38,12 +38,15 @@ public slots:
     void reload(int index);   //重新装载设置
     void trans_key(quint8 key_code);
     void showWaveData(VectorList buf, MODE mod);
+    void change_log_dir();      //改变asset目录
+    void PRPDReset();
+    void save_channel();        //保存通道数据
 
 signals:
     void fresh_parent();
     void send_key(quint8);
     void startRecWave(MODE, int);
-    void hfct_log_data(double,int,double);
+    void hfct_log_data(double val, int pulse, double degree, int qc);
     void hfct_PRPD_data(QVector<QwtPoint3D>);
     void show_indicator(bool);      //显示菊花
     void beep(int index, int red_alert);        //蜂鸣器报警
@@ -87,10 +90,14 @@ private:
     QVector<PC_DATA> pclist_100ms;      //100ms的脉冲数据,HFCT分析的基准
     QVector<double> pclist_1000ms;
     QVector<int> pulse_cnt_list;        //脉冲序列，配合脉冲计数时长
-    QVector<PC_DATA> compute_pc_1ms(QVector<double> list, int x_origin);        //计算1ms数据的HFCT数据
-    PC_DATA compute_pc_1node(QVector<double> list, int x_origin);           //计算一个脉冲节点的HFCT数据
-    double simpson(QVector<double> list);
+    QVector<PC_DATA> compute_pc_1ms(QVector<int> list, int x_origin);        //计算1ms数据的HFCT数据
+    PC_DATA compute_pc_1node(QVector<int> list, int x_origin);           //计算一个脉冲节点的HFCT数据
+    double simpson(QVector<int> list);
     double triangle(double d1, double d2);
+    qint32 max_100ms;       //100ms内的最大值
+    QVector<int> pulse_list_100ms;
+
+
 
     //基本数据+时序图
     BarChart *d_barchart;              //时序图
@@ -106,7 +113,7 @@ private:
     QwtPlotSpectroCurve *d_PRPD;    //PRPD曲线(qwt)
     QVector<QwtPoint3D> points_PRPD;//PRPD曲线数据(qwt)
     QMap<MyKey,int> map_PRPD;       //PRPD数据(Qt,points_PRPD的数据源,便与检索)
-    void PRPDReset();
+
 
     //t-f图
     QwtPlot *plot_TF;
@@ -122,6 +129,14 @@ private:
     QwtPlot *plot_Histogram;
     QwtPlotHistogram *d_histogram;   //Histogram图
     QVector<QwtIntervalSample> histogram_data;
+
+    //频谱图
+    QwtPlot *plot_Spectra;
+    QwtPlotHistogram *d_Spectra;
+    QVector<QwtIntervalSample> Spectra_data;
+    int Spectra_map[60];          //Spectra存储中介(数据点图)
+    void do_Spectra_compute();
+    FFT *fft;
 
     //录波
     bool isBusy;            //菊花状态
@@ -141,8 +156,8 @@ private:
 
     QVector<double> pCList;     //记录一秒内的脉冲pc值列表
 
-    double compute_list_pC(QVector<double> list, int x_origin);
-    double compute_one_pC(QVector<double> list);
+    double compute_list_pC(QVector<int> list, int x_origin);
+    double compute_one_pC(QVector<int> list);
 
 
 };

@@ -1,4 +1,4 @@
-/********************************************************************
+﻿/********************************************************************
 	created:	2015/11/06
 	created:	6:11:2015   16:12
 	filename: 	D:\rd\src_code\rtu\code\inc\rdb.h
@@ -63,6 +63,8 @@ extern "C" {
 #define QDS_SB			0x20	/* 品质，被取代 */
 #define QDS_BL			0x10	/* 品质，被闭锁 */
 #define QDS_EI			0x08	/* 品质，动作时间无效 */
+#define QDS_FO			0x04	/* 品质，前台 */
+#define QDS_BA			0x02	/* 品质，后台 */
 
 #define BCR_SEQ_NOT_SQ	0x1f	/* 顺序记法，顺序号 */
 #define BCR_SEQ_NOT_CY	0x20	/* 顺序记法，进位 */

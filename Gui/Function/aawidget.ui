@@ -32,6 +32,11 @@
    </item>
    <item>
     <property name="text">
+     <string>图形显示 [时序图]</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
      <string>增益调节 [×1]</string>
     </property>
    </item>
@@ -146,7 +151,7 @@ background:transparent;color:gray;</string>
     <string notr="true">range</string>
    </property>
   </widget>
-  <widget class="QwtPlot" name="qwtPlot">
+  <widget class="QWidget" name="widget" native="true">
    <property name="geometry">
     <rect>
      <x>10</x>
@@ -155,6 +160,16 @@ background:transparent;color:gray;</string>
      <height>140</height>
     </rect>
    </property>
+   <widget class="QwtPlot" name="qwtPlot">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>0</y>
+      <width>201</width>
+      <height>140</height>
+     </rect>
+    </property>
+   </widget>
   </widget>
  </widget>
  <customwidgets>

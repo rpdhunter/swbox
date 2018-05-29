@@ -1,4 +1,4 @@
-#ifndef ASSETWIDGET_H
+﻿#ifndef ASSETWIDGET_H
 #define ASSETWIDGET_H
 
 #include <QFrame>
@@ -18,10 +18,11 @@ class AssetWidget;
 class AssetWidget : public QFrame
 {
     Q_OBJECT
-
 public:
     explicit AssetWidget(CURRENT_KEY_VALUE *val, int menu_index, QWidget *parent = 0);
     ~AssetWidget();
+
+    static QString normal_asset_dir_init();    //开机时初始化通用测量空间
 
 public slots:
     void trans_key(quint8 key_code);
@@ -33,6 +34,7 @@ signals:
 
     void show_input(QString initial_str, QString hint_str);       //开启软键盘(初始值，提示值)
     void send_input_key(quint8);    //专门的虚拟键盘事件
+    void current_asset_changed(QString new_equ, QString new_path);
 
 private:
     Ui::AssetWidget *ui;
@@ -63,6 +65,20 @@ private:
     void del_node();
     void edit_node(QString hint_str);
     void set_current();
+    void set_no_equ();
+    QString get_new_child_node_name(Node::Type type, QModelIndex &parent);     //生成一个新名字(已知父节点)
+    static QString get_new_asset_dir_name(QString path);
 };
 
 #endif // ASSETWIDGET_H
+
+
+
+
+
+
+
+
+
+
+

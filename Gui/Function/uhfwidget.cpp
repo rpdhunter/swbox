@@ -1,4 +1,4 @@
-#include "uhfwidget.h"
+﻿#include "uhfwidget.h"
 #include "ui_uhfwidget.h"
 #include <QTimer>
 #include <QLineEdit>
@@ -190,6 +190,11 @@ void UHFWidget::showWaveData(VectorList buf, MODE mod)
     }
 }
 
+void UHFWidget::change_log_dir()
+{
+    logtools->change_current_asset_dir();
+}
+
 void UHFWidget::fresh_plot()
 {
     double uhf_db, degree;
@@ -215,46 +220,36 @@ void UHFWidget::fresh_plot()
     ui->label_pluse->setText(tr("脉冲数: ") + Common::secton_three(pulse_cnt_show) );//按三位分节法显示脉冲计数
     ui->label_degree->setText(tr("严重度: ") + QString::number(degree, 'f', 2));
 
-    emit uhf_log_data(db,pulse_cnt_show,degree);
+    int is_current = 0;
+    if((int)key_val->grade.val0 == menu_index){
+        is_current = 1;
+    }
+
+//    emit tev_log_data(db,pulse_cnt_show,degree,is_current);
 
     //实时数据库
-    yc_data_type temp_data;
     if(mode == UHF1){
-        temp_data.f_val = db;
-        yc_set_value(UHF1_amplitude, &temp_data, 0, NULL,0);
-        temp_data.f_val = pulse_cnt_show;
-        yc_set_value(UHF1_num, &temp_data, 0, NULL,0);
-        temp_data.f_val = degree;
-        yc_set_value(UHF1_severity, &temp_data, 0, NULL,0);
-        temp_data.f_val = uhf_sql->gain;
-        yc_set_value(UHF1_gain, &temp_data, 0, NULL,0);
-        temp_data.f_val = uhf_sql->fpga_zero;
-        yc_set_value(UHF1_center_biased, &temp_data, 0, NULL,0);
-        temp_data.f_val = uhf_sql->offset_noise;
-        yc_set_value(UHF1_noise_biased, &temp_data, 0, NULL,0);
-        temp_data.f_val = sug_zero_offset;
-        yc_set_value(UHF1_center_biased_adv, &temp_data, 0, NULL,0);
-        temp_data.f_val = sug_noise_offset;
-        yc_set_value(UHF1_noise_biased_adv, &temp_data, 0, NULL,0);
+        Common::rdb_set_value(UHF1_amplitude,db,is_current);
+        Common::rdb_set_value(UHF1_num,pulse_cnt_show,is_current);
+        Common::rdb_set_value(UHF1_severity,degree,is_current);
+        Common::rdb_set_value(UHF1_gain,uhf_sql->gain,is_current);
+        Common::rdb_set_value(UHF1_center_biased,uhf_sql->fpga_zero,is_current);
+        Common::rdb_set_value(UHF1_noise_biased,uhf_sql->offset_noise,is_current);
+        Common::rdb_set_value(UHF1_center_biased_adv,sug_zero_offset,is_current);
+        Common::rdb_set_value(UHF1_noise_biased_adv,sug_noise_offset,is_current);
     }
     else{
-        temp_data.f_val = db;
-        yc_set_value(UHF2_amplitude, &temp_data, 0, NULL,0);
-        temp_data.f_val = pulse_cnt_show;
-        yc_set_value(UHF2_num, &temp_data, 0, NULL,0);
-        temp_data.f_val = degree;
-        yc_set_value(UHF2_severity, &temp_data, 0, NULL,0);
-        temp_data.f_val = uhf_sql->gain;
-        yc_set_value(UHF2_gain, &temp_data, 0, NULL,0);
-        temp_data.f_val = uhf_sql->fpga_zero;
-        yc_set_value(UHF2_center_biased, &temp_data, 0, NULL,0);
-        temp_data.f_val = uhf_sql->offset_noise;
-        yc_set_value(UHF2_noise_biased, &temp_data, 0, NULL,0);
-        temp_data.f_val = sug_zero_offset;
-        yc_set_value(UHF2_center_biased_adv, &temp_data, 0, NULL,0);
-        temp_data.f_val = sug_noise_offset;
-        yc_set_value(UHF2_noise_biased_adv, &temp_data, 0, NULL,0);
+        Common::rdb_set_value(UHF2_amplitude,db,is_current);
+        Common::rdb_set_value(UHF2_num,pulse_cnt_show,is_current);
+        Common::rdb_set_value(UHF2_severity,degree,is_current);
+        Common::rdb_set_value(UHF2_gain,uhf_sql->gain,is_current);
+        Common::rdb_set_value(UHF2_center_biased,uhf_sql->fpga_zero,is_current);
+        Common::rdb_set_value(UHF2_noise_biased,uhf_sql->offset_noise,is_current);
+        Common::rdb_set_value(UHF2_center_biased_adv,sug_zero_offset,is_current);
+        Common::rdb_set_value(UHF2_noise_biased_adv,sug_noise_offset,is_current);
     }
+
+    emit uhf_log_data(db,pulse_cnt_show,degree,is_current);
 
     plot_PRPD->replot();
     plot_Barchart->replot();
@@ -604,6 +599,11 @@ void UHFWidget::PRPDReset()
     }
     emit uhf_PRPD_data(prpd_samples);
     prpd_samples.clear();
+}
+
+void UHFWidget::save_channel()
+{
+    PRPDReset();
 }
 
 

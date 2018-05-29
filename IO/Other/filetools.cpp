@@ -1,11 +1,12 @@
-#include "filetools.h"
+﻿#include "filetools.h"
 #include <QtDebug>
 #include <QFile>
 #include <QDataStream>
 #include <QDateTime>
 #include <QDir>
-#include <QProcess>
+
 #include "IO/SqlCfg/sqlcfg.h"
+#include "Gui/Common/common.h"
 
 
 //还没有开启冲突控制
@@ -14,6 +15,7 @@ FileTools::FileTools(VectorList data, MODE mode, FileMode filemode)
     _data = data;
     _mode = mode;
     _fileMode = filemode;
+    qRegisterMetaType<QProcess::ProcessState>("QProcess::ProcessState");
     mode_envelope_modify();
 }
 
@@ -21,7 +23,6 @@ FileTools::FileTools(QString str,FileTools::FileMode filemode)
 {
     getReadFilePath(str);
     _fileMode = filemode;
-    mode_envelope_modify();
 }
 
 FileTools::~FileTools()
@@ -35,16 +36,20 @@ void FileTools::run()
         getWriteFilePath();          //得到文件保存的路径
         saveDataFile();         //保存数据文件
         saveCfgFile();          //生成对应的配置文件
+        Common::create_hard_link(filepath+".DAT",filename+".DAT");
+        Common::create_hard_link(filepath+".CFG",filename+".CFG");
+//        qDebug()<<"filepath:"<<filepath<<"\filename:"<<filename;
 
         if(_mode == AA1 || _mode == AA2 || _mode == AE1 || _mode == AE2
                 || _mode == AA1_ENVELOPE || _mode == AA2_ENVELOPE || _mode == AE1_ENVELOPE || _mode == AE2_ENVELOPE){
             saveWavFile();      //生成声音文件
             wavToMp3();         //mp3转换
+
 //            wav_add_filter();       //TEST
         }
 
         //空间管理
-        spaceControl(WAVE_DIR"/");              //内存空间管理
+        spaceControl(DIR_WAVE"/");              //内存空间管理
         spaceControl("/mmc/sdcard/WaveForm/");  //SD卡空间管理
 
         system ("sync");
@@ -65,6 +70,7 @@ void FileTools::run()
         qint16 v;
         _data.clear();
 
+        //这里有个隐患，如果录波文件损坏，程序将卡死
         while (!in.atEnd()) {
             in >> t1 >> t2 >> v;
             _data.append(v);
@@ -87,6 +93,25 @@ void FileTools::run()
     }
 
 
+}
+
+void FileTools::deal_myProcess(QProcess::ProcessState state)
+{
+    switch (state) {
+    case QProcess::NotRunning:
+        qDebug()<<"QProcess::NotRunning";
+        break;
+    case QProcess::Starting:
+        qDebug()<<"QProcess::Starting";
+        break;
+    case QProcess::Running:
+        qDebug()<<"QProcess::Running";
+        break;
+    default:
+        break;
+    }
+    qDebug()<<"mp3 link created!";
+//    Common::create_hard_link(filepath+".mp3",filename+".mp3");
 }
 
 
@@ -126,27 +151,47 @@ void FileTools::getReadFilePath(QString str)
     else if(str.contains("UHF2_")){
         _mode = UHF2;
     }
-    else if(str.contains("AA1_")){
-        _mode = AA1;
+    else if(str.contains("AA1_")){        
+        if(str.contains("ENVELOPE")){
+            _mode = AA1_ENVELOPE;
+        }
+        else{
+            _mode = AA1;
+        }
     }
     else if(str.contains("AA2_")){
-        _mode = AA2;
+        if(str.contains("ENVELOPE")){
+            _mode = AA2_ENVELOPE;
+        }
+        else{
+            _mode = AA2;
+        }
     }
     else if(str.contains("AE1_")){
-        _mode = AE1;
+        if(str.contains("ENVELOPE")){
+            _mode = AE1_ENVELOPE;
+        }
+        else{
+            _mode = AE1;
+        }
     }
     else if(str.contains("AE2_")){
-        _mode = AE2;
+        if(str.contains("ENVELOPE")){
+            _mode = AE2_ENVELOPE;
+        }
+        else{
+            _mode = AE2;
+        }
     }
     else if(str.contains("Double_")){
         _mode = Double_Channel;
     }
 
     if(str.contains(QString("☆") )){
-        filepath = QString(FAVORITE_DIR"/" + str.remove(QString("☆") ) + ".DAT");        //收藏夹
+        filepath = QString(DIR_FAVORITE"/" + str.remove(QString("☆") ) + ".DAT");        //收藏夹
     }
     else{
-        filepath = QString(WAVE_DIR"/"+str+".DAT");
+        filepath = QString(DIR_WAVE"/"+str+".DAT");
     }
 }
 
@@ -236,23 +281,23 @@ void FileTools::getWriteFilePath()
         dir.mkdir("/mmc/sdcard/WaveForm/favorite");
     }
 
-    if(!dir.exists(USB_DIR"/") ){
-        dir.mkdir(USB_DIR"/");
+    if(!dir.exists(DIR_USB"/") ){
+        dir.mkdir(DIR_USB"/");
     }
 
-    if(!dir.exists(DATA_DIR"/") ){
-        dir.mkdir(DATA_DIR"/");
+    if(!dir.exists(DIR_DATA"/") ){
+        dir.mkdir(DIR_DATA"/");
     }
 
-    if(!dir.exists(WAVE_DIR"/") ){
-        dir.mkdir(WAVE_DIR"/");
+    if(!dir.exists(DIR_WAVE"/") ){
+        dir.mkdir(DIR_WAVE"/");
     }
 
-    if(!dir.exists(FAVORITE_DIR"/") ){
-        dir.mkdir(FAVORITE_DIR"/");
+    if(!dir.exists(DIR_FAVORITE"/") ){
+        dir.mkdir(DIR_FAVORITE"/");
     }
 
-    filepath = QString(WAVE_DIR"/" + filename);
+    filepath = QString(DIR_WAVE"/" + filename);
     filepath_SD = QString("/mmc/sdcard/WaveForm/" + filename);
 //    qDebug()<<filepath;
 //    qDebug()<<filepath_SD;
@@ -264,6 +309,7 @@ void FileTools::saveDataFile()
     bool flag;
 
     //保存文本文件
+#if 0
     file.setFileName(filepath + ".txt");
     flag = file.open(QIODevice::WriteOnly | QIODevice::Text);
     if(flag){
@@ -278,7 +324,7 @@ void FileTools::saveDataFile()
     }
     else
         qDebug()<<"file open failed!";
-
+#endif
 
     //保存二进制文件（小端）
     file.setFileName(filepath + ".DAT");
@@ -464,8 +510,13 @@ void FileTools::wavToMp3()
     arguments1 << "/root/out.wav" << filepath+".mp3";
 
     QProcess *myProcess1 = new QProcess;
+
+    connect(myProcess1,SIGNAL(stateChanged(QProcess::ProcessState)),this,SLOT(deal_myProcess(QProcess::ProcessState)));
+//    QObject::connect(myProcess1,SIGNAL(finished(int)),myProcess1,SLOT(deleteLater()));
+//    QObject::connect(myProcess1,SIGNAL(finished(int)),this,SLOT(deal_myProcess()));     //建立mp3资产软连接
     myProcess1->start(program, arguments1);
-    QObject::connect(myProcess1,SIGNAL(finished(int)),myProcess1,SLOT(deleteLater()));
+
+
 
 #if 0
     if(sqlcfg->get_para()->buzzer_on){
@@ -474,7 +525,7 @@ void FileTools::wavToMp3()
         QObject::connect(myProcess2,SIGNAL(finished(int)),myProcess2,SLOT(deleteLater()));
     }
 #endif
-    qDebug()<<"mp3 file saved!";
+    qDebug()<<"mp3 file saved!    1111111111111111";
 }
 
 void FileTools::wav_add_filter()

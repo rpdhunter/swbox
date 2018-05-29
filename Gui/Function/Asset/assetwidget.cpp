@@ -1,11 +1,11 @@
-#include "assetwidget.h"
+﻿#include "assetwidget.h"
 #include "ui_assetwidget.h"
 #include <QLineEdit>
-//#include <QScrollBar>
+#include <QDateTime>
 
-#define AREA_NUM 5           //设置菜单条目数
-#define SUBSTATION_NUM 5           //设置菜单条目数
-#define EQUIPMENT_NUM 4           //设置菜单条目数
+#define AREA_NUM 5              //设置片区菜单条目数
+#define SUBSTATION_NUM 5        //设置站所菜单条目数
+#define EQUIPMENT_NUM 4         //设置设备菜单条目数
 
 AssetWidget::AssetWidget(CURRENT_KEY_VALUE *val, int menu_index, QWidget *parent) :
     QFrame(parent),
@@ -21,7 +21,6 @@ AssetWidget::AssetWidget(CURRENT_KEY_VALUE *val, int menu_index, QWidget *parent
     this->menu_index = menu_index;
 
     inputStatus = false;
-
     model = new AssetModel;
     view = new AssetView;
 
@@ -31,8 +30,6 @@ AssetWidget::AssetWidget(CURRENT_KEY_VALUE *val, int menu_index, QWidget *parent
     ui->treeView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     ui->treeView->setStyleSheet("QTreeView{ "
                                 "border-image: url(:/widgetphoto/bk/bk2.png);"
-//                                "background-color: #5B677A;"
-//                                font-size:17px;
                                 "color: white;}"
                                 );
 
@@ -42,33 +39,17 @@ AssetWidget::AssetWidget(CURRENT_KEY_VALUE *val, int menu_index, QWidget *parent
     QStringList list;
     list << tr("展开/收起片区") << tr("增加片区") << tr("删除片区") << tr("重命名片区") << tr("增加子站所");
     menu_area = new QListWidget(this);        //右键菜单
-    menu_area->setStyleSheet("QListWidget {border-image: url(:/widgetphoto/bk/para_child.png);color:gray;outline: none;}");
-    menu_area->addItems(list);
-    menu_area->resize(100, 100);
-    menu_area->move(200,10);
-    menu_area->setSpacing(2);
-    menu_area->hide();
+    Common::set_contextMenu_style(menu_area, list, QPoint(200,10));
 
     list.clear();
     list << tr("展开/收起站所") << tr("增加站所") << tr("删除站所") << tr("重命名站所") << tr("增加子设备");
     menu_substation = new QListWidget(this);        //右键菜单
-    menu_substation->setStyleSheet("QListWidget {border-image: url(:/widgetphoto/bk/para_child.png);color:gray;outline: none;}");
-    menu_substation->addItems(list);
-    menu_substation->resize(100, 100);
-    menu_substation->move(250,10);
-    menu_substation->setSpacing(2);
-    menu_substation->hide();
+    Common::set_contextMenu_style(menu_substation, list, QPoint(250,10));
 
     list.clear();
     list << tr("设为当前设备") << tr("增加设备") << tr("删除设备") << tr("编辑设备");
     menu_equipment = new QListWidget(this);        //右键菜单
-    menu_equipment->setStyleSheet("QListWidget {border-image: url(:/widgetphoto/bk/para_child.png);color:gray;outline: none;}");
-    menu_equipment->addItems(list);
-    menu_equipment->resize(100, 80);
-    menu_equipment->move(300,10);
-    menu_equipment->setSpacing(2);
-    menu_equipment->hide();
-
+    Common::set_contextMenu_style(menu_equipment, list, QPoint(300,10));
 }
 
 AssetWidget::~AssetWidget()
@@ -76,9 +57,16 @@ AssetWidget::~AssetWidget()
     delete ui;
 }
 
-//    key_val->grade.val1            //是否在当前工作页面
-//    key_val->grade.val2            //右键菜单是否显示
-//    key_val->grade.val3             //右键菜单选项
+QString AssetWidget::normal_asset_dir_init()
+{
+    QString str_new = get_new_asset_dir_name(DIR_ASSET_NORMAL);    //获得新的资产目录（带日期的临时目录）
+    Common::mk_dir(str_new);
+    return str_new;
+}
+
+//key_val->grade.val1表征是否在当前工作页面
+//key_val->grade.val2表征右键菜单是否显示
+//key_val->grade.val3表征右键菜单选项
 void AssetWidget::trans_key(quint8 key_code)
 {
     if (key_val == NULL || key_val->grade.val0 != menu_index) {
@@ -100,6 +88,7 @@ void AssetWidget::trans_key(quint8 key_code)
             QString str = model->data(model->index(index.row(),1,index.parent()),Qt::DisplayRole).toString();
             if(str == "Area"){
                 switch (key_val->grade.val3) {
+                case 0:
                 case 1:         //展开/收起片区
                     expand_collapse();
                     break;
@@ -121,6 +110,7 @@ void AssetWidget::trans_key(quint8 key_code)
             }
             else if(str == "Substation"){
                 switch (key_val->grade.val3) {
+                case 0:
                 case 1:         //展开/收起站所
                     expand_collapse();
                     break;
@@ -142,6 +132,7 @@ void AssetWidget::trans_key(quint8 key_code)
             }
             else if(str == "Equipment"){
                 switch (key_val->grade.val3) {
+                case 0:
                 case 1:         //设为当前设备
                     set_current();
                     break;
@@ -166,7 +157,7 @@ void AssetWidget::trans_key(quint8 key_code)
         if(key_val->grade.val2 != 0){       //右键菜单激活则退出右键菜单
             key_val->grade.val2 = 0;
         }
-        else{                               //没显示右键菜单，则退出工作页面
+        else if(key_val->grade.val1 != 0){                               //没显示右键菜单，则退出工作页面
             key_val->grade.val1 = 0;
         }
         break;
@@ -327,6 +318,7 @@ void AssetWidget::expand_collapse()
     }
 }
 
+//增加兄弟节点
 void AssetWidget::add_node(Node::Type type)
 {
     QModelIndex index = ui->treeView->currentIndex();
@@ -337,6 +329,7 @@ void AssetWidget::add_node(Node::Type type)
     }
 }
 
+//增加子节点
 void AssetWidget::add_child(Node::Type type)
 {
     QModelIndex index = ui->treeView->currentIndex();
@@ -350,23 +343,10 @@ void AssetWidget::add_child(Node::Type type)
 void AssetWidget::set_node(Node::Type type, QModelIndex &index, QModelIndex &index_new)
 {
     if(index.isValid() && index_new.isValid()){
-        switch (type) {
-        case Node::Area:
-            model->setData(index_new, QString("New Area%1").arg(index.row()), Qt::EditRole );   //设置节点名称
-            model->setData(index_new, Node::Area, Qt::UserRole );                               //设置节点类型
-            break;
-        case Node::Substation:
-            model->setData(index_new, QString("New Substation%1").arg(index.row()), Qt::EditRole );
-            model->setData(index_new, Node::Substation, Qt::UserRole );
-            break;
-        case Node::Equipment:
-            model->setData(index_new, QString("New Equipment%1").arg(index.row()), Qt::EditRole );
-            model->setData(index_new, Node::Equipment, Qt::UserRole );
-            break;
-        default:
-            break;
-        }
-
+        QModelIndex parent = index_new.parent();
+        QString new_name = get_new_child_node_name(type,parent);
+        model->setData(index_new, new_name, Qt::EditRole );   //设置节点名称
+        model->setData(index_new, type, Node::TypeRole );     //设置节点类型
         model->save_node(index_new);        //保存至sql
         ui->treeView->setCurrentIndex(index_new);
     }
@@ -380,9 +360,14 @@ void AssetWidget::del_node()
             qDebug()<<"the node has at least one child yet, please delete it first!";
         }
         else{
+            if(model->data(index, Node::CurrentRole) == true){      //删除的节点是当前测量节点
+                set_current();                                      //先取消选择
+            }
             model->removeRow(index.row(),index.parent());
         }
     }
+
+    //如果是当前节点，需要插入删除代码
 }
 
 void AssetWidget::edit_node(QString hint_str)
@@ -396,29 +381,101 @@ void AssetWidget::set_current()
     QModelIndex index = ui->treeView->currentIndex();
     if(index.isValid()){
         QString text = model->data(index,Qt::DisplayRole).toString();
-        if(ui->lab_current->text() == text){
-            ui->lab_current->setText(tr("未设置"));
+        if(model->data(index, Node::CurrentRole) == true){      //设置的节点是当前测量节点
+            model->setData(index, false, Node::CurrentRole);
+            QString str = tr("未指定");
+            ui->lab_current->setText(str);
             ui->lab_tips->setText(tr("设置未生效，仪器所有的测量数据都将归档到公有档案下"));
+//            emit current_asset_changed(str, QString(DIR_DATA));
+            QString str_new = get_new_asset_dir_name(DIR_ASSET_NORMAL);    //获得新的资产目录（带日期的临时目录）
+
+            if(Common::mk_dir(str_new) ){
+                emit current_asset_changed(str, str_new);
+            }
+            else{
+                qDebug()<<"make dir failed:" << str_new;
+            }
         }
         else{
             ui->lab_current->setText(text);
             ui->lab_tips->setText(tr("设置已生效，仪器所有的测量数据都将归档到此设备档案下"));
+            model->setData(index, true, Node::CurrentRole);
+            QString str_new = get_new_asset_dir_name(model->data(index, Node::PathRole).toString());    //获得新的资产目录（带日期的临时目录）
+
+            if(Common::mk_dir(str_new) ){
+                str_new = Common::str_to_cn(str_new);
+                emit current_asset_changed(text, str_new);
+            }
+            else{
+                qDebug()<<"make dir failed:" << str_new;
+            }
         }
     }
 }
 
+void AssetWidget::set_no_equ()
+{
+    QString str = tr("未指定");
+    ui->lab_current->setText(str);
+    ui->lab_tips->setText(tr("设置未生效，仪器所有的测量数据都将归档到公有档案下"));
+    emit current_asset_changed(str, QString(DIR_DATA));
+}
+
+QString AssetWidget::get_new_child_node_name(Node::Type type, QModelIndex &parent)
+{
+    QString path = model->data(parent,Node::PathRole).toString();
+    qDebug()<<"get_new_name"<<path;
+    QDir dir;
+    dir.setPath(path);
+    QStringList list = dir.entryList(QDir::AllDirs|QDir::NoDotAndDotDot,QDir::Name);
+    QString new_name;
+    int i = 0;
+
+    switch (type) {
+    case Node::Area:
+        do{
+            i++;
+            new_name = QString("New_Area%1").arg(i);
+        }
+        while (list.contains(new_name,Qt::CaseInsensitive));
+        break;
+    case Node::Substation:
+        do{
+            i++;
+            new_name = QString("New_Substation%1").arg(i);
+        }
+        while (list.contains(new_name,Qt::CaseInsensitive));
+        break;
+    case Node::Equipment:
+        do{
+            i++;
+            new_name = QString("New_Equipment%1").arg(i);
+        }
+        while (list.contains(new_name,Qt::CaseInsensitive));
+        break;
+    default:
+        break;
+    }
+    return new_name;
+}
+
+QString AssetWidget::get_new_asset_dir_name(QString path)
+{
+    QDir dir;
+    dir.setPath(path);
+    QStringList list = dir.entryList(QDir::AllDirs|QDir::NoDotAndDotDot,QDir::Name);    //仅显示文件夹，按名称排列
+    int max = 0;                        //文件夹名前四位是编号
+    foreach (QString l, list) {         //找到最大编号
+        max = MAX(l.left(4).toInt(),max);
+    }
+
+    QString str_new = QString("%1/%2#%3").arg(dir.path()).arg(max+1,4,10,QLatin1Char('0'))
+            .arg(QDateTime::currentDateTime().toString("yyyy-MM-dd-HH-mm-ss-zzz"));
+    return str_new;
+}
+
 void AssetWidget::fresh_setting()
 {
-    //    ui->comboBox->setCurrentIndex(key_val->grade.val2-1);
-
-    //    if (key_val->grade.val2 && key_val->grade.val0 == menu_index && key_val->grade.val5 == 0) {
-    //        ui->comboBox->showPopup();
-    //    }
-    //    else{
-    //        ui->comboBox->hidePopup();
-    //    }
-
-    //    ui->comboBox->lineEdit()->setText(tr(" 参 数 设 置"));
     if(key_val->grade.val2 == 1){       //右键显示
         QModelIndex index = ui->treeView->currentIndex();
         QString str = model->data(model->index(index.row(),1,index.parent()),Qt::DisplayRole).toString();

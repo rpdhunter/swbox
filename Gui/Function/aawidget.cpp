@@ -1,10 +1,11 @@
-#include "aawidget.h"
+﻿#include "aawidget.h"
 #include "ui_aawidget.h"
 #include <QLineEdit>
 #include <QTimer>
 #include "IO/Com/rdb/rdb.h"
+#include "Gui/Common/fft.h"
 
-#define SETTING_NUM 7           //设置菜单条目数
+#define SETTING_NUM 8           //设置菜单条目数
 #define VALUE_MAX 60
 
 AAWidget::AAWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu_index, QWidget *parent) :
@@ -23,6 +24,7 @@ AAWidget::AAWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu_ind
     this->menu_index = menu_index;
 
     reload(-1);
+    fft = new FFT;
 
     temp_db = 0;
     db = 0;
@@ -33,13 +35,19 @@ AAWidget::AAWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu_ind
     chart = new BarChart(ui->qwtPlot, &db, &aaultra_sql->high, &aaultra_sql->low);
     chart->resize(200, 140);
 
+    //Spectra
+    plot_Spectra = new QwtPlot(ui->widget);
+    plot_Spectra->resize(200, 140);
+    d_Spectra = new QwtPlotHistogram;
+    Common::set_Spectra_style(plot_Spectra,d_Spectra,0,4,0,30,"");
+
     timer_100ms = new QTimer(this);
     timer_100ms->setInterval(100);
-    connect(timer_100ms, SIGNAL(timeout()), this, SLOT(fresh_fast()));   //每0.1秒刷新一次数据状态，明显的变化需要快速显示
+    connect(timer_100ms, SIGNAL(timeout()), this, SLOT(fresh_100ms()));   //每0.1秒刷新一次数据状态，明显的变化需要快速显示
 
     timer_1000ms = new QTimer(this);
     timer_1000ms->setInterval(1000);
-    connect(timer_1000ms, SIGNAL(timeout()), this, SLOT(fresh_slow()));   //每1秒刷新一次数据状态
+    connect(timer_1000ms, SIGNAL(timeout()), this, SLOT(fresh_1000ms()));   //每1秒刷新一次数据状态
 
     recWaveForm = new RecWaveForm(menu_index,this);
     connect(this, SIGNAL(send_key(quint8)), recWaveForm, SLOT(trans_key(quint8)));
@@ -62,9 +70,11 @@ void AAWidget::reload(int index)
     sql_para = *sqlcfg->get_para();
     if(mode == AA1){
         aaultra_sql = &sql_para.aa1_sql;
+        ae_pulse_data = &data->recv_para_ae1;
     }
     else if(mode == AA2){
         aaultra_sql = &sql_para.aa2_sql;
+        ae_pulse_data = &data->recv_para_ae1;
     }
 
     //构造函数中计时器不启动
@@ -85,6 +95,7 @@ void AAWidget::reload(int index)
             data->set_send_para (sp_aa_record_play, 2);        //耳机送2通道
         }
         data->set_send_para(sp_auto_rec, 0);        //关闭自动录波
+        ae_pulse_data->readComplete = 1;        //读取完成标志
         fresh_setting();
     }
 }
@@ -109,13 +120,13 @@ void AAWidget::trans_key(quint8 key_code)
         sqlcfg->sql_save(&sql_para);
         reload(menu_index);
         switch (key_val->grade.val2) {
-        case 6:
+        case 7:
             key_val->grade.val1 = 1;        //为了锁住主界面，防止左右键切换通道
             emit startRecWave(mode, aaultra_sql->time);        //发送录波信号
             emit show_indicator(true);
             isBusy = true;
             return;
-        case 7:
+        case 8:
             this->maxReset();
             break;
         default:
@@ -156,11 +167,17 @@ void AAWidget::do_key_up_down(int d)
 
 void AAWidget::do_key_left_right(int d)
 {
+    QList<int> list;
+
     switch (key_val->grade.val2) {
     case 1:
         aaultra_sql->mode = !aaultra_sql->mode;
         break;
     case 2:
+        list << BASIC << Spectra;
+        Common::change_index(aaultra_sql->chart, d, list);
+        break;
+    case 3:
         if( (aaultra_sql->gain<9.95 && d>0) || (aaultra_sql->gain<10.15 && d<0) ){
             Common::change_index(aaultra_sql->gain, d * 0.1, 100, 0.1 );
         }
@@ -168,20 +185,41 @@ void AAWidget::do_key_left_right(int d)
             Common::change_index(aaultra_sql->gain, d * 10, 100, 0.1 );
         }
         break;
-    case 3:
+    case 4:
         Common::change_index(aaultra_sql->vol, d, VOL_MAX, VOL_MIN );
         break;
-    case 4:
+    case 5:
         Common::change_index(aaultra_sql->low, d, aaultra_sql->high, 0 );
         break;
-    case 5:
+    case 6:
         Common::change_index(aaultra_sql->high, d, 60, aaultra_sql->low );
         break;
-    case 6:
+    case 7:
         Common::change_index(aaultra_sql->time, d, TIME_MAX, TIME_MIN );
         break;
     default:
         break;
+    }
+}
+
+void AAWidget::do_Spectra_compute()
+{
+    if(ae_datalist.count() > 2048){
+        QVector<qint32> fft_result = fft->fft2048(ae_datalist.mid(0,2048));
+        for (int i = 0; i <41 ; ++i) {
+            Spectra_map[i] = Common::avrage(fft_result.mid(i*5 + 1, (i+1)*5) );
+        }
+
+        Spectra_data.clear();
+        for(int i=0;i<40;i++){
+            QwtInterval interval( 0.1*(i + 0.2) , 0.1*(i + 0.8) );
+            interval.setBorderFlags( QwtInterval::ExcludeMaximum );
+            Spectra_data.append( QwtIntervalSample( Spectra_map[i], interval ) );
+        }
+
+        d_Spectra->setData(new QwtIntervalSeriesData( Spectra_data ));
+        plot_Spectra->replot();
+        ae_datalist.clear();
     }
 }
 
@@ -199,31 +237,33 @@ void AAWidget::showWaveData(VectorList buf, MODE mod)
     }
 }
 
-//void AAWidget::calc_aa_value (double * aa_val, double * aa_db, int * offset)
-//{
-//    int d;
-//    if(mode == AA1){
-//        d = (int)data->recv_para_normal.ldata0_max - (int)data->recv_para_normal.ldata0_min ;      //最大值-最小值=幅值
-////        qDebug()<<  "AA1"<<(int)data->recv_para_normal.ldata0_max << '\t'<<(int)data->recv_para_normal.ldata0_min<< '\t'<<d;
-//    }
-//    else  if(mode == AA2){
-//        d = (int)data->recv_para_normal.ldata1_max - (int)data->recv_para_normal.ldata1_min ;      //最大值-最小值=幅值
-////        qDebug()<< "AA2"<<(int)data->recv_para_normal.ldata1_max << '\t'<<(int)data->recv_para_normal.ldata1_min<< '\t'<<d;
-//    }
+void AAWidget::change_log_dir()
+{
+    logtools->change_current_asset_dir();
+}
 
-//    * offset = ( d - 1 / aaultra_sql->gain / AA_FACTOR ) / 100;
-//    * aa_val = (d - aaultra_sql->offset * 100) * aaultra_sql->gain * AA_FACTOR;
-//    * aa_db = 20 * log10 (* aa_val);
-//}
+void AAWidget::add_ae_data()
+{
+    for (int i = 0; i < 128; ++i) {
+        ae_datalist.append(ae_pulse_data->data[i+2]);
+    }
+
+    ae_timelist.append(ae_pulse_data->time/* + ae_timelist.last()*/);
+
+    ae_pulse_data->readComplete = 1;        //读取完成标志
+}
+
+void AAWidget::save_channel()
+{
+
+}
 
 void AAWidget::fresh(bool f)
 {
     int offset;
     double val,val_db;
 
-//	calc_aa_value (&val, &val_db, &offset);
     Common::calc_aa_value(data,mode,aaultra_sql,&val, &val_db, &offset);
-
 
     if(db < int(val_db)){
         db = int(val_db);      //每秒的最大值
@@ -315,16 +355,17 @@ void AAWidget::fresh(bool f)
 //    ui->label_range->setText(QString("%1").arg(data->recv_para.ldata1_max * 4 * aaultra_sql->gain * AA_FACTOR));
 }
 
-void AAWidget::fresh_slow()
+void AAWidget::fresh_1000ms()
 {
     fresh(true);
     chart->fresh();
     ui->qwtPlot->replot();
 }
 
-void AAWidget::fresh_fast()
+void AAWidget::fresh_100ms()
 {
     fresh(false);
+    do_Spectra_compute();
 }
 
 void AAWidget::maxReset()
@@ -345,11 +386,27 @@ void AAWidget::fresh_setting()
         timer_1000ms->setSingleShot(false);
     }
 
-    ui->comboBox->setItemText(1,tr("增益调节\t[×%1]").arg(QString::number(aaultra_sql->gain, 'f', 1)) );
-    ui->comboBox->setItemText(2,tr("音量调节\t[×%1]").arg(QString::number(aaultra_sql->vol)));
-    ui->comboBox->setItemText(3,tr("黄色报警阈值\t[%1]dB").arg(QString::number(aaultra_sql->low)));
-    ui->comboBox->setItemText(4,tr("红色报警阈值\t[%1]dB").arg(QString::number(aaultra_sql->high)));
-    ui->comboBox->setItemText(5,tr("连续录波\t[%1]s").arg(aaultra_sql->time));
+    ui->qwtPlot->hide();
+    plot_Spectra->hide();
+
+    switch (aaultra_sql->chart) {
+    case BASIC:
+        ui->qwtPlot->show();
+        ui->comboBox->setItemText(1,tr("图形显示 \t[时序图]"));
+        break;
+    case Spectra:
+        plot_Spectra->show();
+        ui->comboBox->setItemText(1,tr("图形显示  \t[频谱图]"));
+        break;
+    default:
+        break;
+    }
+
+    ui->comboBox->setItemText(2,tr("增益调节\t[×%1]").arg(QString::number(aaultra_sql->gain, 'f', 1)) );
+    ui->comboBox->setItemText(3,tr("音量调节\t[×%1]").arg(QString::number(aaultra_sql->vol)));
+    ui->comboBox->setItemText(4,tr("黄色报警阈值\t[%1]dB").arg(QString::number(aaultra_sql->low)));
+    ui->comboBox->setItemText(5,tr("红色报警阈值\t[%1]dB").arg(QString::number(aaultra_sql->high)));
+    ui->comboBox->setItemText(6,tr("连续录波\t[%1]s").arg(aaultra_sql->time));
 
     ui->comboBox->setCurrentIndex(key_val->grade.val2-1);
 

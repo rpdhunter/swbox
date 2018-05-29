@@ -1,4 +1,4 @@
-#ifndef MAINWINDOW_H
+﻿#ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
 #include <QFrame>
@@ -70,6 +70,7 @@ private slots:
     void set_sync_status(bool flag);
     void do_sync(uint offset);
     void do_beep(int index, int red_alert);
+    void set_current_equ(QString new_equ, QString new_path);
 
 #ifdef PRINTSCREEN
     void printSc(); //截屏
@@ -134,6 +135,10 @@ private:
     void set_non_current_menu_icon();       //设置非活动菜单图标
     void set_disable_menu_icon();           //设置禁用动菜单图标
     void fresh_grade1(void);                //刷新设置子选项
+    void save_channel();       //保存所有通道的PRPD文件
+    void set_asset_dir(QString new_path);       //设置asset路径
+    int close_time_flag;    //记录收到powerkey事件的次数，2次则执行保存
+    void create_report();       //生成测试报告
 
 };
 

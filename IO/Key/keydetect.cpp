@@ -1,4 +1,4 @@
-#include "keydetect.h"
+﻿#include "keydetect.h"
 
 
 //线程的初始化工作，建立设备连接
@@ -45,17 +45,19 @@ KeyDetect::KeyDetect (QObject *parent) : QThread(parent)
     }
 
     /* start pthread */
-    this->start ();
+//    this->start ();
 }
 
 void KeyDetect::check_press_once (int pin, enum KEY_VALUE key)
 {
-	if (!gpio_read_pin (pin)) {
+//    qDebug()<<"11"<<"pin = "<<pin;
+    if (!gpio_read_pin (pin)) {
         usleep (KEY_MS_DLY);
         if (!gpio_read_pin (pin)) {
             emit sendkey (key);
             while (!gpio_read_pin (pin)) {
                 usleep (KEY_MS_DLY);
+//                qDebug()<<"22"<<"pin = "<<pin;
             }
         }
     }
@@ -86,6 +88,15 @@ void KeyDetect::check_press_cont (int pin, enum KEY_VALUE key)
 void KeyDetect::run(void)
 {
     while (true) {
+
+//        for (int i = 54; i < 62; ++i) {
+//            if (!gpio_read_pin (i)) {
+//                qDebug()<<i;
+//                msleep (400);
+//            }
+//        }
+
+
         check_press_once (PIN_POWER, KEY_POWER);
         check_press_once (PIN_OK, KEY_OK);
         check_press_once (PIN_CANCEL, KEY_CANCEL);
@@ -198,6 +209,7 @@ void KeyDetect::set_dir_pin(int pin, int dir)
 */
 bool KeyDetect::gpio_read_pin(int pin)
 {
+//    qDebug()<<"begin gpio, pin = " << pin;
     int bank, pin_num;
     volatile unsigned int *reg;
 
@@ -218,6 +230,7 @@ bool KeyDetect::gpio_read_pin(int pin)
 
     /* reg */
     reg = (volatile unsigned int *)(base_addr + (XGPIOPS_DATA_BANK_OFFSET * (bank) + XGPIOPS_DATA_OFFSET));
+
     return (*reg >> pin_num) & 1;
 }
 
@@ -230,13 +243,13 @@ bool KeyDetect::gpio_read_pin(int pin)
 void KeyDetect::get_bank(int pin, int *bank)
 {
     /* Get bank from pin */
-    if (pin <= gpio_pin_table[0]) {
+    if (pin <= gpio_pin_table[0]) {         //31
         *bank = 0;
-    } else if (pin <= gpio_pin_table[1]) {
+    } else if (pin <= gpio_pin_table[1]) {  //53
         *bank = 1;
-    } else if(pin <= gpio_pin_table[2]) {
+    } else if(pin <= gpio_pin_table[2]) {   //85
         *bank = 2;
-    } else if(pin <= gpio_pin_table[3]) {
+    } else if(pin <= gpio_pin_table[3]) {   //117
         *bank = 3;
     } else {
         *bank = -1;

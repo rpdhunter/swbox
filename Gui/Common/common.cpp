@@ -1,4 +1,4 @@
-#include "common.h"
+﻿#include "common.h"
 #include <QtDebug>
 
 #include <QLineEdit>
@@ -13,7 +13,7 @@
 #include <qwt_plot_curve.h>
 #include <qwt_scale_engine.h>
 #include <qwt_plot.h>
-
+#include "IO/Com/rdb/rdb.h"
 
 Common::Common(QObject *parent) : QObject(parent)
 {
@@ -119,6 +119,17 @@ void Common::set_comboBox_style(QComboBox *comboBox)
     comboBox->view()->setStyleSheet("QListView {border-image: url(:/widgetphoto/bk/para_child.png);color:gray;outline: none;}");
     comboBox->view()->setFrameShadow(QFrame::Plain);
     comboBox->setFrame(false);
+}
+
+void Common::set_contextMenu_style(QListWidget *w, QStringList list, QPoint pos)
+{
+    w->setStyleSheet("QListWidget {border-image: url(:/widgetphoto/bk/para_child.png);color:gray;outline: none;}");
+    w->addItems(list);
+    int n = list.count();
+    w->resize(100, n * 20);
+    w->move(pos);
+    w->setSpacing(2);
+    w->hide();
 }
 
 void Common::set_barchart_style(QwtPlot *plot, int v_max)
@@ -278,6 +289,36 @@ void Common::set_histogram_style(QwtPlot *plot, QwtPlotHistogram *d_histogram, i
     d_histogram->attach(plot);
 }
 
+void Common::set_Spectra_style(QwtPlot *plot, QwtPlotHistogram *d_histogram, int xBottom_min, int xBottom_max, int yLeft_min, int yLeft_max, QString title)
+{
+    plot->setStyleSheet("background:transparent;color:gray;");
+
+    plot->setAxisScale(QwtPlot::xBottom, xBottom_min, xBottom_max);
+    plot->setAxisScale(QwtPlot::yLeft, yLeft_min, yLeft_max);
+    //    plot->setAxisScale(QwtPlot::xBottom, 0, 6);
+    //    plot->setAxisScale(QwtPlot::yLeft, 0.01, 10);
+
+    plot->axisScaleDraw(QwtPlot::yLeft)->enableComponent(QwtAbstractScaleDraw::Backbone, true);
+    plot->axisScaleDraw(QwtPlot::yLeft)->enableComponent(QwtAbstractScaleDraw::Ticks, false);
+    plot->axisScaleDraw(QwtPlot::yLeft)->enableComponent(QwtAbstractScaleDraw::Labels, false);
+
+    /* remove gap */
+    plot->axisWidget(QwtPlot::xBottom)->setMargin(0);
+    plot->axisWidget(QwtPlot::xBottom)->setTitle(title);
+    plot->axisWidget(QwtPlot::yLeft)->setMargin(0);
+
+//    plot->setAxisScaleEngine( QwtPlot::yLeft, new QwtLogScaleEngine );  //对数坐标
+    plot->axisScaleDraw(QwtPlot::xBottom)->enableComponent(QwtAbstractScaleDraw::Backbone, true);
+    plot->axisScaleDraw(QwtPlot::xBottom)->enableComponent(QwtAbstractScaleDraw::Ticks, false);
+    plot->plotLayout()->setAlignCanvasToScales(true);
+
+//    d_histogram->setStyle( QwtPlotHistogram::Outline );
+    d_histogram->setStyle( QwtPlotHistogram::Columns );
+    d_histogram->setBrush(Qt::yellow);
+    d_histogram->setPen(Qt::yellow);
+    d_histogram->attach(plot);
+}
+
 void Common::setTab(QLabel *label)
 {
     label->resize(70, 28);
@@ -314,19 +355,19 @@ double Common::physical_value(int code_value, MODE mode)
         break;
     case AA1:
     case AA1_ENVELOPE:
-        v_real = (code_value * 4) * sqlcfg->get_para()->aa1_sql.gain * L_C_FACTOR;
+        v_real = (code_value * 4) * sqlcfg->get_para()->aa1_sql.gain * AA_FACTOR;
         break;
     case AA2:
     case AA2_ENVELOPE:
-        v_real = (code_value * 4) * sqlcfg->get_para()->aa2_sql.gain * L_C_FACTOR;
+        v_real = (code_value * 4) * sqlcfg->get_para()->aa2_sql.gain * AA_FACTOR;
         break;
     case AE1:
     case AE1_ENVELOPE:
-        v_real = (code_value * 4) * sqlcfg->get_para()->ae1_sql.gain * L_C_FACTOR;
+        v_real = (code_value * 4) * sqlcfg->get_para()->ae1_sql.gain * sqlcfg->ae1_factor();
         break;
     case AE2:
     case AE2_ENVELOPE:
-        v_real = (code_value * 4) * sqlcfg->get_para()->ae2_sql.gain * L_C_FACTOR;
+        v_real = (code_value * 4) * sqlcfg->get_para()->ae2_sql.gain * sqlcfg->ae2_factor();
         break;
     default:
         break;
@@ -363,16 +404,16 @@ int Common::code_value(double physical_value, MODE mode)
         v_code = physical_value / sqlcfg->get_para()->uhf2_sql.gain / H_C_FACTOR;
         break;
     case AA1:
-        v_code = physical_value / 4 / sqlcfg->get_para()->aa1_sql.gain / L_C_FACTOR;
+        v_code = physical_value / 4 / sqlcfg->get_para()->aa1_sql.gain / AA_FACTOR;
         break;
     case AA2:
-        v_code = physical_value / 4 / sqlcfg->get_para()->aa2_sql.gain / L_C_FACTOR;
+        v_code = physical_value / 4 / sqlcfg->get_para()->aa2_sql.gain / AA_FACTOR;
         break;
     case AE1:
-        v_code = physical_value / 4 / sqlcfg->get_para()->ae1_sql.gain / L_C_FACTOR;
+        v_code = physical_value / 4 / sqlcfg->get_para()->ae1_sql.gain / sqlcfg->ae1_factor();
         break;
     case AE2:
-        v_code = physical_value / 4 / sqlcfg->get_para()->ae2_sql.gain / L_C_FACTOR;
+        v_code = physical_value / 4 / sqlcfg->get_para()->ae2_sql.gain / sqlcfg->ae2_factor();
         break;
     default:
         break;
@@ -595,12 +636,17 @@ void Common::calc_aa_value(G_PARA *data, MODE mode, L_CHANNEL_SQL *x_sql, double
     else {
         d = ((int)data->recv_para_normal.ldata1_max - (int)data->recv_para_normal.ldata1_min) / 2 ;      //最大值-最小值=幅值
     }
-//    if(mode == AE1 || mode == AE2){
-//        qDebug()<<"d="<<d<<"\t ph value="<<Common::physical_value(d,mode)/4;
-//    }
 
-    * offset = ( d - 1 / x_sql->gain / L_C_FACTOR ) / 100;
-    * aa_val = (d - x_sql->offset * 100) * x_sql->gain * L_C_FACTOR;
+    double factor = AA_FACTOR;
+    if(mode == AE1){
+        factor = sqlcfg->ae1_factor();
+    }
+    else if(mode == AE2){
+        factor = sqlcfg->ae2_factor();
+    }
+
+    * offset = ( d - 1 / x_sql->gain / factor ) / 100;
+    * aa_val = (d - x_sql->offset * 100) * x_sql->gain * factor;
     if(* aa_val < 0.1){         //保证结果有值，最小是-20dB
         * aa_val = 0.1;
     }
@@ -690,8 +736,8 @@ float Common::kalman_filter_core(float ResrcData, float ProcessNiose_Q, float Me
     p_mid=p_last+Q;                     //p_mid=p(k|k-1),p_last=p(k-1|k-1),Q=??
 
     /*
-         *  卡尔曼滤波的五个重要公式
-         */
+     *  卡尔曼滤波的五个重要公式
+     */
     kg=p_mid/(p_mid+R);                 //kg为kalman filter，R 为噪声
     x_now=x_mid+kg*(ResrcData-x_mid);   //估计出的最优值
     p_now=(1-kg)*p_mid;                 //最优值对应的covariance
@@ -724,6 +770,37 @@ double Common::avrage(QVector<double> list)
     return tmp / list.count();
 }
 
+int Common::avrage(QVector<int> list)
+{
+    int tmp=0;
+    foreach (int p, list) {
+        tmp += p;
+    }
+    return tmp / list.count();
+}
+
+double Common::tev_freq_compensation(int pulse_num)
+{
+    int f = pulse_num / 2000000;     //单位是M
+    double k = 1;
+    if(f>=3 && f<8){
+        k = -0.04 * f + 1.12;
+    }
+    else if(f>=8 && f<13){
+        k = 0.04 * f + 0.48;
+    }
+    else if(f>=13 && f<18){
+        k = 0.1 * f - 0.3;
+    }
+    else if(f>=18 && f<30){
+        k = -0.1 * f + 3.3;
+    }
+    else if(f>=30){
+        k = 0.2;
+    }
+    return k;
+}
+
 QString Common::secton_three(int n)
 {
     QString tmpstr = QString::number(n);
@@ -740,6 +817,103 @@ QString Common::secton_three(int n)
     }
     return tmpstr;
 }
+
+//使用硬连接，可以做到直接拷贝
+void Common::create_hard_link(QString str_src, QString file_name){
+    QString str_dst = QString(sqlcfg->get_para()->current_dir);
+    if(str_dst.contains("asset")){
+        QString cmd = QString("ln \"%1\" \"%2\"").arg(str_src).arg(str_dst + "/" + file_name);      //文件名加入双引号，为了应对带空格的文件名
+//        printf("create_hard_link %s \n", cmd.toLocal8Bit().data());
+        system(cmd.toLocal8Bit().data());
+    }
+}
+
+QLabel *Common::set_mainwindow_lab(QLabel *lab, int n, QTabWidget *widget)
+{
+    lab->resize(41, 24);
+    widget->tabBar()->setTabButton(n,QTabBar::LeftSide,lab);
+    return lab;
+}
+
+QString Common::str_to_cn(QString str)
+{
+    QByteArray byte = str.toUtf8();
+    char *c = byte.data();
+    return QString().fromLocal8Bit(c);
+}
+
+//实现创建文件夹操作
+//这里之所以用标准字符串中介一下，是因为直接使用QString会造成乱码，原因未知
+bool Common::mk_dir(QString path/*, QDir &dir*/)
+{
+    QDir dir;
+    path = str_to_cn(path);
+
+    if(!dir.exists(path) ){
+        dir.mkdir(path );
+    }
+    if(dir.exists(path)){
+//        printf("check dir: %s  succeed!\n",path.toLocal8Bit().data());
+        return true;
+    }
+    else{
+//        printf("check dir: %s  failed!\n",path.toLocal8Bit().data());
+        return false;
+    }
+}
+
+bool Common::del_dir(QString path)
+{
+    QDir dir;
+    dir.setPath(Common::str_to_cn(path) );
+    return dir.removeRecursively();        //递归删除文件夹及其所有子内容
+}
+
+bool Common::rename_dir(QString old_path, QString new_path)
+{
+    QDir dir;
+    old_path = str_to_cn(old_path);
+    new_path = str_to_cn(new_path);
+    dir.setPath(old_path);
+    return dir.rename(old_path,new_path);
+}
+
+int Common::max_at(QVector<double> list)
+{
+    int max_n = 0;
+    for (int i = 0; i < list.count(); ++i) {
+        if(list.at(max_n) < list.at(i)){
+            max_n = i;
+        }
+    }
+
+    return max_n;
+}
+
+int Common::max_at(QVector<int> list)
+{
+    int max_n = 0;
+    for (int i = 0; i < list.count(); ++i) {
+        if(list.at(max_n) < list.at(i)){
+            max_n = i;
+        }
+    }
+
+    return max_n;
+}
+
+void Common::rdb_set_value(uint yc_no, double val, uint qc)
+{
+    yc_data_type temp_data;
+    temp_data.f_val = val;
+    if(qc == 1){
+        yc_set_value(yc_no, &temp_data, QDS_FO, NULL,0);
+    }
+    else{
+        yc_set_value(yc_no, &temp_data, QDS_BA, NULL,0);
+    }
+}
+
 
 
 

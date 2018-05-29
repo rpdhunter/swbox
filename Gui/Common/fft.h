@@ -1,4 +1,4 @@
-#ifndef FFT_H
+﻿#ifndef FFT_H
 #define FFT_H
 
 #include "IO/Com/rdb/data_types.h"
@@ -13,7 +13,9 @@ class FFT
 public:
     FFT();
 
+//    QVector<qint32> fft4096(int ibuf[]);
     QVector<qint32> fft2048(int ibuf[]);
+    QVector<qint32> fft2048(QVector<qint32> list);
     QVector<qint32> fft64(QVector<qint32> list);
     QVector<qint32> fft32(QVector<qint32> list);
 
