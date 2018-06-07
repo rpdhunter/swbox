@@ -369,7 +369,13 @@ void DebugSet::trans_key(quint8 key_code)
     switch (key_code) {
     case KEY_OK:
         if(pass){
-            saveSql();                          //保存
+            if(key_val->grade.val3 == 5 && key_val->grade.val4 == 1){
+                //插入保存参数文件代码
+                ui->label_channel_data_tips->setText(tr("通道参数已保存至文件"));
+            }
+            else{
+                saveSql();                          //保存
+            }
         }
         else{
             //检查密码是否匹配
@@ -455,7 +461,7 @@ void DebugSet::trans_key(quint8 key_code)
 
 void DebugSet::do_key_left_right(int d)
 {
-    if(key_val->grade.val4 == 0 && key_val->grade.val3 != 0 && key_val->grade.val3 != 5 && d > 0){   //必须第三层处于工作状态
+    if(key_val->grade.val4 == 0 && key_val->grade.val3 != 0 /*&& key_val->grade.val3 != 5*/ && d > 0){   //必须第三层处于工作状态
         key_val->grade.val4 =1;
     }
     else{
@@ -926,6 +932,12 @@ void DebugSet::fresh()
             tab2->setStyleSheet("QLabel{border: 0px solid darkGray;}");
             tab3->setStyleSheet("QLabel{border: 0px solid darkGray;}");
             tab4->setStyleSheet("QLabel{border: 1px solid darkGray;}");
+            if(key_val->grade.val4 == 1){
+                ui->pbt_channel_data->setStyleSheet("QPushButton {background-color:gray;}");
+            }
+            else{
+                ui->pbt_channel_data->setStyleSheet("");
+            }
             break;
         default:
             break;

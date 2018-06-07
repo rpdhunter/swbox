@@ -119,22 +119,22 @@ void FifoData::run(void)
 
 
         //包络线数据
-        if(data->recv_para_ae1.readComplete == 1 ){
+        if(data->recv_para_envelope1.readComplete == 1 ){
             fifocontrol->read_fpga(sp_read_fpga_ae1);
             ret = fifocontrol->read_ae1_data();
             if(ret > 100){
-                data->recv_para_ae1.readComplete = 0;
+                data->recv_para_envelope1.readComplete = 0;
 //                qDebug()<<"AE1 len = "<<ret<<"\trecComplete = "<<data->recv_para_ae1.recComplete
 //                                          <<"\tgroup = "<<data->recv_para_ae1.groupNum;
                 emit ae1_update();
             }
         }
 
-        if(data->recv_para_ae2.readComplete == 1){
+        if(data->recv_para_envelope2.readComplete == 1){
             fifocontrol->read_fpga(sp_read_fpga_ae2);
             ret = fifocontrol->read_ae2_data();
             if(ret > 100){
-                data->recv_para_ae2.readComplete = 0;
+                data->recv_para_envelope2.readComplete = 0;
 //                                qDebug()<<"AE2 len = "<<ret<<"\trecComplete = "<<data->recv_para_ae2.recComplete
 //                                                          <<"\tgroup = "<<data->recv_para_ae2.groupNum;
                 emit ae2_update();
@@ -159,11 +159,11 @@ void FifoData::run(void)
 
         //延迟设置
         if(data->recv_para_rec.recComplete == 16 || data->recv_para_rec.recComplete == 32
-                || data->recv_para_ae1.recComplete == 2 || data->recv_para_ae2.recComplete == 2 ){
+                || data->recv_para_envelope1.recComplete == 2 || data->recv_para_envelope2.recComplete == 2 ){
             delay_time = DELAY_TIME_MID;
         }
         else if(reccontrol->mode() != Disable || data->recv_para_short1.empty == 0 || data->recv_para_short2.empty == 0
-                || data->recv_para_ae1.recComplete == 1 || data->recv_para_ae2.recComplete == 1){
+                || data->recv_para_envelope1.recComplete == 1 || data->recv_para_envelope2.recComplete == 1){
             delay_time = DELAY_TIME_SHORT;
             if(reccontrol->free_time()>10){
                 reccontrol->re_send_rec_continuous();

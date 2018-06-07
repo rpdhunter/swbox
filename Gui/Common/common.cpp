@@ -3,6 +3,7 @@
 
 #include <QLineEdit>
 #include <QListView>
+#include <QPushButton>
 #include <qwt_scale_draw.h>
 #include <qwt_scale_widget.h>
 #include <qwt_plot_layout.h>
@@ -126,7 +127,7 @@ void Common::set_contextMenu_style(QListWidget *w, QStringList list, QPoint pos)
     w->setStyleSheet("QListWidget {border-image: url(:/widgetphoto/bk/para_child.png);color:gray;outline: none;}");
     w->addItems(list);
     int n = list.count();
-    w->resize(100, n * 20);
+    w->resize(110, n * 20);
     w->move(pos);
     w->setSpacing(2);
     w->hide();
@@ -857,7 +858,7 @@ bool Common::mk_dir(QString path/*, QDir &dir*/)
         return true;
     }
     else{
-//        printf("check dir: %s  failed!\n",path.toLocal8Bit().data());
+        printf("check dir: %s  failed!\n",path.toLocal8Bit().data());
         return false;
     }
 }
@@ -911,6 +912,116 @@ void Common::rdb_set_value(uint yc_no, double val, uint qc)
     }
     else{
         yc_set_value(yc_no, &temp_data, QDS_BA, NULL,0);
+    }
+}
+
+void Common::select_root(QTreeView *v, QAbstractItemModel *model)
+{
+    QModelIndex index = model->index(0,0,v->rootIndex());        //选择第一个可选节点（非不可见的根节点）
+    v->setCurrentIndex(index);
+}
+
+void Common::select_up(QTreeView *v, QAbstractItemModel *model)
+{
+    QModelIndex index = v->currentIndex();
+    QModelIndex index_next;
+
+    if(index.row()>0){      //有哥哥
+        index_next = index.sibling(index.row()-1,0);            //先找本节点的第一个哥哥
+        if(index_next.isValid() && v->isExpanded(index_next)){       //有哥哥，如果是展开的，先找哥哥的小儿子
+            int rowCount = model->rowCount(index_next);
+            if(rowCount > 0){
+                index_next = model->index(rowCount-1,0,index_next);     //找到哥哥的小儿子
+                if(index_next.isValid() && v->isExpanded(index_next) ){       //有孙子并且是展开的，再找哥哥的小孙子
+                    rowCount = model->rowCount(index_next);
+                    if(rowCount > 0){
+                        index_next = model->index(rowCount-1,0,index_next);     //找到哥哥的小孙子（循环次数视叔深度而定，不定深度可能需要递归）
+                    }
+                }
+            }
+        }
+    }
+    else{           //无哥哥
+        if(index.parent() != v->rootIndex()){
+            index_next = index.parent();        //找爹
+        }
+    }
+
+    if(index_next.isValid()){
+        v->setCurrentIndex(index_next);
+    }
+}
+
+void Common::select_down(QTreeView *v, QAbstractItemModel *model)
+{
+    QModelIndex index = v->currentIndex();
+    QModelIndex index_next;
+
+    if(v->isExpanded(index) || index == v->rootIndex()){                   //如果当前节点是展开的
+        index_next = model->index(0,0,index);                   //第一顺位是本节点的第一个儿子
+    }
+
+
+    if(!index_next.isValid()){
+        index_next = model->index(index.row()+1,index.column(),index.parent());     //第二顺位是本节点的下一个兄弟
+    }
+
+    if(!index_next.isValid()){
+        int row = index.parent().row();
+        index_next = model->index(row + 1,0,index.parent().parent());       //第三顺位是本节点的下一个叔叔
+    }
+
+    if(!index_next.isValid()){
+        int row = index.parent().parent().row();
+        index_next = model->index(row + 1,0,index.parent().parent().parent());      //第四顺位是叔爷爷
+    }
+    if(index_next.isValid()){
+        v->setCurrentIndex(index_next);
+    }
+}
+
+//展开/收起节点
+void Common::expand_collapse(QTreeView *v)
+{
+    QModelIndex index = v->currentIndex();
+    if(v->isExpanded(index)){
+        v->collapse(index);
+    }
+    else{
+        v->expand(index);
+    }
+}
+
+void Common::check_base_dir()
+{
+    Common::mk_dir(DIR_USB);
+    Common::mk_dir(DIR_DATA);
+    Common::mk_dir(DIR_DATALOG);
+    Common::mk_dir(DIR_PRPDLOG);
+    Common::mk_dir(DIR_ASSET);
+    Common::mk_dir(DIR_ASSET_NORMAL);
+}
+
+void Common::messagebox_show_and_init(QMessageBox *box)
+{
+    box->move(135,100);
+    box->show();
+    box->button(QMessageBox::Ok)->setStyleSheet("QPushButton {background-color:gray;}");
+    box->button(QMessageBox::Cancel)->setStyleSheet("");
+    box->setDefaultButton(QMessageBox::Ok);
+}
+
+void Common::messagebox_switch(QMessageBox *box)
+{
+    if(box->defaultButton() == box->button(QMessageBox::Ok)){
+        box->button(QMessageBox::Ok)->setStyleSheet("");
+        box->button(QMessageBox::Cancel)->setStyleSheet("QPushButton {background-color:gray;}");
+        box->setDefaultButton(QMessageBox::Cancel);
+    }
+    else{
+        box->button(QMessageBox::Ok)->setStyleSheet("QPushButton {background-color:gray;}");
+        box->button(QMessageBox::Cancel)->setStyleSheet("");
+        box->setDefaultButton(QMessageBox::Ok);
     }
 }
 

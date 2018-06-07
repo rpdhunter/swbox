@@ -1,4 +1,4 @@
-#ifndef FIFOCONTROL_H
+﻿#ifndef FIFOCONTROL_H
 #define FIFOCONTROL_H
 
 #include <QObject>
@@ -50,6 +50,7 @@ private:
         SLEEPING,
         BUZZER,
         BUZZER_FREQ,
+        REBOOT,
         FILTER_MODE,
         L1_CHANNEL_MODE,
         L2_CHANNEL_MODE,
@@ -63,8 +64,6 @@ private:
         VOL_L2,
         KALMAN_L1,
         KALMAN_L2,
-        L1_THRESHOLD,
-        L2_THRESHOLD,
         //录波
         REC_ON,
         REC_START_H1,
@@ -76,14 +75,11 @@ private:
         //要通道数据信号
         READ_FPGA_NOMAL,
         READ_FPGA_REC,
-        READ_FPGA_PRPD1,
-        READ_FPGA_PRPD2,
         READ_FPGA_HFCT1,
         READ_FPGA_HFCT2,
         READ_FPGA_AE1,
         READ_FPGA_AE2,
 
-        TEMP_TEST,
     };
 
     QString send_para_to_string(int val);

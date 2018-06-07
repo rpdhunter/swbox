@@ -127,18 +127,18 @@ SQL_PARA *SqlCfg::default_config(void)
     sql_para.buzzer_on = false;
     sql_para.auto_rec_interval = 1;
 
-    sql_para.menu_h1 = TEV1;
-    sql_para.menu_h2 = HFCT2;    
-    sql_para.menu_l1 = AA1;
-#ifdef OHV
-    sql_para.menu_l2 = Disable;
-    sql_para.menu_double = Disable;
-    sql_para.menu_asset = Disable;
-#else
-    sql_para.menu_l2 = AE2;
-    sql_para.menu_double = Double_Channel;
-    sql_para.menu_asset = ASSET;
-#endif
+//    sql_para.menu_h1 = TEV1;
+//    sql_para.menu_h2 = HFCT2;
+//    sql_para.menu_l1 = AA1;
+//#ifdef OHV
+//    sql_para.menu_l2 = Disable;
+//    sql_para.menu_double = Disable;
+//    sql_para.menu_asset = Disable;
+//#else
+//    sql_para.menu_l2 = AE2;
+//    sql_para.menu_double = Double_Channel;
+//    sql_para.menu_asset = ASSET;
+//#endif
 
 
     sql_para.sync_mode = SYNC_NONE;

@@ -5,7 +5,7 @@
 #-------------------------------------------------
 
 QT  += core gui widgets  #network
-QT  += serialport sql qml quick quickwidgets
+QT  += serialport sql qml quick quickwidgets xml
 #QT += opengl
 
 TARGET = swbox
@@ -76,7 +76,11 @@ SOURCES += \
     Gui/Function/Asset/assetview.cpp \
     Gui/Function/Asset/assetmodel.cpp \
     Gui/Function/Asset/assetsql.cpp \
-    Gui/Function/Asset/assetwidget.cpp
+    Gui/Function/Asset/assetwidget.cpp \
+    Gui/Function/basewidget.cpp \
+    Gui/Common/compute.cpp \
+    IO/Other/report.cpp \
+    Gui/Function/Asset/assetfilemanagement.cpp
 
 
 HEADERS  += \
@@ -137,7 +141,11 @@ HEADERS  += \
     Gui/Function/Asset/assetview.h \
     Gui/Function/Asset/assetmodel.h \
     Gui/Function/Asset/assetsql.h \
-    Gui/Function/Asset/assetwidget.h
+    Gui/Function/Asset/assetwidget.h \
+    Gui/Function/basewidget.h \
+    Gui/Common/compute.h \
+    IO/Other/report.h \
+    Gui/Function/Asset/assetfilemanagement.h
 
 FORMS += \
     Gui/Function/tevwidget.ui \

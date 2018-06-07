@@ -1,15 +1,13 @@
 ﻿#include "tevwidget.h"
 #include "ui_tevwidget.h"
-#include <QTimer>
 #include <QLineEdit>
-#include "IO/Other/buzzer.h"
+#include <QGraphicsView>
 
 #define VALUE_MAX  60           //RPPD最大值
 #define SETTING_NUM 10           //设置菜单条目数
 
-
 TEVWidget::TEVWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu_index, QWidget *parent) :
-    QFrame(parent),
+    BaseWidget(data, val, mode, menu_index, parent),
     ui(new Ui::TEVWidget)
 {
     ui->setupUi(this);
@@ -18,54 +16,10 @@ TEVWidget::TEVWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu_i
     this->setStyleSheet("TEVWidget {border-image: url(:/widgetphoto/bk/bk2.png);}");
     Common::set_comboBox_style(ui->comboBox);
 
-    this->data = data;
-    this->key_val = val;
-    this->mode = mode;
-    this->menu_index = menu_index;
-
+    recWaveForm->raise();
     reload(-1);
-
-    db = 0;
-    max_db = 0;
-    db_last1 = 0;
-    manual = false;
-    token = 0;
-
-    timer_1000ms = new QTimer(this);
-    timer_1000ms->setInterval(1000);
-    connect(timer_1000ms, SIGNAL(timeout()), this, SLOT(fresh_1000ms()));
-
-    timer_1ms = new QTimer(this);
-    timer_1ms->setInterval(2);         //1ms读取一次数据
-    connect(timer_1ms, SIGNAL(timeout()), this, SLOT(add_token()));
-
-    timer_100ms = new QTimer(this);
-    timer_100ms->setInterval(100);
-    connect(timer_100ms, SIGNAL(timeout()), this, SLOT(fresh_100ms()));
-
-    timer_freeze = new QTimer(this);      //timer3设置了一个界面手动退出后的锁定期,便于操作
-    timer_freeze->setInterval(FREEZE_TIME);      //5秒内不出现新录波界面
-    timer_freeze->setSingleShot(true);
-
-    timer_rec_close_delay= new QTimer(this);          //timer_rec_close_delay用于延迟关闭录波系统，为节能启用
-    timer_rec_close_delay->setInterval(2000);
-    timer_rec_close_delay->setSingleShot(true);
-    connect(timer_rec_close_delay, SIGNAL(timeout()), this, SLOT(close_rec()));
-
     chart_ini();
-
-    recWaveForm = new RecWaveForm(menu_index,this);
-    connect(this, SIGNAL(send_key(quint8)), recWaveForm, SLOT(trans_key(quint8)));
-    connect(recWaveForm,SIGNAL(fresh_parent()),this,SIGNAL(fresh_parent()));
-    connect(recWaveForm, SIGNAL(fresh_parent()), timer_freeze, SLOT(start()) );
-
-    logtools = new LogTools(mode);      //日志保存模块
-    connect(this,SIGNAL(tev_log_data(double,int,double,int)),logtools,SLOT(dealLog(double,int,double,int)));
-    connect(this,SIGNAL(tev_PRPD_data(QVector<QwtPoint3D>)),logtools,SLOT(dealRPRDLog(QVector<QwtPoint3D>)));
-
     reload(menu_index);
-
-//    logtools->deal_test();
 }
 
 TEVWidget::~TEVWidget()
@@ -73,14 +27,9 @@ TEVWidget::~TEVWidget()
     delete ui;
 }
 
-void TEVWidget::change_log_dir()
-{
-    logtools->change_current_asset_dir();
-}
-
 void TEVWidget::save_channel()
 {
-    PRPDReset();
+    data_reset();
 }
 
 void TEVWidget::reload(int index)
@@ -125,70 +74,34 @@ void TEVWidget::reload(int index)
     }
 }
 
-void TEVWidget::trans_key(quint8 key_code)
+void TEVWidget::do_key_ok()
 {
-    if (key_val == NULL || key_val->grade.val0 != menu_index) {
-        return;
-    }
-    //    qDebug()<<"TEV\tval0 = "<<key_val->grade.val0 <<"\tval1 = "<<key_val->grade.val1 <<"\tval2 = "<<key_val->grade.val2 ;
-
-    if(key_val->grade.val5 != 0){
-        emit send_key(key_code);
-        return;
-    }
-
-    switch (key_code) {
-    case KEY_OK:
-        sqlcfg->sql_save(&sql_para);
-        reload(menu_index);        //重置默认数据
-        switch (key_val->grade.val2) {
-        case 8:
-            //自动录波
-            if(tev_sql->auto_rec == true){
-                data->set_send_para (sp_rec_on, 1);
-                data->set_send_para(sp_auto_rec, menu_index + 1);
-            }
-            else{      
-                data->set_send_para(sp_auto_rec, 0);
-                timer_rec_close_delay->start();
-//                data->set_send_para (sp_rec_on, 0);
-            }
-            break;
-        case 9:
-            emit startRecWave(mode,0);     //开始录波
-            manual = true;
-            break;
-        case 10:
-            maxReset();
-            PRPDReset();
-            break;
-        default:
-            break;
+    sqlcfg->sql_save(&sql_para);
+    reload(menu_index);        //重置默认数据
+    switch (key_val->grade.val2) {
+    case 8:
+        //自动录波
+        if(tev_sql->auto_rec == true){
+            data->set_send_para (sp_rec_on, 1);
+            data->set_send_para(sp_auto_rec, menu_index + 1);
         }
-        key_val->grade.val1 = 0;
-        key_val->grade.val2 = 0;
+        else{
+            data->set_send_para(sp_auto_rec, 0);
+            timer_rec_close_delay->start();
+//                data->set_send_para (sp_rec_on, 0);
+        }
         break;
-    case KEY_CANCEL:
-        reload(-1);        //重置默认数据
-        key_val->grade.val1 = 0;
-        key_val->grade.val2 = 0;
+    case 9:
+        emit startRecWave(mode,0);     //开始录波
+        manual = true;
         break;
-    case KEY_UP:
-        do_key_up_down(-1);
-        break;
-    case KEY_DOWN:
-        do_key_up_down(1);
-        break;
-    case KEY_LEFT:
-        do_key_left_right(-1);
-        break;
-    case KEY_RIGHT:
-        do_key_left_right(1);
+    case 10:
+        data_reset();
         break;
     default:
         break;
     }
-    fresh_setting();
+    BaseWidget::do_key_ok();
 }
 
 void TEVWidget::do_key_up_down(int d)
@@ -230,18 +143,6 @@ void TEVWidget::do_key_left_right(int d)
     }
 }
 
-void TEVWidget::showWaveData(VectorList buf, MODE mod)
-{
-    if( (key_val->grade.val0 == menu_index ) && ( !timer_freeze->isActive() || !tev_sql->auto_rec || manual == true) ){
-        key_val->grade.val1 = 1;        //为了锁住主界面，防止左右键切换通道
-        key_val->grade.val5 = 1;
-        emit fresh_parent();
-        ui->comboBox->hidePopup();
-        manual = false;
-        recWaveForm->working(key_val,buf,mod);
-    }
-}
-
 void TEVWidget::chart_ini()
 {
     //barchart
@@ -264,7 +165,7 @@ void TEVWidget::chart_ini()
     plot_PRPD->resize(200, 140);
     d_PRPD = new QwtPlotSpectroCurve;
     Common::set_PRPD_style(plot_PRPD,d_PRPD,VALUE_MAX);
-    PRPDReset();
+//    data_reset();
 
     //histogram
     plot_Histogram = new QwtPlot(ui->widget);
@@ -340,7 +241,28 @@ void TEVWidget::calc_tev_value (double &tev_db, int &pulse_cnt_show, double &deg
     degree = pow(tev_val,tev_sql->gain) * (double)pulse_cnt / sql_para.freq_val;     //严重度算法更改,严重度 = 幅值×每周期脉冲数
 }
 
-void TEVWidget::fresh_plot()
+void TEVWidget::fresh_Histogram()
+{
+    histogram_data.clear();
+
+    int tmp;
+
+    for(int j=0;j<121;j++){
+        tmp = 0;
+        for(int i=0;i<360;i++){
+            tmp += map[i][j];
+        }
+        QwtInterval interval( j - 60.0 , j - 59.0 );
+        interval.setBorderFlags( QwtInterval::ExcludeMaximum );
+        histogram_data.append( QwtIntervalSample( tmp, interval ) );
+    }
+
+    d_histogram->setData(new QwtIntervalSeriesData( histogram_data ));
+
+    plot_Histogram->replot();
+}
+
+void TEVWidget::fresh_1000ms()
 {
     double tev_db, degree;
     int pulse_cnt_show, sug_zero_offset, sug_noise_offset;
@@ -370,9 +292,9 @@ void TEVWidget::fresh_plot()
         is_current = 1;
     }
 
-    emit tev_log_data(db,pulse_cnt_show,degree,is_current);
+    emit send_log_data(db,pulse_cnt_show,degree,is_current);
 
-    //实时数据库    
+    //实时数据库
     if(mode == TEV1){
         Common::rdb_set_value(TEV1_amplitude,db,is_current);
         Common::rdb_set_value(TEV1_num,pulse_cnt_show,is_current);
@@ -394,46 +316,14 @@ void TEVWidget::fresh_plot()
         Common::rdb_set_value(TEV2_noise_biased_adv,sug_noise_offset,is_current);
     }
 
-    plot_PRPD->replot();
-    plot_Barchart->replot();
-    plot_Histogram->replot();
-}
-
-void TEVWidget::fresh_Histogram()
-{
-    histogram_data.clear();
-
-    int tmp;
-
-    for(int j=0;j<121;j++){
-        tmp = 0;
-        for(int i=0;i<360;i++){
-            tmp += map[i][j];
-        }
-        QwtInterval interval( j - 60.0 , j - 59.0 );
-        interval.setBorderFlags( QwtInterval::ExcludeMaximum );
-        histogram_data.append( QwtIntervalSample( tmp, interval ) );
-    }
-
-    d_histogram->setData(new QwtIntervalSeriesData( histogram_data ));
-
-    plot_Histogram->replot();
-}
-
-void TEVWidget::fresh_1000ms()
-{
-    fresh_plot();
     fresh_Histogram();
-//    qDebug()<<"token num:"<<token;
-
     d_BarChart->fresh();
+    plot_Barchart->replot();
 }
 
 void TEVWidget::fresh_100ms()
 {
     QVector<QPointF> PRPS_point_list;
-
-//    qDebug()<<"pulse_200ms.length()"<<pulse_200ms;
     int x,y;
     for(int i=0; i<pulse_100ms.count(); i++){
         x = pulse_100ms.at(i).x();
@@ -497,71 +387,29 @@ void TEVWidget::fresh_1ms()
                 min = MIN(min,l);
             }
             if(qAbs(max) > qAbs(min)){
-                pulse_100ms.append(transData(short_data->time,max));
+                pulse_100ms.append(Compute::trans_data(short_data->time,max,mode));
             }
             else{
-                pulse_100ms.append(transData(short_data->time,min));
+                pulse_100ms.append(Compute::trans_data(short_data->time,min,mode));
             }
         }
     }
 }
 
-void TEVWidget::add_token()
+
+
+void TEVWidget::data_reset()
 {
-    if(token < TOKEN_MAX){
-        token += 5;
-    }
-}
-
-QPoint TEVWidget::transData(int x, int y)
-{
-    y = tev_sql->gain * H_C_FACTOR * (y - tev_sql->fpga_zero) ; //注意，脉冲计算里，忽略了噪声偏置的影响
-
-    //取DB值
-    if(y>=1){
-        y = ((double)20) * log10(y);
-    }
-    else if(y<=-1){
-        y = -((double)20) * log10(-y);
-    }
-    else{
-        y = 0;
-    }
-
-    x = Common::time_to_phase(x);
-//    if(sqlcfg->get_para()->freq_val == 50){
-//        x = x % 2000000;    //取余数
-//        x = x * 360 /2000000;
-//    }
-//    else if(sqlcfg->get_para()->freq_val == 60){
-//        x = x % 1666667;
-//        x = x * 360 /1666667;
-//    }
-
-    return QPoint(x,y);
-}
-
-void TEVWidget::PRPDReset()
-{
+    //PRPD重置
     for(int i=0;i<360;i++){
         for(int j=0;j<121;j++){
             map[i][j]=0;
         }
     }
-    emit tev_PRPD_data(prpd_samples);
+    emit send_PRPD_data(prpd_samples);
     prpd_samples.clear();
-//    fresh_PRPD();
-}
-
-void TEVWidget::maxReset()
-{
-    max_db = 0;
-    ui->label_max->setText(tr("最大值: ") + QString::number(max_db) + "dB");
-}
-
-void TEVWidget::close_rec()
-{
-    data->set_send_para (sp_rec_on, 0);
+    //最大值重置
+    maxReset(ui->label_max);
 }
 
 void TEVWidget::fresh_setting()
@@ -574,29 +422,21 @@ void TEVWidget::fresh_setting()
         ui->comboBox->setItemText(0,tr("检测模式\t[连续]"));
     }
 
+    plot_PRPD->hide();
+    plot_Barchart->hide();
+    plot_Histogram->hide();
+    plot_PRPS->hide();
     if (tev_sql->chart == PRPD) {
         ui->comboBox->setItemText(1,tr("图形显示\t[PRPD]"));
         plot_PRPD->show();
-        plot_Barchart->hide();
-        plot_Histogram->hide();
-        plot_PRPS->hide();
     } else if(tev_sql->chart == BASIC){
         ui->comboBox->setItemText(1,tr("图形显示 \t[时序图]"));
-        plot_PRPD->hide();
         plot_Barchart->show();
-        plot_Histogram->hide();
-        plot_PRPS->hide();
     } else if(tev_sql->chart == Histogram){
         ui->comboBox->setItemText(1,tr("图形显示 \t[柱状图]"));
-        plot_PRPD->hide();
-        plot_Barchart->hide();
         plot_Histogram->show();
-        plot_PRPS->hide();
     } else if(tev_sql->chart == PRPS){
         ui->comboBox->setItemText(1,tr("图形显示 \t[PRPS]"));
-        plot_PRPD->hide();
-        plot_Barchart->hide();
-        plot_Histogram->hide();
         plot_PRPS->show();
     }
     ui->comboBox->setItemText(2,tr("增益调节\t[×%1]").arg(QString::number(tev_sql->gain, 'f', 1)));
@@ -619,8 +459,8 @@ void TEVWidget::fresh_setting()
     else{
         ui->comboBox->hidePopup();
     }
-
     ui->comboBox->lineEdit()->setText(tr(" 参 数 设 置"));
+
     emit fresh_parent();
 }
 

@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 #include <QtDebug>
 #include <QQuickItem>
+#include <QPushButton>
 
 #ifdef PRINTSCREEN
 #include <QPixmap>
@@ -28,7 +29,6 @@ MainWindow::MainWindow(QSplashScreen *sp, QWidget *parent ) :
 //    sqlcfg->sql_save(sqlcfg->default_config());       //用于程序崩溃时重置数据
 
     key_val.val = 0;
-    close_time_flag = 0;
     data = new G_PARA;
     memset(data, 0, sizeof(G_PARA));
     buzzer = new Buzzer(data);
@@ -60,12 +60,21 @@ MainWindow::MainWindow(QSplashScreen *sp, QWidget *parent ) :
     qRegisterMetaType<VectorList>("VectorList");
     qRegisterMetaType<MODE>("MODE");
 
+    Common::check_base_dir();       //初始化系统文件夹
+
     sp->showMessage(tr("正在初始化主菜单..."),Qt::AlignBottom|Qt::AlignLeft);
     menu_init();
     qml_init();
     statusbar_init();
     function_init(sp);
+    sp->showMessage(tr("正在初始化系统设置..."),Qt::AlignBottom|Qt::AlignLeft);
     options_init();
+
+    box = new QMessageBox(QMessageBox::Warning,tr("关机"),tr("将要关机.\n确定要关机吗?"),
+                          QMessageBox::Ok | QMessageBox::Cancel,this);
+
+    Common::messagebox_show_and_init(box);
+    box->hide();
 
 #ifdef PRINTSCREEN
     connect(timer_time,SIGNAL(timeout()),this,SLOT(printSc()));  //截屏
@@ -174,6 +183,8 @@ void MainWindow::function_init(QSplashScreen *sp)
     sp->showMessage(tr("正在初始化低频通道..."),Qt::AlignBottom|Qt::AlignLeft);
     channel_init((MODE)sqlcfg->get_para()->menu_l1,3);
     channel_init((MODE)sqlcfg->get_para()->menu_l2,4);
+
+    sp->showMessage(tr("正在初始化资产管理..."),Qt::AlignBottom|Qt::AlignLeft);
     channel_init((MODE)sqlcfg->get_para()->menu_asset,5);
     mode_list.append(Options_Mode);
 
@@ -490,26 +501,16 @@ void MainWindow::trans_key(quint8 key_code)
     }
 
     switch (key_code) {
-    case KEY_LEFT:
-        if(key_val.grade.val1 == 0 ){
-            do{
-                Common::change_index(key_val.grade.val0, -1, TAB_NUM - 1, 0);
-            }
-            while(mode_list.at(key_val.grade.val0) == Disable);
-            ui->tabWidget->setCurrentIndex(key_val.grade.val0);
-        }
-        break;
-    case KEY_RIGHT:
-        if(key_val.grade.val1 == 0 ){
-            do{
-                Common::change_index(key_val.grade.val0, 1, TAB_NUM - 1, 0);
-            }
-            while(mode_list.at(key_val.grade.val0) == Disable);
-            ui->tabWidget->setCurrentIndex(key_val.grade.val0);
-        }
-        break;
     case KEY_OK:
-        if(key_val.grade.val0 == TAB_NUM - 1){
+        if(box->isVisible()){
+            if(box->defaultButton() == box->button(QMessageBox::Ok)){
+                qDebug()<<"shut down!!!!!!!!!!!!";
+                save_channel();
+                data->set_send_para(sp_reboot,1);
+            }
+            box->hide();
+        }
+        else if(key_val.grade.val0 == TAB_NUM - 1){
             switch (key_val.grade.val1) {
             case 1:
                 key_val.grade.val2 = 1;
@@ -537,6 +538,43 @@ void MainWindow::trans_key(quint8 key_code)
             fresh_menu_icon();
         }
         break;
+    case KEY_CANCEL:
+        if(box->isVisible()){
+            box->hide();
+        }
+        else if (key_val.grade.val0 == TAB_NUM - 1 && key_val.grade.val1 > 0){       //只针对设置界面
+            key_val.grade.val1 = 0;
+        }
+        break;
+    case KEY_SHUTDOWN:
+        if(box->isHidden()){
+            Common::messagebox_show_and_init(box);
+        }
+        break;
+    case KEY_LEFT:
+        if(box->isVisible()){
+            Common::messagebox_switch(box);
+        }
+        else if(key_val.grade.val1 == 0 ){
+            do{
+                Common::change_index(key_val.grade.val0, -1, TAB_NUM - 1, 0);
+            }
+            while(mode_list.at(key_val.grade.val0) == Disable);
+            ui->tabWidget->setCurrentIndex(key_val.grade.val0);
+        }
+        break;
+    case KEY_RIGHT:
+        if(box->isVisible()){
+            Common::messagebox_switch(box);
+        }
+        else if(key_val.grade.val1 == 0 ){
+            do{
+                Common::change_index(key_val.grade.val0, 1, TAB_NUM - 1, 0);
+            }
+            while(mode_list.at(key_val.grade.val0) == Disable);
+            ui->tabWidget->setCurrentIndex(key_val.grade.val0);
+        }
+        break;
     case KEY_UP:
         if (key_val.grade.val0 == TAB_NUM - 1) {
             Common::change_index(key_val.grade.val1,-1,SETTING_NUM,1);
@@ -546,19 +584,7 @@ void MainWindow::trans_key(quint8 key_code)
         if (key_val.grade.val0 == TAB_NUM - 1) {
             Common::change_index(key_val.grade.val1,1,SETTING_NUM,1);
         }
-        break;
-    case KEY_CANCEL:
-        if (key_val.grade.val0 == TAB_NUM - 1 && key_val.grade.val1 > 0){       //只针对设置界面
-            key_val.grade.val1 = 0;
-        }
-        break;
-    case KEY_POWER:
-        close_time_flag++;
-        qDebug()<<"close_time_flag"<<close_time_flag;
-        if(close_time_flag == 2){
-            save_channel();
-        }
-        break;
+        break;    
     default:
         break;
     }
@@ -567,7 +593,6 @@ void MainWindow::trans_key(quint8 key_code)
     fresh_menu_icon();
     if(key_val.grade.val0 != TAB_NUM - 1 ){
         emit send_key(key_code);
-//        return;
     }
 }
 
@@ -1167,9 +1192,9 @@ void MainWindow::set_current_equ(QString new_equ, QString new_path)
 void MainWindow::printSc()
 {
     //    QPixmap fullScreenPixmap = this->grab(this->rect());                      //老的截屏方式，只能截取指定Wdiget及其子类
-    Common::mk_dir("/root/ScreenShots");
+    Common::mk_dir(DIR_SCREENSHOTS);
     QPixmap fullScreenPixmap = QGuiApplication::primaryScreen()->grabWindow(0);     //新截屏方式更加完美
-    bool flag = fullScreenPixmap.save(QString("./ScreenShots/ScreenShots-%1.png").arg(QTime::currentTime().toString("hh-mm-ss")),"PNG");
+    bool flag = fullScreenPixmap.save(QString(DIR_SCREENSHOTS"/ScreenShots-%1.png").arg(QTime::currentTime().toString("hh-mm-ss")),"PNG");
     if(flag)
         qDebug()<<"fullScreen saved!";
     else

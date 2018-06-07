@@ -10,13 +10,6 @@ LogTools::LogTools(MODE mode, QObject *parent) : QObject(parent)
 {
     this->mode = mode;
 
-    Common::mk_dir(DIR_USB);
-    Common::mk_dir(DIR_DATA);
-    Common::mk_dir(DIR_DATALOG);
-    Common::mk_dir(DIR_PRPDLOG);
-    Common::mk_dir(DIR_ASSET);
-    Common::mk_dir(DIR_ASSET_NORMAL);
-
     log_timer = 0;
     path_normal = DIR_DATALOG"/" + Common::MODE_toString(mode) + "_NORMAL" + ".log";
     path_asset = DIR_ASSET_NORMAL"/" + Common::MODE_toString(mode) + "_NORMAL" + ".log";
@@ -127,14 +120,19 @@ void LogTools::read_normal_log(QString path, QVector<LOG_DATA> &log_data)
 
         file.close();
     }
+    else{
+        qDebug()<<"read file failed!";
+
+    }
 }
 
-void LogTools::write_normal_log(QString path, QVector<LogTools::LOG_DATA> log_data)
+void LogTools::write_normal_log(QString path, QVector<LOG_DATA> log_data)
 {
     QFile file;
     file.setFileName(path);
     bool flag = file.open(QIODevice::WriteOnly);
-//    printf("writeFile:%s\n", path.toLocal8Bit().data());
+//    if(mode == TEV1)
+//        printf("writeFile:%s\n", path.toLocal8Bit().data());
 
     if(flag){
         QTextStream out(&file);

@@ -271,31 +271,36 @@ void FileTools::getWriteFilePath()
     }
 
     //文件夹操作
-    QDir dir;
+//    QDir dir;
     //创建文件夹
-    if(!dir.exists("/mmc/sdcard/WaveForm/")){
-        dir.mkdir("/mmc/sdcard/WaveForm/");
-    }
+//    if(!dir.exists("/mmc/sdcard/WaveForm/")){
+//        dir.mkdir("/mmc/sdcard/WaveForm/");
+//    }
 
-    if(!dir.exists("/mmc/sdcard/WaveForm/favorite")){
-        dir.mkdir("/mmc/sdcard/WaveForm/favorite");
-    }
+//    if(!dir.exists("/mmc/sdcard/WaveForm/favorite")){
+//        dir.mkdir("/mmc/sdcard/WaveForm/favorite");
+//    }
 
-    if(!dir.exists(DIR_USB"/") ){
-        dir.mkdir(DIR_USB"/");
-    }
+//    if(!dir.exists(DIR_USB"/") ){
+//        dir.mkdir(DIR_USB"/");
+//    }
 
-    if(!dir.exists(DIR_DATA"/") ){
-        dir.mkdir(DIR_DATA"/");
-    }
+//    if(!dir.exists(DIR_DATA"/") ){
+//        dir.mkdir(DIR_DATA"/");
+//    }
 
-    if(!dir.exists(DIR_WAVE"/") ){
-        dir.mkdir(DIR_WAVE"/");
-    }
+//    if(!dir.exists(DIR_WAVE"/") ){
+//        dir.mkdir(DIR_WAVE"/");
+//    }
 
-    if(!dir.exists(DIR_FAVORITE"/") ){
-        dir.mkdir(DIR_FAVORITE"/");
-    }
+//    if(!dir.exists(DIR_FAVORITE"/") ){
+//        dir.mkdir(DIR_FAVORITE"/");
+//    }
+
+    Common::mk_dir(DIR_USB);
+    Common::mk_dir(DIR_DATA);
+    Common::mk_dir(DIR_WAVE);
+    Common::mk_dir(DIR_FAVORITE);
 
     filepath = QString(DIR_WAVE"/" + filename);
     filepath_SD = QString("/mmc/sdcard/WaveForm/" + filename);

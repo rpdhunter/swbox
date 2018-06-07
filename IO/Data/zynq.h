@@ -1,4 +1,4 @@
-#ifndef ZYNQ_H
+﻿#ifndef ZYNQ_H
 #define ZYNQ_H
 
 //基地址
@@ -38,22 +38,21 @@
 #define SLEEPING                0x0005          //FPGA休眠(0为休眠,1为唤醒)
 #define BUZZER                  0x0006          //蜂鸣器(0不响,1为响)
 #define BUZZER_FREQ             0x0007          //蜂鸣器频率,目标频率f, 则写入值为100 000 000/f/2/16 (f范围100-20000)
+#define REBOOT                  0x0008          //关机指令(1为关机)
 #define FILTER_MODE             0x0009          //滤波模式设定，高八位控制H2,低八位控制H1,0无滤波，2为1.8M高通，1为500K高通
-#define L1_CHANNEL_MODE          0x000a          //低频通道模式，0为录波声音使用原始模式，1为录波声音使用包络线模式
-#define L2_CHANNEL_MODE          0x000b          //低频通道模式，0为录波声音使用原始模式，1为录波声音使用包络线模式
+#define L1_CHANNEL_MODE         0x000a          //低频通道模式，0为录波声音使用原始模式，1为录波声音使用包络线模式
+#define L2_CHANNEL_MODE         0x000b          //低频通道模式，0为录波声音使用原始模式，1为录波声音使用包络线模式
 
 //通道参数
-#define H1_ZERO				0x0010          //TEV参考零点(通道1)（0x0000-0xffff）
-#define H1_THRESHOLD			0x0011          //TEV脉冲阈值(通道1)（0x0000-0xffff）
-#define H2_ZERO				0x0012          //TEV参考零点(通道2)（0x0000-0xffff）
-#define H2_THRESHOLD			0x0013          //TEV脉冲阈值(通道2)（0x0000-0xffff）
+#define H1_ZERO                 0x0010          //通道1参考零点（0x0000-0xffff）
+#define H1_THRESHOLD			0x0011          //通道1脉冲阈值（0x0000-0xffff）
+#define H2_ZERO                 0x0012          //通道2参考零点（0x0000-0xffff）
+#define H2_THRESHOLD			0x0013          //通道2脉冲阈值（0x0000-0xffff）
 #define VOL_L1					0x0018          //超声音量通道1（0-15变化，7为原始音量）
 #define AA_RECORD_PLAY			0x0019          //播放声音标志(之后发送声音数据至FPGA)（0直播L1,1重播,2直播L2）
 #define VOL_L2					0x001a          //超声音量通道2（0-15变化，7为原始音量）
 #define KALMAN_L1               0x001b          //卡尔曼滤波器的开关(低频1)，0为关，1为开
 #define KALMAN_L2               0x001c          //卡尔曼滤波器的开关(低频2)，0为关，1为开
-#define L1_THRESHOLD            0x001d          //阈值(低频1)（0x0000-0xffff）
-#define L2_THRESHOLD            0x001e          //阈值(低频2)（0x0000-0xffff）
 
 //录波
 #define REC_ON                  0x001f          //录波开关(0为关闭录波功能,1为开启录波功能,常态关闭)
@@ -70,14 +69,11 @@
 //要通道数据信号
 #define READ_FPGA_NOMAL         0x0030          //普通
 #define READ_FPGA_REC           0x0031          //录波
-#define READ_FPGA_PRPD1         0x0032          //PRPD1模式
-#define READ_FPGA_PRPD2         0x0033          //PRPD2模式
 #define READ_FPGA_HFCT1         0x0034          //HFCT1模式
 #define READ_FPGA_HFCT2         0x0035          //HFCT2模式
 #define READ_FPGA_AE1           0x0036          //AE模式中包络线数据1
 #define READ_FPGA_AE2           0x0037          //AE模式中包络线数据2
 
-#define TEMP_TEST            0x0040          //临时，窗口时间，（0-63，代表0-63/40秒）
 
 
 enum send_params {
@@ -89,6 +85,7 @@ enum send_params {
     sp_sleeping,
     sp_buzzer,
     sp_buzzer_freq,
+    sp_reboot,
     sp_filter_mode,
     sp_l1_channnel_mode,
     sp_l2_channnel_mode,
@@ -103,8 +100,6 @@ enum send_params {
     sp_vol_l2,
     sp_kalman_l1,
     sp_kalman_l2,
-    sp_l1_threshold,
-    sp_l2_threshold,
 
     //录波
     sp_rec_on,
@@ -117,14 +112,10 @@ enum send_params {
     //要通道数据信号
     sp_read_fpga_normal,
     sp_read_fpga_rec,
-    sp_read_fpga_prpd1,
-    sp_read_fpga_prpd2,
     sp_read_fpga_hfct1,
     sp_read_fpga_hfct2,
     sp_read_fpga_ae1,
     sp_read_fpga_ae2,
-
-    sp_temp_test,
 
     sp_num
 };

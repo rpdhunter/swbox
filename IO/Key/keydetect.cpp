@@ -68,15 +68,38 @@ void KeyDetect::check_press_cont (int pin, enum KEY_VALUE key)
 	int cnt;
 	
 	if (!gpio_read_pin (pin)) {
-        usleep (KEY_MS_DLY);
+        usleep (KEY_MS_DLY);            //10ms
         if (!gpio_read_pin (pin)) {
             emit sendkey (key);
             cnt = 0;
             while (!gpio_read_pin (pin)) {
-                usleep (60000);
+                usleep (60000);         //300ms发送一次重复按键
                 if (cnt++ > 5) {
                     emit sendkey (key);
                     cnt = 5;
+                }
+            }
+        }
+    }
+}
+
+void KeyDetect::check_press_power(int pin)
+{
+    if(pin != PIN_POWER)
+        return;
+
+    if (!gpio_read_pin (pin)) {
+        msleep (10);            //400ms
+        if (!gpio_read_pin (pin)) {
+            emit sendkey (KEY_POWER);
+            msleep (300);
+            if (!gpio_read_pin (pin)) {
+                msleep (300);
+                if (!gpio_read_pin (pin)) {
+                    emit sendkey (KEY_SHUTDOWN);        //关机信号
+                    while (!gpio_read_pin (pin)) {
+                        usleep (KEY_MS_DLY);
+                    }
                 }
             }
         }
@@ -89,24 +112,22 @@ void KeyDetect::run(void)
 {
     while (true) {
 
-//        for (int i = 54; i < 62; ++i) {
+//        for (int i = 54; i < 63; ++i) {
 //            if (!gpio_read_pin (i)) {
 //                qDebug()<<i;
 //                msleep (400);
 //            }
 //        }
 
-
-        check_press_once (PIN_POWER, KEY_POWER);
         check_press_once (PIN_OK, KEY_OK);
         check_press_once (PIN_CANCEL, KEY_CANCEL);
-
         check_press_cont (PIN_UP, KEY_UP);
         check_press_cont (PIN_DOWN, KEY_DOWN);
         check_press_cont (PIN_LEFT, KEY_LEFT);
         check_press_cont (PIN_RIGHT, KEY_RIGHT);
+        check_press_power (PIN_POWER);
 
-        usleep (KEY_MS_DLY);
+        usleep (KEY_MS_DLY);        //10ms
     }
     exit(0);
 }

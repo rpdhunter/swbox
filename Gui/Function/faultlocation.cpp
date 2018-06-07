@@ -1,4 +1,4 @@
-#include "faultlocation.h"
+﻿#include "faultlocation.h"
 #include "ui_faultlocation.h"
 #include <QLineEdit>
 #include <qwt_dial_needle.h>
@@ -520,10 +520,8 @@ void FaultLocation::fresh_setting()
 
     ui->comboBox->lineEdit()->setText(tr(" 参 数 设 置"));
 
-
     timer->setSingleShot(!sql_para.location_sql.mode);
     emit fresh_parent();
-
 }
 
 

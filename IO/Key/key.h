@@ -1,4 +1,4 @@
-#ifndef KEY_H
+﻿#ifndef KEY_H
 #define KEY_H
 
 #define PS_GPIO_BASE        0xe000a000
@@ -10,7 +10,7 @@
 #define PIN_BASE            906
 #define PIN_START           54
 
-#define PIN_POWER           61
+#define PIN_POWER           62
 
 /*
  * HD_V1 : hardware made in 2016
@@ -80,13 +80,14 @@ const int gpio_pin_table[] = {
 /* key value define by self */
 enum KEY_VALUE {
     KEY_NONE    = 0x00,
-    KEY_POWER   = 0x10,
+    KEY_POWER   = 0x10,    
     KEY_CANCEL  = 0x20,
     KEY_OK      = 0x30,
     KEY_UP      = 0xa0,
     KEY_DOWN    = 0xa1,
     KEY_LEFT    = 0xb0,
     KEY_RIGHT   = 0xb1,
+    KEY_SHUTDOWN= 0xc0,
 };
 
 union CURRENT_KEY_VALUE {

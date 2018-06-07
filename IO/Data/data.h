@@ -17,6 +17,8 @@
 #define DIR_ASSET           DIR_DATA"/asset"
 #define DIR_ASSET_NORMAL    DIR_ASSET"/Normal"
 
+#define DIR_SCREENSHOTS     DIR_DATA"/ScreenShots"
+
 #define SDCARD_DIR          "/mmc/sdcard"
 #define WAVE_DIR_SD         SDCARD_DIR "/WaveForm"
 #define FAVORITE_DIR_SD     SDCARD_DIR "/WaveForm/favorite"
@@ -112,7 +114,7 @@ struct G_RECV_PARA_REC {
 //录波数据
 //适用通道：TEV1，TEV2，HFCT1，HFCT2，AA
 //更新时间：立刻更新
-struct G_RECV_PARA_AE {
+struct G_RECV_PARA_ENVELOPE {
     quint32 recComplete;    //录播完成(1为完成)
     quint32 groupNum;       //组号(0-15)
     quint32 time;           //时标（0-2M对应0-360°）
@@ -136,14 +138,14 @@ typedef struct G_SEND_PARA {
 
 /* total data */
 typedef struct G_PARA {
-    G_RECV_PARA_NOMAL recv_para_normal;     //常规数据
-    G_RECV_PARA_REC recv_para_rec;          //录波数据
-    G_RECV_PARA_PRPD recv_para_prpd1;       //脉冲数据(低频1)
-    G_RECV_PARA_PRPD recv_para_prpd2;       //脉冲数据(低频2)
-    G_RECV_PARA_SHORT recv_para_short1;     //短波形数据(高频1)
-    G_RECV_PARA_SHORT recv_para_short2;     //短波形数据(高频2)
-    G_RECV_PARA_AE recv_para_ae1;          //包络线数据（低频1）
-    G_RECV_PARA_AE recv_para_ae2;          //包络线数据（低频2）
+    G_RECV_PARA_NOMAL recv_para_normal;         //常规数据
+    G_RECV_PARA_REC recv_para_rec;              //录波数据
+//    G_RECV_PARA_PRPD recv_para_prpd1;         //脉冲数据(低频1)
+//    G_RECV_PARA_PRPD recv_para_prpd2;         //脉冲数据(低频2)
+    G_RECV_PARA_SHORT recv_para_short1;         //短波形数据(高频1)
+    G_RECV_PARA_SHORT recv_para_short2;         //短波形数据(高频2)
+    G_RECV_PARA_ENVELOPE recv_para_envelope1;   //包络线数据,共120位有效数据（低频1）
+    G_RECV_PARA_ENVELOPE recv_para_envelope2;   //包络线数据,共120位有效数据（低频2）
     G_SEND_PARA send_para;
 
 public:
@@ -199,6 +201,12 @@ enum CHANNEL{
     CHANNEL_L2,     //低频通道2
 };
 
+struct PC_DATA {
+    double pc_value;    //脉冲放电强度
+    int phase;          //相位
+    double rise_time;      //上升时间
+    double fall_time;      //下降时间
+};
 
 typedef QVector<qint32> VectorList;
 

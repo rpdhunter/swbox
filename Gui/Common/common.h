@@ -11,6 +11,9 @@
 #include <QListWidget>
 #include "IO/Data/data.h"
 #include "IO/SqlCfg/sqlcfg.h"
+#include <QTreeView>
+#include <QAbstractItemModel>
+#include <QMessageBox>
 
 #define FREEZE_TIME     5000            //秒界面锁定时间
 
@@ -128,6 +131,15 @@ public:
     static int max_at(QVector<double> list);            //找到最大值的位置，返回序号
     static int max_at(QVector<int> list);            //找到最大值的位置，返回序号
     static void rdb_set_value(uint yc_no,double val,uint qc = 0);
+
+    static void select_root(QTreeView *v, QAbstractItemModel *model);
+    static void select_up(QTreeView *v, QAbstractItemModel *model);
+    static void select_down(QTreeView *v, QAbstractItemModel *model);
+    static void expand_collapse(QTreeView *v);
+
+    static void check_base_dir();       //检测基本文件夹
+    static void messagebox_show_and_init(QMessageBox *box);
+    static void messagebox_switch(QMessageBox *box);
 
 };
 

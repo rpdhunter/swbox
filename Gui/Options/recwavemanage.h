@@ -1,8 +1,8 @@
-#ifndef RECWAVEMANAGE_H
+﻿#ifndef RECWAVEMANAGE_H
 #define RECWAVEMANAGE_H
 
 #include <QFrame>
-#include <IO/Key/key.h>
+#include "IO/Key/key.h"
 #include <QListWidget>
 #include <QTableWidget>
 #include "../Common/recwaveform.h"

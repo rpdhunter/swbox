@@ -89,12 +89,12 @@ QString FifoControl::send_para_to_string(int val)
     case sp_kalman_l2:
         tmp = "kalman_l2";
         break;
-    case sp_l1_threshold:
-        tmp = "l1_threshold";
-        break;
-    case sp_l2_threshold:
-        tmp = "l2_threshold";
-        break;
+//    case sp_l1_threshold:
+//        tmp = "l1_threshold";
+//        break;
+//    case sp_l2_threshold:
+//        tmp = "l2_threshold";
+//        break;
     case sp_rec_start_h1:
         tmp = "rec_start_h1";
         break;
@@ -122,11 +122,11 @@ QString FifoControl::send_para_to_string(int val)
     case sp_read_fpga_rec:
         tmp = "read_fpga_rec";
         break;
-    case sp_read_fpga_prpd1:
-        tmp = "read_fpga_prpd1";
-        break;
-    case sp_read_fpga_prpd2:
-        tmp = "read_fpga_prpd2";
+//    case sp_read_fpga_prpd1:
+//        tmp = "read_fpga_prpd1";
+//        break;
+//    case sp_read_fpga_prpd2:
+//        tmp = "read_fpga_prpd2";
         break;
     case sp_read_fpga_hfct1:
         tmp = "read_fpga_hfct1";
@@ -176,12 +176,12 @@ int FifoControl::read_short2_data()
 
 int FifoControl::read_ae1_data()
 {
-    return recv_data (vbase_ae1, (unsigned int *)&(tdata->recv_para_ae1));
+    return recv_data (vbase_ae1, (unsigned int *)&(tdata->recv_para_envelope1));
 }
 
 int FifoControl::read_ae2_data()
 {
-    return recv_data (vbase_ae2, (unsigned int *)&(tdata->recv_para_ae2));
+    return recv_data (vbase_ae2, (unsigned int *)&(tdata->recv_para_envelope2));
 }
 
 int FifoControl::read_rec_data()
@@ -306,8 +306,6 @@ void FifoControl::regs_init()
     tdata->set_send_para (sp_kalman_l1, 1);
     tdata->set_send_para (sp_kalman_l2, 1);
 
-    tdata->set_send_para (sp_l1_threshold, 200);
-    tdata->set_send_para (sp_l2_threshold, 200);
 
 //    tdata->set_send_para (sp_temp_test, 10);        //（0-63，代表0-63/40秒）
 
@@ -350,8 +348,8 @@ void FifoControl::check_send_param(RPARA pp[], int index, unsigned int data_mask
         send_data (vbase_send, &temp, 1);
         if(index != sp_read_fpga_normal && index != sp_read_fpga_rec && index != sp_group_num
                 && index != sp_rec_start_h1 && index != sp_rec_start_h2
-                && index != sp_read_fpga_prpd1 && index != sp_read_fpga_hfct1 && index != sp_read_fpga_ae1
-                && index != sp_read_fpga_prpd2 && index != sp_read_fpga_hfct2 && index != sp_read_fpga_ae2
+                && index != sp_read_fpga_hfct1 && index != sp_read_fpga_ae1
+                && index != sp_read_fpga_hfct2 && index != sp_read_fpga_ae2
                 ){
 //            qDebug("WRITE_REG = 0x%08x", temp);
             qDebug().noquote() << QString("%1 = 0x%2").arg(send_para_to_string(index)).arg(temp,8,16, QLatin1Char('0'));

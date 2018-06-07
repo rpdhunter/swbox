@@ -3,9 +3,10 @@
 #include <QLineEdit>
 #include <QDateTime>
 
+
 #define AREA_NUM 5              //设置片区菜单条目数
 #define SUBSTATION_NUM 5        //设置站所菜单条目数
-#define EQUIPMENT_NUM 4         //设置设备菜单条目数
+#define EQUIPMENT_NUM 5         //设置设备菜单条目数
 
 AssetWidget::AssetWidget(CURRENT_KEY_VALUE *val, int menu_index, QWidget *parent) :
     QFrame(parent),
@@ -33,23 +34,27 @@ AssetWidget::AssetWidget(CURRENT_KEY_VALUE *val, int menu_index, QWidget *parent
                                 "color: white;}"
                                 );
 
-    select_root();
+//    select_root();
+    Common::select_root(ui->treeView, model);
     ui->treeView->expandAll();
 
     QStringList list;
-    list << tr("展开/收起片区") << tr("增加片区") << tr("删除片区") << tr("重命名片区") << tr("增加子站所");
+    list << tr("展开/收起片区") << tr("增加片区") << tr("删除片区") << tr("重命名片区...") << tr("增加子站所");
     menu_area = new QListWidget(this);        //右键菜单
     Common::set_contextMenu_style(menu_area, list, QPoint(200,10));
 
     list.clear();
-    list << tr("展开/收起站所") << tr("增加站所") << tr("删除站所") << tr("重命名站所") << tr("增加子设备");
+    list << tr("展开/收起站所") << tr("增加站所") << tr("删除站所") << tr("重命名站所...") << tr("增加子设备");
     menu_substation = new QListWidget(this);        //右键菜单
     Common::set_contextMenu_style(menu_substation, list, QPoint(250,10));
 
     list.clear();
-    list << tr("设为当前设备") << tr("增加设备") << tr("删除设备") << tr("编辑设备");
+    list << tr("设为当前设备") << tr("增加设备") << tr("删除设备") << tr("编辑设备...")<< tr("测量数据管理...");
     menu_equipment = new QListWidget(this);        //右键菜单
     Common::set_contextMenu_style(menu_equipment, list, QPoint(300,10));
+
+    assetFileManagement = new AssetFileManagement(key_val, this);
+    connect(this, SIGNAL(send_key(quint8)), assetFileManagement, SLOT(trans_key(quint8)));
 }
 
 AssetWidget::~AssetWidget()
@@ -67,6 +72,7 @@ QString AssetWidget::normal_asset_dir_init()
 //key_val->grade.val1表征是否在当前工作页面
 //key_val->grade.val2表征右键菜单是否显示
 //key_val->grade.val3表征右键菜单选项
+//key_val->grade.val4表征历史测量数据窗口
 void AssetWidget::trans_key(quint8 key_code)
 {
     if (key_val == NULL || key_val->grade.val0 != menu_index) {
@@ -75,6 +81,11 @@ void AssetWidget::trans_key(quint8 key_code)
 
     if(inputStatus){        //文字输入状态
         emit send_input_key(key_code);
+        return;
+    }
+
+    if(key_val->grade.val4 == 1){
+        emit send_key(key_code);
         return;
     }
 
@@ -90,7 +101,8 @@ void AssetWidget::trans_key(quint8 key_code)
                 switch (key_val->grade.val3) {
                 case 0:
                 case 1:         //展开/收起片区
-                    expand_collapse();
+//                    expand_collapse();
+                    Common::expand_collapse(ui->treeView);
                     break;
                 case 2:         //增加片区
                     add_node(Node::Area);
@@ -112,7 +124,7 @@ void AssetWidget::trans_key(quint8 key_code)
                 switch (key_val->grade.val3) {
                 case 0:
                 case 1:         //展开/收起站所
-                    expand_collapse();
+                    Common::expand_collapse(ui->treeView);
                     break;
                 case 2:         //增加站所
                     add_node(Node::Substation);
@@ -144,6 +156,13 @@ void AssetWidget::trans_key(quint8 key_code)
                     break;
                 case 4:         //编辑设备
                     edit_node(tr("输入新的设备名"));
+                    break;
+//                case 5:         //测试报告
+//                    create_report();
+//                    break;
+                case 5:         //浏览测量数据
+                    key_val->grade.val4 = 1;
+                    assetFileManagement->setRootPath(model->data(index, Node::PathRole).toString());
                     break;
                 default:
                     break;
@@ -212,10 +231,12 @@ void AssetWidget::do_key_up_down(int d)
     }
     else{                               //树操作
         if(d > 0){
-            select_down();
+//            select_down();
+            Common::select_down(ui->treeView,model);
         }
         else{
-            select_up();
+//            select_up();
+            Common::select_up(ui->treeView,model);
         }
     }
 }
@@ -240,81 +261,6 @@ void AssetWidget::do_key_left_right(int d)
                 ui->treeView->setCurrentIndex(index_next);
             }
         }
-    }
-}
-
-void AssetWidget::select_root()
-{
-    QModelIndex index = model->index(0,0,ui->treeView->rootIndex());        //选择第一个可选节点（非不可见的根节点）
-    ui->treeView->setCurrentIndex(index);
-}
-
-void AssetWidget::select_up()
-{
-    QModelIndex index = ui->treeView->currentIndex();
-    QModelIndex index_next;
-
-    if(index.row()>0){      //有哥哥
-        index_next = index.sibling(index.row()-1,0);            //先找本节点的第一个哥哥
-        if(index_next.isValid() && ui->treeView->isExpanded(index_next)){       //有哥哥，如果是展开的，先找哥哥的小儿子
-            int rowCount = model->rowCount(index_next);
-            if(rowCount > 0){
-                index_next = model->index(rowCount-1,0,index_next);     //找到哥哥的小儿子
-                if(index_next.isValid() && ui->treeView->isExpanded(index_next) ){       //有孙子并且是展开的，再找哥哥的小孙子
-                    rowCount = model->rowCount(index_next);
-                    if(rowCount > 0){
-                        index_next = model->index(rowCount-1,0,index_next);     //找到哥哥的小孙子（循环次数视叔深度而定，不定深度可能需要递归）
-                    }
-                }
-            }
-        }
-    }
-    else{           //无哥哥
-        index_next = index.parent();        //找爹
-    }
-
-    if(index_next.isValid()){
-        ui->treeView->setCurrentIndex(index_next);
-    }
-}
-
-void AssetWidget::select_down()
-{
-    QModelIndex index = ui->treeView->currentIndex();
-    QModelIndex index_next;
-
-    if(ui->treeView->isExpanded(index) ){                   //如果当前节点是展开的
-        index_next = model->index(0,0,index);                   //第一顺位是本节点的第一个儿子
-    }
-
-
-    if(!index_next.isValid()){
-        index_next = model->index(index.row()+1,index.column(),index.parent());     //第二顺位是本节点的下一个兄弟
-    }
-
-    if(!index_next.isValid()){
-        int row = index.parent().row();
-        index_next = model->index(row + 1,0,index.parent().parent());       //第三顺位是本节点的下一个叔叔
-    }
-
-    if(!index_next.isValid()){
-        int row = index.parent().parent().row();
-        index_next = model->index(row + 1,0,index.parent().parent().parent());      //第四顺位是叔爷爷
-    }
-    if(index_next.isValid()){
-        ui->treeView->setCurrentIndex(index_next);
-    }
-}
-
-//展开/收起节点
-void AssetWidget::expand_collapse()
-{
-    QModelIndex index = ui->treeView->currentIndex();
-    if(ui->treeView->isExpanded(index)){
-        ui->treeView->collapse(index);
-    }
-    else{
-        ui->treeView->expand(index);
     }
 }
 
@@ -421,6 +367,8 @@ void AssetWidget::set_no_equ()
     emit current_asset_changed(str, QString(DIR_DATA));
 }
 
+
+
 QString AssetWidget::get_new_child_node_name(Node::Type type, QModelIndex &parent)
 {
     QString path = model->data(parent,Node::PathRole).toString();
@@ -496,6 +444,13 @@ void AssetWidget::fresh_setting()
         menu_area->hide();
         menu_substation->hide();
         menu_equipment->hide();
+    }
+
+    if(key_val->grade.val4 == 1){
+        assetFileManagement->show();
+    }
+    else{
+        assetFileManagement->hide();
     }
 
 }

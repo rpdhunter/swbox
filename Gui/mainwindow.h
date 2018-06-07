@@ -7,6 +7,7 @@
 #include <QSplashScreen>
 #include <QQuickWidget>
 #include <QVector>
+#include <QMessageBox>
 
 #include "IO/Data/fifodata.h"
 #include "IO/Com/Modbus/modbus.h"
@@ -89,7 +90,7 @@ private:
     FifoData *fifodata;
     Modbus *modbus;
 
-    //9个逻辑通道
+    //12个逻辑通道
     TEVWidget *tev1_widget, *tev2_widget;
     HFCTWidget *hfct1_widget, *hfct2_widget;
     UHFWidget *uhf1_widget, *uhf2_widget;
@@ -122,8 +123,9 @@ private:
 
     Rtu *rtu;
 
-    int serial_fd;      //保存一个全局的串口fd值
+    int serial_fd;          //保存一个全局的串口fd值
     Buzzer *buzzer;
+    QMessageBox *box;       //关机确认框
 
 
     void menu_init();
@@ -137,7 +139,6 @@ private:
     void fresh_grade1(void);                //刷新设置子选项
     void save_channel();       //保存所有通道的PRPD文件
     void set_asset_dir(QString new_path);       //设置asset路径
-    int close_time_flag;    //记录收到powerkey事件的次数，2次则执行保存
     void create_report();       //生成测试报告
 
 };

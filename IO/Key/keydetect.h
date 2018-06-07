@@ -1,4 +1,4 @@
-#ifndef KEYDETECT_H
+﻿#ifndef KEYDETECT_H
 #define KEYDETECT_H
 
 #include "key.h"
@@ -50,6 +50,7 @@ private:
     bool gpio_read_pin (int pin);
 	void check_press_once (int pin, enum KEY_VALUE key);
 	void check_press_cont (int pin, enum KEY_VALUE key);
+    void check_press_power (int pin);
 };
 
 #endif // KEYDETECT_H
