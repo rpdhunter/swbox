@@ -1,39 +1,57 @@
-import QtQuick 2.7
+﻿import QtQuick 2.7
 import QtQuick.VirtualKeyboard 2.1
 import QtQuick.Controls 2.0
 //import an.qt.DataTransfer 1.0
 
 Rectangle {
+    property int h: 0
+
     width: 480
-    height: 272
+    height: 272-h
     color: "#F6F6F6"
-//    color: "red"
 
 //    MouseArea {
+//        z: 99
 //        anchors.fill: parent
-//        onClicked: {
-//            console.log("receive:\t" + mouseX + '\t' + mouseY)
-//            mouse.accepted = false
-//        }
+//        enabled: true
+//        onClicked: console.log("MouseArea X:"+ mouseX + "   Y:" +  mouseY)
+
 //    }
 
-    InputPanel {
+    MyKeyboard {
+//        id: keyboard
         id: inputPanel
-        y:  parent.height - inputPanel.height
         anchors.left: parent.left
         anchors.right: parent.right
+        anchors.bottom: parent.bottom
 
-//        Rectangle {
         Image {
             id: pointer
             x: 30
             y: 6
+            z: 5
             width: 30 / 3
             height: 28 / 2
-//            color: "green"
             source: "qrc:/widgetphoto/wifi/pointer.png"
         }
     }
+
+//    MyInputPanel {
+//        id: inputPanel
+//        y:  parent.height - inputPanel.height
+//        anchors.left: parent.left
+//        anchors.right: parent.right
+////        focus: true
+
+//        Image {
+//            id: pointer
+//            x: 30
+//            y: 6
+//            width: 30 / 3
+//            height: 28 / 2
+//            source: "qrc:/widgetphoto/wifi/pointer.png"
+//        }
+//    }
 
     Text {
         id: preText
@@ -52,36 +70,34 @@ Rectangle {
         focus: true
         font.pixelSize: 30
 
-//        echoMode: TextInput.Password
-
-        inputMethodHints: Qt.ImhNoAutoUppercase | Qt.ImhPreferLowercase/* | Qt.ImhSensitiveData | Qt.ImhNoPredictiveText*/
+        inputMethodHints: Qt.ImhNoAutoUppercase | Qt.ImhPreferLowercase
 
         onTextChanged: {
             preText.visible = false
-//            console.log("input text:\t" + textInput.text)
         }
         onEditingFinished: {
-//            console.log("edit finished:\t" + textInput.text)
             dt.editFinished(textInput.text)
         }
     }
 
     Connections {
         target: dt
-//        onMouseClicked: {
-//            pointer.x = mouseX - pointer.width/2
-//            pointer.y = mouseY - pointer.height/2 -30
-////            console.log("recv:\t" + mouseX + '\t' + mouseY)
-//        }
         onMouseMoved: {
             pointer.x = mouseX - pointer.width/2
-            pointer.y = mouseY - pointer.height/2 -30 + 10
+            pointer.y = mouseY - pointer.height/2 - (272-h-inputPanel.height)
+
+//            inputPanel.focus = true
 //            console.log("recv:\t" + pointer.x + '\t' + pointer.y)
+
         }
         onInputClear: {
             textInput.text = str1
             preText.text = str2
             preText.visible = true
+        }
+        onViewInit: {
+            h = h_space
+            dt.qml_view_init(272-h-inputPanel.height)
         }
     }
 }

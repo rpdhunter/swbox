@@ -1,4 +1,4 @@
-/********************************************************************
+﻿/********************************************************************
 	created:	2015/11/16
 	created:	16:11:2015   11:51
 	filename: 	D:\cygwin64\home\ibm\prog\rtu\inc\comm_head.h
@@ -107,12 +107,12 @@ unsigned char sub_type;
 unsigned short content_len;
 unsigned char content [4];
 } internal_msg_t;
-*/
+
 typedef struct {
 unsigned int seconds;
 unsigned int msec;
 } time_type;
-
+*/
 
 //#define MAX_MSG_LEN				80
 #define INTERNAL_MSG_HEAD_LEN	(sizeof (internal_msg_t) - 4 /* sizeof (internal_msg_t.content)*/)

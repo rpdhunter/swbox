@@ -1,4 +1,4 @@
-#ifndef BATTERY_H
+﻿#ifndef BATTERY_H
 #define BATTERY_H
 
 /********************************************************************
@@ -26,7 +26,7 @@
 #include <errno.h>
 #include <linux/i2c.h>
 #include <linux/i2c-dev.h>
-#include "IO/Com/Modbus/gpio_oper.h"
+#include "IO/Com/rdb/gpio_oper.h"
 
 #define I2C_DEV_0		"/dev/i2c-0"
 

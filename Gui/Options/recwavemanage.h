@@ -1,20 +1,19 @@
 ﻿#ifndef RECWAVEMANAGE_H
 #define RECWAVEMANAGE_H
 
-#include <QFrame>
-#include "IO/Key/key.h"
 #include <QListWidget>
 #include <QTableWidget>
 #include "../Common/recwaveform.h"
+#include "../Common/common.h"
+#include "Gui/Common/basewidget.h"
 #include <QDir>
-//#include "voiceplayer.h"
 
 class QMessageBox;
 namespace Ui {
 class Form;
 }
 
-class RecWaveManage : public QFrame
+class RecWaveManage : public BaseWidget
 {
     Q_OBJECT
 public:
@@ -28,19 +27,19 @@ public slots:
     void playVoiceProgress(int p, int all, bool f);      //控制播放器进度
 
 signals:
-    void fresh_parent();
-    void send_key(quint8);
+//    void fresh_parent();
+//    void send_key(quint8);
 
     void play_voice(VectorList);        //发送播放声音的指令
     void stop_play_voice();             //终止播放
 
-    void show_indicator(bool);      //显示菊花
+//    void show_indicator(bool);      //显示菊花
 
 private slots:
     void start_play(VectorList list, MODE mode);
 
 private:
-    CURRENT_KEY_VALUE *key_val;
+//    CURRENT_KEY_VALUE *key_val;
 
     QTableWidget *tableWidget;
     RecWaveForm *recWaveForm;
@@ -65,6 +64,11 @@ private:
     QMessageBox *box;
 
     Ui::Form *ui;
+
+    void do_key_ok();
+    void do_key_cancel();
+    void do_key_up_down(int d);
+    void do_key_left_right(int d);
 };
 
 #endif // RECWAVEMANAGE_H

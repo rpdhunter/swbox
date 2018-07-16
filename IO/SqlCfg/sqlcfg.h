@@ -51,10 +51,46 @@ enum DISPLAY {
     Spectra = 7,    //频谱图
 };
 
+//滤波器
 enum FILTER {
-    NONE = 0,
-    HP_500K = 1,
-    HP_1800K = 2,
+    NONE,
+    hp_500k,
+    hp_1M,
+    hp_1M5,
+    hp_1M8,
+    hp_2M,
+    hp_2M5,
+    hp_3M,
+    hp_5M,
+    hp_8M,
+    hp_10M,
+    hp_12M,
+    hp_15M,
+    hp_18M,
+    hp_20M,
+    hp_22M,
+    hp_25M,
+    hp_28M,
+    hp_30M,
+    hp_32M,
+    hp_35M,
+
+    lp_2M,
+    lp_5M,
+    lp_8M,
+    lp_10M,
+    lp_12M,
+    lp_15M,
+    lp_18M,
+    lp_20M,
+    lp_22M,
+    lp_25M,
+    lp_28M,
+    lp_30M,
+    lp_32M,
+    lp_35M,
+    lp_38M,
+    lp_40M,
 };
 
 enum LOCATION_TRIGGER_CHANNEL {
@@ -74,13 +110,6 @@ enum SYNC_MODE {
     SYNC_EXTERNAL = 2,
 };
 
-enum WIFI_MODE {
-    WIFI_NONE = 0,
-    WIFI_HOTPOT = 1,
-    WIFI_AP = 2,
-    WIFI_SYNC = 4,
-};
-
 typedef struct H_CHANNEL_SQL {
     bool mode;                      //检测模式
     int chart;                      //图形显示模式
@@ -93,7 +122,8 @@ typedef struct H_CHANNEL_SQL {
     int offset_linearity;           //线性度补偿偏置
     int fpga_zero;                  //零点（需要FPGA同步）
     uint fpga_threshold;            //阈值（需要FPGA同步）
-    int filter;                     //滤波器（需要FPGA同步）
+    int filter_hp;                  //高通滤波器（部分需要FPGA同步）
+    int filter_lp;                  //低通滤波器
     bool auto_rec;                  //自动录波（需要FPGA同步）
 } H_CHANNEL_SQL;
 
@@ -131,7 +161,11 @@ typedef struct L_CHANNEL_SQL {
 //    int channel;   //触发通道
 //    int chart_mode;      //图形显示模式
 //} SYNCMODE_SQL;
-
+enum WIFI_TRANS_MODE{
+    wifi_ftp,
+    wifi_telnet,
+    wifi_104,
+};
 
 /* Sql para */
 typedef struct SQL_PARA {
@@ -149,6 +183,7 @@ typedef struct SQL_PARA {
     int screen_dark_time;                   //屏幕自动变暗时间,单位为秒
     int screen_close_time;                  //屏幕自动关闭时间，单位为秒
     int close_time;                         //自动关机时间,单位为分钟
+    int wifi_trans_mode;                    //wifi传输协议
     int max_rec_num;                        //录波文件保存个数
     bool buzzer_on;                         //蜂鸣器
     int auto_rec_interval;                  //自动录波间隔

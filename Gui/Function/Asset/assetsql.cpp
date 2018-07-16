@@ -204,6 +204,10 @@ void AssetSql::create_tree()
 {
     model_area->select();       //读取片区
     rootNode = new Node;
+    Node *n = new Node(Node::Normal, -1, tr("Normal"));
+    n->parent = rootNode;
+
+    rootNode->children.append(n );
 
     for (int i = 0; i < model_area->rowCount(); ++i) {
         rootNode->children.append(create_node_area(i,rootNode) );
@@ -349,13 +353,16 @@ QString Node::type_to_string()
 {
     switch (type) {
     case Equipment:
-        return QString("Equipment");
+        return QString("设备");
         break;
     case Substation:
-        return QString("Substation");
+        return QString("站所");
         break;
     case Area:
-        return QString("Area");
+        return QString("区域");
+        break;
+    case Normal:
+        return QString("通用设备");
         break;
     case Root:
         return QString("Root");

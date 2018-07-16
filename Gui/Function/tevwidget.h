@@ -1,13 +1,13 @@
 ﻿#ifndef AMPLITUDE1_H
 #define AMPLITUDE1_H
 
-#include "basewidget.h"
+#include "channelwidget.h"
 
 namespace Ui {
 class TEVWidget;
 }
 
-class TEVWidget : public BaseWidget
+class TEVWidget : public ChannelWidget
 {
     Q_OBJECT
 public:

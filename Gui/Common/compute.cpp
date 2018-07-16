@@ -8,7 +8,7 @@ Compute::Compute(QObject *parent) : QObject(parent)
 
 QPoint Compute::trans_data(int x, int y, MODE mode)
 {
-    if(mode != TEV1 || mode != TEV2)
+    if(mode != TEV1 && mode != TEV2)
         return QPoint();
 
     switch (mode) {
@@ -35,7 +35,7 @@ QPoint Compute::trans_data(int x, int y, MODE mode)
     return QPoint(x,y);
 }
 
-QVector<PC_DATA> Compute::compute_pc_1ms(QVector<int> list, int x_origin, double gain)
+QVector<PC_DATA> Compute::compute_pc_1ms(QVector<int> list, int x_origin, double gain, int threshold)
 {
     QVector<PC_DATA> pclist_1ms;
 
@@ -48,18 +48,25 @@ QVector<PC_DATA> Compute::compute_pc_1ms(QVector<int> list, int x_origin, double
         if(list.at(i) * list.at(i+1) <= 0){
             last = i+1;
             if(last-first > 1){         //至少有3个点
-                pc_data = compute_pc_1node(list.mid(first,last-first+1), x_origin, gain);  //计算一个脉冲的pC值
-                first = i;
-                if(qAbs(pc_data.pc_value) > 10){            //认为值严格为0的点是无意义点(可加入更严格的筛选条件)
-                    pclist_1ms.append( pc_data );
+                QVector<int> list_1node = list.mid(first,last-first+1);
+
+//                if(max_abs(list_1node.mid(1,list_1node.count()-2)).y() > threshold ){
+                QPoint P = max_abs(list_1node.mid(1,list_1node.count()-2));
+                if(P.y() > threshold ){
+//                    qDebug()<<"max value:"<< P << "\tthreshold"<<threshold<<list_1node;
+                    pc_data = compute_pc_1node(list_1node, x_origin, gain);  //计算一个脉冲的pC值
+                    if(qAbs(pc_data.pc_value) > 10){            //认为值严格为0的点是无意义点(可加入更严格的筛选条件)
+                        pclist_1ms.append( pc_data );
+                    }
                 }
+                first = i;
             }
         }
     }
 
-    if(pclist_1ms.isEmpty()){           //序列没有子脉冲，则把整个序列看做一个脉冲
-        pclist_1ms.append(compute_pc_1node(list, x_origin, gain) );
-    }
+//    if(pclist_1ms.isEmpty()  && max_abs(list).y() > threshold){           //序列没有子脉冲，则把整个序列看做一个脉冲
+//        pclist_1ms.append(compute_pc_1node(list, x_origin, gain) );
+//    }
 
     return pclist_1ms;
 }
@@ -139,6 +146,7 @@ double Compute::triangle(double d1, double d2)
     return d1*d1 / (d1 - d2) / 2.0;
 }
 
+//求一组测量值的50Hz频率分量和100Hz频率分量
 void Compute::compute_f_value(QVector<int> list, FFT *fft, int &v_50Hz, int &v_100Hz)
 {
     QVector<double> fft_50Hz, fft_100Hz;
@@ -149,4 +157,85 @@ void Compute::compute_f_value(QVector<int> list, FFT *fft, int &v_50Hz, int &v_1
     }
     v_50Hz = Common::avrage(fft_50Hz);
     v_100Hz = Common::avrage(fft_100Hz);
+}
+
+//寻找一个数组的最大值点
+//返回值为(最大值序号,最大值)
+QPoint Compute::max(QVector<int> list)
+{
+    QPoint P;
+    if(!list.isEmpty()){
+        int m = list.at(0), max_i=0;
+        for (int i = 0; i < list.count(); ++i) {
+            if(m < list.at(i)){
+                m = list.at(i);
+                max_i = i;
+            }
+        }
+        P.setX(max_i);
+        P.setY(m);
+    }
+    return P;
+}
+
+//寻找一个数组的最小值点
+//返回值为(最小值序号,最小值)
+QPoint Compute::min(QVector<int> list)
+{
+    QPoint P;
+    if(!list.isEmpty()){
+        int m = list.at(0), min_i=0;
+        for (int i = 0; i < list.count(); ++i) {
+            if(m > list.at(i)){
+                m = list.at(i);
+                min_i = i;
+            }
+        }
+        P.setX(min_i);
+        P.setY(m);
+    }
+    return P;
+}
+
+//寻找一个数组的绝对值最大点
+//返回值为(绝对值最大点序号,最大绝对值)
+QPoint Compute::max_abs(QVector<int> list)
+{
+    QPoint P;
+    if(!list.isEmpty()){
+        int m = qAbs(list.at(0) ), max_i=0;
+        for (int i = 0; i < list.count(); ++i) {
+            if(m < qAbs(list.at(i) ) ){
+                m = qAbs(list.at(i) );
+                max_i = i;
+            }
+        }
+        P.setX(max_i);
+        P.setY(m);
+    }
+    return P;
+}
+
+QVector<int> Compute::sim_sin(int amp, int f, int n)
+{
+    QVector<int> list;
+    for (int i = 0; i < n; ++i) {
+        list.append( amp * sin(i*f*2*3.1416/100)  );
+    }
+    return list;
+}
+
+QVector<int> Compute::sim_pulse(int amp, int n)
+{
+    QVector<int> list;
+    if(n<40){
+        qDebug()<<"sim_pulse input points should greater than 40!";
+        return list;
+    }
+
+    list.fill(0,n);
+    for (int i = 0; i < 20; ++i) {
+        list[20+i] = amp * (20-i) / 20;
+    }
+    return list;
 }

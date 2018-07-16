@@ -1,4 +1,4 @@
-#include <QApplication>
+﻿#include <QApplication>
 #include <QFontDatabase>
 #include <QTranslator>
 #include <QSplashScreen>
@@ -9,6 +9,7 @@
 #include "Gui/mainwindow.h"
 #include "IO/SqlCfg/sqlcfg.h"
 #include "Gui/Qml/quickview.h"
+#include "IO/Other/cpu.h"
 
 #include <QSqlDatabase>
 
@@ -16,6 +17,8 @@ void print_centor();
 
 int main(int argc, char *argv[])
 {
+    set_process_cpu(0,CPU_0);
+
     qputenv("QT_IM_MODULE", QByteArray("qtvirtualkeyboard"));
     QApplication a(argc, argv);
 

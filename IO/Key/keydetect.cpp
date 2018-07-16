@@ -1,5 +1,5 @@
 ﻿#include "keydetect.h"
-
+#include "IO/Other/cpu.h"
 
 //线程的初始化工作，建立设备连接
 KeyDetect::KeyDetect (QObject *parent) : QThread(parent)
@@ -110,6 +110,9 @@ void KeyDetect::check_press_power(int pin)
 //一旦按下某键，便发送对应信号
 void KeyDetect::run(void)
 {
+//    pthread_t tid = pthread_self();
+//    set_thread_cpu(tid,CPU_1);          //设置运行核
+
     while (true) {
 
 //        for (int i = 54; i < 63; ++i) {

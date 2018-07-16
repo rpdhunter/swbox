@@ -6,7 +6,7 @@
 #define VALUE_MAX 60
 
 AEWidget::AEWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu_index, QWidget *parent) :
-    BaseWidget(data, val, mode, menu_index, parent),
+    ChannelWidget(data, val, mode, menu_index, parent),
     ui(new Ui::AEWidget)
 {
     ui->setupUi(this);
@@ -86,6 +86,7 @@ void AEWidget::fresh_100ms()
 
     do_Spectra_compute();
 
+
     int x,y, time;
     double _y;
     for(int i=0; i<pulse_100ms.count(); i++){
@@ -124,6 +125,7 @@ void AEWidget::fresh_100ms()
     d_fly->setSamples(fly_samples);
     plot_fly->replot();
     ae_timelist.clear();
+
 }
 
 void AEWidget::reload(int index)
@@ -218,7 +220,7 @@ void AEWidget::do_key_ok()
         key_val->grade.val1 = 1;        //为了锁住主界面，防止左右键切换通道
         emit startRecWave(mode, aeultra_sql->time);        //发送录波信号
         emit show_indicator(true);
-        isBusy = true;
+//        isBusy = true;
         return;
     case 9:
         maxReset(ui->label_max);
@@ -228,7 +230,7 @@ void AEWidget::do_key_ok()
     default:
         break;
     }
-    BaseWidget::do_key_ok();
+    ChannelWidget::do_key_ok();
 }
 
 void AEWidget::chart_ini()
@@ -286,6 +288,7 @@ void AEWidget::PRPDReset()
 void AEWidget::save_channel()
 {
     PRPDReset();
+    ChannelWidget::save_channel();
 }
 
 void AEWidget::fly_Reset()
@@ -358,18 +361,18 @@ void AEWidget::fresh(bool f)
         }
 
         if(mode == AE1){
-            Common::rdb_set_value(AE1_amplitude,val_db,is_current);
-            Common::rdb_set_value(AE1_severity,0,is_current);
-            Common::rdb_set_value(AE1_gain,aeultra_sql->gain,is_current);
-            Common::rdb_set_value(AE1_biased,aeultra_sql->offset,is_current);
-            Common::rdb_set_value(AE1_biased_adv,offset,is_current);
+            Common::rdb_set_yc_value(AE1_amplitude,val_db,is_current);
+            Common::rdb_set_yc_value(AE1_severity,0,is_current);
+            Common::rdb_set_yc_value(AE1_gain,aeultra_sql->gain,is_current);
+            Common::rdb_set_yc_value(AE1_biased,aeultra_sql->offset,is_current);
+            Common::rdb_set_yc_value(AE1_biased_adv,offset,is_current);
         }
         else if(mode == AE2){
-            Common::rdb_set_value(AE2_amplitude,val_db,is_current);
-            Common::rdb_set_value(AE2_severity,0,is_current);
-            Common::rdb_set_value(AE2_gain,aeultra_sql->gain,is_current);
-            Common::rdb_set_value(AE2_biased,aeultra_sql->offset,is_current);
-            Common::rdb_set_value(AE2_biased_adv,offset,is_current);
+            Common::rdb_set_yc_value(AE2_amplitude,val_db,is_current);
+            Common::rdb_set_yc_value(AE2_severity,0,is_current);
+            Common::rdb_set_yc_value(AE2_gain,aeultra_sql->gain,is_current);
+            Common::rdb_set_yc_value(AE2_biased,aeultra_sql->offset,is_current);
+            Common::rdb_set_yc_value(AE2_biased_adv,offset,is_current);
         }
         emit send_log_data(val_db,0,0,is_current);
     }

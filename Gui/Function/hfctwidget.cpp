@@ -4,11 +4,11 @@
 #include <QGraphicsView>
 
 #define VALUE_MAX       9999           //RPPD最大值
-#define SETTING_NUM     10           //设置菜单条目数
+#define SETTING_NUM     11           //设置菜单条目数
 
 
 HFCTWidget::HFCTWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu_index, QWidget *parent) :
-    BaseWidget(data, val, mode, menu_index, parent),
+    ChannelWidget(data, val, mode, menu_index, parent),
     ui(new Ui::HFCTWidget)
 {
     ui->setupUi(this);
@@ -19,8 +19,15 @@ HFCTWidget::HFCTWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu
 
     reload(-1);
     max_100ms = 0;
+
+#ifdef TEST_LAB
+    bpcable = new BpCable;
+    bpcable->test();
+#endif
+
     chart_ini();
     recWaveForm->raise();
+    fir = new Fir;
     reload(menu_index);
 }
 
@@ -71,7 +78,7 @@ void HFCTWidget::reload(int index)
         }
         //设置滤波器
         //滤波模式设定，高八位控制H2,低八位控制H1,0无滤波，2为1.8M高通，1为500K高通
-        data->set_send_para (sp_filter_mode, sqlcfg->get_para()->hfct1_sql.filter + sqlcfg->get_para()->hfct2_sql.filter * 0x100);
+//        data->set_send_para (sp_filter_mode, sqlcfg->get_para()->hfct1_sql.filter_hp + sqlcfg->get_para()->hfct2_sql.filter_hp * 0x100);
         fresh_setting();
     }
 }
@@ -81,23 +88,35 @@ void HFCTWidget::do_key_ok()
     sqlcfg->sql_save(&sql_para);        //保存SQL
     reload(menu_index);                 //重置默认数据
     switch (key_val->grade.val2) {
-    case 8:
+    case 9:
         emit startRecWave(mode_continuous,hfct_sql->rec_time);     //开始连续录波
         emit show_indicator(true);
-        isBusy = true;
+//        isBusy = true;
         return;
-    case 9:
+    case 10:
         emit startRecWave(mode,0);     //开始录波
         manual = true;
         break;
-    case 10:
+    case 11:
         maxReset(ui->label_max);
         PRPDReset();
         break;
     default:
         break;
     }
-    BaseWidget::do_key_ok();
+
+    QVector<int> list1 = Compute::sim_sin(2500,1,120);
+    QVector<int> list2 = Compute::sim_pulse(1000,120);
+
+    for (int i = 0; i < 120; ++i) {
+        list1[i] += list1.at(i) + list2.at(i);
+    }
+
+    list1 = add_filters(list1);
+//    list2 = add_filters(list2);
+
+
+    ChannelWidget::do_key_ok();
 }
 
 void HFCTWidget::do_key_up_down(int d)
@@ -121,18 +140,28 @@ void HFCTWidget::do_key_left_right(int d)
         Common::change_index(hfct_sql->gain, d * 0.1, 20, 0.1 );
         break;
     case 4:
-        Common::change_index(hfct_sql->filter, d, HP_1800K, NONE );
+        list.clear();
+        list << NONE << hp_500k << hp_1M << hp_1M5 << hp_1M8 << hp_2M << hp_2M5 << hp_3M << hp_5M
+             << hp_8M << hp_10M << hp_12M << hp_15M << hp_18M << hp_20M << hp_22M << hp_25M << hp_28M
+             << hp_30M << hp_32M << hp_35M;
+        Common::change_index(hfct_sql->filter_hp, d, list);
         break;
     case 5:
-        hfct_sql->fpga_threshold += Common::code_value(1,mode) * d;
+        list.clear();
+        list << NONE << lp_2M << lp_5M << lp_8M << lp_10M << lp_12M << lp_15M << lp_18M << lp_20M
+             << lp_22M << lp_25M << lp_28M << lp_30M << lp_32M << lp_35M << lp_38M << lp_40M;
+        Common::change_index(hfct_sql->filter_lp, d, list);
         break;
     case 6:
-        Common::change_index(hfct_sql->pulse_time, d, MAX_PULSE_CNT, 1 );
+        hfct_sql->fpga_threshold += Common::code_value(1,mode) * d;
         break;
     case 7:
-        hfct_sql->auto_rec = !hfct_sql->auto_rec;
+        Common::change_index(hfct_sql->pulse_time, d, MAX_PULSE_CNT, 1 );
         break;
     case 8:
+        hfct_sql->auto_rec = !hfct_sql->auto_rec;
+        break;
+    case 9:
         Common::change_index(hfct_sql->rec_time, d, 5, 1 );
         break;
     default:
@@ -183,7 +212,6 @@ void HFCTWidget::chart_ini()
     plot_Spectra = new QwtPlot(ui->widget);
     plot_Spectra->resize(200, 140);
     d_Spectra = new QwtPlotHistogram;
-    qDebug()<<"d_Spectra init";
     Common::set_Spectra_style(plot_Spectra,d_Spectra,0,50,0,60,"");
 }
 
@@ -215,6 +243,17 @@ void HFCTWidget::do_Spectra_compute()
     max_100ms = 0;
 }
 
+QVector<int> HFCTWidget::add_filters(QVector<int> list)
+{
+//    qDebug()<<"before:"<<list;
+    list = fir->set_filter(list, (FILTER)hfct_sql->filter_hp);
+//    qDebug()<<"mid:"<<list;
+    list = fir->set_filter(list, (FILTER)hfct_sql->filter_lp);
+//    qDebug()<<"after:"<<list<<"\n";
+    return list;
+
+}
+
 void HFCTWidget::PRPDReset()
 {
     map_PRPD.clear();
@@ -228,6 +267,51 @@ void HFCTWidget::PRPDReset()
 void HFCTWidget::save_channel()
 {
     PRPDReset();
+    ChannelWidget::save_channel();
+}
+
+//读取一次原始数据
+//原始数据为256个数据
+void HFCTWidget::fresh_1ms()
+{
+    if( group_num != short_data->time ){         //判断数据有效性
+        group_num = short_data->time;
+        if(short_data->empty == 0){              //0为有数据
+            if(token == 0){
+                return;
+            }
+            else{
+                token--;
+            }
+
+            //拷贝数据
+            QVector<int> list;
+            for (int i = 0; i < 256; ++i) {
+                if(short_data->data[i] == 0x55aa){
+                    break;
+                }
+                else{
+                    list.append(((int)short_data->data[i] - 0x8000));
+                }
+            }
+
+            //加入滤波器
+//            qDebug()<<"before:"<<Compute::max(list)/*<<list*/;
+            list = add_filters(list);
+//            qDebug()<<"after:"<<Compute::max(list)/*<<list*/;
+
+            qint32 max = MAX(max_100ms, list.at(Common::max_at(list)) );
+            if(max > max_100ms ){
+                pulse_list_100ms = list;            //找到100ms中最大的一组脉冲数据进行频谱分析
+                max_100ms = max;
+            }
+
+            //切割 计算 筛选
+            QVector<PC_DATA> pclist_1ms = Compute::compute_pc_1ms(list.mid(10,100),short_data->time,hfct_sql->gain,hfct_sql->fpga_threshold);
+            //累计数据
+            pclist_100ms.append(pclist_1ms);
+        }
+    }
 }
 
 void HFCTWidget::fresh_100ms()
@@ -295,10 +379,12 @@ void HFCTWidget::fresh_100ms()
     //插入TF图,柱状图代码
 
     //刷新200ms内的db和脉冲数
+//    qDebug()<<pclist_100ms.count();
     foreach (PC_DATA node, pclist_100ms) {
         if(db < qAbs(node.pc_value) ){
             db = qAbs(node.pc_value);
         }
+//        qDebug()<<node.pc_value;
 //        pclist_1000ms.append(qAbs(node.pc_value));
     }
 //    pulse_number += pclist_100ms.length();
@@ -307,43 +393,12 @@ void HFCTWidget::fresh_100ms()
 
 }
 
-//读取一次原始数据
-//原始数据为256个数据
-void HFCTWidget::fresh_1ms()
+void HFCTWidget::showWaveData(VectorList buf, MODE mod)
 {
-    if( group_num != short_data->time ){         //判断数据有效性
-        group_num = short_data->time;
-        if(short_data->empty == 0){              //0为有数据
-            if(token == 0){
-                return;
-            }
-            else{
-                token--;
-            }
-
-            //拷贝数据
-            QVector<int> list;
-            for (int i = 0; i < 256; ++i) {
-                if(short_data->data[i] == 0x55aa){
-                    break;
-                }
-                else{
-                    list.append(((int)short_data->data[i] - 0x8000));
-                }
-            }
-
-            qint32 max = MAX(max_100ms, list.at(Common::max_at(list)) );
-            if(max > max_100ms ){
-                pulse_list_100ms = list;            //找到100ms中最大的一组脉冲数据进行频谱分析
-                max_100ms = max;
-            }
-
-            //切割 计算 筛选
-            QVector<PC_DATA> pclist_1ms = Compute::compute_pc_1ms(list,short_data->time,hfct_sql->gain);
-            //累计数据
-            pclist_100ms.append(pclist_1ms);
-        }
-    }
+//    qDebug()<<buf.at(Common::max_at(buf));
+    buf = add_filters(buf);
+//    qDebug()<<buf.count() << "\t" << buf.at(Common::max_at(buf));;
+    ChannelWidget::showWaveData(buf,mod);
 }
 
 void HFCTWidget::fresh_1000ms()
@@ -373,6 +428,12 @@ void HFCTWidget::fresh_1000ms()
     ui->label_val->setText(QString("%1").arg(db));
     ui->label_pluse->setText(tr("脉冲数: ") + Common::secton_three(pulse_cnt_show) );//按三位分节法显示脉冲计数
     ui->label_degree->setText(tr("严重度: %1").arg(degree));
+
+#ifdef TEST_LAB
+    ui->label_judge->setText(tr("模式判断: %1").arg(bpcable->cable_prpd_mode(points_PRPD)));
+#else
+    ui->label_judge->hide();
+#endif
 //    pclist_1000ms.clear();
 
     if ( db >= hfct_sql->high) {
@@ -393,28 +454,28 @@ void HFCTWidget::fresh_1000ms()
     //实时数据库
     int d_max, d_min;
     if(mode == HFCT1){
-        Common::rdb_set_value(HFCT1_amplitude,db,is_current);
-        Common::rdb_set_value(HFCT1_num,pulse_cnt,is_current);
-        Common::rdb_set_value(HFCT1_severity,degree,is_current);
-        Common::rdb_set_value(HFCT1_gain,hfct_sql->gain,is_current);
-        Common::rdb_set_value(HFCT1_center_biased,hfct_sql->fpga_zero,is_current);
+        Common::rdb_set_yc_value(HFCT1_amplitude,db,is_current);
+        Common::rdb_set_yc_value(HFCT1_num,pulse_cnt,is_current);
+        Common::rdb_set_yc_value(HFCT1_severity,degree,is_current);
+        Common::rdb_set_yc_value(HFCT1_gain,hfct_sql->gain,is_current);
+        Common::rdb_set_yc_value(HFCT1_center_biased,hfct_sql->fpga_zero,is_current);
         d_max = data->recv_para_normal.hdata0.ad.ad_max;
         d_min = data->recv_para_normal.hdata0.ad.ad_min;
-        Common::rdb_set_value(HFCT1_center_biased_adv, ((d_max + d_min) / 2) - 0x8000, is_current);
-        Common::rdb_set_value(HFCT1_noise_biased,0,is_current);
-        Common::rdb_set_value(HFCT1_noise_biased_adv,0,is_current);
+        Common::rdb_set_yc_value(HFCT1_center_biased_adv, ((d_max + d_min) / 2) - 0x8000, is_current);
+        Common::rdb_set_yc_value(HFCT1_noise_biased,0,is_current);
+        Common::rdb_set_yc_value(HFCT1_noise_biased_adv,0,is_current);
     }
     else{
-        Common::rdb_set_value(HFCT2_amplitude,db,is_current);
-        Common::rdb_set_value(HFCT2_num,pulse_cnt,is_current);
-        Common::rdb_set_value(HFCT2_severity,degree,is_current);
-        Common::rdb_set_value(HFCT2_gain,hfct_sql->gain,is_current);
-        Common::rdb_set_value(HFCT2_center_biased,hfct_sql->fpga_zero,is_current);
+        Common::rdb_set_yc_value(HFCT2_amplitude,db,is_current);
+        Common::rdb_set_yc_value(HFCT2_num,pulse_cnt,is_current);
+        Common::rdb_set_yc_value(HFCT2_severity,degree,is_current);
+        Common::rdb_set_yc_value(HFCT2_gain,hfct_sql->gain,is_current);
+        Common::rdb_set_yc_value(HFCT2_center_biased,hfct_sql->fpga_zero,is_current);
         d_max = data->recv_para_normal.hdata1.ad.ad_max;
         d_min = data->recv_para_normal.hdata1.ad.ad_min;
-        Common::rdb_set_value(HFCT2_center_biased_adv, ((d_max + d_min) / 2) - 0x8000, is_current);
-        Common::rdb_set_value(HFCT2_noise_biased,0,is_current);
-        Common::rdb_set_value(HFCT2_noise_biased_adv,0,is_current);
+        Common::rdb_set_yc_value(HFCT2_center_biased_adv, ((d_max + d_min) / 2) - 0x8000, is_current);
+        Common::rdb_set_yc_value(HFCT2_noise_biased,0,is_current);
+        Common::rdb_set_yc_value(HFCT2_noise_biased_adv,0,is_current);
     }
 
     if (max_db < db) {
@@ -467,28 +528,19 @@ void HFCTWidget::fresh_setting()
     }
 
     ui->comboBox->setItemText(2,tr("增益调节\t[×%1]").arg(QString::number(hfct_sql->gain, 'f', 1)));
-
-    if(hfct_sql->filter == NONE){
-        ui->comboBox->setItemText(3,tr("滤波器\t[无]"));
-    }
-    else if(hfct_sql->filter == HP_500K){
-        ui->comboBox->setItemText(3,tr("滤波器   [高通500K]"));
-    }
-    else if(hfct_sql->filter == HP_1800K){
-        ui->comboBox->setItemText(3,tr("滤波器   [高通1.8M]"));
-    }
-
-    ui->comboBox->setItemText(4,tr("脉冲触发\t[%1]mV").arg(QString::number((int)Common::physical_value(hfct_sql->fpga_threshold,mode) )));
-    ui->comboBox->setItemText(5,tr("脉冲计数时长\t[%1]s").arg(QString::number(hfct_sql->pulse_time)) );
+    ui->comboBox->setItemText(3,tr("高通滤波\t[%1]").arg(Common::filter_to_string(hfct_sql->filter_hp)));
+    ui->comboBox->setItemText(4,tr("低通滤波\t[%1]").arg(Common::filter_to_string(hfct_sql->filter_lp)));
+    ui->comboBox->setItemText(5,tr("脉冲触发\t[%1]mV").arg(QString::number((int)Common::physical_value(hfct_sql->fpga_threshold,mode) )));
+    ui->comboBox->setItemText(6,tr("脉冲计数时长\t[%1]s").arg(QString::number(hfct_sql->pulse_time)) );
 
     if(hfct_sql->auto_rec == true){
-        ui->comboBox->setItemText(6,tr("自动录波\t[开启]") );
+        ui->comboBox->setItemText(7,tr("自动录波\t[开启]") );
     }
     else{
-        ui->comboBox->setItemText(6,tr("自动录波\t[关闭]") );
+        ui->comboBox->setItemText(7,tr("自动录波\t[关闭]") );
     }
 
-    ui->comboBox->setItemText(7,tr("连续录波\t[%1]s").arg(QString::number(hfct_sql->rec_time)));
+    ui->comboBox->setItemText(8,tr("连续录波\t[%1]s").arg(QString::number(hfct_sql->rec_time)));
 
     ui->comboBox->setCurrentIndex(key_val->grade.val2-1);
 

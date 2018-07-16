@@ -1,4 +1,4 @@
-#include "factoryreset.h"
+﻿#include "factoryreset.h"
 #include <QVBoxLayout>
 #include <QPushButton>
 #include <QApplication>
@@ -64,7 +64,10 @@ void FactoryReset::trans_key(quint8 key_code)
 
     switch (key_code) {
     case KEY_OK:
-        if(key_val->grade.val2 == 1){
+        if(key_val->grade.val2 == 0){
+            key_val->grade.val2 = 1;
+        }
+        else if(key_val->grade.val2 == 1){
             if(reset == 1){
                 sqlcfg->sql_save(sqlcfg->default_config());
                 qDebug()<<"Factory Reset!";

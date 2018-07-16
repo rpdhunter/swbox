@@ -1,13 +1,15 @@
 ﻿#ifndef HFCTWIDGET_H
 #define HFCTWIDGET_H
 
-#include "basewidget.h"
+#include "channelwidget.h"
+#include "Gui/Common/fir.h"
+#include "Gui/Algorithm/Bp/bpcable.h"
 
 namespace Ui {
 class HFCTWidget;
 }
 
-class HFCTWidget : public BaseWidget
+class HFCTWidget : public ChannelWidget
 {
     Q_OBJECT
 
@@ -23,10 +25,16 @@ private slots:
     void fresh_1000ms();
     void fresh_100ms();
     void fresh_1ms();
+    void showWaveData(VectorList buf, MODE mod);
 
 private:
     Ui::HFCTWidget *ui;
     H_CHANNEL_SQL *hfct_sql;
+    Fir *fir;
+
+#ifdef TEST_LAB
+    BpCable *bpcable;
+#endif
 
     void do_key_ok();
     void do_key_up_down(int d);
@@ -37,6 +45,7 @@ private:
     void chart_ini();
     void PRPDReset();
     void do_Spectra_compute();
+    QVector<int> add_filters(QVector<int> list);
 
     //数据流
     QVector<PC_DATA> pclist_100ms;      //100ms的脉冲数据,HFCT分析的基准

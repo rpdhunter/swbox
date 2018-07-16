@@ -229,24 +229,24 @@ void UHFWidget::fresh_plot()
 
     //实时数据库
     if(mode == UHF1){
-        Common::rdb_set_value(UHF1_amplitude,db,is_current);
-        Common::rdb_set_value(UHF1_num,pulse_cnt_show,is_current);
-        Common::rdb_set_value(UHF1_severity,degree,is_current);
-        Common::rdb_set_value(UHF1_gain,uhf_sql->gain,is_current);
-        Common::rdb_set_value(UHF1_center_biased,uhf_sql->fpga_zero,is_current);
-        Common::rdb_set_value(UHF1_noise_biased,uhf_sql->offset_noise,is_current);
-        Common::rdb_set_value(UHF1_center_biased_adv,sug_zero_offset,is_current);
-        Common::rdb_set_value(UHF1_noise_biased_adv,sug_noise_offset,is_current);
+        Common::rdb_set_yc_value(UHF1_amplitude,db,is_current);
+        Common::rdb_set_yc_value(UHF1_num,pulse_cnt_show,is_current);
+        Common::rdb_set_yc_value(UHF1_severity,degree,is_current);
+        Common::rdb_set_yc_value(UHF1_gain,uhf_sql->gain,is_current);
+        Common::rdb_set_yc_value(UHF1_center_biased,uhf_sql->fpga_zero,is_current);
+        Common::rdb_set_yc_value(UHF1_noise_biased,uhf_sql->offset_noise,is_current);
+        Common::rdb_set_yc_value(UHF1_center_biased_adv,sug_zero_offset,is_current);
+        Common::rdb_set_yc_value(UHF1_noise_biased_adv,sug_noise_offset,is_current);
     }
     else{
-        Common::rdb_set_value(UHF2_amplitude,db,is_current);
-        Common::rdb_set_value(UHF2_num,pulse_cnt_show,is_current);
-        Common::rdb_set_value(UHF2_severity,degree,is_current);
-        Common::rdb_set_value(UHF2_gain,uhf_sql->gain,is_current);
-        Common::rdb_set_value(UHF2_center_biased,uhf_sql->fpga_zero,is_current);
-        Common::rdb_set_value(UHF2_noise_biased,uhf_sql->offset_noise,is_current);
-        Common::rdb_set_value(UHF2_center_biased_adv,sug_zero_offset,is_current);
-        Common::rdb_set_value(UHF2_noise_biased_adv,sug_noise_offset,is_current);
+        Common::rdb_set_yc_value(UHF2_amplitude,db,is_current);
+        Common::rdb_set_yc_value(UHF2_num,pulse_cnt_show,is_current);
+        Common::rdb_set_yc_value(UHF2_severity,degree,is_current);
+        Common::rdb_set_yc_value(UHF2_gain,uhf_sql->gain,is_current);
+        Common::rdb_set_yc_value(UHF2_center_biased,uhf_sql->fpga_zero,is_current);
+        Common::rdb_set_yc_value(UHF2_noise_biased,uhf_sql->offset_noise,is_current);
+        Common::rdb_set_yc_value(UHF2_center_biased_adv,sug_zero_offset,is_current);
+        Common::rdb_set_yc_value(UHF2_noise_biased_adv,sug_noise_offset,is_current);
     }
 
     emit uhf_log_data(db,pulse_cnt_show,degree,is_current);

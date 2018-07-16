@@ -1,13 +1,13 @@
 ﻿#ifndef AEWIDGET_H
 #define AEWIDGET_H
 
-#include "basewidget.h"
+#include "channelwidget.h"
 
 namespace Ui {
 class AEWidget;
 }
 
-class AEWidget : public BaseWidget
+class AEWidget : public ChannelWidget
 {
     Q_OBJECT
 public:

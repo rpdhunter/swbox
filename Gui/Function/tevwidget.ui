@@ -40,6 +40,9 @@
    <property name="currentIndex">
     <number>0</number>
    </property>
+   <property name="maxVisibleItems">
+    <number>15</number>
+   </property>
    <item>
     <property name="text">
      <string>检测模式          [单次]</string>

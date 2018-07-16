@@ -17,16 +17,27 @@ extern "C" {
 
 
 #include <semaphore.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
+#include <arpa/inet.h>
+#include <sys/ioctl.h>
+#include <netdb.h>
 
-//#include "global_define.h"
-#include "point_table.h"
+#include "global_define.h"
 #include "data_types.h"
-#include "comm_head.h"
+#include "point_table.h"
 
-#define RDB_CHECK_TIME	100000	/* 100000us, 100ms */
+#define RDB_SEND_PORT		8111
+#define RDB_RECV_PORT		8222
+
+#define RDB_CHECK_TIME	50000	/* 100000us, 100ms */
 
 #define YC_INT			1		/* 遥测整型 */
 #define YC_FLOAT		2		/* 遥测浮点 */
+#define DZ_INT			0x01
+#define DZ_FLOAT		0x02
+#define DZ_STRING		0x03
 
 #define YK_SP			1		/* 单点遥控 */
 #define YK_DP			2		/* 双点遥控 */
@@ -77,27 +88,40 @@ extern "C" {
 #define YX_NUMBER		(YX_VALID_NUM + 4)
 #define YC_NUMBER		(YC_VALID_NUM + 4)
 #define YK_NUMBER		(YK_VALID_NUM + 4)
-//#define YM_NUMBER		(YM_VALID_NUM + 4)
+#define DZ_NUMBER		(DZ_VALID_NUM + 4)
 
 #define RDB_TYPE_YX		0x01
 #define RDB_TYPE_YC		0x02
 #define RDB_TYPE_YM		0x03
+#define RDB_TYPE_YK		0x04
+#define RDB_TYPE_DZ   	0x05
 
-#define MAX_RDB_EVENT_NO	600		/*最大事件数*/
+#define MAX_RDB_EVENT_NO	600
 
 #define MAX_RDB_REGED_APP	5
 
-#define MAX_MSG_LEN					512 		/*消息最大长度*/
+#define MAX_MSG_LEN					2048
 
 #define INTERNAL_MSG_HEAD_LEN		(sizeof (internal_msg_t) - 4 /* sizeof (internal_msg_t.content)*/)
 
 /* message type */
+#define MSG_NONE_TYPE 				0x00
+#define	MSG_SUB_YX					0x01
+#define	MSG_SUB_YC					0x02
 #define MSG_CHK_SEND_LST			0x10
 #define MSG_CHK_TIME1S_TASK			0x11
 #define MSG_CHK_EVENT				0x12
-#define		MSG_SUB_YX				0x01
-#define		MSG_SUB_YC				0x02
-/*事件链表添加*/
+#define MSG_YX_EVENT 				0x20
+#define MSG_YC_EVENT 				0x21
+#define MSG_YK_EVENT 				0x22
+#define MSG_YK_SELECT 				0x30
+#define MSG_YK_UNSELECT 			0x31
+#define MSG_YK_OPERATE 				0x32
+#define MSG_YK_DONE 				0x33
+#define MSG_SENDPATH_EVENT 			0x40
+#define MSG_DZ_EVENT 				0x50
+
+
 #define ADD_EVENT_TO_TAIL(PENTRY,PEVENT) \
 { \
 	if ((PENTRY)->p_event_tail != NULL) { \
@@ -109,7 +133,7 @@ extern "C" {
 		(PENTRY)->p_event_head = (PEVENT); \
 	} \
 }
-/*事件链表移除*/
+
 #define GET_EVENT_FROM_HEAD(PENTRY,PEVENT) \
 { \
 	if ((PENTRY)->p_event_head != NULL) { \
@@ -135,11 +159,78 @@ do { \
 #define _DPRINTF(fmt, args...)
 
 #endif /* __DBUG__ */
-/* 遥测数据类型*/
+
 typedef union {
 	Int32		i_val;
 	float32		f_val;
 } yc_data_type;
+
+typedef struct rdb_yc_param_s{
+	unsigned int yc_no;		/* 从0到YC_NUMBER-1 */
+	yc_data_type * val;		/* 遥测值 */
+	unsigned char qds;		/* 品质 */
+	time_type * ts;			/* 时标，可以为NULL */
+	int	b_event;			/* 是否触发事件 */
+}rdb_yc_param_t;
+
+typedef struct rdb_yx_param_s{
+	unsigned int yx_no;		/* 从0到YX_NUMBER-1 */
+	unsigned int * val;		/* 双点入库，DP_OPEN or DP_CLOSE */
+	time_type * ts;			/* 时标 */
+	unsigned char cos_soe_flag;
+}rdb_yx_param_t;
+
+
+typedef struct rdb_dz_param_s{
+	unsigned int dz_no; 		/* 从0到DZ_NUMBER-1 */
+	unsigned char tag;			/* 数据类型 */
+	unsigned char data_len;		/* 数据长度 */
+	unsigned char * data_buf;	/* 数据值 */
+}rdb_dz_param_t;
+
+
+typedef struct rdb_yk_select_s{
+	unsigned int yk_no;		/* 从0到YK_NUMBER-1 */
+	unsigned char val;		/* 双点入库，DP_OPEN or DP_CLOSE */
+	int app_id;				/* 遥控发起者的id */
+	int yk_result;			/* 记录遥控各个步骤的结果 */
+}rdb_yk_select_t;
+
+typedef struct rdb_yk_unselect_s{
+	unsigned int yk_no;		/* 从0到YK_NUMBER-1 */
+	int app_id;				/* 遥控发起者的id */
+	int yk_result;			/* 记录遥控各个步骤的结果 */
+}rdb_yk_unselect_t;
+
+typedef struct rdb_yk_operate_s{
+	unsigned int yk_no;		/* 从0到YK_NUMBER-1 */
+	unsigned char val;		/* 双点入库，DP_OPEN or DP_CLOSE */
+	int app_id;				/* 遥控发起者的id */
+	int yk_result;			/* 记录遥控各个步骤的结果 */
+}rdb_yk_operate_t;
+
+typedef struct rdb_yk_done_s{
+	unsigned int yk_no; 	/* 从0到YK_NUMBER-1 */
+	unsigned char ret;		/* 执行结果 */
+	int app_id;				/* 遥控发起者的id */
+	int yk_result;			/* 记录遥控各个步骤的结果 */
+}rdb_yk_done_t;
+
+
+typedef struct rdb_udp_s{
+	int rdb_server_id;				/* 外部通信用 */
+	int rdb_client_id;				/* 外部通信用 */
+	struct sockaddr_in client_addr;
+
+	rdb_yc_param_t yc_param;
+	rdb_yx_param_t yx_param;
+	rdb_dz_param_t dz_param;
+	rdb_yk_select_t yk_select;
+	rdb_yk_unselect_t yk_unselect;
+	rdb_yk_operate_t yk_operate;
+	rdb_yk_done_t yk_done;
+}rdb_udp_t;
+
 
 /* 二进制计数器读数 */
 typedef struct bcr_s {
@@ -147,15 +238,15 @@ typedef struct bcr_s {
 	unsigned char seq_not;		/* 顺序记法 */
 } bcr_t;
 
-typedef struct data_hook_s {	//本质为一个Node
+typedef struct data_hook_s {
 	int	app_id;					/* 接受hook的应用ID */
-	Uint32 proto_data_no;		/* 在协议中的点号，即yx_lst的下标 */
+	Uint32 proto_data_no;		/* 在协议中的点号 */
 	struct data_hook_s * next;
 } data_hook_t;
 
 typedef struct yx_event_s {
-	Uint32 data_no;			//存入几号点
-	Uint32 event_val;       //存入开还是关
+	Uint32 data_no;
+	Uint32 event_val;
 	time_type time_val;
 	unsigned char cos_soe_flag;
 } yx_event_t;
@@ -163,27 +254,25 @@ typedef struct yx_event_s {
 typedef struct yc_event_s {
 	Uint32 data_no;
 	yc_data_type event_val;
-	/*
-typedef union {
-	Int32		i_val;
-	float32		f_val;
-} yc_data_type;
-	*/
 	unsigned char data_type;
 	unsigned char qds;
 	time_type time_val;
 } yc_event_t;
 
 typedef struct rdb_event_s {
-	/*
-	本质为一个单项链表的Node，info域为yx_event_t或yc_event_t其一。
-	*/
 	union {
 		yx_event_t yx_e;
 		yc_event_t yc_e;
 	};
 	struct rdb_event_s * next;
 } rdb_event_t;
+
+typedef struct yx_preset_s {
+	Uint32 preset_val;			/* 预置值，延时结束后，与cur_val不等，则赋予cur_val */
+	Uint8  preset_flag;			/* 预置cos/soe的flag */
+	time_type ts;				/* 预置值赋值时间 */
+	struct timeval delay_until;
+} yx_preset_t;
 
 typedef int (* hook_func_t) (unsigned char *, int);
 
@@ -192,6 +281,7 @@ typedef struct yx_s {
 	rdb_event_t * p_event_head;	/* event链头，取事件 */
 	rdb_event_t * p_event_tail;	/* event链尾，压事件 */
 	data_hook_t * p_hook;		/* hook链 */
+	yx_preset_t	  pres_val;		/* 预置值 */
 	sem_t 		  mutex;		/* 互斥信号量 */
 } yx_t;
 
@@ -205,12 +295,6 @@ typedef struct yc_s {
 	sem_t 		  mutex;		/* 互斥信号量 */
 } yc_t;
 
-typedef struct ym_s {
-	bcr_t cur_val;				/* 数值，BCR类型 */
-	data_hook_t * p_hook;		/* hook链 */
-	sem_t 		  mutex;		/* 互斥信号量 */
-} ym_t;
-
 typedef struct yk_s {
 	unsigned char ctl_val;		/* 数值，存为双点值，DP_OPEN or DP_CLOSE */
 	unsigned char ctl_mode;		/* 遥控模式，YK_DO or YK_SBO */
@@ -218,18 +302,29 @@ typedef struct yk_s {
 	unsigned char sel_val;		/* 选择值 */
 	int 		  sel_timer;	/* 选择超时计时器，us */
 	int 		  oper_timer;	/* 控制超时计时器，us */
-	int app_id;					/* 控制应用的ID */
-	sem_t 		 mutex;		/* 互斥信号量 */
+	int 		  app_id;		/* 控制应用的ID */
+	data_hook_t * p_hook;		/* hook链 */
+	sem_t 		  mutex;		/* 互斥信号量 */
 } yk_t;
 
-typedef struct app_hook_func_s {//本质为Node
-	int app_id;
-	//int (* hook_func) (unsigned char *, int);
-	//hook_func为一函数指针，返回值为int，函数参数为(unsigned char *, int)
-	hook_func_t hook_func;
-	unsigned char msg_buf [MAX_MSG_LEN];
-	int msg_len;
-	struct app_hook_func_s * next;
+typedef struct dz_s {
+	unsigned char tag;			/* Tag类型 */
+	unsigned char data_len;		/* 数据长度 */
+	unsigned char data_buf[256];/* 值 */
+	int 		  app_id;		/* 控制应用的ID */
+	data_hook_t * p_hook;		/* hook链 */
+//	int sn;						/* 当前区号 */
+//	int sn_min;					/* 终端支持的最小区号 */
+//	int sn_max;					/* 终端支持的最大区号 */
+	sem_t 		  mutex;		/* 互斥信号量 */
+} dz_t;
+
+typedef struct app_hook_func_s {
+	int app_id;								/**/
+	hook_func_t hook_func;					/*函数指针,指向注册的函数*/
+	unsigned char msg_buf [MAX_MSG_LEN];	/*传递消息的数组*/
+	int msg_len;							/*传递消息的长度*/
+	struct app_hook_func_s * next;			/*Next指针*/
 } app_hook_func_t;
 
 typedef struct {
@@ -253,10 +348,20 @@ int reg_rdb_data (
 	unsigned int proto_no
 	);
 
+int proto_rdb_reg_data (int com_no);
+
 int yx_set_value (
 	unsigned int yx_no,		/* 从0到YX_NUMBER-1 */
 	unsigned int * val,		/* 双点入库，DP_OPEN or DP_CLOSE */
 	time_type * ts,			/* 时标 */
+	unsigned char cos_soe_flag,
+	int flag				/* 是否发送给QT的rdb */
+	);
+int yx_preset_value (
+	unsigned int yx_no,		/* 从0到YX_NUMBER-1 */
+	unsigned int * val,		/* 双点入库，DP_OPEN or DP_CLOSE */
+	time_type * ts,			/* 时标 */
+	time_type * delay,		/* 延时 */
 	unsigned char cos_soe_flag
 	);
 int yx_get_value (
@@ -264,6 +369,12 @@ int yx_get_value (
 	unsigned int begin_no,	/* 从0到YX_NUMBER-1 */
 	unsigned int num,		/* 从1到YX_NUMBER */
 	unsigned int data []	/* 数据缓存数组 */
+	);
+int yx_get_preset_value (
+	int app_id,
+	unsigned int begin_no,	/* 从0到YX_NUMBER-1 */
+	unsigned int num,		/* 从1到YX_NUMBER */
+	unsigned int data []	/* 数据缓存数组,返回遥信数据值 */
 	);
 int yx_get_value_proto (
 	int app_id,
@@ -284,7 +395,8 @@ int yc_set_value (
 	yc_data_type * val,		/* 遥测值 */
 	unsigned char qds,		/* 品质 */
 	time_type * ts,			/* 时标，可以为NULL */
-	int	b_event				/* 是否触发事件 */
+	int	b_event,				/* 是否触发事件 */
+	int flag				/* 是否发送给QT的rdb */
 	);
 int yc_get_value (
 	int app_id,
@@ -310,6 +422,29 @@ int yc_get_total_num_proto (
 	int app_id,
 	unsigned int * num		/* 返回遥测总数目 */
 	);
+
+int dz_set_value (
+	rdb_dz_param_t * dz,
+	int flag					/* 是否发送给QT的rdb */
+	);
+int dz_get_value (
+//	int app_id,
+	rdb_dz_param_t * dz
+	);
+int dz_get_value_proto (
+	int app_id,
+	rdb_dz_param_t * dz
+	);
+
+int dz_get_total_num (
+	int app_id,
+	unsigned int * num		/* 返回遥测总数目 */
+	);
+int dz_get_total_num_proto (
+	int app_id,
+	unsigned int * num		/* 返回遥测总数目 */
+	);
+
 int ym_set_value (
 	unsigned int ym_no,		/* 从0到YM_NUMBER-1 */
 	bcr_t * val				/* 二进制计数量 */
@@ -339,28 +474,67 @@ int yk_select (
 	unsigned char val,		/* 双点入库，DP_OPEN or DP_CLOSE */
 	int app_id				/* 遥控发起者的id */
 	);
+int yk_select_proto (
+	unsigned int yk_no,		/* 从0到YK_NUMBER-1 */
+	unsigned char val,		/* 双点入库，DP_OPEN or DP_CLOSE */
+	int app_id,				/* 遥控发起者的id */
+	int flag				/* 是否发送给QT的rdb */
+	);
 int yk_unselect (
 	unsigned int yk_no,		/* 从0到YK_NUMBER-1 */
 	int app_id				/* 遥控发起者的id */
+	);
+int yk_unselect_proto (
+	unsigned int yk_no,		/* 从0到YK_NUMBER-1 */
+	int app_id,				/* 遥控发起者的id */
+	int flag				/* 是否发送给QT的rdb */
 	);
 int yk_operate (
 	unsigned int yk_no,		/* 从0到YK_NUMBER-1 */
 	unsigned char val,		/* 双点入库，DP_OPEN or DP_CLOSE */
 	int app_id				/* 遥控发起者的id */
 	);
+int yk_operate_proto (
+	unsigned int yk_no,		/* 从0到YK_NUMBER-1 */
+	unsigned char val,		/* 双点入库，DP_OPEN or DP_CLOSE */
+	int app_id,				/* 遥控发起者的id */
+	int flag				/* 是否发送给QT的rdb */
+	);
 int yk_done (
 	unsigned int yk_no,		/* 从0到YK_NUMBER-1 */
-	unsigned char ret		/* 执行结果 */
+	unsigned char ret,		/* 执行结果 */
+	int app_id	
+	);
+int yk_done_proto (
+	unsigned int yk_no,		/* 从0到YK_NUMBER-1 */
+	unsigned char ret,		/* 执行结果 */
+	int app_id,
+	int flag				/* 是否发送给QT的rdb */
 	);
 int yk_get_total_num (
 	unsigned int * num		/* 返回遥控总数目 */
 	);
+int yk_get_total_num_proto (
+	unsigned int * num		/* 返回遥控总数目 */
+	);
+
+int yx_rdb_index_to_proto_index (
+	int app_id,
+	unsigned int rdb_index,
+	unsigned int * proto_index);
+
+int yc_rdb_index_to_proto_index (
+	int app_id,
+	unsigned int rdb_index,
+	unsigned int * proto_index);
 
 int rdb_yx_show ();
 
 int rdb_yc_show ();
 
-int rdb_ym_show ();
+
+extern rdb_udp_t * rdb_udp;
+extern void send_path(unsigned char meas_path[],int len);
 
 #ifdef __cplusplus
 }

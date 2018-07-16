@@ -120,6 +120,7 @@ SQL_PARA *SqlCfg::default_config(void)
     sql_para.key_backlight = 0;                             //默认键盘背光关闭
     sql_para.screen_dark_time = SCREEN_DARK_TIME;
     sql_para.screen_close_time = SCREEN_CLOSE_TIME;
+    sql_para.wifi_trans_mode = wifi_ftp;
     sql_para.close_time = SHUT_DOWN_TIME;
     sql_para.language = LANGUAGE_DEF;
 
@@ -218,7 +219,8 @@ void SqlCfg::tev_default(H_CHANNEL_SQL &sql)
     sql.rec_time = 5;
     sql.offset_noise = 0;
     sql.offset_linearity = 0;
-    sql.filter = NONE;
+    sql.filter_hp = NONE;
+    sql.filter_lp = NONE;
 }
 
 void SqlCfg::hfct_default(H_CHANNEL_SQL &sql)
@@ -235,7 +237,8 @@ void SqlCfg::hfct_default(H_CHANNEL_SQL &sql)
     sql.rec_time = 5;
     sql.offset_noise = 0;
     sql.offset_linearity = 0;
-    sql.filter = NONE;
+    sql.filter_hp = NONE;
+    sql.filter_lp = NONE;
 }
 
 void SqlCfg::uhf_default(H_CHANNEL_SQL &sql)
@@ -252,7 +255,8 @@ void SqlCfg::uhf_default(H_CHANNEL_SQL &sql)
     sql.rec_time = 5;
     sql.offset_noise = 0;
     sql.offset_linearity = 0;
-    sql.filter = NONE;
+    sql.filter_hp = NONE;
+    sql.filter_lp = NONE;
 }
 
 void SqlCfg::aa_default(L_CHANNEL_SQL &sql)

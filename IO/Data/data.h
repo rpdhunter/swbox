@@ -201,6 +201,14 @@ enum CHANNEL{
     CHANNEL_L2,     //低频通道2
 };
 
+enum WIFI_MODE {
+    WIFI_NONE,
+    WIFI_STA,
+    WIFI_AP,
+    WIFI_APSTA,
+    WIFI_SYNC,
+};
+
 struct PC_DATA {
     double pc_value;    //脉冲放电强度
     int phase;          //相位

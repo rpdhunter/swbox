@@ -47,6 +47,9 @@
    <property name="currentText">
     <string>检测模式 [连续]</string>
    </property>
+   <property name="maxVisibleItems">
+    <number>15</number>
+   </property>
    <item>
     <property name="text">
      <string>检测模式 [连续]</string>

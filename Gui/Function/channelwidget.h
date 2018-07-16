@@ -1,10 +1,9 @@
-﻿#ifndef BASEWIDGET_H
-#define BASEWIDGET_H
+﻿#ifndef CHANNELWIDGET_H
+#define CHANNELWIDGET_H
 
 #include <QFrame>
 #include <QVector>
 #include "IO/Data/data.h"
-#include "IO/Key/key.h"
 #include "IO/SqlCfg/sqlcfg.h"
 #include "IO/Other/logtools.h"
 #include "IO/Com/rdb/rdb.h"
@@ -15,6 +14,7 @@
 #include "../Common/common.h"
 #include "../Common/compute.h"
 #include "../Common/fft.h"
+#include "../Common/basewidget.h"
 
 class QTimer;
 class QwtPlotSpectroCurve;
@@ -22,11 +22,11 @@ class QwtPlotHistogram;
 class QwtPlotCurve;
 class QGraphicsView;
 
-class BaseWidget : public QFrame
+class ChannelWidget : public BaseWidget
 {
     Q_OBJECT
 public:
-    explicit BaseWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu_index, QWidget *parent = nullptr);
+    explicit ChannelWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu_index, QWidget *parent = nullptr);
 
     void change_log_dir();      //改变asset目录
     virtual void save_channel();        //保存通道数据
@@ -39,26 +39,26 @@ protected slots:
     virtual void trans_key(quint8 key_code);
 
 private slots:
-//    void fresh_plot(void);
-//    void fresh_Histogram();
     void add_token();
     void close_rec();       //关闭录波系统
     void add_ae_data();     //处理256个点的AE数据（1/160秒的数据）
 
 signals:
-    void fresh_parent();
-    void send_key(quint8);
+//    void fresh_parent();
+//    void send_key(quint8);
+//    void show_indicator(bool);      //显示菊花
+
     void startRecWave(MODE, int);
     void send_log_data(double val, int pulse, double degree, int qc);    //发送日志数据
     void send_PRPD_data(QVector<QwtPoint3D>);
     void beep(int index, int red_alert);        //蜂鸣器报警(参数：通道，严重程度(0,1,2))
-    void show_indicator(bool);      //显示菊花
+
 
 protected:
-    virtual void do_key_up_down(int d) = 0;
-    virtual void do_key_left_right(int d) = 0;
-    virtual void do_key_ok();
-    virtual void do_key_cancel();
+//    virtual void do_key_up_down(int d) = 0;
+//    virtual void do_key_left_right(int d) = 0;
+    void do_key_ok();
+    void do_key_cancel();
     virtual void fresh_setting() = 0;
 
     //    void chart_ini();
@@ -66,7 +66,6 @@ protected:
     void do_Spectra_compute();
 
     //常规变量
-    CURRENT_KEY_VALUE *key_val;
     G_PARA *data;
     G_RECV_PARA_SHORT *short_data;
     SQL_PARA sql_para;
@@ -75,7 +74,6 @@ protected:
     LogTools *logtools;
     FFT *fft;
 
-    bool isBusy;            //菊花状态
 
     G_RECV_PARA_ENVELOPE *ae_pulse_data;
     QVector<int> ae_datalist;
@@ -132,4 +130,4 @@ protected:
     RecWaveForm *recWaveForm;
 };
 
-#endif // BASEWIDGET_H
+#endif // CHANNELWIDGET_H

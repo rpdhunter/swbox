@@ -6,7 +6,7 @@
 #define VALUE_MAX 60
 
 AAWidget::AAWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu_index, QWidget *parent) :
-    BaseWidget(data, val, mode, menu_index, parent),
+    ChannelWidget(data, val, mode, menu_index, parent),
     ui(new Ui::AAWidget)
 {
     ui->setupUi(this);
@@ -85,7 +85,7 @@ void AAWidget::do_key_ok()
         key_val->grade.val1 = 1;        //为了锁住主界面，防止左右键切换通道
         emit startRecWave(mode, aaultra_sql->time);        //发送录波信号
         emit show_indicator(true);
-        isBusy = true;
+//        isBusy = true;
         return;
     case 8:
         maxReset(ui->label_max);
@@ -93,7 +93,7 @@ void AAWidget::do_key_ok()
     default:
         break;
     }
-    BaseWidget::do_key_ok();
+    ChannelWidget::do_key_ok();
 }
 
 void AAWidget::do_key_up_down(int d)
@@ -169,6 +169,7 @@ void AAWidget::fresh(bool f)
         } else {
             ui->label_val->setStyleSheet("QLabel {font-family:WenQuanYi Micro Hei;font-size:60px;color:green}");
         }
+//        #if 0
 
         int is_current = 0;
         if((int)key_val->grade.val0 == menu_index){
@@ -176,20 +177,21 @@ void AAWidget::fresh(bool f)
         }
 
         if(mode == AA1){
-            Common::rdb_set_value(AA1_amplitude,val_db,is_current);
-            Common::rdb_set_value(AA1_severity,0,is_current);
-            Common::rdb_set_value(AA1_gain,aaultra_sql->gain,is_current);
-            Common::rdb_set_value(AA1_biased,aaultra_sql->offset,is_current);
-            Common::rdb_set_value(AA1_biased_adv,offset,is_current);
+            Common::rdb_set_yc_value(AA1_amplitude,val_db,is_current);
+            Common::rdb_set_yc_value(AA1_severity,0,is_current);
+            Common::rdb_set_yc_value(AA1_gain,aaultra_sql->gain,is_current);
+            Common::rdb_set_yc_value(AA1_biased,aaultra_sql->offset,is_current);
+            Common::rdb_set_yc_value(AA1_biased_adv,offset,is_current);
         }
         else if(mode == AA2){
-            Common::rdb_set_value(AA2_amplitude,val_db,is_current);
-            Common::rdb_set_value(AA2_severity,0,is_current);
-            Common::rdb_set_value(AA2_gain,aaultra_sql->gain,is_current);
-            Common::rdb_set_value(AA2_biased,aaultra_sql->offset,is_current);
-            Common::rdb_set_value(AA2_biased_adv,offset,is_current);
+            Common::rdb_set_yc_value(AA2_amplitude,val_db,is_current);
+            Common::rdb_set_yc_value(AA2_severity,0,is_current);
+            Common::rdb_set_yc_value(AA2_gain,aaultra_sql->gain,is_current);
+            Common::rdb_set_yc_value(AA2_biased,aaultra_sql->offset,is_current);
+            Common::rdb_set_yc_value(AA2_biased_adv,offset,is_current);
         }
         emit send_log_data(val_db,0,0,is_current);
+//        #endif
     }
     else{   //条件显示
         if(qAbs(val_db-temp_db ) >= aaultra_sql->step){
@@ -223,7 +225,7 @@ void AAWidget::fresh(bool f)
     }
     ui->progressBar->setValue(val * 100 / max_val_range);
 
-//    ui->label_range->setText(QString("%1").arg(data->recv_para.ldata1_max * 4 * aaultra_sql->gain * AA_FACTOR));
+
 }
 
 void AAWidget::fresh_1000ms()
@@ -236,7 +238,9 @@ void AAWidget::fresh_1000ms()
 void AAWidget::fresh_100ms()
 {
     fresh(false);
-    do_Spectra_compute();
+//    if(aaultra_sql->chart == Spectra){
+            do_Spectra_compute();
+//    }
 }
 
 void AAWidget::fresh_setting()

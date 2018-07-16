@@ -1,4 +1,4 @@
-/*
+﻿/*
  * data types defines
  * zhouxf, 2017.6.23
  */
@@ -18,13 +18,11 @@ typedef unsigned long long Uint64;
 
 typedef float float32;
 typedef double float64;
-/*
-
 
 typedef struct {
 	unsigned int seconds;
 	unsigned int msec;
-} time_type;*/
+} time_type;
 
 #ifndef TRUE
 #define TRUE	1

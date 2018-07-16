@@ -7,8 +7,9 @@
 #include <QVector>
 #include <qwt_point_3d.h>
 
-#define MAX_LOG_NUM         10000    //保存日志最大条目数
+#define MAX_LOG_NUM         5000    //保存日志最大条目数
 #define LOG_TIME_INTERVAL   10      //记录时间间隔（10s）
+#define SAVE_TIME_INTERVAL   60      //记录时间间隔（60s）
 
 struct LOG_DATA {
     QString datetime;       //时间
@@ -24,7 +25,8 @@ class LogTools : public QObject
 public:
     explicit LogTools(MODE mode = TEV1, QObject *parent = 0);
 
-    void read_normal_log(QString path, QVector<LOG_DATA> &log_data);
+    void read_normal_log(QString path, QVector<LOG_DATA> &log_data);        //读入历史数据，保存在链表中,适用于生成报告时读取数据
+    void save_log();            //保存所有日志
 
 public slots:
     void dealLog(double val, int pulse, double degree, int is_current = 0);     //处理日志文件（管理，保存）

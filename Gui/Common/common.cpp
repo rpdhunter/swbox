@@ -110,7 +110,12 @@ void Common::change_value(bool &value, bool value_a, bool value_b)
 
 void Common::set_comboBox_style(QComboBox *comboBox)
 {
-    comboBox->resize(155,25);
+    if(sqlcfg->get_para()->language == CN){
+        comboBox->resize(150,22);
+    }
+    else{
+        comboBox->resize(240,22);
+    }
     QLineEdit *lineEdit = new QLineEdit;
     comboBox->setStyleSheet("QComboBox {border-image: url(:/widgetphoto/bk/para_child.png);color:gray; }");
     comboBox->setLineEdit(lineEdit);
@@ -119,7 +124,8 @@ void Common::set_comboBox_style(QComboBox *comboBox)
     comboBox->lineEdit()->setStyleSheet("QLineEdit {border-image: url(:/widgetphoto/bk/para_child.png);color:gray}");
     comboBox->view()->setStyleSheet("QListView {border-image: url(:/widgetphoto/bk/para_child.png);color:gray;outline: none;}");
     comboBox->view()->setFrameShadow(QFrame::Plain);
-    comboBox->setFrame(false);
+//    QComboBox QAbstractItemView::item { min-height: 40px; min-width: 60px; };
+    comboBox->setFrame(true);
 }
 
 void Common::set_contextMenu_style(QListWidget *w, QStringList list, QPoint pos)
@@ -903,16 +909,38 @@ int Common::max_at(QVector<int> list)
     return max_n;
 }
 
-void Common::rdb_set_value(uint yc_no, double val, uint qc)
+void Common::rdb_set_yc_value(uint yc_no, double val, uint qc)
 {
     yc_data_type temp_data;
     temp_data.f_val = val;
     if(qc == 1){
-        yc_set_value(yc_no, &temp_data, QDS_FO, NULL,0);
+        yc_set_value(yc_no, &temp_data, QDS_FO, 0,NULL,0);
     }
     else{
-        yc_set_value(yc_no, &temp_data, QDS_BA, NULL,0);
+        yc_set_value(yc_no, &temp_data, QDS_BA, 0, NULL,0);
     }
+}
+
+double Common::rdb_get_yc_value(uint yc_no)
+{
+    yc_data_type temp_data;
+    unsigned char a[1],b[1];
+    yc_get_value(0,yc_no,1, &temp_data, b, a);
+    return temp_data.f_val;
+}
+
+bool Common::rdb_check_test_start()
+{
+    if(rdb_udp != NULL){
+        int r = rdb_udp->yk_operate.yk_result;      //初始化为0,成功FF,不成功0x55
+        if(r == 0xFF){
+            qDebug()<<"get test start signal!";
+            rdb_udp->yk_operate.yk_result = 0;
+            send_path((unsigned char*)sqlcfg->get_para()->current_dir, strlen(sqlcfg->get_para()->current_dir));
+            return true;
+        }
+    }
+    return false;
 }
 
 void Common::select_root(QTreeView *v, QAbstractItemModel *model)
@@ -1005,6 +1033,7 @@ void Common::check_base_dir()
 void Common::messagebox_show_and_init(QMessageBox *box)
 {
     box->move(135,100);
+//    box->raise();
     box->show();
     box->button(QMessageBox::Ok)->setStyleSheet("QPushButton {background-color:gray;}");
     box->button(QMessageBox::Cancel)->setStyleSheet("");
@@ -1022,6 +1051,88 @@ void Common::messagebox_switch(QMessageBox *box)
         box->button(QMessageBox::Ok)->setStyleSheet("QPushButton {background-color:gray;}");
         box->button(QMessageBox::Cancel)->setStyleSheet("");
         box->setDefaultButton(QMessageBox::Ok);
+    }
+}
+
+QString Common::filter_to_string(int f)
+{
+    switch (f) {
+    case NONE:
+        return "None";
+    case hp_500k:
+        return "500K";
+    case hp_1M:
+        return "1M";
+    case hp_1M5:
+        return "1.5M";
+    case hp_1M8:
+        return "1.8M";
+    case hp_2M:
+        return "2M";
+    case hp_2M5:
+        return "2.5M";
+    case hp_3M:
+        return "3M";
+    case hp_5M:
+        return "5M";
+    case hp_8M:
+        return "8M";
+    case hp_10M:
+        return "10M";
+    case hp_12M:
+        return "12M";
+    case hp_15M:
+        return "15M";
+    case hp_18M:
+        return "18M";
+    case hp_20M:
+        return "20M";
+    case hp_22M:
+        return "22M";
+    case hp_25M:
+        return "25M";
+    case hp_28M:
+        return "28M";
+    case hp_30M:
+        return "30M";
+    case hp_32M:
+        return "32M";
+    case hp_35M:
+        return "35M";
+    case lp_2M:
+        return "2M";
+    case lp_5M:
+        return "5M";
+    case lp_8M:
+        return "8M";
+    case lp_10M:
+        return "10M";
+    case lp_12M:
+        return "12M";
+    case lp_15M:
+        return "15M";
+    case lp_18M:
+        return "18M";
+    case lp_20M:
+        return "20M";
+    case lp_22M:
+        return "22M";
+    case lp_25M:
+        return "25M";
+    case lp_28M:
+        return "28M";
+    case lp_30M:
+        return "30M";
+    case lp_32M:
+        return "32M";
+    case lp_35M:
+        return "35M";
+    case lp_38M:
+        return "38M";
+    case lp_40M:
+        return "40M";
+    default:
+        return "None";
     }
 }
 

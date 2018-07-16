@@ -2,6 +2,7 @@
 #include <QThreadPool>
 #include <QtDebug>
 //#include <QTime>
+#include "IO/Other/cpu.h"
 #include "zynq.h"
 
 //#define DELAY_TIME_LONG     200000
@@ -49,6 +50,9 @@ void FifoData::do_slow()
 
 void FifoData::run(void)
 {
+    pthread_t tid = pthread_self();
+    set_thread_cpu(tid,CPU_1);
+
     int ret = 0;
     int delay_time = DELAY_TIME_LONG;
 

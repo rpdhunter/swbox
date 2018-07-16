@@ -1,4 +1,4 @@
-/********************************************************************
+﻿/********************************************************************
 	created:	2017/07/21
 	created:	
 	filename: 	D:\rd\src_code\ftu\inc\point_table.h
@@ -165,8 +165,8 @@ enum sdz_e {
 /* YK */
 #define YK_VALID_NUM	(num_of_yk)
 
-/* SDZ */
-#define SDZ_VALID_NUM	(num_of_sdz)
+/* DZ */
+#define DZ_VALID_NUM	(num_of_sdz)
 
 
 /*

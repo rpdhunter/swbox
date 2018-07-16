@@ -3,8 +3,9 @@
 #include <QFile>
 #include <QTime>
 #include <QDir>
+#include "IO/SqlCfg/sqlcfg.h"
 
-SystemInfo::SystemInfo(QWidget *parent) : QFrame(parent),ui(new Ui::SystemInfoUi)
+SystemInfo::SystemInfo(QWidget *parent) : BaseWidget(NULL, parent),ui(new Ui::SystemInfoUi)
 {
     ui->setupUi(this);
     this->setStyleSheet("SystemInfo {background-color:lightGray;}");
@@ -12,16 +13,15 @@ SystemInfo::SystemInfo(QWidget *parent) : QFrame(parent),ui(new Ui::SystemInfoUi
     this->move(3, 3);
 
     key_val = NULL;
-//    ui->label_compiled->setText(QString("%1 %2").arg(__TIME__).arg(__DATE__));
 
 #ifdef OHV
-    ui->label_logo_text->setText("copyright © 2014-2017 Ohv Diagnostic GmbH, Ltd\nAll rights reserved.");
+    ui->label_logo_text->setText("copyright © 2014-2018 Ohv Diagnostic GmbH, Ltd\nAll rights reserved.");
     ui->label_logo->setPixmap(QPixmap(":/widgetphoto/bk/ohv_low.png"));
 #elif AMG
-    ui->label_logo_text->setText("copyright © 2016-2017 Australian Microgrid Technology Pty Ltd\nAll rights reserved.");
+    ui->label_logo_text->setText("copyright © 2016-2018 Australian Microgrid Technology Pty Ltd\nAll rights reserved.");
     ui->label_logo->setPixmap(QPixmap(":/widgetphoto/bk/amg_low.png"));
 #elif ZDIT
-    ui->label_logo_text->setText("copyright © 2016-2017 ZIT(Nanjing) Technology Co., Ltd\nAll rights reserved.");
+    ui->label_logo_text->setText("copyright © 2016-2018 ZIT(Nanjing) Technology Co., Ltd\nAll rights reserved.");
     ui->label_logo->setPixmap(QPixmap(":/widgetphoto/bk/zdit_low.png"));
 #elif XDP_II
     ui->label_logo_text->setText("\nAll rights reserved.");
@@ -46,11 +46,14 @@ SystemInfo::SystemInfo(QWidget *parent) : QFrame(parent),ui(new Ui::SystemInfoUi
 #ifdef OHV
             line = "PDTEV";
 #elif AMG
-            line = "PDcable";
+//            line = "PDcable";
+            line = "TAH-300";
 #elif ZDIT
             line = "PD3000";
 #elif XDP_II
             line = "XDP-II";
+//            line = tr("局部放电测试仪系统软件V1.0");
+
 #else
             line = "TAH-300";
 #endif
@@ -58,17 +61,18 @@ SystemInfo::SystemInfo(QWidget *parent) : QFrame(parent),ui(new Ui::SystemInfoUi
         }
         line.replace("\n","");
         ui->label_name->setText(line);
+//        ui->label_name->setText(tr("局部放电测试仪系统软件"));
 
         if(!file.atEnd()) {     //读版权信息
             line = file.readLine();            
         }
         else{
 #ifdef OHV
-            line = "\ncopyright © 2014-2017 Ohv Diagnostic GmbH, Ltd";
+            line = "\ncopyright © 2014-2018 Ohv Diagnostic GmbH, Ltd";
 #elif AMG
-            line = "\ncopyright © 2016-2017 Australian Microgrid Technology Pty Ltd";
+            line = "\ncopyright © 2016-2018 Australian Microgrid Technology Pty Ltd";
 #elif ZDIT
-            line = "\ncopyright © 2016-2017 ZIT(Nanjing) Technology Co., Ltd";
+            line = "\ncopyright © 2017-2018 ZIT(Nanjing) Technology Co., Ltd";
 #elif XDP_II
             line = "\n";
 #else
@@ -115,40 +119,30 @@ void SystemInfo::working(CURRENT_KEY_VALUE *val)
     }
     key_val = val;
 
+    qDebug()<<"SystemInfo";
+
     this->show();
+}
+
+void SystemInfo::do_key_ok()
+{
+    key_val->grade.val2 = 0;
+    fresh_parent();
+    this->hide();
+}
+
+void SystemInfo::do_key_cancel()
+{
+    key_val->grade.val2 = 0;
+    fresh_parent();
+    this->hide();
 }
 
 void SystemInfo::trans_key(quint8 key_code)
 {
-    if (key_val == NULL) {
+    if (key_val == NULL || key_val->grade.val1 != 4) {
         return;
     }
-
-    if (key_val->grade.val1 != 4) {
-        return;
-    }
-
-    switch (key_code) {
-    case KEY_OK:
-        key_val->grade.val2 = 0;
-        fresh_parent();
-        this->hide();
-        break;
-    case KEY_CANCEL:
-        key_val->grade.val2 = 0;
-        fresh_parent();
-        this->hide();
-        break;
-    case KEY_UP:
-        break;
-    case KEY_DOWN:
-        break;
-    case KEY_LEFT:
-        break;
-    case KEY_RIGHT:
-        break;
-    default:
-        break;
-    }
+    BaseWidget::trans_key(key_code);
 }
 

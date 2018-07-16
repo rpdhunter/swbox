@@ -7,7 +7,7 @@
 #define SETTING_NUM 10           //设置菜单条目数
 
 TEVWidget::TEVWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu_index, QWidget *parent) :
-    BaseWidget(data, val, mode, menu_index, parent),
+    ChannelWidget(data, val, mode, menu_index, parent),
     ui(new Ui::TEVWidget)
 {
     ui->setupUi(this);
@@ -30,6 +30,7 @@ TEVWidget::~TEVWidget()
 void TEVWidget::save_channel()
 {
     data_reset();
+    ChannelWidget::save_channel();
 }
 
 void TEVWidget::reload(int index)
@@ -42,6 +43,14 @@ void TEVWidget::reload(int index)
     }
     else if(mode == TEV2){
         tev_sql = &sql_para.tev2_sql;
+        short_data = &data->recv_para_short2;
+    }
+    else if(mode == UHF1){
+        tev_sql = &sql_para.uhf1_sql;
+        short_data = &data->recv_para_short1;
+    }
+    else if(mode == UHF2){
+        tev_sql = &sql_para.uhf2_sql;
         short_data = &data->recv_para_short2;
     }
 
@@ -64,10 +73,10 @@ void TEVWidget::reload(int index)
         else{
             data->set_send_para(sp_auto_rec, 0);
         }
-        if(mode == TEV1){
+        if(mode == TEV1 || mode == UHF1){
             data->set_send_para(sp_h1_threshold, tev_sql->fpga_threshold);
         }
-        else if(mode == TEV2){
+        else if(mode == TEV2 || mode == UHF2){
             data->set_send_para(sp_h2_threshold, tev_sql->fpga_threshold);
         }
         fresh_setting();
@@ -101,7 +110,7 @@ void TEVWidget::do_key_ok()
     default:
         break;
     }
-    BaseWidget::do_key_ok();
+    ChannelWidget::do_key_ok();
 }
 
 void TEVWidget::do_key_up_down(int d)
@@ -165,7 +174,7 @@ void TEVWidget::chart_ini()
     plot_PRPD->resize(200, 140);
     d_PRPD = new QwtPlotSpectroCurve;
     Common::set_PRPD_style(plot_PRPD,d_PRPD,VALUE_MAX);
-//    data_reset();
+    data_reset();
 
     //histogram
     plot_Histogram = new QwtPlot(ui->widget);
@@ -180,12 +189,14 @@ void TEVWidget::calc_tev_value (double &tev_db, int &pulse_cnt_show, double &deg
 {
     //脉冲计数
     quint32 pulse_cnt;
-    if(mode == TEV1){
+    if(mode == TEV1 || mode == UHF1){
         pulse_cnt = data->recv_para_normal.hpulse0_totol;
     }
     else{
         pulse_cnt = data->recv_para_normal.hpulse1_totol;
     }
+
+//    qDebug()<<"pulse_cnt"<<pulse_cnt;
 
     pulse_cnt_list.append(pulse_cnt);
     if(pulse_cnt_list.count() > MAX_PULSE_CNT){
@@ -198,7 +209,7 @@ void TEVWidget::calc_tev_value (double &tev_db, int &pulse_cnt_show, double &deg
 
     //地电波强度
     int d_max, d_min, a, b;
-    if (mode == TEV1) {
+    if (mode == TEV1 || mode == UHF1) {
         d_max = data->recv_para_normal.hdata0.ad.ad_max;
         d_min = data->recv_para_normal.hdata0.ad.ad_min;
     }
@@ -219,16 +230,13 @@ void TEVWidget::calc_tev_value (double &tev_db, int &pulse_cnt_show, double &deg
     double tev_val = tev_sql->gain * (MAX (qAbs (a), qAbs (b)) - tev_sql->offset_noise * 10) * H_C_FACTOR;
     tev_db = 20 * log10 (tev_val);      //对数运算，来自工具链的函数
 
-
-//    qDebug()<<"max : "<<tev_db << "db";
     //脉冲数多时，进入测试模式^^
     if(pulse_cnt > 500000 && !amp_1000ms.isEmpty()){
         tev_db = Common::avrage(amp_1000ms);
         double k = Common::tev_freq_compensation(pulse_cnt);
-        qDebug()<<"k="<<k;
+//        qDebug()<<"k="<<k;
         tev_db += 20 * log10 (k);
     }
-//    qDebug()<<"avrage : "<<tev_db << "db";
     amp_1000ms.clear();
 
     if(tev_db < 0){
@@ -296,24 +304,44 @@ void TEVWidget::fresh_1000ms()
 
     //实时数据库
     if(mode == TEV1){
-        Common::rdb_set_value(TEV1_amplitude,db,is_current);
-        Common::rdb_set_value(TEV1_num,pulse_cnt_show,is_current);
-        Common::rdb_set_value(TEV1_severity,degree,is_current);
-        Common::rdb_set_value(TEV1_gain,tev_sql->gain,is_current);
-        Common::rdb_set_value(TEV1_center_biased,tev_sql->fpga_zero,is_current);
-        Common::rdb_set_value(TEV1_noise_biased,tev_sql->offset_noise,is_current);
-        Common::rdb_set_value(TEV1_center_biased_adv,sug_zero_offset,is_current);
-        Common::rdb_set_value(TEV1_noise_biased_adv,sug_noise_offset,is_current);
+        Common::rdb_set_yc_value(TEV1_amplitude,db,is_current);
+        Common::rdb_set_yc_value(TEV1_num,pulse_cnt_show,is_current);
+        Common::rdb_set_yc_value(TEV1_severity,degree,is_current);
+        Common::rdb_set_yc_value(TEV1_gain,tev_sql->gain,is_current);
+        Common::rdb_set_yc_value(TEV1_center_biased,tev_sql->fpga_zero,is_current);
+        Common::rdb_set_yc_value(TEV1_noise_biased,tev_sql->offset_noise,is_current);
+        Common::rdb_set_yc_value(TEV1_center_biased_adv,sug_zero_offset,is_current);
+        Common::rdb_set_yc_value(TEV1_noise_biased_adv,sug_noise_offset,is_current);
     }
-    else{
-        Common::rdb_set_value(TEV2_amplitude,db,is_current);
-        Common::rdb_set_value(TEV2_num,pulse_cnt_show,is_current);
-        Common::rdb_set_value(TEV2_severity,degree,is_current);
-        Common::rdb_set_value(TEV2_gain,tev_sql->gain,is_current);
-        Common::rdb_set_value(TEV2_center_biased,tev_sql->fpga_zero,is_current);
-        Common::rdb_set_value(TEV2_noise_biased,tev_sql->offset_noise,is_current);
-        Common::rdb_set_value(TEV2_center_biased_adv,sug_zero_offset,is_current);
-        Common::rdb_set_value(TEV2_noise_biased_adv,sug_noise_offset,is_current);
+    else if(mode == TEV2){
+        Common::rdb_set_yc_value(TEV2_amplitude,db,is_current);
+        Common::rdb_set_yc_value(TEV2_num,pulse_cnt_show,is_current);
+        Common::rdb_set_yc_value(TEV2_severity,degree,is_current);
+        Common::rdb_set_yc_value(TEV2_gain,tev_sql->gain,is_current);
+        Common::rdb_set_yc_value(TEV2_center_biased,tev_sql->fpga_zero,is_current);
+        Common::rdb_set_yc_value(TEV2_noise_biased,tev_sql->offset_noise,is_current);
+        Common::rdb_set_yc_value(TEV2_center_biased_adv,sug_zero_offset,is_current);
+        Common::rdb_set_yc_value(TEV2_noise_biased_adv,sug_noise_offset,is_current);
+    }
+    else if(mode == UHF1){
+        Common::rdb_set_yc_value(UHF1_amplitude,db,is_current);
+        Common::rdb_set_yc_value(UHF1_num,pulse_cnt_show,is_current);
+        Common::rdb_set_yc_value(UHF1_severity,degree,is_current);
+        Common::rdb_set_yc_value(UHF1_gain,tev_sql->gain,is_current);
+        Common::rdb_set_yc_value(UHF1_center_biased,tev_sql->fpga_zero,is_current);
+        Common::rdb_set_yc_value(UHF1_noise_biased,tev_sql->offset_noise,is_current);
+        Common::rdb_set_yc_value(UHF1_center_biased_adv,sug_zero_offset,is_current);
+        Common::rdb_set_yc_value(UHF1_noise_biased_adv,sug_noise_offset,is_current);
+    }
+    else if(mode == UHF2){
+        Common::rdb_set_yc_value(UHF2_amplitude,db,is_current);
+        Common::rdb_set_yc_value(UHF2_num,pulse_cnt_show,is_current);
+        Common::rdb_set_yc_value(UHF2_severity,degree,is_current);
+        Common::rdb_set_yc_value(UHF2_gain,tev_sql->gain,is_current);
+        Common::rdb_set_yc_value(UHF2_center_biased,tev_sql->fpga_zero,is_current);
+        Common::rdb_set_yc_value(UHF2_noise_biased,tev_sql->offset_noise,is_current);
+        Common::rdb_set_yc_value(UHF2_center_biased_adv,sug_zero_offset,is_current);
+        Common::rdb_set_yc_value(UHF2_noise_biased_adv,sug_noise_offset,is_current);
     }
 
     fresh_Histogram();
@@ -386,6 +414,7 @@ void TEVWidget::fresh_1ms()
                 max = MAX(max,l);
                 min = MIN(min,l);
             }
+
             if(qAbs(max) > qAbs(min)){
                 pulse_100ms.append(Compute::trans_data(short_data->time,max,mode));
             }
@@ -395,7 +424,6 @@ void TEVWidget::fresh_1ms()
         }
     }
 }
-
 
 
 void TEVWidget::data_reset()

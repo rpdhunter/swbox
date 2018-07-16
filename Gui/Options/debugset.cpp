@@ -370,8 +370,17 @@ void DebugSet::trans_key(quint8 key_code)
     case KEY_OK:
         if(pass){
             if(key_val->grade.val3 == 5 && key_val->grade.val4 == 1){
-                //插入保存参数文件代码
-                ui->label_channel_data_tips->setText(tr("通道参数已保存至文件"));
+                //插入保存参数文件代码                
+                QDir dir;
+                dir.setPath("/root/OEM");
+                if(dir.removeRecursively()){
+                    ui->label_channel_data_tips->setText(tr("OEM文件已重置"));
+                    system("sync");
+                }
+                else{
+                    ui->label_channel_data_tips->setText(tr("OEM文件未重置"));
+                }
+//                ui->label_channel_data_tips->setText(tr("通道参数已保存至文件"));
             }
             else{
                 saveSql();                          //保存
@@ -645,27 +654,18 @@ void DebugSet::do_key_up_down(int d)
 
 void DebugSet::fresh_rdb_data()
 {
-    yc_data_type temp_data;
-    unsigned char a[1],b[1];
-
     switch (sqlcfg->get_para()->menu_h1) {
     case TEV1:
-        yc_get_value(0,TEV1_center_biased_adv,1, &temp_data, b, a);
-        ui->lab_offset_zero_h1->setText(QString("%1").arg(temp_data.f_val));
-        yc_get_value(0,TEV1_noise_biased_adv,1, &temp_data, b, a);
-        ui->lab_offset_noise_h1->setText(QString("%1").arg(temp_data.f_val));;
+        ui->lab_offset_zero_h1->setText(QString("%1").arg(Common::rdb_get_yc_value(TEV1_center_biased_adv)));
+        ui->lab_offset_noise_h1->setText(QString("%1").arg(Common::rdb_get_yc_value(TEV1_noise_biased_adv)));;
         break;
     case HFCT1:
-        yc_get_value(0,HFCT1_center_biased_adv,1, &temp_data, b, a);
-        ui->lab_offset_zero_h1->setText(QString("%1").arg(temp_data.f_val));
-        yc_get_value(0,HFCT1_noise_biased_adv,1, &temp_data, b, a);
-        ui->lab_offset_noise_h1->setText(QString("%1").arg(temp_data.f_val));;
+        ui->lab_offset_zero_h1->setText(QString("%1").arg(Common::rdb_get_yc_value(HFCT1_center_biased_adv)));
+        ui->lab_offset_noise_h1->setText(QString("%1").arg(Common::rdb_get_yc_value(HFCT1_noise_biased_adv)));;
         break;
     case UHF1:
-        yc_get_value(0,UHF1_center_biased_adv,1, &temp_data, b, a);
-        ui->lab_offset_zero_h1->setText(QString("%1").arg(temp_data.f_val));
-        yc_get_value(0,UHF1_noise_biased_adv,1, &temp_data, b, a);
-        ui->lab_offset_noise_h1->setText(QString("%1").arg(temp_data.f_val));;
+        ui->lab_offset_zero_h1->setText(QString("%1").arg(Common::rdb_get_yc_value(UHF1_center_biased_adv)));
+        ui->lab_offset_noise_h1->setText(QString("%1").arg(Common::rdb_get_yc_value(UHF1_noise_biased_adv)));;
         break;
     default:
         break;
@@ -673,36 +673,26 @@ void DebugSet::fresh_rdb_data()
 
     switch (sqlcfg->get_para()->menu_h2) {
     case TEV2:
-        yc_get_value(0,TEV2_center_biased_adv,1, &temp_data, b, a);
-        ui->lab_offset_zero_h2->setText(QString("%1").arg(temp_data.f_val));
-        yc_get_value(0,TEV2_noise_biased_adv,1, &temp_data, b, a);
-        ui->lab_offset_noise_h2->setText(QString("%1").arg(temp_data.f_val));;
+        ui->lab_offset_zero_h2->setText(QString("%1").arg(Common::rdb_get_yc_value(TEV2_center_biased_adv)));
+        ui->lab_offset_noise_h2->setText(QString("%1").arg(Common::rdb_get_yc_value(TEV2_noise_biased_adv)));;
         break;
     case HFCT2:
-        yc_get_value(0,HFCT2_center_biased_adv,1, &temp_data, b, a);
-        ui->lab_offset_zero_h2->setText(QString("%1").arg(temp_data.f_val));
-        yc_get_value(0,HFCT2_noise_biased_adv,1, &temp_data, b, a);
-        ui->lab_offset_noise_h2->setText(QString("%1").arg(temp_data.f_val));;
+        ui->lab_offset_zero_h2->setText(QString("%1").arg(Common::rdb_get_yc_value(HFCT2_center_biased_adv)));
+        ui->lab_offset_noise_h2->setText(QString("%1").arg(Common::rdb_get_yc_value(HFCT2_noise_biased_adv)));;
         break;
     case UHF2:
-        yc_get_value(0,UHF2_center_biased_adv,1, &temp_data, b, a);
-        ui->lab_offset_zero_h2->setText(QString("%1").arg(temp_data.f_val));
-        yc_get_value(0,UHF2_noise_biased_adv,1, &temp_data, b, a);
-        ui->lab_offset_noise_h2->setText(QString("%1").arg(temp_data.f_val));;
+        ui->lab_offset_zero_h2->setText(QString("%1").arg(Common::rdb_get_yc_value(UHF2_center_biased_adv)));
+        ui->lab_offset_noise_h2->setText(QString("%1").arg(Common::rdb_get_yc_value(UHF2_noise_biased_adv)));;
         break;
     default:
         break;
     }
 
-    yc_get_value(0,AA1_biased_adv,1, &temp_data, b, a);
-    ui->lab_offset_noise_aa1->setText(QString("%1").arg(temp_data.f_val));
-    yc_get_value(0,AA2_biased_adv,1, &temp_data, b, a);
-    ui->lab_offset_noise_aa2->setText(QString("%1").arg(temp_data.f_val));
+    ui->lab_offset_noise_aa1->setText(QString("%1").arg(Common::rdb_get_yc_value(AA1_biased_adv)));
+    ui->lab_offset_noise_aa2->setText(QString("%1").arg(Common::rdb_get_yc_value(AA2_biased_adv)));
 
-    yc_get_value(0,AE1_biased_adv,1, &temp_data, b, a);
-    ui->lab_offset_noise_ae1->setText(QString("%1").arg(temp_data.f_val));
-    yc_get_value(0,AE2_biased_adv,1, &temp_data, b, a);
-    ui->lab_offset_noise_ae2->setText(QString("%1").arg(temp_data.f_val));
+    ui->lab_offset_noise_ae1->setText(QString("%1").arg(Common::rdb_get_yc_value(AE1_biased_adv)));
+    ui->lab_offset_noise_ae2->setText(QString("%1").arg(Common::rdb_get_yc_value(AE2_biased_adv)));
 }
 
 void DebugSet::fresh_hardware_status()

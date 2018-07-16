@@ -1,4 +1,4 @@
-#ifndef ASSETMODEL_H
+﻿#ifndef ASSETMODEL_H
 #define ASSETMODEL_H
 
 #include <QAbstractItemModel>
@@ -9,6 +9,7 @@ class AssetModel : public QAbstractItemModel
     Q_OBJECT
 public:
     explicit AssetModel(QObject *parent = nullptr);
+
     int rowCount(const QModelIndex &parent) const;
     int columnCount(const QModelIndex &parent) const;
     QVariant data(const QModelIndex &index, int role) const;

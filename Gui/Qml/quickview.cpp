@@ -1,4 +1,4 @@
-#include "quickview.h"
+﻿#include "quickview.h"
 #include <QGuiApplication>
 //#include <QBitmap>
 #include "IO/Key/key.h"
@@ -6,23 +6,27 @@
 #define INTERVAL    10
 
 #define X_INIT      45
-#define Y_INIT      50
+//#define Y_INIT      50
+#define Y_INIT      100
 
 #define X_SPACE      39
 #define Y_SPACE      33
+
+#define H_MODIFY    50
 
 
 QuickView::QuickView(QString str): QQuickView(str)
 {
     this->setResizeMode(QQuickView::SizeRootObjectToView);
-    this->setGeometry(0,90,480,182);
+    this->setGeometry(0,H_MODIFY,480,272-H_MODIFY);
 
-//    //主计时器
-//    timer1 = new QTimer;
-//    timer1->setSingleShot(true);
-//    timer1->setInterval(3000);
-////    timer1->start();
+    //主计时器
+    timer1 = new QTimer;
+    timer1->setSingleShot(true);
+    timer1->setInterval(1000);
+    timer1->start();
 //    connect(timer1,SIGNAL(timeout()), this, SLOT(test_press()) );
+    connect(timer1,SIGNAL(timeout()), this, SLOT(view_init()) );
 
     timer_short = new QTimer;
     timer_short->setInterval(200);
@@ -39,6 +43,7 @@ QuickView::QuickView(QString str): QQuickView(str)
 //    space = 40;
 
     isWorking = false;
+
 }
 
 //void QuickView::test_press()
@@ -77,11 +82,16 @@ void QuickView::press2()
     QPoint pos(_x, _y);
     QMouseEvent event1(QEvent::MouseButtonRelease, pos, Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
     QGuiApplication::sendEvent(this, &event1);
-//    qDebug()<<"mouse clicked:"<< pos.x() <<'\t'<< pos.y();
+    qDebug()<<"mouse clicked:"<< pos.x() <<'\t'<< pos.y();
 
     emit mouseClicked(_x,_y);
 
     //    test_press();
+}
+
+void QuickView::view_init()
+{
+    emit viewInit(H_MODIFY);
 }
 
 //初始化
@@ -103,6 +113,13 @@ void QuickView::editFinished(QString str)
         this->hide();
         isWorking = false;
     }
+}
+
+void QuickView::qml_view_init(int y_init)
+{
+    _y = y_init + 6;
+    y_min = y_init;
+//    qDebug()<<"y_init:"<<y_init;
 }
 
 void QuickView::trans_input_key(quint8 key_code)
@@ -145,15 +162,15 @@ void QuickView::do_key_up_down(int d)
         _x += 11 * X_SPACE;
     }
 
-    if(_y > 160){
-        _y -= 4 * Y_SPACE;
-        _x -= 4 * 16;
-    }
+//    if(_y > (y_min+180)){
+//        _y -= 4 * Y_SPACE;
+//        _x -= 4 * 16;
+//    }
 
-    if(_y < 40){
-        _y += 4 * Y_SPACE;
-        _x += 4 * 16;
-    }
+//    if(_y < y_min){
+//        _y += 4 * Y_SPACE;
+//        _x += 4 * 16;
+//    }
 }
 
 void QuickView::do_key_left_right(int d)

@@ -6,10 +6,8 @@
 #include "IO/Other/filetools.h"
 #include <QThreadPool>
 
-RecWaveManage::RecWaveManage(QWidget *parent) : QFrame(parent), ui(new Ui::Form)
+RecWaveManage::RecWaveManage(QWidget *parent) : BaseWidget(NULL, parent), ui(new Ui::Form)
 {
-    key_val = NULL;
-
     this->resize(CHANNEL_X, CHANNEL_Y);
     this->move(3, 3);
 
@@ -135,11 +133,7 @@ void RecWaveManage::reload_tablewidget()
 
 void RecWaveManage::trans_key(quint8 key_code)
 {
-    if (key_val == NULL) {
-        return;
-    }
-
-    if (key_val->grade.val1 != 3) {
+    if (key_val == NULL || key_val->grade.val1 != 3) {
         return;
     }
 
@@ -153,139 +147,7 @@ void RecWaveManage::trans_key(quint8 key_code)
         return;
     }
 
-
-    switch (key_code) {
-    case KEY_OK:
-        if(reset_flag == 0){
-            if(tableWidget->currentRow()>=0){
-                reset_flag = 0;
-                contextMenu->hide();
-                switch (key_val->grade.val4) {
-                case 0:             //查看波形
-                case 1:             //查看波形
-                    key_val->grade.val5 = 1;
-                    key_val->grade.val4 = 0;
-                    recWaveForm->working(key_val,tableWidget->currentItem()->text());
-                    break;
-                case 2:
-                    key_val->grade.val4 = 0;
-                    do_favorite();
-                    break;
-                case 3:             //删除当前波形
-                    key_val->grade.val4 = 0;
-                    deleteCurrent();
-                    break;
-                case 4:             //删除全部波形
-                    key_val->grade.val4 = 0;
-                    reset_flag = 1;
-                    break;
-                case 5:             //播放声音
-                    key_val->grade.val4 = 0;
-                    readVoiceData();
-                    qDebug()<<"play voice";
-                    break;
-                default:
-                    break;
-                }
-            }
-        }
-        else if(reset_flag == 1){
-            reset_flag = 0;
-        }
-        else if(reset_flag == 2){
-            reset_flag = 0;
-            deleteAll();        //确定删除
-            reload_tablewidget();
-        }
-
-        break;
-    case KEY_CANCEL:        
-        if(reset_flag > 0){
-            reset_flag = 0;
-        }
-        else if(key_val->grade.val4 >0){     //小退
-            key_val->grade.val4 = 0;
-        }
-        else{                           //大退
-            key_val->grade.val2 = 0;
-            key_val->grade.val3 = 0;
-            key_val->grade.val5 = 0;
-            this->hide();
-            emit fresh_parent();
-        }
-        if(player->isVisible()){
-            player->setVisible(false);
-        }
-
-        break;
-    case KEY_UP:
-        if(reset_flag == 0){
-            if(key_val->grade.val4 > 0){
-                if(key_val->grade.val4 > 1){
-                    key_val->grade.val4 --;
-                }
-                else{
-                    key_val->grade.val4 = contextMenu_num;
-                }
-
-            }
-            else if(key_val->grade.val3 > 1){
-                key_val->grade.val3 --;
-            }
-            else if(key_val->grade.val3 == 1){
-                key_val->grade.val3 = tableWidget->rowCount();
-            }
-        }
-        break;
-    case KEY_DOWN:
-        if(reset_flag == 0){
-            if(key_val->grade.val4 > 0){
-                if(key_val->grade.val4 < contextMenu_num){
-                    key_val->grade.val4 ++;
-                }
-                else{
-                    key_val->grade.val4 = 1;
-                }
-
-            }
-            else if(key_val->grade.val3 < tableWidget->rowCount()){
-                key_val->grade.val3 ++;
-            }
-            else if(key_val->grade.val3 == tableWidget->rowCount()){
-                key_val->grade.val3 = 1;
-            }
-        }
-        break;
-    case KEY_LEFT:
-        if(reset_flag == 1){
-            reset_flag = 2;
-        }
-        else if(reset_flag == 2){
-            reset_flag = 1;
-        }
-        break;
-    case KEY_RIGHT:
-        if(reset_flag == 1){
-            reset_flag = 2;
-        }
-        else if(reset_flag == 2){
-            reset_flag = 1;
-        }
-        else{
-            if(key_val->grade.val3){
-                if(key_val->grade.val4 == 0){
-                    key_val->grade.val4 ++;
-                    contextMenu->show();
-                }
-//                qDebug()<<contextMenu->visualItemRect(contextMenu->currentItem());
-            }
-        }
-
-        break;
-    default:
-        break;
-    }
-
+    BaseWidget::trans_key(key_code);
     refresh();
 }
 
@@ -370,6 +232,98 @@ void RecWaveManage::readVoiceData()
     FileTools *filetools = new FileTools(tableWidget->currentItem()->text(),FileTools::Read);      //开一个线程，为了不影响数据接口性能
     QThreadPool::globalInstance()->start(filetools);
     connect(filetools,SIGNAL(readFinished(VectorList,MODE)),this,SLOT(start_play(VectorList,MODE)) );
+}
+
+void RecWaveManage::do_key_ok()
+{
+    if(reset_flag == 0){
+        if(tableWidget->currentRow()>=0){
+            reset_flag = 0;
+            contextMenu->hide();
+            switch (key_val->grade.val4) {
+            case 0:             //查看波形
+            case 1:             //查看波形
+                key_val->grade.val5 = 1;
+                key_val->grade.val4 = 0;
+                recWaveForm->working(key_val,tableWidget->currentItem()->text());
+                break;
+            case 2:
+                key_val->grade.val4 = 0;
+                do_favorite();
+                break;
+            case 3:             //删除当前波形
+                key_val->grade.val4 = 0;
+                deleteCurrent();
+                break;
+            case 4:             //删除全部波形
+                key_val->grade.val4 = 0;
+                reset_flag = 1;
+                break;
+            case 5:             //播放声音
+                key_val->grade.val4 = 0;
+                readVoiceData();
+                qDebug()<<"play voice";
+                break;
+            default:
+                break;
+            }
+        }
+    }
+    else if(reset_flag == 1){
+        reset_flag = 0;
+    }
+    else if(reset_flag == 2){
+        reset_flag = 0;
+        deleteAll();        //确定删除
+        reload_tablewidget();
+    }
+}
+
+void RecWaveManage::do_key_cancel()
+{
+    if(reset_flag > 0){
+        reset_flag = 0;
+    }
+    else if(key_val->grade.val4 >0){     //小退
+        key_val->grade.val4 = 0;
+    }
+    else{                           //大退
+        key_val->grade.val2 = 0;
+        key_val->grade.val3 = 0;
+        key_val->grade.val5 = 0;
+        this->hide();
+        emit fresh_parent();
+    }
+    if(player->isVisible()){
+        player->setVisible(false);
+    }
+}
+
+void RecWaveManage::do_key_up_down(int d)
+{
+    if(reset_flag == 0){
+        if(key_val->grade.val4 > 0){
+            Common::change_index(key_val->grade.val4,d,contextMenu_num,1);
+        }
+        else{
+            Common::change_index(key_val->grade.val3,d,tableWidget->rowCount(),1);
+        }
+    }
+}
+
+void RecWaveManage::do_key_left_right(int d)
+{
+    if(reset_flag == 0 ){
+        if(key_val->grade.val3){
+            if(key_val->grade.val4 == 0){
+                key_val->grade.val4 ++;
+                contextMenu->show();
+            }
+        }
+    }
+    else{
+        Common::change_index(reset_flag,d,2,1);
+    }
 }
 
 void RecWaveManage::start_play(VectorList list,MODE mode)

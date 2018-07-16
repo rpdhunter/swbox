@@ -1,9 +1,8 @@
-﻿#include "basewidget.h"
+﻿#include "channelwidget.h"
 
-BaseWidget::BaseWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu_index, QWidget *parent) : QFrame(parent)
+ChannelWidget::ChannelWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu_index, QWidget *parent) : BaseWidget(val,parent)
 {
     this->data = data;
-    this->key_val = val;
     this->mode = mode;
     this->menu_index = menu_index;
 
@@ -12,7 +11,6 @@ BaseWidget::BaseWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu
     this->db_last1 = 0;
     this->manual = false;
     this->token = 0;
-    this->isBusy = false;
 
     timer_1000ms = new QTimer(this);
     timer_1000ms->setInterval(1000);
@@ -48,15 +46,15 @@ BaseWidget::BaseWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu
 
 }
 
-void BaseWidget::change_log_dir()
+void ChannelWidget::change_log_dir()
 {
     logtools->change_current_asset_dir();
 }
 
-void BaseWidget::showWaveData(VectorList buf, MODE mod)
+void ChannelWidget::showWaveData(VectorList buf, MODE mod)
 {
-    if(key_val->grade.val0 == menu_index){       //在超声界面，可以显示
-        isBusy = false;
+    if(key_val->grade.val0 == menu_index && !timer_freeze->isActive()){       //在超声界面，可以显示
+//        isBusy = false;
         emit show_indicator(false);
         key_val->grade.val1 = 1;        //为了锁住主界面，防止左右键切换通道
         key_val->grade.val5 = 1;
@@ -66,33 +64,29 @@ void BaseWidget::showWaveData(VectorList buf, MODE mod)
     fresh_setting();
 }
 
-void BaseWidget::save_channel()
+void ChannelWidget::save_channel()
 {
-
+    logtools->save_log();
 }
 
-void BaseWidget::fresh_1000ms()
+void ChannelWidget::fresh_1000ms()
 {
     qDebug()<<"base";
 }
 
-void BaseWidget::fresh_100ms()
+void ChannelWidget::fresh_100ms()
 {
 
 }
 
-void BaseWidget::fresh_1ms()
+void ChannelWidget::fresh_1ms()
 {
 
 }
 
-void BaseWidget::trans_key(quint8 key_code)
+void ChannelWidget::trans_key(quint8 key_code)
 {
-    if (key_val == NULL || key_val->grade.val0 != menu_index) {
-        return;
-    }
-
-    if(isBusy){
+    if(key_val->grade.val0 != menu_index) {
         return;
     }
 
@@ -101,33 +95,12 @@ void BaseWidget::trans_key(quint8 key_code)
         return;
     }
 
-    switch (key_code) {
-    case KEY_OK:
-        do_key_ok();
-        break;
-    case KEY_CANCEL:
-        do_key_cancel();
-        break;
-    case KEY_UP:
-        do_key_up_down(-1);
-        break;
-    case KEY_DOWN:
-        do_key_up_down(1);
-        break;
-    case KEY_LEFT:
-        do_key_left_right(-1);
-        break;
-    case KEY_RIGHT:
-        do_key_left_right(1);
-        break;
-    default:
-        break;
-    }
+    BaseWidget::trans_key(key_code);
     fresh_setting();
 }
 
 //这里可以根据不同模式设置不同的令牌增长速度
-void BaseWidget::add_token()
+void ChannelWidget::add_token()
 {
 //    qDebug()<<"token="<<token;
     if(token < TOKEN_MAX){
@@ -135,31 +108,31 @@ void BaseWidget::add_token()
     }
 }
 
-void BaseWidget::close_rec()
+void ChannelWidget::close_rec()
 {
 //    qDebug()<<"close_rec";
     data->set_send_para (sp_rec_on, 0);
 }
 
-void BaseWidget::do_key_ok()
+void ChannelWidget::do_key_ok()
 {
     key_val->grade.val1 = 0;
     key_val->grade.val2 = 0;
 }
 
-void BaseWidget::do_key_cancel()
+void ChannelWidget::do_key_cancel()
 {
     key_val->grade.val1 = 0;
     key_val->grade.val2 = 0;
 }
 
-void BaseWidget::maxReset(QLabel *label)
+void ChannelWidget::maxReset(QLabel *label)
 {
     max_db = 0;
     label->setText(tr("最大值: ") + QString::number(max_db));
 }
 
-void BaseWidget::add_ae_data()
+void ChannelWidget::add_ae_data()
 {
     for (int i = 0; i < 128; ++i) {
         ae_datalist.append(ae_pulse_data->data[i+2]);
@@ -170,7 +143,7 @@ void BaseWidget::add_ae_data()
     ae_pulse_data->readComplete = 1;        //读取完成标志
 }
 
-void BaseWidget::do_Spectra_compute()
+void ChannelWidget::do_Spectra_compute()
 {
     if(ae_datalist.count() > 2048){
 //        if(mode == AE2){

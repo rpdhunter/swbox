@@ -98,6 +98,7 @@ void AssetFileManagement::trans_key(quint8 key_code)
         }
         else{
             Common::expand_collapse(this);
+            qDebug()<<"Common::expand_collapse(this)";
         }
         key_val->grade.val5 = 0;
         break;

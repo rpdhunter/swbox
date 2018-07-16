@@ -4,20 +4,26 @@
 #
 #-------------------------------------------------
 
-QT  += core gui widgets  #network
+QT  += core gui widgets network
 QT  += serialport sql qml quick quickwidgets xml
 #QT += opengl
 
+static{
+    QTPLUGIN+=qtvirtualkeyboardplugin
+    QT+=svg
+}
+
 TARGET = swbox
 TEMPLATE = app
-
-#DEFINES += PRINTSCREEN      #截屏
 
 #DEFINES += AMG             #OEM
 #DEFINES += XDP_II          #OEM
 DEFINES += OHV             #OEM
 #DEFINES += ZDIT            #OEM
 #DEFINES += NO_OEM           #OEM
+
+#DEFINES += TEST_LAB
+
 
 TRANSLATIONS += trans/en.ts
 
@@ -32,9 +38,6 @@ SOURCES += \
     IO/Data/recwave.cpp \
     IO/SqlCfg/sqlcfg.cpp \
     IO/Key/keydetect.cpp \
-    IO/Com/Modbus/modbus.cpp \
-    IO/Com/Modbus/gpio_oper.c \
-    IO/Com/Modbus/uart_oper.c \
     IO/Com/rdb/thread.c \
     IO/Com/rdb/rdb.c \
     IO/Com/rdb/ipcs.c \
@@ -58,15 +61,7 @@ SOURCES += \
     IO/Other/filetools.cpp \
     IO/Data/reccontrol.cpp \
     IO/Data/fifocontrol.cpp \
-    IO/Other/wifi.cpp \
-    Gui/Common/wifitools.cpp \
     Gui/Qml/quickview.cpp \
-    IO/Com/rtu/uart_driver.c \
-    IO/Com/rtu/setting_value.c \
-    IO/Com/rtu/io.c \
-    IO/Com/rtu/iec104.c \
-    IO/Com/rtu/iec101.c \
-    IO/Com/rtu/rtu.cpp \
     IO/Other/CPU/xadc_core.c \
     IO/Other/CPU/cpustatus.cpp \
     Gui/Common/prpsscene.cpp \
@@ -77,10 +72,18 @@ SOURCES += \
     Gui/Function/Asset/assetmodel.cpp \
     Gui/Function/Asset/assetsql.cpp \
     Gui/Function/Asset/assetwidget.cpp \
-    Gui/Function/basewidget.cpp \
     Gui/Common/compute.cpp \
     IO/Other/report.cpp \
-    Gui/Function/Asset/assetfilemanagement.cpp
+    Gui/Function/Asset/assetfilemanagement.cpp \
+    Gui/Common/fir.cpp \
+    IO/Other/cpu.c \
+    Gui/Common/basewidget.cpp \
+    Gui/Function/channelwidget.cpp \
+    IO/Com/socket.cpp \
+    IO/Com/rdb/gpio_oper.c \
+    Gui/Common/wifipassword.cpp \
+    Gui/Algorithm/Bp/bp.cpp \
+    Gui/Algorithm/Bp/bpcable.cpp
 
 
 HEADERS  += \
@@ -90,9 +93,6 @@ HEADERS  += \
     IO/Data/recwave.h \
     IO/Key/key.h \
     IO/Key/keydetect.h \
-    IO/Com/Modbus/modbus.h \
-    IO/Com/Modbus/gpio_oper.h \
-    IO/Com/Modbus/uart_oper.h \
     IO/SqlCfg/sqlcfg.h \    
     IO/Com/rdb/thread.h \
     IO/Com/rdb/rdb.h \
@@ -119,16 +119,7 @@ HEADERS  += \
     IO/Other/filetools.h \
     IO/Data/reccontrol.h \
     IO/Data/fifocontrol.h \
-    IO/Other/wifi.h \
-    Gui/Common/wifitools.h \
     Gui/Qml/quickview.h \
-    IO/Com/rtu/uart_driver.h \
-    IO/Com/rtu/setting_table.h \
-    IO/Com/rtu/protocol.h \
-    IO/Com/rtu/io.h \
-    IO/Com/rtu/iec104.h \
-    IO/Com/rtu/iec101.h \
-    IO/Com/rtu/rtu.h \
     IO/Other/CPU/xadc_core_if.h \
     IO/Other/CPU/xadc_core.h \
     IO/Other/CPU/types.h \
@@ -142,10 +133,19 @@ HEADERS  += \
     Gui/Function/Asset/assetmodel.h \
     Gui/Function/Asset/assetsql.h \
     Gui/Function/Asset/assetwidget.h \
-    Gui/Function/basewidget.h \
     Gui/Common/compute.h \
     IO/Other/report.h \
-    Gui/Function/Asset/assetfilemanagement.h
+    Gui/Function/Asset/assetfilemanagement.h \
+    Gui/Common/fir.h \
+    IO/Other/cpu.h \
+    Gui/Common/basewidget.h \
+    Gui/Function/channelwidget.h \
+    IO/Com/socket.h \
+    IO/Com/rdb/global_define.h \
+    IO/Com/rdb/gpio_oper.h \
+    Gui/Common/wifipassword.h \
+    Gui/Algorithm/Bp/bp.h \
+    Gui/Algorithm/Bp/bpcable.h
 
 FORMS += \
     Gui/Function/tevwidget.ui \
@@ -159,7 +159,8 @@ FORMS += \
     Gui/Options/debugui.ui \
     Gui/mainwindow.ui \
     Gui/Function/uhfwidget.ui \
-    Gui/Function/Asset/assetwidget.ui
+    Gui/Function/Asset/assetwidget.ui \
+    Gui/Options/apinfo.ui
 
 
 RESOURCES += \
@@ -167,7 +168,11 @@ RESOURCES += \
 
 DISTFILES += \
     BOOT.bin \
-    trans/en.ts
+    trans/en.ts \
+    resource/Busy.qml \
+    resource/Input.qml \
+    resource/MyInputPanel.qml \
+    resource/MyKeyboard.qml
 
 ################################################################################
 

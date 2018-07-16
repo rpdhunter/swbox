@@ -15,6 +15,7 @@ public:
         Substation,
         Area,
         Root,
+        Normal,
     };
 
     enum NodeRole{

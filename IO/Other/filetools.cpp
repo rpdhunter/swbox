@@ -50,7 +50,7 @@ void FileTools::run()
 
         //空间管理
         spaceControl(DIR_WAVE"/");              //内存空间管理
-        spaceControl("/mmc/sdcard/WaveForm/");  //SD卡空间管理
+//        spaceControl("/mmc/sdcard/WaveForm/");  //SD卡空间管理
 
         system ("sync");
     }
@@ -530,7 +530,7 @@ void FileTools::wavToMp3()
         QObject::connect(myProcess2,SIGNAL(finished(int)),myProcess2,SLOT(deleteLater()));
     }
 #endif
-    qDebug()<<"mp3 file saved!    1111111111111111";
+    qDebug()<<"mp3 file saved!";
 }
 
 void FileTools::wav_add_filter()
@@ -554,13 +554,14 @@ void FileTools::wav_add_filter()
 
 void FileTools::spaceControl(QString str)
 {
+//    qDebug()<<"sqlcfg->get_para()->max_rec_num"<<sqlcfg->get_para()->max_rec_num;
     QDir dir(str);
     QStringList list = dir.entryList(QDir::Files,QDir::Time);
     if(list.length()>sqlcfg->get_para()->max_rec_num){
         for(int i=0;i<12;i++){          //删除10个文件
             QString s = list.at(i);
             if(dir.remove(s)){
-                qDebug()<<"remove file "<<str + s<<" succeed!";
+//                qDebug()<<"remove file "<<str + s<<" succeed!";
             }
             else{
                 qDebug()<<"remove file "<<str + s<<" failed!";

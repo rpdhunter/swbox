@@ -44,11 +44,18 @@ void LogTools::dealLog(double val, int pulse, double degree, int is_current)
             data_asset.removeFirst();
         }
 
-        //保存文件
+//        //保存文件
+////        write_normal_log(path_normal,data_normal);
+//        write_normal_log(path_asset,data_asset);
+    }
+
+    //60s保存文件
+    if(log_timer % SAVE_TIME_INTERVAL == 0){
         write_normal_log(path_normal,data_normal);
         write_normal_log(path_asset,data_asset);
     }
-    if(log_timer == LOG_TIME_INTERVAL){
+
+    if(log_timer == SAVE_TIME_INTERVAL * LOG_TIME_INTERVAL){
         log_timer = 0;      //计数器清零
     }
 }
@@ -121,9 +128,17 @@ void LogTools::read_normal_log(QString path, QVector<LOG_DATA> &log_data)
         file.close();
     }
     else{
-        qDebug()<<"read file failed!";
+        qDebug()<<"found no former log file" << path;
 
     }
+}
+
+void LogTools::save_log()
+{
+    write_normal_log(path_normal,data_normal);
+    write_normal_log(path_asset,data_asset);
+
+    qDebug()<<"save_log"<<mode;
 }
 
 void LogTools::write_normal_log(QString path, QVector<LOG_DATA> log_data)

@@ -97,7 +97,7 @@ void AssetWidget::trans_key(quint8 key_code)
         else{                               //在工作页面，则进入对应功能
             QModelIndex index = ui->treeView->currentIndex();
             QString str = model->data(model->index(index.row(),1,index.parent()),Qt::DisplayRole).toString();
-            if(str == "Area"){
+            if(str == tr("区域")){
                 switch (key_val->grade.val3) {
                 case 0:
                 case 1:         //展开/收起片区
@@ -120,7 +120,7 @@ void AssetWidget::trans_key(quint8 key_code)
                     break;
                 }
             }
-            else if(str == "Substation"){
+            else if(str == tr("站所")){
                 switch (key_val->grade.val3) {
                 case 0:
                 case 1:         //展开/收起站所
@@ -142,7 +142,7 @@ void AssetWidget::trans_key(quint8 key_code)
                     break;
                 }
             }
-            else if(str == "Equipment"){
+            else if(str == tr("设备") || str == tr("通用设备")){
                 switch (key_val->grade.val3) {
                 case 0:
                 case 1:         //设为当前设备
@@ -219,13 +219,13 @@ void AssetWidget::do_key_up_down(int d)
     if(key_val->grade.val2 == 1){       //右键显示
         QModelIndex index = ui->treeView->currentIndex();
         QString str = model->data(model->index(index.row(),1,index.parent()),Qt::DisplayRole).toString();
-        if(str == "Area"){
+        if(str == tr("区域")){
             Common::change_index(key_val->grade.val3, d, AREA_NUM, 1);
         }
-        else if(str == "Substation"){
+        else if(str == tr("站所")){
             Common::change_index(key_val->grade.val3, d, SUBSTATION_NUM, 1);
         }
-        else if(str == "Equipment"){
+        else if(str == tr("设备") || str == tr("通用设备")){
             Common::change_index(key_val->grade.val3, d, EQUIPMENT_NUM, 1);
         }
     }
@@ -427,15 +427,15 @@ void AssetWidget::fresh_setting()
     if(key_val->grade.val2 == 1){       //右键显示
         QModelIndex index = ui->treeView->currentIndex();
         QString str = model->data(model->index(index.row(),1,index.parent()),Qt::DisplayRole).toString();
-        if(str == "Area"){
+        if(str == tr("区域")){
             menu_area->show();
             menu_area->setCurrentRow(key_val->grade.val3-1);
         }
-        else if(str == "Substation"){
+        else if(str == tr("站所")){
             menu_substation->show();
             menu_substation->setCurrentRow(key_val->grade.val3-1);
         }
-        else if(str == "Equipment"){
+        else if(str == tr("设备") || str == tr("通用设备")){
             menu_equipment->show();
             menu_equipment->setCurrentRow(key_val->grade.val3-1);
         }

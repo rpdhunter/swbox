@@ -3,12 +3,9 @@
 #include <QtDebug>
 #include <QQuickItem>
 #include <QPushButton>
-
-#ifdef PRINTSCREEN
 #include <QPixmap>
 #include <QApplication>
 #include <QScreen>
-#endif
 
 #define LOW_POWER_TIMES     3
 #define TAB_NUM     7       //通道数量
@@ -32,6 +29,7 @@ MainWindow::MainWindow(QSplashScreen *sp, QWidget *parent ) :
     data = new G_PARA;
     memset(data, 0, sizeof(G_PARA));
     buzzer = new Buzzer(data);
+    power_num = 0;
 
     sp->showMessage(tr("正在初始化实时数据库..."),Qt::AlignBottom|Qt::AlignLeft);
     init_rdb();
@@ -44,17 +42,7 @@ MainWindow::MainWindow(QSplashScreen *sp, QWidget *parent ) :
     fifodata = new FifoData(data);
     connect(this, SIGNAL(send_sync(uint)), fifodata, SIGNAL(send_sync(uint)) );
 
-
     sp->showMessage(tr("正在初始化通信..."),Qt::AlignBottom|Qt::AlignLeft);
-
-    qDebug()<<"\n";
-
-//    modbus = new Modbus(this,data);
-//    connect(modbus,SIGNAL(closeTimeChanged(int)),this,SLOT(set_reboot_time()) );
-//    serial_fd = modbus->get_serial_fd();    //获取串口fd,便于统一管理
-    serial_fd = -1;
-//    rtu = new Rtu(serial_fd);
-
 
     //注册两个自定义类型
     qRegisterMetaType<VectorList>("VectorList");
@@ -76,9 +64,7 @@ MainWindow::MainWindow(QSplashScreen *sp, QWidget *parent ) :
     Common::messagebox_show_and_init(box);
     box->hide();
 
-#ifdef PRINTSCREEN
-    connect(timer_time,SIGNAL(timeout()),this,SLOT(printSc()));  //截屏
-#endif
+//    connect(timer_time,SIGNAL(timeout()),this,SLOT(printSc()));  //截屏
 
     set_asset_dir(AssetWidget::normal_asset_dir_init());        //初始化资产路径
     for (int i = 0; i < mode_list.count(); ++i) {           //寻找有效的初始通道
@@ -92,6 +78,7 @@ MainWindow::MainWindow(QSplashScreen *sp, QWidget *parent ) :
 
     fifodata->start();                                      //开启数据线程
     keydetect->start();
+//    qDebug()<<"main"<<QThread::currentThreadId();
 }
 
 MainWindow::~MainWindow()
@@ -145,6 +132,10 @@ void MainWindow::statusbar_init()
     timer_dark = new QTimer();
     timer_dark->setSingleShot(true);
 
+    timer_message = new QTimer();
+    timer_message->setSingleShot(true);
+    timer_message->setInterval(2000);       //2秒后恢复显示标准信息
+
     set_reboot_time();
 
     connect(timer_time, SIGNAL(timeout()), this, SLOT(fresh_status()) );
@@ -152,6 +143,7 @@ void MainWindow::statusbar_init()
     connect(timer_reboot, SIGNAL(timeout()), this, SLOT(system_reboot()) );
     connect(timer_sleep, SIGNAL(timeout()), this, SLOT(system_sleep()) );
     connect(timer_dark, SIGNAL(timeout()), this, SLOT(screen_dark()) );
+    connect(timer_message, SIGNAL(timeout()), this, SLOT(fresh_menu_icon()) );
 
     if(sqlcfg->get_para()->menu_asset == Disable){          //没配置资产，则状态栏资产图标隐藏
         ui->lab_asset->hide();
@@ -364,7 +356,8 @@ void MainWindow::channel_init(MODE mode, int index)
             hfct1_widget = new HFCTWidget(data,&key_val,mode,0,ui->H_Channel1);
             break;
         case UHF1:
-            uhf1_widget = new UHFWidget(data,&key_val,mode,0,ui->H_Channel1);
+//            uhf1_widget = new UHFWidget(data,&key_val,mode,0,ui->H_Channel1);
+            uhf1_widget = new TEVWidget(data,&key_val,mode,0,ui->H_Channel1);       //UHF代码没完善前,用TEV通道代替
             break;
         default:
             mode = Disable;
@@ -381,7 +374,8 @@ void MainWindow::channel_init(MODE mode, int index)
             hfct2_widget = new HFCTWidget(data,&key_val,mode,1,ui->H_Channel2);
             break;
         case UHF2:
-            uhf2_widget = new UHFWidget(data,&key_val,mode,1,ui->H_Channel2);
+//            uhf2_widget = new UHFWidget(data,&key_val,mode,1,ui->H_Channel2);
+            uhf2_widget = new TEVWidget(data,&key_val,mode,1,ui->H_Channel2);
             break;
         default:
             mode = Disable;
@@ -443,7 +437,7 @@ void MainWindow::channel_init(MODE mode, int index)
 
 void MainWindow::options_init()
 {
-    options = new Options(ui->Options,data,serial_fd);
+    options = new Options(ui->Options,data);
     debugset = new DebugSet(data,ui->Options);
     systeminfo = new SystemInfo(ui->Options);
     factoryreset = new FactoryReset(ui->Options);
@@ -494,10 +488,8 @@ void MainWindow::trans_key(quint8 key_code)
     set_reboot_time();          //接到任何按键，重置重启计时器
 
 //    qDebug()<<"key_code"<<key_code;
-
-    if(key_val.grade.val0 == TAB_NUM - 1 && key_val.grade.val2 !=0 ){
-        emit send_key(key_code);
-        return;
+    if(key_code != KEY_POWER){
+        power_num = 0;          //重置截屏计数器
     }
 
     switch (key_code) {
@@ -509,81 +501,73 @@ void MainWindow::trans_key(quint8 key_code)
                 data->set_send_para(sp_reboot,1);
             }
             box->hide();
+            return;
         }
-        else if(key_val.grade.val0 == TAB_NUM - 1){
+        else if(key_val.grade.val0 == TAB_NUM - 1 && key_val.grade.val2 == 0){
+//            qDebug()<<key_val.grade.val0<<"\t"<<key_val.grade.val1<<"\t"<<key_val.grade.val2;
             switch (key_val.grade.val1) {
             case 1:
                 key_val.grade.val2 = 1;
                 options->working(&key_val);
-                break;
+                return;
             case 2:
                 key_val.grade.val2 = 1;
                 debugset->working(&key_val);
-                break;
+                return;
             case 3:
                 key_val.grade.val2 = 1;
                 recwavemanage->working(&key_val);
-                break;
+                return;
             case 4:
                 key_val.grade.val2 = 1;
                 systeminfo->working(&key_val);
-                break;
+                return;
             case 5:
                 key_val.grade.val2 = 1;
                 factoryreset->working(&key_val);
-                break;
+                return;
             default:
                 break;
             }
-            fresh_menu_icon();
+//            fresh_menu_icon();
         }
         break;
     case KEY_CANCEL:
         if(box->isVisible()){
             box->hide();
+            return;
         }
-        else if (key_val.grade.val0 == TAB_NUM - 1 && key_val.grade.val1 > 0){       //只针对设置界面
+        else if (key_val.grade.val0 == TAB_NUM - 1 && key_val.grade.val1 > 0 && (key_val.grade.val2 ==0)){       //只针对设置界面
             key_val.grade.val1 = 0;
         }
         break;
     case KEY_SHUTDOWN:
         if(box->isHidden()){
             Common::messagebox_show_and_init(box);
+            return;
         }
         break;
+    case KEY_POWER:
+        power_num++;
+        if(power_num == 2){
+            printSc();      //截屏
+            qDebug()<<"KEY_POWER"<<power_num;
+            show_message(tr("截屏已保存"));
+            power_num = 0;
+        }
+        timer_message->start();
+        return;
     case KEY_LEFT:
-        if(box->isVisible()){
-            Common::messagebox_switch(box);
-        }
-        else if(key_val.grade.val1 == 0 ){
-            do{
-                Common::change_index(key_val.grade.val0, -1, TAB_NUM - 1, 0);
-            }
-            while(mode_list.at(key_val.grade.val0) == Disable);
-            ui->tabWidget->setCurrentIndex(key_val.grade.val0);
-        }
+        do_key_left_right(-1);
         break;
     case KEY_RIGHT:
-        if(box->isVisible()){
-            Common::messagebox_switch(box);
-        }
-        else if(key_val.grade.val1 == 0 ){
-            do{
-                Common::change_index(key_val.grade.val0, 1, TAB_NUM - 1, 0);
-            }
-            while(mode_list.at(key_val.grade.val0) == Disable);
-            ui->tabWidget->setCurrentIndex(key_val.grade.val0);
-        }
+        do_key_left_right(1);
         break;
     case KEY_UP:
-        if (key_val.grade.val0 == TAB_NUM - 1) {
-            Common::change_index(key_val.grade.val1,-1,SETTING_NUM,1);
-        }
+        do_key_up_down(-1);
         break;
     case KEY_DOWN:
-        if (key_val.grade.val0 == TAB_NUM - 1) {
-            Common::change_index(key_val.grade.val1,1,SETTING_NUM,1);
-        }
+        do_key_up_down(1);
         break;    
     default:
         break;
@@ -591,13 +575,41 @@ void MainWindow::trans_key(quint8 key_code)
 
     fresh_grade1();
     fresh_menu_icon();
-    if(key_val.grade.val0 != TAB_NUM - 1 ){
+    if((key_val.grade.val0 != TAB_NUM - 1) && box->isHidden()){         //发送给各通道键盘信息
         emit send_key(key_code);
+    }
+    if(key_val.grade.val0 == TAB_NUM - 1 && key_val.grade.val2 !=0 && box->isHidden()){     //发送到设置界面键盘信息
+        emit send_key(key_code);
+    }
+}
+
+void MainWindow::do_key_up_down(int d)
+{
+//    qDebug()<<key_val.grade.val0<<"\t"<<key_val.grade.val1<<"\t"<<key_val.grade.val2;
+    if (box->isHidden() && (key_val.grade.val0 == TAB_NUM - 1) && (key_val.grade.val2 == 0) ) {
+        Common::change_index(key_val.grade.val1,d,SETTING_NUM,1);
+        fresh_menu_icon();
+    }
+}
+
+void MainWindow::do_key_left_right(int d)
+{
+    if(box->isVisible()){
+        Common::messagebox_switch(box);
+    }
+    else if(/*key_val.grade.val0 != TAB_NUM - 1 && */key_val.grade.val1 == 0 ){
+        do{
+            Common::change_index(key_val.grade.val0, d, TAB_NUM - 1, 0);
+        }
+        while(mode_list.at(key_val.grade.val0) == Disable);
+        ui->tabWidget->setCurrentIndex(key_val.grade.val0);
     }
 }
 
 void MainWindow::fresh_menu_icon()
 {
+    power_num = 0;          //重置截屏计数器
+
     //先根据图标的刷新模式，绘制非当前图标
     if(key_val.grade.val1 == 0){
         set_non_current_menu_icon();
@@ -1001,6 +1013,9 @@ void MainWindow::fresh_status()
         ui->lab_imformation->setText(tr("再过%1秒将自动关机，按任意键取消").arg(s));
     }
     ui->lab_freq->setText(QString("%1Hz").arg(sqlcfg->get_para()->freq_val));
+    if(Common::rdb_check_test_start()){         //检测测试项目
+        //保存通道信息
+    }
 }
 
 void MainWindow::fresh_batt()
@@ -1113,6 +1128,7 @@ void MainWindow::screen_dark()
 void MainWindow::show_message(QString str)
 {
     ui->lab_imformation->setText(str);
+    timer_message->start();
 }
 
 void MainWindow::show_busy(bool f)
@@ -1124,10 +1140,10 @@ void MainWindow::show_busy(bool f)
 void MainWindow::set_wifi_icon(int w)
 {
     switch (w) {
-    case WIFI_AP:
+    case WIFI_STA:
         ui->lab_wifi->setPixmap(QPixmap(":/widgetphoto/wifi/wifi3.png").scaled(ui->lab_wifi->size()));
         break;
-    case WIFI_HOTPOT:
+    case WIFI_AP:
         ui->lab_wifi->setPixmap(QPixmap(":/widgetphoto/wifi/wifi_hot.png").scaled(ui->lab_wifi->size()));
         break;
     case WIFI_SYNC:
@@ -1188,7 +1204,6 @@ void MainWindow::set_current_equ(QString new_equ, QString new_path)
 
 }
 
-#ifdef PRINTSCREEN
 void MainWindow::printSc()
 {
     //    QPixmap fullScreenPixmap = this->grab(this->rect());                      //老的截屏方式，只能截取指定Wdiget及其子类
@@ -1200,4 +1215,3 @@ void MainWindow::printSc()
     else
         qDebug()<<"fullScreen failed!";
 }
-#endif
