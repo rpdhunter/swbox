@@ -50,52 +50,52 @@
         <translation>Max Value: </translation>
     </message>
     <message>
-        <location filename="../Gui/Function/aawidget.cpp" line="249"/>
+        <location filename="../Gui/Function/aawidget.cpp" line="251"/>
         <source>检测模式	[单次]</source>
         <translation>Measurement Mode	[Single]</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/aawidget.cpp" line="253"/>
+        <location filename="../Gui/Function/aawidget.cpp" line="255"/>
         <source>检测模式	[连续]</source>
         <translation>Measurement Mode	[Cont.]</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/aawidget.cpp" line="264"/>
+        <location filename="../Gui/Function/aawidget.cpp" line="266"/>
         <source>图形显示 	[时序图]</source>
         <translation>Graphic Display	[Historic]</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/aawidget.cpp" line="268"/>
+        <location filename="../Gui/Function/aawidget.cpp" line="270"/>
         <source>图形显示  	[频谱图]</source>
         <translation>Graphic Display	[Spectrum]</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/aawidget.cpp" line="274"/>
+        <location filename="../Gui/Function/aawidget.cpp" line="276"/>
         <source>增益调节	[×%1]</source>
         <translation>Gain		[×%1]</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/aawidget.cpp" line="275"/>
+        <location filename="../Gui/Function/aawidget.cpp" line="277"/>
         <source>音量调节	[×%1]</source>
         <translation>Volume		[×%1]</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/aawidget.cpp" line="276"/>
+        <location filename="../Gui/Function/aawidget.cpp" line="278"/>
         <source>黄色报警阈值	[%1]dB</source>
         <translation>Yellow Threshold	[%1]dB</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/aawidget.cpp" line="277"/>
+        <location filename="../Gui/Function/aawidget.cpp" line="279"/>
         <source>红色报警阈值	[%1]dB</source>
         <translation>Red Threshold	[%1]dB</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/aawidget.cpp" line="278"/>
+        <location filename="../Gui/Function/aawidget.cpp" line="280"/>
         <source>连续录波	[%1]s</source>
         <translation>Cont. Waveform Record	[%1]s</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/aawidget.cpp" line="289"/>
+        <location filename="../Gui/Function/aawidget.cpp" line="291"/>
         <source> 参 数 设 置</source>
         <translation> Settings</translation>
     </message>
@@ -154,72 +154,72 @@
         <translation>Max Value: </translation>
     </message>
     <message>
-        <location filename="../Gui/Function/aewidget.cpp" line="396"/>
+        <location filename="../Gui/Function/aewidget.cpp" line="398"/>
         <source>检测模式	[单次]</source>
         <translation>Measurement Mode	[Single]</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/aewidget.cpp" line="400"/>
+        <location filename="../Gui/Function/aewidget.cpp" line="402"/>
         <source>检测模式	[连续]</source>
         <translation>Measurement Mode	[Cont.]</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/aewidget.cpp" line="414"/>
+        <location filename="../Gui/Function/aewidget.cpp" line="416"/>
         <source>图形显示 	[时序图]</source>
         <translation>Graphic Display	[Historic]</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/aewidget.cpp" line="418"/>
+        <location filename="../Gui/Function/aewidget.cpp" line="420"/>
         <source>图形显示	[PRPD]</source>
         <translation>Graphic Display	[PRPD]</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/aewidget.cpp" line="422"/>
+        <location filename="../Gui/Function/aewidget.cpp" line="424"/>
         <source>图形显示 	[飞行图]</source>
         <translation>Graphic Display	[FLY]</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/aewidget.cpp" line="426"/>
+        <location filename="../Gui/Function/aewidget.cpp" line="428"/>
         <source>图形显示 [特征指数]</source>
         <translation>Graphic Display	[Exponent]</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/aewidget.cpp" line="430"/>
+        <location filename="../Gui/Function/aewidget.cpp" line="432"/>
         <source>图形显示  	[频谱图]</source>
         <translation>Graphic Display	[Spectrum]</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/aewidget.cpp" line="436"/>
+        <location filename="../Gui/Function/aewidget.cpp" line="438"/>
         <source>增益调节	[×%1]</source>
         <translation>Gain		[×%1]</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/aewidget.cpp" line="437"/>
+        <location filename="../Gui/Function/aewidget.cpp" line="439"/>
         <source>音量调节	[×%1]</source>
         <translation>Volume		[×%1]</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/aewidget.cpp" line="438"/>
+        <location filename="../Gui/Function/aewidget.cpp" line="440"/>
         <source>黄色报警阈值	[%1]dB</source>
         <translation>Yellow Threshold	[%1]dB</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/aewidget.cpp" line="439"/>
+        <location filename="../Gui/Function/aewidget.cpp" line="441"/>
         <source>红色报警阈值	[%1]dB</source>
         <translation>Red Threshold	[%1]dB</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/aewidget.cpp" line="440"/>
+        <location filename="../Gui/Function/aewidget.cpp" line="442"/>
         <source>脉冲触发	[%1]mV</source>
         <translation>Pulse Trigger		[%1]mV</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/aewidget.cpp" line="441"/>
+        <location filename="../Gui/Function/aewidget.cpp" line="443"/>
         <source>连续录波	[%1]s</source>
         <translation>Cont. Waveform Record	[%1]s</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/aewidget.cpp" line="452"/>
+        <location filename="../Gui/Function/aewidget.cpp" line="454"/>
         <source> 参 数 设 置</source>
         <translation> Settings</translation>
     </message>
@@ -239,12 +239,12 @@
     <message>
         <location filename="../Gui/Options/apinfo.ui" line="36"/>
         <source>信号强度</source>
-        <translation type="unfinished"></translation>
+        <translation>strength</translation>
     </message>
     <message>
         <location filename="../Gui/Options/apinfo.ui" line="50"/>
         <source>加密方式</source>
-        <translation type="unfinished"></translation>
+        <translation>way of encryption</translation>
     </message>
     <message>
         <location filename="../Gui/Options/apinfo.ui" line="57"/>
@@ -257,17 +257,17 @@
     <message>
         <location filename="../Gui/Options/apinfo.ui" line="64"/>
         <source>安全类型</source>
-        <translation type="unfinished"></translation>
+        <translation>Security</translation>
     </message>
     <message>
         <location filename="../Gui/Options/apinfo.ui" line="78"/>
         <source>mac地址</source>
-        <translation type="unfinished"></translation>
+        <translation>mac address</translation>
     </message>
     <message>
         <location filename="../Gui/Options/apinfo.ui" line="92"/>
         <source>IP分配</source>
-        <translation type="unfinished"></translation>
+        <translation>IP acquire</translation>
     </message>
     <message>
         <location filename="../Gui/Options/apinfo.ui" line="110"/>
@@ -287,17 +287,17 @@
     <message>
         <location filename="../Gui/Options/apinfo.ui" line="152"/>
         <source>是否保存网络</source>
-        <translation type="unfinished"></translation>
+        <translation>net saved</translation>
     </message>
     <message>
         <location filename="../Gui/Options/apinfo.ui" line="159"/>
         <source>未保存</source>
-        <translation type="unfinished"></translation>
+        <translation>not saved</translation>
     </message>
     <message>
         <location filename="../Gui/Options/apinfo.ui" line="183"/>
         <source>忘记网络</source>
-        <translation type="unfinished"></translation>
+        <translation>forget net</translation>
     </message>
     <message>
         <location filename="../Gui/Options/apinfo.ui" line="190"/>
@@ -310,27 +310,27 @@
     <message>
         <location filename="../Gui/Function/Asset/assetfilemanagement.cpp" line="17"/>
         <source>展开/收起文件夹</source>
-        <translation type="unfinished"></translation>
+        <translation>expand/collapse</translation>
     </message>
     <message>
         <location filename="../Gui/Function/Asset/assetfilemanagement.cpp" line="17"/>
         <source>删除文件夹</source>
-        <translation type="unfinished"></translation>
+        <translation>Del Dir</translation>
     </message>
     <message>
         <location filename="../Gui/Function/Asset/assetfilemanagement.cpp" line="17"/>
         <source>生成测试报告</source>
-        <translation type="unfinished"></translation>
+        <translation>Creat Report</translation>
     </message>
     <message>
         <location filename="../Gui/Function/Asset/assetfilemanagement.cpp" line="21"/>
         <source>查看文件</source>
-        <translation type="unfinished"></translation>
+        <translation>View File</translation>
     </message>
     <message>
         <location filename="../Gui/Function/Asset/assetfilemanagement.cpp" line="21"/>
         <source>删除文件</source>
-        <translation type="unfinished"></translation>
+        <translation>Del File</translation>
     </message>
 </context>
 <context>
@@ -346,7 +346,7 @@
     <message>
         <location filename="../Gui/Function/Asset/assetwidget.ui" line="14"/>
         <source>Form</source>
-        <translation type="unfinished"></translation>
+        <translation>Form</translation>
     </message>
     <message>
         <location filename="../Gui/Function/Asset/assetwidget.ui" line="26"/>
@@ -382,98 +382,98 @@
     <message>
         <location filename="../Gui/Function/Asset/assetwidget.ui" line="60"/>
         <source>最大值重置</source>
-        <translation type="unfinished">Max Value Reset</translation>
+        <translation>Max Value Reset</translation>
     </message>
     <message>
         <location filename="../Gui/Function/Asset/assetwidget.ui" line="93"/>
         <source>当前测量设备</source>
-        <translation type="unfinished"></translation>
+        <translation>Current equipment</translation>
     </message>
     <message>
         <location filename="../Gui/Function/Asset/assetwidget.ui" line="113"/>
         <source>未设置</source>
-        <translation type="unfinished"></translation>
+        <translation>None</translation>
     </message>
     <message>
         <location filename="../Gui/Function/Asset/assetwidget.ui" line="129"/>
         <location filename="../Gui/Function/Asset/assetwidget.cpp" line="347"/>
         <source>设置已生效，仪器所有的测量数据都将归档到此设备档案下</source>
-        <translation type="unfinished"></translation>
+        <translation>Setup is in effect and all measurement data of the instrument will be filed in this equipment file</translation>
     </message>
     <message>
         <location filename="../Gui/Function/Asset/assetwidget.cpp" line="42"/>
         <source>展开/收起片区</source>
-        <translation type="unfinished"></translation>
+        <translation>Expand/Collapse Area</translation>
     </message>
     <message>
         <location filename="../Gui/Function/Asset/assetwidget.cpp" line="42"/>
         <source>增加片区</source>
-        <translation type="unfinished"></translation>
+        <translation>Add Area</translation>
     </message>
     <message>
         <location filename="../Gui/Function/Asset/assetwidget.cpp" line="42"/>
         <source>删除片区</source>
-        <translation type="unfinished"></translation>
+        <translation>Del Area</translation>
     </message>
     <message>
         <location filename="../Gui/Function/Asset/assetwidget.cpp" line="42"/>
         <source>重命名片区...</source>
-        <translation type="unfinished"></translation>
+        <translation>Rename Area...</translation>
     </message>
     <message>
         <location filename="../Gui/Function/Asset/assetwidget.cpp" line="42"/>
         <source>增加子站所</source>
-        <translation type="unfinished"></translation>
+        <translation>Add child substation</translation>
     </message>
     <message>
         <location filename="../Gui/Function/Asset/assetwidget.cpp" line="47"/>
         <source>展开/收起站所</source>
-        <translation type="unfinished"></translation>
+        <translation>Expand/Collapse substation</translation>
     </message>
     <message>
         <location filename="../Gui/Function/Asset/assetwidget.cpp" line="47"/>
         <source>增加站所</source>
-        <translation type="unfinished"></translation>
+        <translation>Add substation</translation>
     </message>
     <message>
         <location filename="../Gui/Function/Asset/assetwidget.cpp" line="47"/>
         <source>删除站所</source>
-        <translation type="unfinished"></translation>
+        <translation>Del substation</translation>
     </message>
     <message>
         <location filename="../Gui/Function/Asset/assetwidget.cpp" line="47"/>
         <source>重命名站所...</source>
-        <translation type="unfinished"></translation>
+        <translation>Rename substation...</translation>
     </message>
     <message>
         <location filename="../Gui/Function/Asset/assetwidget.cpp" line="47"/>
         <source>增加子设备</source>
-        <translation type="unfinished"></translation>
+        <translation>Add child equipment</translation>
     </message>
     <message>
         <location filename="../Gui/Function/Asset/assetwidget.cpp" line="52"/>
         <source>设为当前设备</source>
-        <translation type="unfinished"></translation>
+        <translation>Set current equipment</translation>
     </message>
     <message>
         <location filename="../Gui/Function/Asset/assetwidget.cpp" line="52"/>
         <source>增加设备</source>
-        <translation type="unfinished"></translation>
+        <translation>Add equipment</translation>
     </message>
     <message>
         <location filename="../Gui/Function/Asset/assetwidget.cpp" line="52"/>
         <source>删除设备</source>
-        <translation type="unfinished"></translation>
+        <translation>Del equipment</translation>
     </message>
     <message>
         <location filename="../Gui/Function/Asset/assetwidget.cpp" line="52"/>
         <source>编辑设备...</source>
-        <translation type="unfinished"></translation>
+        <translation>Edit equipment...</translation>
     </message>
     <message>
         <location filename="../Gui/Function/Asset/assetwidget.cpp" line="52"/>
         <source>测量数据管理...</source>
-        <translation type="unfinished"></translation>
+        <translation>Data management...</translation>
     </message>
     <message>
         <location filename="../Gui/Function/Asset/assetwidget.cpp" line="100"/>
@@ -485,7 +485,7 @@
     <message>
         <location filename="../Gui/Function/Asset/assetwidget.cpp" line="114"/>
         <source>输入新的片区名</source>
-        <translation type="unfinished"></translation>
+        <translation>Enter a new area name</translation>
     </message>
     <message>
         <location filename="../Gui/Function/Asset/assetwidget.cpp" line="123"/>
@@ -497,7 +497,7 @@
     <message>
         <location filename="../Gui/Function/Asset/assetwidget.cpp" line="136"/>
         <source>输入新的站所名</source>
-        <translation type="unfinished"></translation>
+        <translation>Enter a new substation name</translation>
     </message>
     <message>
         <location filename="../Gui/Function/Asset/assetwidget.cpp" line="145"/>
@@ -516,19 +516,47 @@
     <message>
         <location filename="../Gui/Function/Asset/assetwidget.cpp" line="158"/>
         <source>输入新的设备名</source>
-        <translation type="unfinished"></translation>
+        <translation>Enter the new equipment name</translation>
     </message>
     <message>
         <location filename="../Gui/Function/Asset/assetwidget.cpp" line="332"/>
         <location filename="../Gui/Function/Asset/assetwidget.cpp" line="364"/>
         <source>未指定</source>
-        <translation type="unfinished">None</translation>
+        <translation>None</translation>
     </message>
     <message>
         <location filename="../Gui/Function/Asset/assetwidget.cpp" line="334"/>
         <location filename="../Gui/Function/Asset/assetwidget.cpp" line="366"/>
         <source>设置未生效，仪器所有的测量数据都将归档到公有档案下</source>
-        <translation type="unfinished"></translation>
+        <translation>The setting is not effective and all the measurement data of the instrument will be filed in the general equipment file</translation>
+    </message>
+</context>
+<context>
+    <name>BpCable</name>
+    <message>
+        <location filename="../Gui/Algorithm/Bp/bpcable.cpp" line="491"/>
+        <source>内部放电</source>
+        <translation>internal</translation>
+    </message>
+    <message>
+        <location filename="../Gui/Algorithm/Bp/bpcable.cpp" line="493"/>
+        <source>表面放电</source>
+        <translation>surface</translation>
+    </message>
+    <message>
+        <location filename="../Gui/Algorithm/Bp/bpcable.cpp" line="495"/>
+        <source>电晕放电</source>
+        <translation>corona</translation>
+    </message>
+    <message>
+        <location filename="../Gui/Algorithm/Bp/bpcable.cpp" line="497"/>
+        <source>悬浮电位</source>
+        <translation>floating potential</translation>
+    </message>
+    <message>
+        <location filename="../Gui/Algorithm/Bp/bpcable.cpp" line="499"/>
+        <source>白噪声</source>
+        <translation>white noise</translation>
     </message>
 </context>
 <context>
@@ -1066,152 +1094,162 @@
 <context>
     <name>HFCTWidget</name>
     <message>
-        <location filename="../Gui/Function/hfctwidget.ui" line="57"/>
+        <location filename="../Gui/Function/hfctwidget.ui" line="209"/>
         <source>最大值: 0pC</source>
         <translation>Max Value: 0pC</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/hfctwidget.ui" line="67"/>
+        <location filename="../Gui/Function/hfctwidget.ui" line="219"/>
         <source>脉冲数: 0</source>
         <translation>Pulse Count:0</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/hfctwidget.ui" line="77"/>
+        <location filename="../Gui/Function/hfctwidget.ui" line="229"/>
         <source>严重度: 0.00</source>
         <translation>Severity:0.00</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/hfctwidget.ui" line="181"/>
+        <location filename="../Gui/Function/hfctwidget.ui" line="130"/>
         <source>检测模式      [单次]</source>
         <translation>Measurement Mode	[Single]</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/hfctwidget.ui" line="186"/>
+        <location filename="../Gui/Function/hfctwidget.ui" line="135"/>
         <source>图形显示  [柱状图]</source>
         <translation>Graphic Display[Bar]</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/hfctwidget.ui" line="191"/>
+        <location filename="../Gui/Function/hfctwidget.ui" line="140"/>
         <source>增益系数     [×1.0]</source>
         <translation>Gain     [×1.0]</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/hfctwidget.ui" line="196"/>
+        <location filename="../Gui/Function/hfctwidget.ui" line="145"/>
         <source>硬件滤波          [无]</source>
         <translation>Hardware filtering</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/hfctwidget.ui" line="201"/>
+        <location filename="../Gui/Function/hfctwidget.ui" line="150"/>
         <source>软件滤波          [无]</source>
         <translation>Software filtering</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/hfctwidget.ui" line="206"/>
+        <location filename="../Gui/Function/hfctwidget.ui" line="155"/>
         <source>脉冲触发     [15]mV</source>
         <translation>Pulse Trigger	[15]mV</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/hfctwidget.ui" line="211"/>
+        <location filename="../Gui/Function/hfctwidget.ui" line="160"/>
         <source>脉冲计数时长[1]s</source>
         <translation>Pulse Counting Time[1]s</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/hfctwidget.ui" line="231"/>
+        <location filename="../Gui/Function/hfctwidget.ui" line="180"/>
         <source>测量值重置</source>
         <translation>Value Reset</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/hfctwidget.ui" line="216"/>
+        <location filename="../Gui/Function/hfctwidget.ui" line="239"/>
+        <source>模式判别:</source>
+        <translation>Discharge Mode:</translation>
+    </message>
+    <message>
+        <location filename="../Gui/Function/hfctwidget.ui" line="165"/>
         <source>连续录波     [5]s</source>
         <translation>Continuous Record	[5]s</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/hfctwidget.ui" line="221"/>
+        <location filename="../Gui/Function/hfctwidget.ui" line="170"/>
         <source>自动录波     [关闭]</source>
         <translation>Auto Recording[Off]</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/hfctwidget.ui" line="226"/>
+        <location filename="../Gui/Function/hfctwidget.ui" line="175"/>
         <source>单次录波</source>
         <translation>Waveform Record</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/hfctwidget.cpp" line="475"/>
+        <location filename="../Gui/Function/hfctwidget.cpp" line="485"/>
         <source>最大值: </source>
         <translation>Max Value: </translation>
     </message>
     <message>
-        <location filename="../Gui/Function/hfctwidget.cpp" line="428"/>
+        <location filename="../Gui/Function/hfctwidget.cpp" line="432"/>
         <source>严重度: %1</source>
         <translation>Severity %1</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/hfctwidget.cpp" line="487"/>
+        <location filename="../Gui/Function/hfctwidget.cpp" line="435"/>
+        <source>模式判断: %1</source>
+        <translation>Discharge Mode: %1</translation>
+    </message>
+    <message>
+        <location filename="../Gui/Function/hfctwidget.cpp" line="497"/>
         <source>检测模式	[单次]</source>
         <translation>Measurement Mode	[Single]</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/hfctwidget.cpp" line="490"/>
+        <location filename="../Gui/Function/hfctwidget.cpp" line="500"/>
         <source>检测模式	[连续]</source>
         <translation>Measurement Mode	[Cont.]</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/hfctwidget.cpp" line="500"/>
+        <location filename="../Gui/Function/hfctwidget.cpp" line="510"/>
         <source>图形显示	[PRPD]</source>
         <translation>Graphic Display	[PRPD]</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/hfctwidget.cpp" line="503"/>
+        <location filename="../Gui/Function/hfctwidget.cpp" line="513"/>
         <source>图形显示 	[时序图]</source>
         <translation>Graphic Display	[Historic]</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/hfctwidget.cpp" line="506"/>
+        <location filename="../Gui/Function/hfctwidget.cpp" line="516"/>
         <source>图形显示 	[柱状图]</source>
         <translation>Graphic Display	[Bar]</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/hfctwidget.cpp" line="510"/>
+        <location filename="../Gui/Function/hfctwidget.cpp" line="520"/>
         <source>图形显示 	[PRPS]</source>
         <translation>Graphic Display	[PRPS]</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/hfctwidget.cpp" line="514"/>
+        <location filename="../Gui/Function/hfctwidget.cpp" line="524"/>
         <source>图形显示 	[T-F图]</source>
         <translation>Graphic Display	[T-F]</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/hfctwidget.cpp" line="518"/>
+        <location filename="../Gui/Function/hfctwidget.cpp" line="528"/>
         <source>图形显示 	[频谱图]</source>
         <translation>Graphic Display	[Spectrum]</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/hfctwidget.cpp" line="522"/>
+        <location filename="../Gui/Function/hfctwidget.cpp" line="532"/>
         <source>增益调节	[×%1]</source>
         <translation>Gain		[×%1]</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/hfctwidget.cpp" line="523"/>
+        <location filename="../Gui/Function/hfctwidget.cpp" line="533"/>
         <source>高通滤波	[%1]</source>
         <translation>high-pass filter	[%1]</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/hfctwidget.cpp" line="524"/>
+        <location filename="../Gui/Function/hfctwidget.cpp" line="534"/>
         <source>低通滤波	[%1]</source>
         <translation>low-pass filter	[%1]</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/hfctwidget.cpp" line="535"/>
+        <location filename="../Gui/Function/hfctwidget.cpp" line="545"/>
         <source>连续录波	[%1]s</source>
         <translation>Cont. Waveform Record	[%1]s</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/hfctwidget.cpp" line="529"/>
+        <location filename="../Gui/Function/hfctwidget.cpp" line="539"/>
         <source>自动录波	[开启]</source>
         <translation>Auto Recording	[On]</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/hfctwidget.cpp" line="427"/>
+        <location filename="../Gui/Function/hfctwidget.cpp" line="431"/>
         <source>脉冲数: </source>
         <translation>Pulse Count: </translation>
     </message>
@@ -1220,22 +1258,22 @@
         <translation type="vanished">Filter [%1]</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/hfctwidget.cpp" line="525"/>
+        <location filename="../Gui/Function/hfctwidget.cpp" line="535"/>
         <source>脉冲触发	[%1]mV</source>
         <translation>Pulse Trigger		[%1]mV</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/hfctwidget.cpp" line="526"/>
+        <location filename="../Gui/Function/hfctwidget.cpp" line="536"/>
         <source>脉冲计数时长	[%1]s</source>
         <translation>Pulse Counting Time	[%1]s</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/hfctwidget.cpp" line="532"/>
+        <location filename="../Gui/Function/hfctwidget.cpp" line="542"/>
         <source>自动录波	[关闭]</source>
         <translation>Auto Recording	[Off]</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/hfctwidget.cpp" line="547"/>
+        <location filename="../Gui/Function/hfctwidget.cpp" line="556"/>
         <source> 参 数 设 置</source>
         <translation> Settings</translation>
     </message>
@@ -1338,118 +1376,118 @@ Press OK to confirmed</translation>
         <translation>Initializing asset...</translation>
     </message>
     <message>
-        <location filename="../Gui/mainwindow.cpp" line="553"/>
+        <location filename="../Gui/mainwindow.cpp" line="555"/>
         <source>截屏已保存</source>
         <translation>Screenshots have been saved</translation>
     </message>
     <message>
-        <location filename="../Gui/mainwindow.cpp" line="625"/>
+        <location filename="../Gui/mainwindow.cpp" line="627"/>
         <source>地电波检测(高频通道1)</source>
         <translation>TEV(H-Channel1)</translation>
     </message>
     <message>
-        <location filename="../Gui/mainwindow.cpp" line="629"/>
+        <location filename="../Gui/mainwindow.cpp" line="631"/>
         <source>电缆局放检测(高频通道1)</source>
         <translation>HFCT(H-Channel1)</translation>
     </message>
     <message>
-        <location filename="../Gui/mainwindow.cpp" line="633"/>
+        <location filename="../Gui/mainwindow.cpp" line="635"/>
         <source>特高频检测(高频通道1)</source>
         <translation>UHF(H-Channel1)</translation>
     </message>
     <message>
-        <location filename="../Gui/mainwindow.cpp" line="643"/>
+        <location filename="../Gui/mainwindow.cpp" line="645"/>
         <source>地电波检测(高频通道2)</source>
         <translation>TEV(H-Channel2)</translation>
     </message>
     <message>
-        <location filename="../Gui/mainwindow.cpp" line="647"/>
+        <location filename="../Gui/mainwindow.cpp" line="649"/>
         <source>电缆局放检测(高频通道2)</source>
         <translation>HFCT(H-Channel2)</translation>
     </message>
     <message>
-        <location filename="../Gui/mainwindow.cpp" line="651"/>
+        <location filename="../Gui/mainwindow.cpp" line="653"/>
         <source>特高频检测(高频通道2)</source>
         <translation>UHF(H-Channel2)</translation>
     </message>
     <message>
-        <location filename="../Gui/mainwindow.cpp" line="665"/>
+        <location filename="../Gui/mainwindow.cpp" line="667"/>
         <source>AA超声波检测(低频通道1)</source>
         <translation>AA Ultrasonic(L-Channel1)</translation>
     </message>
     <message>
-        <location filename="../Gui/mainwindow.cpp" line="669"/>
+        <location filename="../Gui/mainwindow.cpp" line="671"/>
         <source>AE超声波检测(低频通道1)</source>
         <translation>AE Ultrasonic(L-Channel1)</translation>
     </message>
     <message>
-        <location filename="../Gui/mainwindow.cpp" line="679"/>
+        <location filename="../Gui/mainwindow.cpp" line="681"/>
         <source>AA超声波检测(低频通道2)</source>
         <translation>AA Ultrasonic(L-Channel2)</translation>
     </message>
     <message>
-        <location filename="../Gui/mainwindow.cpp" line="683"/>
+        <location filename="../Gui/mainwindow.cpp" line="685"/>
         <source>AE超声波检测(低频通道2)</source>
         <translation>AE Ultrasonic(L-Channel2)</translation>
     </message>
     <message>
-        <location filename="../Gui/mainwindow.cpp" line="691"/>
+        <location filename="../Gui/mainwindow.cpp" line="693"/>
         <source>资产管理</source>
         <translation>Assets management</translation>
     </message>
     <message>
-        <location filename="../Gui/mainwindow.cpp" line="1166"/>
+        <location filename="../Gui/mainwindow.cpp" line="1171"/>
         <source>同步源:工频量 状态:已同步</source>
         <translation>Sync State: Synchronized</translation>
     </message>
     <message>
-        <location filename="../Gui/mainwindow.cpp" line="1185"/>
+        <location filename="../Gui/mainwindow.cpp" line="1190"/>
         <source>未指定</source>
         <translation>None</translation>
     </message>
     <message>
-        <location filename="../Gui/mainwindow.cpp" line="659"/>
+        <location filename="../Gui/mainwindow.cpp" line="661"/>
         <source>双通道检测</source>
         <translation>Duel Channel</translation>
     </message>
     <message>
-        <location filename="../Gui/mainwindow.cpp" line="695"/>
         <location filename="../Gui/mainwindow.cpp" line="697"/>
+        <location filename="../Gui/mainwindow.cpp" line="699"/>
         <source>系统设置</source>
         <translation>Options</translation>
     </message>
     <message>
-        <location filename="../Gui/mainwindow.cpp" line="699"/>
+        <location filename="../Gui/mainwindow.cpp" line="701"/>
         <source>系统设置-参数设置</source>
         <translation>System Settings</translation>
     </message>
     <message>
-        <location filename="../Gui/mainwindow.cpp" line="701"/>
+        <location filename="../Gui/mainwindow.cpp" line="703"/>
         <source>系统设置-调试模式</source>
         <translation>Debug Settings</translation>
     </message>
     <message>
-        <location filename="../Gui/mainwindow.cpp" line="703"/>
+        <location filename="../Gui/mainwindow.cpp" line="705"/>
         <source>系统设置-录波管理</source>
         <translation>Record Management</translation>
     </message>
     <message>
-        <location filename="../Gui/mainwindow.cpp" line="705"/>
+        <location filename="../Gui/mainwindow.cpp" line="707"/>
         <source>系统设置-系统信息</source>
         <translation>System Information</translation>
     </message>
     <message>
-        <location filename="../Gui/mainwindow.cpp" line="707"/>
+        <location filename="../Gui/mainwindow.cpp" line="709"/>
         <source>系统设置-恢复出厂</source>
         <translation>Factory settings</translation>
     </message>
     <message>
-        <location filename="../Gui/mainwindow.cpp" line="1005"/>
+        <location filename="../Gui/mainwindow.cpp" line="1007"/>
         <source>yyyy年M月d日</source>
         <translation>yyyy-M-d</translation>
     </message>
     <message>
-        <location filename="../Gui/mainwindow.cpp" line="1011"/>
+        <location filename="../Gui/mainwindow.cpp" line="1013"/>
         <source>再过%1秒将自动关机，按任意键取消</source>
         <translation>System automatically shutdown after %1 seconds, Press anykey to abort</translation>
     </message>
@@ -1626,101 +1664,101 @@ Press OK to confirmed</translation>
 <context>
     <name>Options</name>
     <message>
-        <location filename="../Gui/Options/options.cpp" line="55"/>
+        <location filename="../Gui/Options/options.cpp" line="57"/>
         <source>连接/断开连接</source>
         <translation>Connect/Disconnect</translation>
     </message>
     <message>
-        <location filename="../Gui/Options/options.cpp" line="55"/>
+        <location filename="../Gui/Options/options.cpp" line="57"/>
         <source>查看连接信息</source>
         <translation>Information</translation>
     </message>
     <message>
-        <location filename="../Gui/Options/options.cpp" line="87"/>
+        <location filename="../Gui/Options/options.cpp" line="89"/>
         <source>基本设置</source>
         <translation>Basic</translation>
     </message>
     <message>
-        <location filename="../Gui/Options/options.cpp" line="89"/>
+        <location filename="../Gui/Options/options.cpp" line="91"/>
         <source>wifi设置</source>
         <translation>Wifi</translation>
     </message>
     <message>
-        <location filename="../Gui/Options/options.cpp" line="91"/>
+        <location filename="../Gui/Options/options.cpp" line="93"/>
         <source>高级设置</source>
         <translation>Advance</translation>
     </message>
     <message>
-        <location filename="../Gui/Options/options.cpp" line="183"/>
+        <location filename="../Gui/Options/options.cpp" line="185"/>
         <source>请输入wifi名称</source>
-        <translation type="unfinished"></translation>
+        <translation>Please enter the wifi name</translation>
     </message>
     <message>
-        <location filename="../Gui/Options/options.cpp" line="187"/>
-        <location filename="../Gui/Options/options.cpp" line="763"/>
+        <location filename="../Gui/Options/options.cpp" line="189"/>
+        <location filename="../Gui/Options/options.cpp" line="767"/>
         <source>请输入wifi密码</source>
-        <translation type="unfinished">Please input wifi password</translation>
+        <translation>Please enter the wifi password</translation>
     </message>
     <message>
-        <location filename="../Gui/Options/options.cpp" line="191"/>
+        <location filename="../Gui/Options/options.cpp" line="193"/>
         <source>请输入网关</source>
-        <translation type="unfinished"></translation>
+        <translation>Please enter the gateway</translation>
     </message>
     <message>
-        <location filename="../Gui/Options/options.cpp" line="195"/>
+        <location filename="../Gui/Options/options.cpp" line="197"/>
         <source>请输入子网掩码</source>
-        <translation type="unfinished"></translation>
+        <translation>Please enter the subnet mask</translation>
     </message>
     <message>
-        <location filename="../Gui/Options/options.cpp" line="439"/>
+        <location filename="../Gui/Options/options.cpp" line="441"/>
         <source>【参数设置】已保存！</source>
         <translation>[System Settings] has been saved!</translation>
     </message>
     <message>
-        <location filename="../Gui/Options/options.cpp" line="634"/>
-        <location filename="../Gui/Options/options.cpp" line="749"/>
+        <location filename="../Gui/Options/options.cpp" line="636"/>
+        <location filename="../Gui/Options/options.cpp" line="755"/>
         <source>断开连接</source>
-        <translation type="unfinished"></translation>
+        <translation>disconnect</translation>
     </message>
     <message>
-        <location filename="../Gui/Options/options.cpp" line="637"/>
+        <location filename="../Gui/Options/options.cpp" line="639"/>
         <source>连接</source>
-        <translation type="unfinished"></translation>
+        <translation>connect</translation>
     </message>
     <message>
-        <location filename="../Gui/Options/options.cpp" line="717"/>
+        <location filename="../Gui/Options/options.cpp" line="719"/>
         <source>刷新wifi列表错误,请稍后尝试</source>
-        <translation type="unfinished"></translation>
+        <translation>Error refreshing wifi list, please try later</translation>
     </message>
     <message>
-        <location filename="../Gui/Options/options.cpp" line="751"/>
+        <location filename="../Gui/Options/options.cpp" line="757"/>
         <source>wifi连接%1已断开</source>
-        <translation type="unfinished"></translation>
+        <translation>The wifi connection %1 has been disconnected</translation>
     </message>
     <message>
-        <location filename="../Gui/Options/options.cpp" line="777"/>
+        <location filename="../Gui/Options/options.cpp" line="781"/>
         <source>连接成功!</source>
-        <translation type="unfinished"></translation>
+        <translation>The connection is successful!</translation>
     </message>
     <message>
-        <location filename="../Gui/Options/options.cpp" line="800"/>
+        <location filename="../Gui/Options/options.cpp" line="805"/>
         <source>密码错误!请重新尝试</source>
-        <translation type="unfinished"></translation>
+        <translation>Password error!Please try again</translation>
     </message>
     <message>
-        <location filename="../Gui/Options/options.cpp" line="839"/>
+        <location filename="../Gui/Options/options.cpp" line="847"/>
         <source>创建wifi热点成功!</source>
-        <translation type="unfinished"></translation>
+        <translation>Create wifi hotspot successfully!</translation>
     </message>
     <message>
-        <location filename="../Gui/Options/options.cpp" line="858"/>
+        <location filename="../Gui/Options/options.cpp" line="866"/>
         <source>创建wifi热点失败</source>
-        <translation type="unfinished"></translation>
+        <translation>Failed to create wifi hotspot</translation>
     </message>
     <message>
-        <location filename="../Gui/Options/options.cpp" line="884"/>
+        <location filename="../Gui/Options/options.cpp" line="892"/>
         <source>未保存</source>
-        <translation type="unfinished"></translation>
+        <translation>Not saved</translation>
     </message>
 </context>
 <context>
@@ -1904,87 +1942,87 @@ All rights reserved.</translation>
         <translation>Severity:0.00</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/tevwidget.cpp" line="286"/>
+        <location filename="../Gui/Function/tevwidget.cpp" line="293"/>
         <source>最大值: </source>
         <translation>Max Value: </translation>
     </message>
     <message>
-        <location filename="../Gui/Function/tevwidget.cpp" line="288"/>
+        <location filename="../Gui/Function/tevwidget.cpp" line="295"/>
         <source>脉冲数: </source>
         <translation>Pulse Count: </translation>
     </message>
     <message>
-        <location filename="../Gui/Function/tevwidget.cpp" line="289"/>
+        <location filename="../Gui/Function/tevwidget.cpp" line="296"/>
         <source>严重度: </source>
         <translation>Severity: </translation>
     </message>
     <message>
-        <location filename="../Gui/Function/tevwidget.cpp" line="420"/>
+        <location filename="../Gui/Function/tevwidget.cpp" line="447"/>
         <source>检测模式	[单次]</source>
         <translation>Measurement Mode	[Single]</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/tevwidget.cpp" line="423"/>
+        <location filename="../Gui/Function/tevwidget.cpp" line="450"/>
         <source>检测模式	[连续]</source>
         <translation>Measurement Mode	[Cont.]</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/tevwidget.cpp" line="431"/>
+        <location filename="../Gui/Function/tevwidget.cpp" line="458"/>
         <source>图形显示	[PRPD]</source>
         <translation>Graphic Display	[PRPD]</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/tevwidget.cpp" line="434"/>
+        <location filename="../Gui/Function/tevwidget.cpp" line="461"/>
         <source>图形显示 	[时序图]</source>
         <translation>Graphic Display	[Historic]</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/tevwidget.cpp" line="437"/>
+        <location filename="../Gui/Function/tevwidget.cpp" line="464"/>
         <source>图形显示 	[柱状图]</source>
         <translation>Graphic Display	[Bar]</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/tevwidget.cpp" line="440"/>
+        <location filename="../Gui/Function/tevwidget.cpp" line="467"/>
         <source>图形显示 	[PRPS]</source>
         <translation>Graphic Display	[PRPS]</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/tevwidget.cpp" line="443"/>
+        <location filename="../Gui/Function/tevwidget.cpp" line="470"/>
         <source>增益调节	[×%1]</source>
         <translation>Gain		[×%1]</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/tevwidget.cpp" line="444"/>
+        <location filename="../Gui/Function/tevwidget.cpp" line="471"/>
         <source>黄色报警阈值	[%1]dB</source>
         <translation>Yellow Threshold	[%1]dB</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/tevwidget.cpp" line="445"/>
+        <location filename="../Gui/Function/tevwidget.cpp" line="472"/>
         <source>红色报警阈值	[%1]dB</source>
         <translation>Red Threshold	[%1]dB</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/tevwidget.cpp" line="446"/>
+        <location filename="../Gui/Function/tevwidget.cpp" line="473"/>
         <source>脉冲触发	[%1]mV</source>
         <translation>Pulse Trigger		[%1]mV</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/tevwidget.cpp" line="447"/>
+        <location filename="../Gui/Function/tevwidget.cpp" line="474"/>
         <source>脉冲计数时长	[%1]s</source>
         <translation>Pulse Counting Time	[%1]s</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/tevwidget.cpp" line="449"/>
+        <location filename="../Gui/Function/tevwidget.cpp" line="476"/>
         <source>自动录波	[开启]</source>
         <translation>Auto Recording	[On]</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/tevwidget.cpp" line="452"/>
+        <location filename="../Gui/Function/tevwidget.cpp" line="479"/>
         <source>自动录波	[关闭]</source>
         <translation>Auto Recording	[Off]</translation>
     </message>
     <message>
-        <location filename="../Gui/Function/tevwidget.cpp" line="463"/>
+        <location filename="../Gui/Function/tevwidget.cpp" line="490"/>
         <source> 参 数 设 置</source>
         <translation> Settings</translation>
     </message>
@@ -2100,7 +2138,7 @@ All rights reserved.</translation>
     <message>
         <location filename="../Gui/Function/uhfwidget.cpp" line="475"/>
         <source>图形显示 	[柱状图]</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Graphic Display	[Bar]</translation>
     </message>
     <message>
         <location filename="../Gui/Function/uhfwidget.cpp" line="481"/>

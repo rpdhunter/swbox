@@ -1,4 +1,4 @@
-#include "recwaveform.h"
+﻿#include "recwaveform.h"
 #include <QtDebug>
 #include <QFile>
 #include <QScrollBar>
@@ -109,6 +109,12 @@ void RecWaveForm::working(CURRENT_KEY_VALUE *val, QString str)
     plot->setTitle(str + tr("\n按OK键寻找峰值"));
 
     FileTools *filetools = new FileTools(str,FileTools::Read);      //开一个线程，为了不影响数据接口性能
+    if(str.contains("HFCT")){           //读取滤波器信息
+        QString filter_info = filetools->get_filter_info();
+        if(!filter_info.isEmpty()){
+             plot->setTitle(str + tr("\n%1, 按OK键寻找峰值").arg(filter_info));
+        }
+    }
     QThreadPool::globalInstance()->start(filetools);
     connect(filetools,SIGNAL(readFinished(VectorList,MODE)),this,SLOT(start_work(VectorList,MODE)) );
 }
@@ -433,6 +439,11 @@ void RecWaveForm::fresh()
     plot->setAxisScale(QwtPlot::yLeft, min * scale , max * scale);
 
     plot->replot();
+}
+
+double RecWaveForm::get_peak_freq(int i)
+{
+
 }
 
 

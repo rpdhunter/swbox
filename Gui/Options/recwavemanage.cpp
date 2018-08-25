@@ -97,6 +97,7 @@ void RecWaveManage::reload_tablewidget()
     QDir dir_favorite = QDir(DIR_FAVORITE);
 //    int r = tableWidget->currentRow();
     tableWidget->clear();
+    qDebug()<<dir;
 
     QStringList filters;
     filters << "*.DAT" ;

@@ -25,6 +25,32 @@ FileTools::FileTools(QString str,FileTools::FileMode filemode)
     _fileMode = filemode;
 }
 
+QString FileTools::get_filter_info()
+{
+    if(!cfgfilepath.isEmpty()){
+        QFile file;
+        file.setFileName(cfgfilepath);
+
+        if (!file.open(QIODevice::ReadOnly)){
+            qDebug()<<"file open failed!";
+            return QString();
+        }
+
+        QTextStream in(&file);
+        QString tmpstr;
+
+        //这里有个隐患，如果录波文件损坏，程序将卡死
+        while (!in.atEnd()) {
+            tmpstr = in.readLine();
+            if( tmpstr.contains("PB,")){
+                tmpstr.replace("PB,",tr("通带宽度"));
+                return tmpstr;
+            }
+        }
+    }
+    return QString();
+}
+
 FileTools::~FileTools()
 {
     //    qDebug()<<"new thread save completed! mode="<<_mode;
@@ -189,9 +215,11 @@ void FileTools::getReadFilePath(QString str)
 
     if(str.contains(QString("☆") )){
         filepath = QString(DIR_FAVORITE"/" + str.remove(QString("☆") ) + ".DAT");        //收藏夹
+        cfgfilepath = QString(DIR_FAVORITE"/" + str.remove(QString("☆") ) + ".CFG");
     }
     else{
         filepath = QString(DIR_WAVE"/"+str+".DAT");
+        cfgfilepath = QString(DIR_WAVE"/"+str+".CFG");          //保存一个CFG路径
     }
 }
 
@@ -314,7 +342,7 @@ void FileTools::saveDataFile()
     bool flag;
 
     //保存文本文件
-#if 0
+#if 1
     file.setFileName(filepath + ".txt");
     flag = file.open(QIODevice::WriteOnly | QIODevice::Text);
     if(flag){
@@ -356,6 +384,8 @@ void FileTools::saveDataFile()
                 out << a;
             }
         }
+
+//        qDebug()<<tr("save %1 success").arg(filepath + ".DAT");
 
 #if 0
         //拷贝到SD卡
@@ -410,6 +440,17 @@ void FileTools::saveCfgFile()
     out << QDateTime::currentDateTime().toString() << "\n";
     out << QDateTime::currentDateTime().toString() << "\n";
     out << "BINARY" << "\n";
+    //保存滤波器信息
+    if(_mode == HFCT1 || _mode == HFCT1_CONTINUOUS){
+        out << "PB,";
+        out << Common::filter_to_string(sqlcfg->get_para()->hfct1_sql.filter_hp) << "-"
+            << Common::filter_to_string(sqlcfg->get_para()->hfct1_sql.filter_lp) << "\n";
+    }
+    else if(_mode == HFCT2 || _mode == HFCT2_CONTINUOUS){
+        out << "PB,";
+        out << Common::filter_to_string(sqlcfg->get_para()->hfct2_sql.filter_hp) << "-"
+            << Common::filter_to_string(sqlcfg->get_para()->hfct2_sql.filter_lp) << "\n";
+    }
 #if 0
     if(sqlcfg->get_para()->buzzer_on){
         if(file.copy(filepath_SD + ".CFG")){

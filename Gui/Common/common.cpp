@@ -133,7 +133,13 @@ void Common::set_contextMenu_style(QListWidget *w, QStringList list, QPoint pos)
     w->setStyleSheet("QListWidget {border-image: url(:/widgetphoto/bk/para_child.png);color:gray;outline: none;}");
     w->addItems(list);
     int n = list.count();
-    w->resize(110, n * 20);
+    if(sqlcfg->get_para()->language == CN){
+        w->resize(110, n * 20);
+    }
+    else{
+        w->resize(150, n * 20);
+    }
+
     w->move(pos);
     w->setSpacing(2);
     w->hide();
@@ -830,7 +836,7 @@ void Common::create_hard_link(QString str_src, QString file_name){
     QString str_dst = QString(sqlcfg->get_para()->current_dir);
     if(str_dst.contains("asset")){
         QString cmd = QString("ln \"%1\" \"%2\"").arg(str_src).arg(str_dst + "/" + file_name);      //文件名加入双引号，为了应对带空格的文件名
-//        printf("create_hard_link %s \n", cmd.toLocal8Bit().data());
+        printf("create_hard_link %s \n", cmd.toLocal8Bit().data());
         system(cmd.toLocal8Bit().data());
     }
 }
@@ -936,7 +942,9 @@ bool Common::rdb_check_test_start()
         if(r == 0xFF){
             qDebug()<<"get test start signal!";
             rdb_udp->yk_operate.yk_result = 0;
-            send_path((unsigned char*)sqlcfg->get_para()->current_dir, strlen(sqlcfg->get_para()->current_dir));
+//            send_path((unsigned char*)sqlcfg->get_para()->current_dir, strlen(sqlcfg->get_para()->current_dir));
+            char path[] = "/mmc/mmc2/data/asset/Normal/0219#2018-06-29-08-44-40-193/";
+            send_path((unsigned char*)path, strlen(path));
             return true;
         }
     }
@@ -1134,6 +1142,125 @@ QString Common::filter_to_string(int f)
     default:
         return "None";
     }
+}
+
+double Common::filter_to_number(int f)
+{
+    switch (f) {
+    case NONE:
+        return 0;
+    case hp_500k:
+        return 0.5;
+    case hp_1M:
+        return 1;
+    case hp_1M5:
+        return 1.5;
+    case hp_1M8:
+        return 1.8;
+    case hp_2M:
+        return 2;
+    case hp_2M5:
+        return 2.5;
+    case hp_3M:
+        return 3;
+    case hp_5M:
+        return 5;
+    case hp_8M:
+        return 8;
+    case hp_10M:
+        return 10;
+    case hp_12M:
+        return 12;
+    case hp_15M:
+        return 15;
+    case hp_18M:
+        return 18;
+    case hp_20M:
+        return 20;
+    case hp_22M:
+        return 22;
+    case hp_25M:
+        return 25;
+    case hp_28M:
+        return 28;
+    case hp_30M:
+        return 30;
+    case hp_32M:
+        return 32;
+    case hp_35M:
+        return 35;
+    case lp_2M:
+        return 2;
+    case lp_5M:
+        return 5;
+    case lp_8M:
+        return 8;
+    case lp_10M:
+        return 10;
+    case lp_12M:
+        return 12;
+    case lp_15M:
+        return 15;
+    case lp_18M:
+        return 18;
+    case lp_20M:
+        return 20;
+    case lp_22M:
+        return 22;
+    case lp_25M:
+        return 25;
+    case lp_28M:
+        return 28;
+    case lp_30M:
+        return 30;
+    case lp_32M:
+        return 32;
+    case lp_35M:
+        return 35;
+    case lp_38M:
+        return 38;
+    case lp_40M:
+        return 40;
+    default:
+        return 0;
+    }
+}
+
+void Common::adjust_filter_list(QList<int> &list, double cut_off_low, double cut_off_high)
+{
+    if(cut_off_high == 0){
+        return;
+    }
+    while(list.count() > 0 && list.first() == 0){
+        list.removeFirst();
+    }
+    while(list.count() > 0 && filter_to_number(list.first()) <= cut_off_low){
+        list.removeFirst();
+    }
+    while(list.count() > 0 && filter_to_number(list.last()) >= cut_off_high){
+        list.removeLast();
+    }
+    list.prepend(0);
+}
+
+int Common::time_interval(timeval start_time, timeval stop_time)
+{
+    int interval_usec = stop_time.tv_usec - start_time.tv_usec;
+    int interval_sec = stop_time.tv_sec - start_time.tv_sec;
+    return interval_sec*1000000 + interval_usec;
+}
+
+void Common::time_addusec(timeval &time, int usec)
+{
+    int tmp = time.tv_usec + usec;
+    int s = tmp / 1000000;
+    int u = tmp % 1000000;
+    if(u < 0 ){
+        u += 1000000;
+        s -= 1;
+    }
+    time.tv_sec += s;
+    time.tv_usec = u;
 }
 
 

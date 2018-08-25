@@ -198,8 +198,10 @@ void AAWidget::fresh(bool f)
             ui->label_val->setText(QString::number(val_db, 'f', 1));
             if ( val_db > aaultra_sql->high) {
                 ui->label_val->setStyleSheet("QLabel {font-family:WenQuanYi Micro Hei;font-size:60px;color:red}");
+                emit beep(menu_index, 2);        //蜂鸣器报警
             } else if (val_db >= aaultra_sql->low) {
                 ui->label_val->setStyleSheet("QLabel {font-family:WenQuanYi Micro Hei;font-size:60px;color:yellow}");
+                emit beep(menu_index, 1);
             } else {
                 ui->label_val->setStyleSheet("QLabel {font-family:WenQuanYi Micro Hei;font-size:60px;color:green}");
             }

@@ -121,7 +121,7 @@ typedef struct H_CHANNEL_SQL {
     int offset_noise;               //噪声偏置
     int offset_linearity;           //线性度补偿偏置
     int fpga_zero;                  //零点（需要FPGA同步）
-    uint fpga_threshold;            //阈值（需要FPGA同步）
+    int fpga_threshold;            //阈值（需要FPGA同步）
     int filter_hp;                  //高通滤波器（部分需要FPGA同步）
     int filter_lp;                  //低通滤波器
     bool auto_rec;                  //自动录波（需要FPGA同步）

@@ -1,10 +1,12 @@
-#include "reccontrol.h"
+﻿#include "reccontrol.h"
 #include <QtDebug>
 #include "IO/Other/filetools.h"
 #include <QThreadPool>
 #include "IO/SqlCfg/sqlcfg.h"
 #include "Gui/Common/fft.h"
 #include "Gui/Common/common.h"
+#include "Gui/Common/fir.h"
+#include "Gui/Algorithm/Wavelet/wavelet.h"
 
 RecControl::RecControl(G_PARA *g_data, FifoControl *fifocontrol, QObject *parent) : QObject(parent)
 {
@@ -242,11 +244,22 @@ void RecControl::rec_wave_complete(VectorList wave, MODE mode)
 //        this->_mode = mode;
     }
     else if(this->_mode != Disable){            //这里开启波形保存
+        //高频录波加入滤波器
+        Fir fir;
+        if(mode == HFCT1 || mode == HFCT1_CONTINUOUS){
+            wave = fir.set_filter(wave, (FILTER)sqlcfg->get_para()->hfct1_sql.filter_hp);
+            wave = fir.set_filter(wave, (FILTER)sqlcfg->get_para()->hfct1_sql.filter_lp);
+//            wave = Wavelet::set_filter(wave,1);     //小波滤波
+        }
+        else if(mode == HFCT2 || mode == HFCT2_CONTINUOUS){
+            wave = fir.set_filter(wave, (FILTER)sqlcfg->get_para()->hfct2_sql.filter_hp);
+            wave = fir.set_filter(wave, (FILTER)sqlcfg->get_para()->hfct2_sql.filter_lp);
+//            wave = Wavelet::set_filter(wave,1);     //小波滤波
+        }
+
+
         emit waveData(wave,mode);
         this->_mode = Disable;
-        //这里插入FFT测试程序
-//        fft_test(wave);
-
         qDebug()<<"save wave file, mode = "<<Common::MODE_toString(mode);
 
         FileTools *filetools = new FileTools(wave,mode,FileTools::Write);      //开一个线程，为了不影响数据接口性能

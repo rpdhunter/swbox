@@ -831,7 +831,7 @@
               </size>
              </property>
              <property name="text">
-              <string notr="true">PDTEV1</string>
+              <string notr="true">DischargeDetector</string>
              </property>
             </widget>
            </item>

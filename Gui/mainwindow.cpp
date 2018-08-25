@@ -40,7 +40,6 @@ MainWindow::MainWindow(QSplashScreen *sp, QWidget *parent ) :
 
     sp->showMessage(tr("正在设置FPGA..."),Qt::AlignBottom|Qt::AlignLeft);
     fifodata = new FifoData(data);
-    connect(this, SIGNAL(send_sync(uint)), fifodata, SIGNAL(send_sync(uint)) );
 
     sp->showMessage(tr("正在初始化通信..."),Qt::AlignBottom|Qt::AlignLeft);
 
@@ -64,8 +63,6 @@ MainWindow::MainWindow(QSplashScreen *sp, QWidget *parent ) :
     Common::messagebox_show_and_init(box);
     box->hide();
 
-//    connect(timer_time,SIGNAL(timeout()),this,SLOT(printSc()));  //截屏
-
     set_asset_dir(AssetWidget::normal_asset_dir_init());        //初始化资产路径
     for (int i = 0; i < mode_list.count(); ++i) {           //寻找有效的初始通道
         if(mode_list.at(i) != Disable){
@@ -78,7 +75,6 @@ MainWindow::MainWindow(QSplashScreen *sp, QWidget *parent ) :
 
     fifodata->start();                                      //开启数据线程
     keydetect->start();
-//    qDebug()<<"main"<<QThread::currentThreadId();
 }
 
 MainWindow::~MainWindow()
@@ -471,9 +467,8 @@ void MainWindow::options_init()
     connect(recwavemanage,SIGNAL(show_indicator(bool)), this, SLOT(show_busy(bool)) );
     //状态栏
     connect(options,SIGNAL(show_wifi_icon(int)), this, SLOT(set_wifi_icon(int)) );
-//    connect(debugset,SIGNAL(update_syncBar(bool)), this, SLOT(set_sync_status(bool)) );
     //同步
-    connect(debugset,SIGNAL(send_sync(uint)), this, SLOT(do_sync(uint)) );
+    connect(debugset, SIGNAL(send_sync(qint64,qint64)), fifodata, SIGNAL(send_sync(qint64,qint64)) );
 }
 
 void MainWindow::qml_init()
@@ -487,7 +482,6 @@ void MainWindow::trans_key(quint8 key_code)
 {
     set_reboot_time();          //接到任何按键，重置重启计时器
 
-//    qDebug()<<"key_code"<<key_code;
     if(key_code != KEY_POWER){
         power_num = 0;          //重置截屏计数器
     }
@@ -529,7 +523,6 @@ void MainWindow::trans_key(quint8 key_code)
             default:
                 break;
             }
-//            fresh_menu_icon();
         }
         break;
     case KEY_CANCEL:
@@ -1147,28 +1140,12 @@ void MainWindow::set_wifi_icon(int w)
         ui->lab_wifi->setPixmap(QPixmap(":/widgetphoto/wifi/wifi_hot.png").scaled(ui->lab_wifi->size()));
         break;
     case WIFI_SYNC:
-
+        //to be
         break;
     default:
         ui->lab_wifi->setPixmap(QPixmap(":/widgetphoto/wifi/wifi0.png").scaled(ui->lab_wifi->size()));
         break;
     }
-}
-
-void MainWindow::set_sync_status(bool flag)
-{
-    if(flag){
-        ui->lab_sync->setText("同步方式:工频信号  当前状态:已同步");
-    }
-    else {
-        ui->lab_sync->setText("同步方式:工频信号  当前状态:已失步");
-    }
-}
-
-void MainWindow::do_sync(uint offset)
-{
-    emit send_sync(offset);
-    ui->lab_sync->setText(tr("同步源:工频量 状态:已同步"));
 }
 
 void MainWindow::do_beep(int menu_index, int red_alert)

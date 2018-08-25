@@ -710,8 +710,7 @@ void DebugSet::fresh_hardware_status()
     cpu_status->get_vvpn(&sync);
 
 //    qDebug()<<"sync = "<< sync << "mV";
-    if(qAbs(sync) > 25){            //15毫伏触发（对应约150w的负载）
-        gettimeofday( &last_zero, NULL );
+    if(qAbs(sync) > 25 && sqlcfg->get_para()->sync_mode == SYNC_EXTERNAL){            //15毫伏触发（对应约150w的负载）
         timer_sync->start();
     }
 }
@@ -725,50 +724,61 @@ void DebugSet::fresh_sync()
     sync_data.append(temp_data);
 //    qDebug()<<"sync = "<< temp_data.vcc << "mV\ttime = "<<temp_data.t.tv_usec;
 
-    int interval, offset, time_interval;
+    double stand_T = 1000000.0 / sqlcfg->get_para()->freq_val;        //工频周期(us),50Hz时是20000us,60Hz时是16667us
+    double stand_F = sqlcfg->get_para()->freq_val;
 
     //当存在6个有效数据时,进行过零点判断(过零点判断比较严格,必须单调)
     if(sync_data.length() > 6){
         if(sync_data.at(2).vcc < 0 && sync_data.at(3).vcc > 0
                 && sync_data.at(0).vcc < sync_data.at(1).vcc && sync_data.at(1).vcc < sync_data.at(2).vcc
                 && sync_data.at(3).vcc < sync_data.at(4).vcc && sync_data.at(4).vcc < sync_data.at(5).vcc){
-            struct timeval zero_time = sync_data.at(5).t;       //6组数据的时间间隔
-            time_interval = sync_data.at(5).t.tv_usec - sync_data.at(0).t.tv_usec;
-            if(time_interval <0){
-                time_interval += 1000000;
-            }
-//            qDebug()<<time_interval;
-            //算出过零点
-            zero_time.tv_usec -=  time_interval * sync_data.at(5).vcc / (sync_data.at(5).vcc - sync_data.at(0).vcc);
-            if(zero_time.tv_usec < 0){
-                zero_time.tv_sec -= 1;
-                zero_time.tv_usec += 1000000;
-            }
-            interval = zero_time.tv_usec - last_zero.tv_usec;       //过零时间-上次过零时间时间 = 周期
-            if(interval<0){
-                interval += 1000000;
-            }
-            offset = interval % (1000000 / sqlcfg->get_para()->freq_val);
-            if(offset > 10000){
-                offset -= 1000000 / sqlcfg->get_para()->freq_val;
+            struct timeval zero_time = sync_data.at(5).t;
+            //6组数据的时间间隔
+            int time_interval = Common::time_interval(sync_data.at(0).t, sync_data.at(5).t);
+            //算出过零点时刻
+            int time_offset = time_interval * sync_data.at(5).vcc / (sync_data.at(5).vcc - sync_data.at(0).vcc);
+            Common::time_addusec(zero_time, -time_offset);
+            //存储过零点
+            zero_times.append(zero_time);
+
+            if(zero_times.count() == 5){        //校验5个周期
+                time_interval = Common::time_interval(zero_times.first(), zero_times.last() );
+                int a = round(time_interval / stand_T );    //取整
+//                int b = time_interval - a * stand_T;        //和工频的误差
+                double f = a * 1000000.0 / time_interval;      //实际频率
+                if( 100 * (f - stand_F) / stand_F < 5){     //相对误差百分比
+                    emit send_sync( (qint64)zero_times.last().tv_sec, (qint64)zero_times.last().tv_usec );
+                    emit update_statusBar(tr("已同步,同步源:外,频率:%1Hz").arg(f));
+                    timer_sync->stop();
+                    zero_times.clear();
+                }
+                else{
+                    zero_times.removeFirst();
+                }
             }
 
-            if(qAbs(offset) < 1000){
+#if 0
+            int interval = zero_time.tv_usec - last_zero.tv_usec;       //过零时间-上次过零时间 = 周期
+
+            if(interval<0){                     //保证周期在0-1000ms之间,正常值在20 000附近
+                interval += 1000000;
+            }
+
+            offset = interval % stand_T;       //计算一个实际周期和标准周期的差值(offset在0-20000之间)
+
+            if(offset < 1000 || offset > stand_T-1000){         //如果校准频率和标准频率差异过大(超过±5%,就予以摒弃)
 //                qDebug()<< "sync interval =" << interval << "\toffset = "<< offset /*<< "\trate = " << 100.0*offset/interval << "%"*/;
 //                qDebug()<< "sync begin!!!!!!!";
 //                offset += 500;
 //                offset -= 2000;
-                if(offset < 0){
-                    offset += 1000000 / sqlcfg->get_para()->freq_val;
-                }
                 emit send_sync( 100 * offset );
+                emit update_statusBar(tr("已同步,同步源:外,同步补偿:%1").arg(100 * offset));
 //                emit send_sync(100 * (zero_time.tv_usec % 20000 ));
 
                 qDebug()<< "sync time: "<< zero_time.tv_usec % 20000;
                 timer_sync->stop();
 
-            }
-            last_zero = zero_time;
+#endif
         }
         sync_data.removeFirst();
     }

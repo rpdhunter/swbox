@@ -1,4 +1,4 @@
-#ifndef FIFODATA_H
+﻿#ifndef FIFODATA_H
 #define FIFODATA_H
 
 #include <QThread>
@@ -30,7 +30,7 @@ signals:
     void stop_play_voice();
     void playVoiceProgress(int cur, int all, bool);        //返回播放声音的实时进度，前2个参数是播放进度，后一个是是否播完，0未播完，1播完
 
-    void send_sync(uint);
+    void send_sync(qint64,qint64);
     void short1_update();       //高频1通道数据更新
     void short2_update();       //高频1通道数据更新
 //    void ae1_update(VectorList);       //包络线数据更新（低频1）

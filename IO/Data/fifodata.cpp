@@ -36,7 +36,7 @@ FifoData::FifoData(G_PARA *g_data)
     connect(fifocontrol, SIGNAL(playVoiceProgress(int,int,bool)), this, SIGNAL(playVoiceProgress(int,int,bool)) );
 
     //同步信号
-    connect(this,SIGNAL(send_sync(uint)),fifocontrol,SLOT(send_sync(uint)) );
+    connect(this,SIGNAL(send_sync(qint64,qint64)),fifocontrol,SLOT(send_sync(qint64,qint64)) );
 
     /* Start qthread */
 //    this->start();

@@ -1,4 +1,4 @@
-#include "recwave.h"
+﻿#include "recwave.h"
 #include <QtDebug>
 #include "IO/SqlCfg/sqlcfg.h"
 #include "Gui/Common/common.h"

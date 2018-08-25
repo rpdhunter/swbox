@@ -46,6 +46,8 @@ private:
 
 
     void write_normal_log(QString path, QVector<LOG_DATA> log_data);
+    void save_PRPD_zdit(QVector<QwtPoint3D> points);                  //自定义PRPD标准
+    void save_PRPD_State_Grid(QVector<QwtPoint3D> points);            //国网公司PRPD标准
 };
 
 #endif // LOGTOOLS_H

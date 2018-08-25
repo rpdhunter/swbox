@@ -1,4 +1,4 @@
-#ifndef RECWAVEFORM_H
+﻿#ifndef RECWAVEFORM_H
 #define RECWAVEFORM_H
 
 #include <QWidget>
@@ -48,6 +48,7 @@ private:
     void setScroll(int value);      //根据数值不同，改变显示内容
 
     void fresh();
+    double get_peak_freq(int i);     //返回坐标i附近的波峰频率
 
     MODE mode;
 

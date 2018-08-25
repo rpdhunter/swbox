@@ -18,9 +18,9 @@ TEMPLATE = app
 
 #DEFINES += AMG             #OEM
 #DEFINES += XDP_II          #OEM
-DEFINES += OHV             #OEM
+#DEFINES += OHV             #OEM
 #DEFINES += ZDIT            #OEM
-#DEFINES += NO_OEM           #OEM
+DEFINES += NO_OEM           #OEM
 
 #DEFINES += TEST_LAB
 
@@ -83,7 +83,8 @@ SOURCES += \
     IO/Com/rdb/gpio_oper.c \
     Gui/Common/wifipassword.cpp \
     Gui/Algorithm/Bp/bp.cpp \
-    Gui/Algorithm/Bp/bpcable.cpp
+    Gui/Algorithm/Bp/bpcable.cpp \
+    Gui/Algorithm/Wavelet/wavelet.cpp
 
 
 HEADERS  += \
@@ -145,7 +146,8 @@ HEADERS  += \
     IO/Com/rdb/gpio_oper.h \
     Gui/Common/wifipassword.h \
     Gui/Algorithm/Bp/bp.h \
-    Gui/Algorithm/Bp/bpcable.h
+    Gui/Algorithm/Bp/bpcable.h \
+    Gui/Algorithm/Wavelet/wavelet.h
 
 FORMS += \
     Gui/Function/tevwidget.ui \

@@ -6,7 +6,7 @@
 #include <QPalette>
 #include <QThreadPool>
 #include <QHeaderView>
-
+#include <QSettings>
 
 #define GRADE_1             3
 #define GRADE_2_NORMAL      6
@@ -44,6 +44,8 @@ Options::Options(QWidget *parent, G_PARA *g_data) : BaseWidget(NULL, parent),
     ui->tableWidget->horizontalHeader()->resizeSection(0,0);
     ui->tableWidget->horizontalHeader()->resizeSection(1,120);
     ui->tableWidget->horizontalHeader()->resizeSection(2,25);
+
+//    ui->lineEdit_wifi_hot_name->setText();
 
     sql_para = *sqlcfg->get_para();
     _datetime = QDateTime::currentDateTime();
@@ -106,6 +108,25 @@ void Options::optionIni()
     QButtonGroup *group2 = new QButtonGroup();       //必须新建一个组,才使得两组不互斥
     group2->addButton(ui->rbt_key_off);
     group2->addButton(ui->rbt_key_on);
+
+    QSettings settings(QSettings::IniFormat,QSettings::SystemScope,"ZDIT","swbox");                             //读取上次保存的设置
+    QString str;
+    str = settings.value("ap_name").toString();
+    if(!str.isEmpty()){
+        ui->lineEdit_wifi_hot_name->setText(str);
+    }
+    str = settings.value("ap_password").toString();
+    if(!str.isEmpty()){
+        ui->lineEdit_wifi_hot_password->setText(str);
+    }
+    str = settings.value("ap_gate").toString();
+    if(!str.isEmpty()){
+        ui->lineEdit_wifi_hot_gate->setText(str);
+    }
+    str = settings.value("ap_mask").toString();
+    if(!str.isEmpty()){
+        ui->lineEdit_wifi_hot_mask->setText(str);
+    }
 }
 
 void Options::working(CURRENT_KEY_VALUE *val)
@@ -748,12 +769,12 @@ void Options::wifi_connect()
 {
     //开启新的连接前,将原图标删除
     ui->tableWidget->setItem(current_ap_index,2,new QTableWidgetItem);
-    current_ap_index = -1;
     emit show_wifi_icon(WIFI_MODE::WIFI_NONE);
 
-    if(contextMenu->item(0)->text() == tr("断开连接")){
+    if(contextMenu->item(0)->text() == tr("断开连接")){        
         socket->wifi_set_mode(WIFI_AP);         //改变模式断开连接
-        emit update_statusBar(tr("wifi连接%1已断开").arg(ui->tableWidget->item(current_ap_index,1)->text()));        
+        emit update_statusBar(tr("wifi连接%1已断开").arg(ui->tableWidget->item(current_ap_index,1)->text()));
+        current_ap_index = -1;
     }
     else{
         QString name = ui->tableWidget->item(ui->tableWidget->currentRow(),1)->text();
@@ -815,21 +836,26 @@ void Options::input_finished(QString str)
             socket->wifi_connect_route(name,str);
         }
         else if(key_val->grade.val2 == 2 && key_val->grade.val3 == 2 && !str.isEmpty()){
+            QSettings settings(QSettings::IniFormat,QSettings::SystemScope,"ZDIT","swbox");                             //保存设置信息
             if(key_val->grade.val4 == 1){           //名称
                 ui->lineEdit_wifi_hot_name->setText(str);
                 ui->lineEdit_wifi_hot_name->selectAll();
+                settings.setValue("ap_name", str);
             }
             else if(key_val->grade.val4 == 2){      //密码
                 ui->lineEdit_wifi_hot_password->setText(str);
                 ui->lineEdit_wifi_hot_password->selectAll();
+                settings.setValue("ap_password", str);
             }
             else if(key_val->grade.val4 == 3){      //网关
                 ui->lineEdit_wifi_hot_gate->setText(str);
                 ui->lineEdit_wifi_hot_gate->selectAll();
+                settings.setValue("ap_gate", str);
             }
             else if(key_val->grade.val4 == 4){      //掩码
                 ui->lineEdit_wifi_hot_mask->setText(str);
                 ui->lineEdit_wifi_hot_mask->selectAll();
+                settings.setValue("ap_mask", str);
             }
         }
         refresh();

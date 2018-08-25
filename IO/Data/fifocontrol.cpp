@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include "IO/SqlCfg/sqlcfg.h"
 #include "Gui/Common/common.h"
+#include <sys/time.h>    // for gettimeofday()
 
 FifoControl::FifoControl(G_PARA *g_data, QObject *parent) : QObject(parent)
 {
@@ -286,6 +287,7 @@ void FifoControl::regs_init()
 //    tdata->set_send_para (sp_keyboard_backlight, sqlcfg->get_para()->key_backlight);
 
 //    tdata->set_send_para (sp_filter_mode, 0);//to be
+//    tdata->set_send_para (sp_filter_mode, 0x0303);//两个通道都设置为低通滤波器
     tdata->set_send_para (sp_buzzer_freq, 100000000/800/2/16);
 //    tdata->set_send_para (sp_aa_record_play, 2);        //耳机送2通道
 
@@ -327,8 +329,17 @@ void FifoControl::send_para()
     tdata->send_para.data_changed = false;
 }
 
-void FifoControl::send_sync(uint offset)
+void FifoControl::send_sync(qint64 s, qint64 u)
 {
+    int stand_T = 1000000 / sqlcfg->get_para()->freq_val;       //工频周期(us),50Hz时是20000us,60Hz时是16667us
+    struct timeval zero_time, current_time;
+    zero_time.tv_sec = s;
+    zero_time.tv_usec = u;
+    gettimeofday(&current_time, NULL);
+    int interval = Common::time_interval(zero_time, current_time);    //当前时间点和过零点之间的间隔(us)
+    uint offset = 100 * interval % stand_T;        //20000us = 20ms 等于周期
+
+
     send_data (vbase_sync, &offset, 1);
     qDebug()<<"sync completed!!! \t sync offset = "<< offset;
 }

@@ -1,4 +1,4 @@
-#ifndef FILETOOLS_H
+﻿#ifndef FILETOOLS_H
 #define FILETOOLS_H
 
 #include <QRunnable>
@@ -19,6 +19,8 @@ public:
 
     FileTools(VectorList data, MODE mode, FileMode filemode);
     FileTools(QString str, FileMode filemode);
+
+    QString get_filter_info();
 
     ~FileTools();
 
@@ -53,6 +55,7 @@ private:
     MODE _mode;
     WaveFormat *wfh1;
     QString filepath, filepath_SD;
+    QString cfgfilepath;
     QString filename;
     FileMode _fileMode;
 

@@ -4,10 +4,18 @@
 #include "channelwidget.h"
 #include "Gui/Common/fir.h"
 #include "Gui/Algorithm/Bp/bpcable.h"
+//#include <dwt.h>
+//#include "dwt.h"
 
 namespace Ui {
 class HFCTWidget;
 }
+
+//using namespace std;
+//using namespace splab;
+
+
+//typedef float   Type;
 
 class HFCTWidget : public ChannelWidget
 {
@@ -25,7 +33,6 @@ private slots:
     void fresh_1000ms();
     void fresh_100ms();
     void fresh_1ms();
-    void showWaveData(VectorList buf, MODE mod);
 
 private:
     Ui::HFCTWidget *ui;
@@ -45,7 +52,6 @@ private:
     void chart_ini();
     void PRPDReset();
     void do_Spectra_compute();
-    QVector<int> add_filters(QVector<int> list);
 
     //数据流
     QVector<PC_DATA> pclist_100ms;      //100ms的脉冲数据,HFCT分析的基准
@@ -54,7 +60,7 @@ private:
     QVector<int> pulse_list_100ms;
     MODE mode_continuous;
 
-
+//    DWT<Type> discreteWT("db4");
 };
 
 #endif // HFCTWIDGET_H

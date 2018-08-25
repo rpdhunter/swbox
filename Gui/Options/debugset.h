@@ -1,4 +1,4 @@
-#ifndef DEBUGSET_H
+﻿#ifndef DEBUGSET_H
 #define DEBUGSET_H
 
 #include <QFrame>
@@ -34,7 +34,7 @@ signals:
     void send_key(quint8);
     void update_statusBar(QString);
     void update_syncBar(bool);  //参数为false代表同步未成功,true为同步成功
-    void send_sync(uint);
+    void send_sync(qint64, qint64);     //发送过零点的秒和微秒(linux timeval格式)
 
 private slots:
     void fresh_rdb_data();
@@ -66,7 +66,7 @@ private:
     Battery *battery;
     float sync_vcc;                     //同步信号电压
     QVector<SYNC_DATA> sync_data;       //同步数据信号
-    struct timeval start, end , last_zero;          //测试用计时
+    QVector<timeval> zero_times;         //保存之前一系列过零点
 
     QLabel *tab0, *tab1, *tab2, *tab3, *tab4;  //tab标签
 

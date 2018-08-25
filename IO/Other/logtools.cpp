@@ -68,6 +68,12 @@ void LogTools::dealRPRDLog(QVector<QwtPoint3D> points)
     if(points.isEmpty()){
         return;
     }
+    save_PRPD_zdit(points);
+    save_PRPD_State_Grid(points);
+}
+
+void LogTools::save_PRPD_zdit(QVector<QwtPoint3D> points)
+{
     QFile file;
     bool flag;
 
@@ -79,18 +85,66 @@ void LogTools::dealRPRDLog(QVector<QwtPoint3D> points)
     if(flag){
         QTextStream out(&file);
 
+        //保存纯数据格式
         foreach (QwtPoint3D p, points) {
             out << p.x() << "\t"
                 << p.y() << "\t"
                 << p.z() << "\n";
         }
 
-        qDebug()<<"PRPD file saved! \tnum="<< points.length() << "\tmode = "<<Common::MODE_toString(mode);
+        qDebug()<<"ZDIT PRPD file saved! \tnum="<< points.length() << "\tmode = "<<Common::MODE_toString(mode);
 
         file.close();
-
         Common::create_hard_link(str_src, file_name);           //建立硬连接
+    }
+}
 
+void LogTools::save_PRPD_State_Grid(QVector<QwtPoint3D> points)
+{
+    QFile file;
+    bool flag;
+
+    QString format_str;
+    if(mode == HFCT1 || mode == HFCT2){
+        format_str = ".HF";
+    }
+    else if(mode == TEV1 || mode == TEV2){
+        format_str = ".TEV";
+    }
+    else if(mode == UHF1 || mode == UHF2){
+        format_str = ".UHF";
+    }
+    else if(mode == AA1 || mode == AA2){
+        format_str = ".AA";
+    }
+    else if(mode == AE1 || mode == AE2){
+        format_str = ".AE";
+    }
+    QString file_name = QDateTime::currentDateTime().toString("yyyyMMdd_HHmm") + format_str;
+    file.setFileName(DIR_PRPDLOG"/" + file_name);
+
+    QString str_src = file.fileName();
+    flag = file.open(QIODevice::WriteOnly);
+    if(flag){
+        QDataStream out(&file);
+//        out.setByteOrder(QDataStream::LittleEndian);
+
+        out << (float)1.0;
+        out << (char)0x00;
+        out << (qint32)360;
+        out << (qint32)360;
+        out << (char)0x01;
+        out << (float)-9999;
+        out << (float)9999;
+        out << (qint32)0;
+        char t[] = {0,0,0,0,0,0,0,0,0};
+        out.writeRawData(t,8);
+
+
+        qDebug()<<"State_Grid PRPD file saved! \tnum="<< points.length() << "\tmode = "<<Common::MODE_toString(mode);
+
+        file.close();
+        Common::create_hard_link(str_src, file_name);           //建立硬连接
     }
 }
 
@@ -166,6 +220,7 @@ void LogTools::write_normal_log(QString path, QVector<LOG_DATA> log_data)
         qDebug()<<"log file saved failed! ";
     }
 }
+
 
 
 

@@ -53,8 +53,8 @@ void ChannelWidget::change_log_dir()
 
 void ChannelWidget::showWaveData(VectorList buf, MODE mod)
 {
-    if(key_val->grade.val0 == menu_index && !timer_freeze->isActive()){       //在超声界面，可以显示
-//        isBusy = false;
+    if(key_val->grade.val0 == menu_index && (!timer_freeze->isActive() || manual == true) ){
+        manual = false;
         emit show_indicator(false);
         key_val->grade.val1 = 1;        //为了锁住主界面，防止左右键切换通道
         key_val->grade.val5 = 1;
@@ -104,7 +104,7 @@ void ChannelWidget::add_token()
 {
 //    qDebug()<<"token="<<token;
     if(token < TOKEN_MAX){
-        token += 5;
+        token += 2;
     }
 }
 

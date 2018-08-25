@@ -33,7 +33,9 @@
 #include "Common/common.h"
 #include "IO/Com/rdb/rdb.h"
 #include "IO/Other/CPU/cpustatus.h"
+//#include <dwt.h>
 
+//using namespace splab;
 
 namespace Ui {
 class MainWindow;
@@ -55,7 +57,6 @@ signals:
     void show_input(QString,QString);
     void send_input_key(quint8);
     void input_str(QString str);
-    void send_sync(uint);
 
 private slots:
     void fresh_menu_icon();
@@ -68,8 +69,6 @@ private slots:
     void show_message(QString str);
     void show_busy(bool f);
     void set_wifi_icon(int w);
-    void set_sync_status(bool flag);
-    void do_sync(uint offset);
     void do_beep(int index, int red_alert);
     void set_current_equ(QString new_equ, QString new_path);
 

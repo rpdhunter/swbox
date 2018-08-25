@@ -138,8 +138,8 @@ void TEVWidget::do_key_left_right(int d)
         Common::change_index(tev_sql->high, d, 60, tev_sql->low );
         break;
     case 6:
-//        Common::change_index(tev_sql->fpga_threshold, (int)Common::code_value(1,mode) * d, 200, 0 );
-        tev_sql->fpga_threshold += Common::code_value(1,mode) * d;
+        Common::change_index(tev_sql->fpga_threshold, d * Common::code_value(1,mode), Common::code_value(100,mode), Common::code_value(2,mode) );
+//        tev_sql->fpga_threshold += Common::code_value(1,mode) * d;
         break;
     case 7:
         Common::change_index(tev_sql->pulse_time, d, MAX_PULSE_CNT, 1 );

@@ -61,6 +61,12 @@ int BpCable::cable_prpd_mode(prpd_point_t prpd_points[], int data_num, discharge
 {
     bp_neural_data_t pd_data;
 
+    for (int i = 0; i < data_num; i++) {
+        if (prpd_points [i].phase < 0 || prpd_points [i].phase >= 360) {
+            prpd_points [i].phase = abs (prpd_points [i].phase % 360);
+        }
+    }
+
     prpd_bp_set_x_buf (&pd_data, prpd_points, data_num);
     Bp::bp_judge (cable_prpd_bp, &pd_data);
     * pd_mode_output = prpd_bp_get_o (&pd_data);
@@ -70,6 +76,9 @@ int BpCable::cable_prpd_mode(prpd_point_t prpd_points[], int data_num, discharge
 
 QString BpCable::cable_prpd_mode(QVector<QwtPoint3D> list)
 {
+    if(list.count() < 100){
+        return tr("输入数据量不足");
+    }
     prpd_point_t *prpd_points = new prpd_point_t[ list.count() ];
     for (int i = 0; i < list.count(); ++i) {
         prpd_points[i].phase = list.at(i).x();
@@ -79,7 +88,6 @@ QString BpCable::cable_prpd_mode(QVector<QwtPoint3D> list)
     discharge_type_t pd_out;
     cable_prpd_mode(prpd_points, list.count(), &pd_out);
     qDebug()<<mode_2_string(pd_out);
-//    return mode_2_string(pd_out);
     return mode_2_tr_string(pd_out);
 }
 
@@ -344,6 +352,9 @@ int BpCable::prpd_bp_init_points_file(FILE *fp, prpd_point_t points[], int max_n
     }
 
     do {
+        if (points [i].phase < 0 || points [i].phase >= 360) {
+            points [i].phase = abs (points [i].phase % 360);
+        }
         fscanf (fp, "%d", &points [i].q);
         fscanf (fp, "%d", &points [i].n);
         i++;

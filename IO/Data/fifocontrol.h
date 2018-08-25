@@ -34,7 +34,7 @@ public:
 public slots:
     void playVoiceData(VectorList wave);        //检查播放声音开关
     void stop_play_voice();
-    void send_sync(uint offset);       //发送同步信号
+    void send_sync(qint64 s,qint64 u);       //发送同步信号
 
 signals:
     void playVoiceProgress(int cur, int all, bool);        //返回播放声音的实时进度，前2个参数是播放进度，后一个是是否播完，0未播完，1播完

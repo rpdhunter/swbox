@@ -47,7 +47,8 @@ SystemInfo::SystemInfo(QWidget *parent) : BaseWidget(NULL, parent),ui(new Ui::Sy
             line = "PDTEV";
 #elif AMG
 //            line = "PDcable";
-            line = "TAH-300";
+            line = "PDswitch";
+//            line = "TAH-300";
 #elif ZDIT
             line = "PD3000";
 #elif XDP_II
@@ -55,7 +56,7 @@ SystemInfo::SystemInfo(QWidget *parent) : BaseWidget(NULL, parent),ui(new Ui::Sy
 //            line = tr("局部放电测试仪系统软件V1.0");
 
 #else
-            line = "TAH-300";
+            line = " ";
 #endif
             file.write(line);
         }

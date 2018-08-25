@@ -16,6 +16,9 @@ QString WifiPassword::lookup_key(QString name)
 
 void WifiPassword::add_new(QString name, QString password)
 {
+    if(name.isEmpty() || password.isEmpty()){
+        return;
+    }
     if(!map.contains(name)){
         map.insert(name, password);
         save();

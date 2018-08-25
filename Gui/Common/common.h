@@ -144,7 +144,10 @@ public:
     static void messagebox_show_and_init(QMessageBox *box);
     static void messagebox_switch(QMessageBox *box);
     static QString filter_to_string(int f);
-
+    static double filter_to_number(int f);
+    static void adjust_filter_list(QList<int> &list, double cut_off_low, double cut_off_high);      //修正滤波器的可选范围
+    static int time_interval(struct timeval start_time, struct timeval stop_time);      //返回两时间间隔(us)
+    static void time_addusec(struct timeval &time, int usec);                //添加微秒数,可为负值
 };
 
 #endif // COMMON_H

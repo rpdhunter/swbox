@@ -2,6 +2,7 @@
 #include "ui_hfctwidget.h"
 #include <QLineEdit>
 #include <QGraphicsView>
+#include "../Algorithm/Wavelet/wavelet.h"
 
 #define VALUE_MAX       9999           //RPPD最大值
 #define SETTING_NUM     11           //设置菜单条目数
@@ -19,6 +20,8 @@ HFCTWidget::HFCTWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu
 
     reload(-1);
     max_100ms = 0;
+
+//    DWT<float> discreteWT("db4");
 
 #ifdef TEST_LAB
     bpcable = new BpCable;
@@ -105,15 +108,14 @@ void HFCTWidget::do_key_ok()
         break;
     }
 
-    QVector<int> list1 = Compute::sim_sin(2500,1,120);
-    QVector<int> list2 = Compute::sim_pulse(1000,120);
+//    QVector<int> list1 = Compute::sim_sin(2500,1,120);
+//    QVector<int> list2 = Compute::sim_pulse(1000,120);
 
-    for (int i = 0; i < 120; ++i) {
-        list1[i] += list1.at(i) + list2.at(i);
-    }
+//    for (int i = 0; i < 120; ++i) {
+//        list1[i] += list1.at(i) + list2.at(i);
+//    }
 
-    list1 = add_filters(list1);
-//    list2 = add_filters(list2);
+//    list1 = add_filters(list1);
 
 
     ChannelWidget::do_key_ok();
@@ -144,16 +146,19 @@ void HFCTWidget::do_key_left_right(int d)
         list << NONE << hp_500k << hp_1M << hp_1M5 << hp_1M8 << hp_2M << hp_2M5 << hp_3M << hp_5M
              << hp_8M << hp_10M << hp_12M << hp_15M << hp_18M << hp_20M << hp_22M << hp_25M << hp_28M
              << hp_30M << hp_32M << hp_35M;
+        Common::adjust_filter_list(list, 0, Common::filter_to_number(hfct_sql->filter_lp));     //调整可选频率列表,使得高通截止频率永远低于低通
         Common::change_index(hfct_sql->filter_hp, d, list);
         break;
     case 5:
         list.clear();
         list << NONE << lp_2M << lp_5M << lp_8M << lp_10M << lp_12M << lp_15M << lp_18M << lp_20M
              << lp_22M << lp_25M << lp_28M << lp_30M << lp_32M << lp_35M << lp_38M << lp_40M;
+        Common::adjust_filter_list(list, Common::filter_to_number(hfct_sql->filter_hp), 100);
         Common::change_index(hfct_sql->filter_lp, d, list);
         break;
     case 6:
-        hfct_sql->fpga_threshold += Common::code_value(1,mode) * d;
+        Common::change_index(hfct_sql->fpga_threshold, d * Common::code_value(1,mode), Common::code_value(100,mode), Common::code_value(2,mode) );
+//        hfct_sql->fpga_threshold += Common::code_value(1,mode) * d;
         break;
     case 7:
         Common::change_index(hfct_sql->pulse_time, d, MAX_PULSE_CNT, 1 );
@@ -243,17 +248,6 @@ void HFCTWidget::do_Spectra_compute()
     max_100ms = 0;
 }
 
-QVector<int> HFCTWidget::add_filters(QVector<int> list)
-{
-//    qDebug()<<"before:"<<list;
-    list = fir->set_filter(list, (FILTER)hfct_sql->filter_hp);
-//    qDebug()<<"mid:"<<list;
-    list = fir->set_filter(list, (FILTER)hfct_sql->filter_lp);
-//    qDebug()<<"after:"<<list<<"\n";
-    return list;
-
-}
-
 void HFCTWidget::PRPDReset()
 {
     map_PRPD.clear();
@@ -296,9 +290,11 @@ void HFCTWidget::fresh_1ms()
             }
 
             //加入滤波器
-//            qDebug()<<"before:"<<Compute::max(list)/*<<list*/;
-            list = add_filters(list);
-//            qDebug()<<"after:"<<Compute::max(list)/*<<list*/;
+            list = fir->set_filter(list, (FILTER)hfct_sql->filter_hp);
+            list = fir->set_filter(list, (FILTER)hfct_sql->filter_lp);
+
+            //加入小波滤波器
+            list = Wavelet::set_filter(list, 3);
 
             qint32 max = MAX(max_100ms, list.at(Common::max_at(list)) );
             if(max > max_100ms ){
@@ -391,14 +387,6 @@ void HFCTWidget::fresh_100ms()
 
     pclist_100ms.clear();
 
-}
-
-void HFCTWidget::showWaveData(VectorList buf, MODE mod)
-{
-//    qDebug()<<buf.at(Common::max_at(buf));
-    buf = add_filters(buf);
-//    qDebug()<<buf.count() << "\t" << buf.at(Common::max_at(buf));;
-    ChannelWidget::showWaveData(buf,mod);
 }
 
 void HFCTWidget::fresh_1000ms()
@@ -528,8 +516,8 @@ void HFCTWidget::fresh_setting()
     }
 
     ui->comboBox->setItemText(2,tr("增益调节\t[×%1]").arg(QString::number(hfct_sql->gain, 'f', 1)));
-    ui->comboBox->setItemText(3,tr("高通滤波\t[%1]").arg(Common::filter_to_string(hfct_sql->filter_hp)));
-    ui->comboBox->setItemText(4,tr("低通滤波\t[%1]").arg(Common::filter_to_string(hfct_sql->filter_lp)));
+    ui->comboBox->setItemText(3,tr("通带下限\t[%1]").arg(Common::filter_to_string(hfct_sql->filter_hp)));
+    ui->comboBox->setItemText(4,tr("通带上限\t[%1]").arg(Common::filter_to_string(hfct_sql->filter_lp)));
     ui->comboBox->setItemText(5,tr("脉冲触发\t[%1]mV").arg(QString::number((int)Common::physical_value(hfct_sql->fpga_threshold,mode) )));
     ui->comboBox->setItemText(6,tr("脉冲计数时长\t[%1]s").arg(QString::number(hfct_sql->pulse_time)) );
 
