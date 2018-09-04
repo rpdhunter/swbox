@@ -12,7 +12,7 @@
 #define GRADE_2_NORMAL      6
 #define GRADE_2_WIFI        2
 #define GRADE_2_ADVANCED    6
-#define SYNC_WIFI_DISABLE   1       //关闭复杂功能
+#define SYNC_WIFI_DISABLE   0       //关闭复杂功能
 
 
 Options::Options(QWidget *parent, G_PARA *g_data) : BaseWidget(NULL, parent),

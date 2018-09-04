@@ -3,7 +3,7 @@
 #include <QFile>
 #include <QDataStream>
 #include <QDateTime>
-#include <QDir>
+//#include <QDir>
 
 #include "IO/SqlCfg/sqlcfg.h"
 #include "Gui/Common/common.h"
@@ -385,7 +385,7 @@ void FileTools::saveDataFile()
             }
         }
 
-//        qDebug()<<tr("save %1 success").arg(filepath + ".DAT");
+        qDebug()<<tr("save %1 success").arg(filepath + ".DAT");
 
 #if 0
         //拷贝到SD卡
@@ -595,21 +595,32 @@ void FileTools::wav_add_filter()
 
 void FileTools::spaceControl(QString str)
 {
-//    qDebug()<<"sqlcfg->get_para()->max_rec_num"<<sqlcfg->get_para()->max_rec_num;
     QDir dir(str);
-    QStringList list = dir.entryList(QDir::Files,QDir::Time);
-    if(list.length()>sqlcfg->get_para()->max_rec_num){
-        for(int i=0;i<12;i++){          //删除10个文件
-            QString s = list.at(i);
-            if(dir.remove(s)){
-//                qDebug()<<"remove file "<<str + s<<" succeed!";
-            }
-            else{
-                qDebug()<<"remove file "<<str + s<<" failed!";
-            }
-        }
+    QStringList filters;
+    filters << "*.DAT" << "*.dat";
+    QStringList list = dir.entryList(filters,QDir::Files,QDir::Time);
 
-//        system ("sync");
+//    qDebug()<<"max_rec_num:"<<sqlcfg->get_para()->max_rec_num << "\tcurrent"<<list.length();
+
+    if(list.length()>sqlcfg->get_para()->max_rec_num){
+        for(int i=0;i<12;i++){          //删除12个文件
+            QString s = list.at(list.length() - i - 1);
+            rm(dir,s);
+            s.remove(".DAT");
+            rm(dir, s + ".mp3");
+            rm(dir, s + ".CFG");
+            rm(dir, s + ".txt");
+        }
+    }
+}
+
+void FileTools::rm(QDir dir, QString s)
+{
+    if(dir.remove(s)){
+//        qDebug()<<"remove file "<<dir.path() + '/' + s<<" succeed!";
+    }
+    else{
+//        qDebug()<<"remove file "<<dir.path() + '/'+ s<<" failed!";
     }
 }
 

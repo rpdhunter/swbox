@@ -39,7 +39,7 @@
 #define BUZZER                  0x0006          //蜂鸣器(0不响,1为响)
 #define BUZZER_FREQ             0x0007          //蜂鸣器频率,目标频率f, 则写入值为100 000 000/f/2/16 (f范围100-20000)
 #define REBOOT                  0x0008          //关机指令(1为关机)
-#define FILTER_MODE             0x0009          //滤波模式设定，高八位控制H2,低八位控制H1,0无滤波，2为1.8M高通，1为500K高通
+#define FILTER_MODE             0x0009          //滤波模式设定，高八位控制H2,低八位控制H1,0无滤波，1为500K高通2为1.8M高通，3为32M低通
 #define L1_CHANNEL_MODE         0x000a          //低频通道模式，0为录波声音使用原始模式，1为录波声音使用包络线模式
 #define L2_CHANNEL_MODE         0x000b          //低频通道模式，0为录波声音使用原始模式，1为录波声音使用包络线模式
 
@@ -74,6 +74,8 @@
 #define READ_FPGA_AE1           0x0036          //AE模式中包络线数据1
 #define READ_FPGA_AE2           0x0037          //AE模式中包络线数据2
 
+//同步
+#define DO_SYNC                 0x0038          //同步,
 
 
 enum send_params {

@@ -5,6 +5,7 @@
 #include <QObject>
 #include "IO/Data/data.h"
 #include <QProcess>
+#include <QDir>
 
 
 class FileTools : public QObject, public QRunnable
@@ -72,6 +73,7 @@ private:
     void wav_add_filter();
 
     void spaceControl(QString str); //空间管理
+    void rm(QDir dir, QString s);
     void mode_envelope_modify();        //根据实际情况修正mode
 };
 

@@ -64,45 +64,8 @@ void FifoData::run(void)
             //基本数据
             fifocontrol->read_fpga(sp_read_fpga_normal);
             fifocontrol->read_normal_data();
-
-#if 0
-            //PRPD数据
-            fifocontrol->read_fpga(sp_read_fpga_prpd1);
-            fifocontrol->read_prpd1_data();
-            fifocontrol->read_fpga(sp_read_fpga_prpd2);
-            fifocontrol->read_prpd2_data();
-#endif
             read_slow = false;
-
-#if 0
-            //包络线数据
-            if(data->recv_para_ae1.readComplete == 1){
-                fifocontrol->read_fpga(sp_read_fpga_ae1);
-                ret = fifocontrol->read_ae1_data();
-    //            qDebug()<<"AE1 len = "<<ret<<"\trecComplete = "<<data->recv_para_ae1.recComplete
-    //                      <<"\tgroup = "<<data->recv_para_ae1.groupNum;
-                if(ret > 100){
-                    data->recv_para_ae1.readComplete = 0;
-                    emit ae1_update();
-                    read_slow = true;
-                }
-            }
-
-            if(data->recv_para_ae2.readComplete == 1){
-                fifocontrol->read_fpga(sp_read_fpga_ae2);
-                ret = fifocontrol->read_ae2_data();
-                if(ret > 100){
-//                    qDebug()<<"AE2 len = "<<ret<<"\trecComplete = "<<data->recv_para_ae2.recComplete
-//                              <<"\tgroup = "<<data->recv_para_ae2.groupNum;
-                    data->recv_para_ae2.readComplete = 0;
-                    emit ae2_update();
-                    read_slow = true;
-                }
-            }
-#endif
         }
-
-
 
         //短脉冲数据
         if(sqlcfg->get_para()->menu_h1 != Disable){
@@ -152,6 +115,7 @@ void FifoData::run(void)
         ret = fifocontrol->read_rec_data();
         if(data->recv_para_rec.recComplete > 0 && data->recv_para_rec.recComplete < 255){
 //            qDebug()<<"data->recv_para_rec.recComplete:"<<data->recv_para_rec.recComplete;
+//            qDebug()<<"ret = "<<ret;
             reccontrol->recv_rec_data();
         }
 

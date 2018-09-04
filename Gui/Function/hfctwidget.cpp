@@ -32,6 +32,11 @@ HFCTWidget::HFCTWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu
     recWaveForm->raise();
     fir = new Fir;
     reload(menu_index);
+
+    timer_test = new QTimer;
+    connect(timer_test,SIGNAL(timeout()), this, SLOT(test_rec_wave()));
+//    timer_test->start(hfct_sql->rec_time * 2 * 1000);
+
 }
 
 HFCTWidget::~HFCTWidget()
@@ -307,6 +312,14 @@ void HFCTWidget::fresh_1ms()
             //累计数据
             pclist_100ms.append(pclist_1ms);
         }
+    }
+}
+
+void HFCTWidget::test_rec_wave()
+{
+    if(!isBusy){
+        emit startRecWave(mode_continuous,hfct_sql->rec_time);     //开始连续录波
+        emit show_indicator(true);
     }
 }
 

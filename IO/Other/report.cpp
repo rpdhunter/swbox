@@ -42,7 +42,6 @@ void Report::create_XML(QString path)
     QDomElement rootNode = creat_dom_child_0(doc, "report", "generated time", QDateTime::currentDateTime().toString());
 
     //一般内容
-    qDebug()<<"aaaaaaaaaaaaaaaaaaaaa";
     QDomElement generalNode = creat_dom_child_1(doc, "general", "", "", rootNode);
     creat_dom_child_2(doc, "attrib", "param", QString::fromUtf8("仪器型号"), instrument_model, generalNode);
     creat_dom_child_2(doc, "attrib", "param", QString::fromUtf8("生产厂家"), manufacturer, generalNode);

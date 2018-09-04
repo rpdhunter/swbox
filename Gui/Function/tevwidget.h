@@ -32,7 +32,7 @@ private:
     void chart_ini();
     void data_reset();
     void fresh_Histogram();
-    void calc_tev_value (double &tev_db, int &pulse_cnt_show, double &degree, int &sug_central_offset, int &sug_noise_offset);
+    void calc_tev_value (double &tev_val, double &tev_db, int &pulse_cnt_show, double &degree, int &sug_central_offset, int &sug_noise_offset);
 
     Ui::TEVWidget *ui;
     H_CHANNEL_SQL *tev_sql;

@@ -34,6 +34,8 @@ private slots:
     void fresh_100ms();
     void fresh_1ms();
 
+    void test_rec_wave();       //硬盘读写压力测试
+
 private:
     Ui::HFCTWidget *ui;
     H_CHANNEL_SQL *hfct_sql;
@@ -59,6 +61,8 @@ private:
     qint32 max_100ms;       //100ms内的最大值
     QVector<int> pulse_list_100ms;
     MODE mode_continuous;
+
+    QTimer *timer_test;
 
 //    DWT<Type> discreteWT("db4");
 };

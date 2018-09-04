@@ -185,7 +185,7 @@ void TEVWidget::chart_ini()
 
 }
 
-void TEVWidget::calc_tev_value (double &tev_db, int &pulse_cnt_show, double &degree, int &sug_zero_offset, int &sug_noise_offset)
+void TEVWidget::calc_tev_value (double &tev_val, double &tev_db, int &pulse_cnt_show, double &degree, int &sug_zero_offset, int &sug_noise_offset)
 {
     //脉冲计数
     quint32 pulse_cnt;
@@ -227,7 +227,7 @@ void TEVWidget::calc_tev_value (double &tev_db, int &pulse_cnt_show, double &deg
 
     sug_noise_offset = ( MAX (qAbs (a), qAbs (b)) - 1 / H_C_FACTOR / tev_sql->gain ) /10;
 
-    double tev_val = tev_sql->gain * (MAX (qAbs (a), qAbs (b)) - tev_sql->offset_noise * 10) * H_C_FACTOR;
+    tev_val = tev_sql->gain * (MAX (qAbs (a), qAbs (b)) - tev_sql->offset_noise * 10) * H_C_FACTOR;
     tev_db = 20 * log10 (tev_val);      //对数运算，来自工具链的函数
 
     //脉冲数多时，进入测试模式^^
@@ -272,9 +272,9 @@ void TEVWidget::fresh_Histogram()
 
 void TEVWidget::fresh_1000ms()
 {
-    double tev_db, degree;
+    double tev_val, tev_db, degree;
     int pulse_cnt_show, sug_zero_offset, sug_noise_offset;
-    calc_tev_value (tev_db, pulse_cnt_show, degree, sug_zero_offset, sug_noise_offset);
+    calc_tev_value (tev_val, tev_db, pulse_cnt_show, degree, sug_zero_offset, sug_noise_offset);
 
     db = (int)tev_db;
     ui->label_val->setText(QString::number(db) );
@@ -293,7 +293,8 @@ void TEVWidget::fresh_1000ms()
         ui->label_max->setText(tr("最大值: ") + QString::number(max_db) + "dB");
     }
     ui->label_pluse->setText(tr("脉冲数: ") + Common::secton_three(pulse_cnt_show) );//按三位分节法显示脉冲计数
-    ui->label_degree->setText(tr("严重度: ") + QString::number(degree, 'f', 2));
+//    ui->label_degree->setText(tr("严重度: ") + QString::number(degree, 'f', 2));
+    ui->label_degree->setText(tr("实际值: %1 mV").arg(QString::number(tev_val, 'f', 2)) );
 
     int is_current = 0;
     if((int)key_val->grade.val0 == menu_index){
@@ -408,6 +409,9 @@ void TEVWidget::fresh_1ms()
                     list.append(((qint32)short_data->data[i] - 0x8000 - tev_sql->fpga_zero));
                 }
             }
+
+//            qDebug()<<"len = "<<list.count();
+
             //分析数据
             qint32 max = 0, min = 0;
             foreach (qint32 l, list) {

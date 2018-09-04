@@ -22,20 +22,17 @@ QVector<int> Wavelet::set_filter(QVector<int> sig, uint level, QString name)
 
     /******************************* [ signal ] ******************************/
     Vector<Type> s;
-    qDebug()<<"11";
 
     s.resize(sig.count());
     for(int i=0; i<sig.count(); i++)
     {
         s[i] = sig.at(i);
     }
-    qDebug()<<"s.size()"<<s.size();
-    qDebug()<<"22";
+
     /******************************** [ DWT ] ********************************/
     DWT<Type> discreteWT("db4");
     Vector<Type> coefs = discreteWT.dwt( s, level );
 
-    qDebug()<<"33";
     Vector<Type> details;
     for (uint i = 1; i <= level; ++i) {
         details = discreteWT.getDetial(coefs,i);
@@ -49,18 +46,15 @@ QVector<int> Wavelet::set_filter(QVector<int> sig, uint level, QString name)
     /******************************** [ IDWT ] *******************************/
     level = 0 ;
     Vector<Type> x = discreteWT.idwt( coefs, level );
-    qDebug()<<"x.size()"<<x.size();
-    qDebug() << "The relative error is : norm(s-x) / norm(s) = "
-         << norm(s-x)/norm(s) << endl;
+//    qDebug() << "The relative error is : norm(s-x) / norm(s) = "
+//         << norm(s-x)/norm(s) << endl;
 
-    qDebug()<<"44";
     QVector<int> result;
     for(int i=0; i<sig.count(); i++)
     {
         result.append(x[i]);
     }
 
-    qDebug()<<"55";
     return result;
 }
 

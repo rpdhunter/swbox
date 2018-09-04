@@ -215,9 +215,9 @@ void FifoControl::base_init()
         if ((vbase_play_voice_2 = init_vbase (fd, AXI_STREAM_BASE3, AXI_STREAM_SIZE)) == NULL) {
             break;
         }
-        if ((vbase_sync = init_vbase (fd, AXI_STREAM_BASE4, AXI_STREAM_SIZE)) == NULL) {
-            break;
-        }
+//        if ((vbase_sync = init_vbase (fd, AXI_STREAM_BASE4, AXI_STREAM_SIZE)) == NULL) {
+//            break;
+//        }
         if ((vbase_hfct1 = init_vbase (fd, AXI_STREAM_BASE5, AXI_STREAM_SIZE)) == NULL) {
             break;
         }
@@ -287,7 +287,7 @@ void FifoControl::regs_init()
 //    tdata->set_send_para (sp_keyboard_backlight, sqlcfg->get_para()->key_backlight);
 
 //    tdata->set_send_para (sp_filter_mode, 0);//to be
-//    tdata->set_send_para (sp_filter_mode, 0x0303);//两个通道都设置为低通滤波器
+    tdata->set_send_para (sp_filter_mode, 0x0300);//两个通道都设置为低通滤波器
     tdata->set_send_para (sp_buzzer_freq, 100000000/800/2/16);
 //    tdata->set_send_para (sp_aa_record_play, 2);        //耳机送2通道
 
@@ -337,10 +337,14 @@ void FifoControl::send_sync(qint64 s, qint64 u)
     zero_time.tv_usec = u;
     gettimeofday(&current_time, NULL);
     int interval = Common::time_interval(zero_time, current_time);    //当前时间点和过零点之间的间隔(us)
-    uint offset = 100 * interval % stand_T;        //20000us = 20ms 等于周期
+    uint offset = 100 * (interval % stand_T);        //20000us = 20ms 等于周期
 
 
-    send_data (vbase_sync, &offset, 1);
+//    send_data (vbase_sync, &offset, 1);
+    uint temp;
+    temp = (DO_SYNC << 16) | offset/32;
+    send_data (vbase_send, &temp, 1);
+    qDebug("WRITE_REG_SYNC = 0x%08x", temp);
     qDebug()<<"sync completed!!! \t sync offset = "<< offset;
 }
 
