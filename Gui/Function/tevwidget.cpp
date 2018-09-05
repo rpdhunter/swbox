@@ -293,8 +293,8 @@ void TEVWidget::fresh_1000ms()
         ui->label_max->setText(tr("最大值: ") + QString::number(max_db) + "dB");
     }
     ui->label_pluse->setText(tr("脉冲数: ") + Common::secton_three(pulse_cnt_show) );//按三位分节法显示脉冲计数
-//    ui->label_degree->setText(tr("严重度: ") + QString::number(degree, 'f', 2));
-    ui->label_degree->setText(tr("实际值: %1 mV").arg(QString::number(tev_val, 'f', 2)) );
+    ui->label_degree->setText(tr("严重度: ") + QString::number(degree, 'f', 2));
+//    ui->label_degree->setText(tr("实际值: %1 mV").arg(QString::number(tev_val, 'f', 2)) );
 
     int is_current = 0;
     if((int)key_val->grade.val0 == menu_index){

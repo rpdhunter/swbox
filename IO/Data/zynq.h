@@ -2,6 +2,24 @@
 #define ZYNQ_H
 
 //基地址
+#if 1       //新版
+#define AXI_STREAM_BASE0		0x43c10000  //基本读（读）
+#define AXI_STREAM_BASE1		0x43c20000  //基本写（写）
+
+#define AXI_STREAM_BASE2		0x43c00000  //超声1（写）x
+#define AXI_STREAM_BASE3		0x43c20000  //超声2（读）
+#define AXI_STREAM_BASE4		0x43c30000  //同步(写) x
+
+#define AXI_STREAM_BASE5		0x43c40000  //HFCT1（读）
+#define AXI_STREAM_BASE6		0x43c50000  //HFCT2（读）
+//#define AXI_STREAM_BASE7		0x43d60000  //PRPD1（读）
+//#define AXI_STREAM_BASE8		0x43c80000  //PRPD2（读）
+#define AXI_STREAM_BASE9		0x43c60000  //录波（读）
+#define AXI_STREAM_BASE10		0x43c70000  //ae1（读）
+#define AXI_STREAM_BASE11		0x43c80000  //ae2（读）
+
+#else       //旧版
+
 #define AXI_STREAM_BASE0		0x43c10000  //基本读（读）x
 #define AXI_STREAM_BASE1		0x83c00000  //基本写（写）x
 
@@ -16,6 +34,8 @@
 #define AXI_STREAM_BASE9		0x43c60000  //录波（读）xX
 #define AXI_STREAM_BASE10		0x83c10000  //ae1（读）X
 #define AXI_STREAM_BASE11		0x83c20000  //ae2（读）X
+
+#endif
 
 
 #define AXI_STREAM_SIZE			0x1000
@@ -32,7 +52,7 @@
 
 //常规功能设置
 #define RAM_RESET				0x0001          //初始化时使用（bool）
-#define FREQ_REG				0x0002          //频率（目前只有50,60两个值，以后可能要扩展成浮点数频率）
+#define FREQ_REG				0x0002          //频率（50Hz 为0,60Hz为1）
 #define BACKLIGHT_REG			0x0003          //背光（0-7变化，7为最亮，8为全黑）
 #define KEYBOARD_BACKLIGHT      0x0004          //0熄灭键盘灯，1打开键盘灯
 #define SLEEPING                0x0005          //FPGA休眠(0为休眠,1为唤醒)

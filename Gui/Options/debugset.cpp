@@ -709,7 +709,7 @@ void DebugSet::fresh_hardware_status()
 
     cpu_status->get_vvpn(&sync);
 
-    qDebug()<<"sync = "<< sync << "mV";
+//    qDebug()<<"sync = "<< sync << "mV";
     if(/*qAbs(sync) > 25 && */sqlcfg->get_para()->sync_mode == SYNC_EXTERNAL){            //15毫伏触发（对应约150w的负载）
         timer_sync->start();
     }

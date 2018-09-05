@@ -16,11 +16,11 @@ static{
 TARGET = swbox
 TEMPLATE = app
 
-#DEFINES += AMG             #OEM
+DEFINES += AMG             #OEM
 #DEFINES += XDP_II          #OEM
 #DEFINES += OHV             #OEM
 #DEFINES += ZDIT            #OEM
-DEFINES += NO_OEM           #OEM
+#DEFINES += NO_OEM           #OEM
 
 #DEFINES += TEST_LAB
 

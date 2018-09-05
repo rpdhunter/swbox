@@ -115,8 +115,9 @@ void RecWaveForm::working(CURRENT_KEY_VALUE *val, QString str)
              plot->setTitle(str + tr("\n%1, 按OK键寻找峰值").arg(filter_info));
         }
     }
-    QThreadPool::globalInstance()->start(filetools);
+
     connect(filetools,SIGNAL(readFinished(VectorList,MODE)),this,SLOT(start_work(VectorList,MODE)) );
+    QThreadPool::globalInstance()->start(filetools);
 }
 
 void RecWaveForm::working(CURRENT_KEY_VALUE *val,VectorList buf, MODE mod)
@@ -144,7 +145,6 @@ void RecWaveForm::start_work(VectorList buf, MODE mode)
 
     max_show_flag = true;
     min_show_flag = true;
-
     emit show_indicator(false);
     this->show();
 }

@@ -81,6 +81,7 @@ typedef struct G_RECV_PARA_NOMAL {
 	quint32 ldata0_min;     //未使用
 	quint32 ldata1_max;     //AA超声最大值
 	quint32 ldata1_min;     //AA超声最小值
+    quint32 playvoice_enable;   //是否能否播放声音标志位,0为不能播放,1为可以播放
 } G_RECV_PARA_NOMAL;
 
 //PRPD数据
@@ -111,8 +112,8 @@ struct G_RECV_PARA_REC {
     quint32 data [BUFF_DATA_SIZE];   //录播数据256
 };
 
-//录波数据
-//适用通道：TEV1，TEV2，HFCT1，HFCT2，AA
+//包络线数据
+//适用通道：低频2通道
 //更新时间：立刻更新
 struct G_RECV_PARA_ENVELOPE {
     quint32 recComplete;    //录播完成(1为完成)

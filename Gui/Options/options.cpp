@@ -12,7 +12,7 @@
 #define GRADE_2_NORMAL      6
 #define GRADE_2_WIFI        2
 #define GRADE_2_ADVANCED    6
-#define SYNC_WIFI_DISABLE   0       //关闭复杂功能
+#define SYNC_WIFI_DISABLE   1       //关闭复杂功能
 
 
 Options::Options(QWidget *parent, G_PARA *g_data) : BaseWidget(NULL, parent),
@@ -442,7 +442,7 @@ void Options::do_key_left_right(int d)
 void Options::saveOptions()
 {
     //保存频率
-    data->set_send_para (sp_freq_reg, sql_para.freq_val);
+    data->set_send_para (sp_freq_reg, sql_para.freq_val == 50 ? 0 : 1);
     emit fregChanged(sql_para.freq_val);
 
     //保存时间

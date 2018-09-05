@@ -282,12 +282,12 @@ void FifoControl::regs_init()
     tdata->set_send_para (sp_ram_reset, 1);
     send_para();
 
-    tdata->set_send_para (sp_freq_reg, sqlcfg->get_para()->freq_val);
+    tdata->set_send_para (sp_freq_reg, sqlcfg->get_para()->freq_val == 50 ? 0 : 1);
 //    tdata->set_send_para (sp_backlight_reg, sqlcfg->get_para()->backlight);
 //    tdata->set_send_para (sp_keyboard_backlight, sqlcfg->get_para()->key_backlight);
 
 //    tdata->set_send_para (sp_filter_mode, 0);//to be
-    tdata->set_send_para (sp_filter_mode, 0x0300);//两个通道都设置为低通滤波器
+//    tdata->set_send_para (sp_filter_mode, 0x0300);//两个通道都设置为低通滤波器
     tdata->set_send_para (sp_buzzer_freq, 100000000/800/2/16);
 //    tdata->set_send_para (sp_aa_record_play, 2);        //耳机送2通道
 

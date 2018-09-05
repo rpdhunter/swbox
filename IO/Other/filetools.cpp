@@ -105,6 +105,7 @@ void FileTools::run()
                 _data.append(v);
             }
         }
+
         emit readFinished(_data, _mode);
 
         if(_mode == AA1 || _mode == AA2 || _mode == AE1 || _mode == AE2         //TEST

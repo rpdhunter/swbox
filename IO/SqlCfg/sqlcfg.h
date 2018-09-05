@@ -177,7 +177,7 @@ typedef struct SQL_PARA {
     L_CHANNEL_SQL ae1_sql, ae2_sql;         //AE超声设置
 
     bool language;                          //语言设置
-    int freq_val;                           //频率（需要FPGA同步）
+    int freq_val;                           //频率（需要FPGA同步,FPGA 0为50, 1为60）
     int backlight;                          //背光（需要FPGA同步）
     int key_backlight;                      //键盘背光（需要FPGA同步）
     int screen_dark_time;                   //屏幕自动变暗时间,单位为秒

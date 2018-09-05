@@ -91,8 +91,9 @@ void FifoData::run(void)
             ret = fifocontrol->read_ae1_data();
             if(ret > 100){
                 data->recv_para_envelope1.readComplete = 0;
-//                qDebug()<<"AE1 len = "<<ret<<"\trecComplete = "<<data->recv_para_ae1.recComplete
-//                                          <<"\tgroup = "<<data->recv_para_ae1.groupNum;
+//                qDebug()<<"AE1 len = "<<ret
+//                        <<"\trecComplete = "<<data->recv_para_envelope1.recComplete
+//                        <<"\tgroup = "<<data->recv_para_envelope1.groupNum;
                 emit ae1_update();
             }
         }
@@ -113,7 +114,7 @@ void FifoData::run(void)
         fifocontrol->read_fpga(sp_read_fpga_rec);
         usleep(delay_time);
         ret = fifocontrol->read_rec_data();
-        if(data->recv_para_rec.recComplete > 0 && data->recv_para_rec.recComplete < 255){
+        if(ret > 2 && data->recv_para_rec.recComplete > 0 && data->recv_para_rec.recComplete < 255){
 //            qDebug()<<"data->recv_para_rec.recComplete:"<<data->recv_para_rec.recComplete;
 //            qDebug()<<"ret = "<<ret;
             reccontrol->recv_rec_data();
