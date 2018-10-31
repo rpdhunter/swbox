@@ -6,17 +6,24 @@
 #include <QListWidget>
 #include "IO/SqlCfg/sqlcfg.h"
 #include "IO/Data/data.h"
-//#include "IO/Other/wifi.h"
-//#include "../Common/wifitools.h"
 #include "IO/Com/socket.h"
 #include "Gui/Common/basewidget.h"
 #include "Gui/Common/wifipassword.h"
-
+#include <QtCharts/QChartGlobal>
 
 namespace Ui {
 class OptionUi;
 class ApInfomation;
 }
+
+QT_CHARTS_BEGIN_NAMESPACE
+class QChart;
+class QChartView;
+class QPieSeries;
+class QPieSlice;
+QT_CHARTS_END_NAMESPACE
+
+QT_CHARTS_USE_NAMESPACE
 
 class Options : public BaseWidget
 {
@@ -35,6 +42,7 @@ signals:
     void fregChanged(int );
     void closeTimeChanged(int);
     void update_statusBar(QString);
+    void change_sync_status();
 
     void show_input(QString,QString);
     void send_input_key(quint8);    //专门的虚拟键盘事件
@@ -68,7 +76,12 @@ private:
     QStringList aplist;
     int current_ap_index;       //当前连接的AP序号
 
+    QChart *chart;
+    QPieSeries *m_series;
+    void reloadChart();         //重新读取chart数据
+
     void optionIni();
+    void spaceMangagementIni();     //初始化内存管理
     void wifi_connect();
     void saveOptions();
     void saveDatetime();

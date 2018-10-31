@@ -12,13 +12,14 @@
 #include "IO/SqlCfg/sqlcfg.h"
 #include "IO/Other/CPU/cpustatus.h"
 #include "IO/Other/battery.h"
+#include "Gui/Common/basewidget.h"
 
 
 namespace Ui {
 class DebugUi;
 }
 
-class DebugSet : public QFrame
+class DebugSet : public BaseWidget
 {
     Q_OBJECT
 public:
@@ -29,44 +30,32 @@ public slots:
     void trans_key(quint8 key_code);
 
 signals:
-    void fresh_parent();
     void fregChanged(int);      //频率设置变化
-    void send_key(quint8);
     void update_statusBar(QString);
-    void update_syncBar(bool);  //参数为false代表同步未成功,true为同步成功
-    void send_sync(qint64, qint64);     //发送过零点的秒和微秒(linux timeval格式)
 
 private slots:
     void fresh_rdb_data();
-    void fresh_hardware_status();
-    void fresh_sync();
 
 private:
-    struct SYNC_DATA{
-        struct timeval t;
-        float vcc;
-    };
+
 
     void iniUi();
     void iniPasswordUi();
     void fresh();       //刷新界面
     void resetPassword();
-    void saveSql();
-    void reload(); //从SQL读取数据至UI
+    void saveSql();     //保存参数
+    void reload();      //从SQL读取数据至UI
+    void do_key_ok();
+    void do_key_cancel();
     void do_key_left_right(int d);
     void do_key_up_down(int d);
 
-
-    CURRENT_KEY_VALUE *key_val;
     G_PARA *data;
     SQL_PARA sql_para;
-    QTimer *timer_rdb, *timer_hardware;
-    QTimer *timer_sync;                 //同步信号计时器
-    CPUStatus *cpu_status;
+    QTimer *timer_rdb;
     Battery *battery;
-    float sync_vcc;                     //同步信号电压
-    QVector<SYNC_DATA> sync_data;       //同步数据信号
-    QVector<timeval> zero_times;         //保存之前一系列过零点
+
+    int chk_status_h1, chk_status_h2;       //表示复选框fir和wavelet的选择状态,00代表两复选框都不选择,10代表fir选择,01代表wavelet选择
 
     QLabel *tab0, *tab1, *tab2, *tab3, *tab4;  //tab标签
 

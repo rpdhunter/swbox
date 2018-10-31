@@ -45,6 +45,7 @@ private:
     float DigFil_hp_32M(float invar, float initval, int setic);
     float DigFil_hp_35M(float invar, float initval, int setic);
 
+    float DigFil_lp_100Hz(float invar, float initval, int setic);
     float DigFil_lp_2M(float invar, float initval, int setic);
     float DigFil_lp_5M(float invar, float initval, int setic);
     float DigFil_lp_8M(float invar, float initval, int setic);

@@ -1,5 +1,5 @@
 ﻿#include "compute.h"
-#include "common.h"
+#include "Gui/Common/common.h"
 
 Compute::Compute(QObject *parent) : QObject(parent)
 {

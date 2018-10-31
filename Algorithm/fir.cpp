@@ -11,6 +11,14 @@ QVector<int> Fir::set_filter(QVector<int> wave, FILTER l)
         return wave;
     }
 
+    if(l == lp_100Hz){
+        QVector<int> zero;
+        zero.fill(0,16);
+        wave.append(zero);
+        wave = set_filter_origin(wave,l);
+        return wave.mid(8,wave.count()-16);
+    }
+
     QVector<int> zero;
     zero.fill(0,256);
     wave.append(zero);
@@ -123,7 +131,11 @@ QVector<float> Fir::set_filter_origin(QVector<float> wave, FILTER l)
         break;
 
 
-
+    case lp_100Hz:
+        for (int i = 0; i < wave.count(); ++i) {
+            wave [i] = DigFil_lp_100Hz((float)wave [i], (float)wave [i], !i);
+        }
+        break;
     case lp_2M:
         for (int i = 0; i < wave.count(); ++i) {
             wave [i] = DigFil_lp_2M ((float)wave [i], (float)wave [i], !i);
@@ -315,7 +327,11 @@ QVector<int> Fir::set_filter_origin(QVector<int> wave, FILTER l)
         break;
 
 
-
+    case lp_100Hz:
+        for (int i = 0; i < wave.count(); ++i) {
+            wave [i] = DigFil_lp_100Hz((float)wave [i], (float)wave [i], !i);
+        }
+        break;
     case lp_2M:
         for (int i = 0; i < wave.count(); ++i) {
             wave [i] = DigFil_lp_2M ((float)wave [i], (float)wave [i], !i);
@@ -1198,6 +1214,28 @@ float Fir::DigFil_hp_35M(float invar, float initval, int setic)
         }
         states[254] = invar;
         sumnum += states[254]*znum[0];
+        return sumnum;
+    }
+}
+
+float Fir::DigFil_lp_100Hz(float invar, float initval, int setic)
+{
+    float sumnum=0.0; int i=0;
+    static float states[15] = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
+    static float znum[8] = {
+        -3.471e-03,-4.851e-03,-4.246e-03,8.891e-03,4.424e-02,.1002,.1601,.1991
+    };
+    if (setic==1){
+        for (i=0;i<15;i++) states[i] = initval;
+        return initval;
+    }
+    else{
+        for (i=0;i<15;i++){
+            sumnum += states[i]*znum[i<8?i:15-i];
+            if (i<14) states[i] = states[i+1];
+        }
+        states[14] = invar;
+        sumnum += states[14]*znum[0];
         return sumnum;
     }
 }

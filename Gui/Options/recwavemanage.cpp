@@ -3,7 +3,7 @@
 #include <QtDebug>
 #include <QMessageBox>
 #include <QAbstractButton>
-#include "IO/Other/filetools.h"
+#include "IO/File/filetools.h"
 #include <QThreadPool>
 
 RecWaveManage::RecWaveManage(QWidget *parent) : BaseWidget(NULL, parent), ui(new Ui::Form)
@@ -97,7 +97,7 @@ void RecWaveManage::reload_tablewidget()
     QDir dir_favorite = QDir(DIR_FAVORITE);
 //    int r = tableWidget->currentRow();
     tableWidget->clear();
-    qDebug()<<dir;
+//    qDebug()<<dir;
 
     QStringList filters;
     filters << "*.DAT" ;

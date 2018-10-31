@@ -10,7 +10,7 @@
 #include <QMessageBox>
 
 #include "IO/Data/fifodata.h"
-//#include "IO/Com/Modbus/modbus.h"
+#include "IO/Sync/syncthread.h"
 #include "IO/Key/keydetect.h"
 #include "IO/SqlCfg/sqlcfg.h"
 #include "IO/Other/battery.h"
@@ -84,7 +84,7 @@ private:
     //3个线程
     KeyDetect *keydetect;
     FifoData *fifodata;
-//    Modbus *modbus;
+    SyncThread *syncThread;
 
     //12个逻辑通道
     TEVWidget *tev1_widget, *tev2_widget;

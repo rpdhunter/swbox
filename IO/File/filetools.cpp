@@ -3,7 +3,7 @@
 #include <QFile>
 #include <QDataStream>
 #include <QDateTime>
-//#include <QDir>
+#include "spacecontrol.h"
 
 #include "IO/SqlCfg/sqlcfg.h"
 #include "Gui/Common/common.h"
@@ -343,7 +343,7 @@ void FileTools::saveDataFile()
     bool flag;
 
     //保存文本文件
-#if 1
+#if 0
     file.setFileName(filepath + ".txt");
     flag = file.open(QIODevice::WriteOnly | QIODevice::Text);
     if(flag){
@@ -386,7 +386,7 @@ void FileTools::saveDataFile()
             }
         }
 
-        qDebug()<<tr("save %1 success").arg(filepath + ".DAT");
+//        qDebug()<<tr("save %1 success").arg(filepath + ".DAT");
 
 #if 0
         //拷贝到SD卡
@@ -603,6 +603,7 @@ void FileTools::spaceControl(QString str)
 
 //    qDebug()<<"max_rec_num:"<<sqlcfg->get_para()->max_rec_num << "\tcurrent"<<list.length();
 
+    //按文件数目删除
     if(list.length()>sqlcfg->get_para()->max_rec_num){
         for(int i=0;i<12;i++){          //删除12个文件
             QString s = list.at(list.length() - i - 1);
@@ -613,6 +614,11 @@ void FileTools::spaceControl(QString str)
             rm(dir, s + ".txt");
         }
     }
+
+    //按空间大小删除
+//    qDebug()<<"DIR_WAVE file size:"<<Common::dirFileSize(DIR_WAVE);
+    SpaceControl::file_bySize(str, 2e9);         //大于2G,开删
+
 }
 
 void FileTools::rm(QDir dir, QString s)

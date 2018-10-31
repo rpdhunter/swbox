@@ -221,6 +221,9 @@ void SqlCfg::tev_default(H_CHANNEL_SQL &sql)
     sql.offset_linearity = 0;
     sql.filter_hp = NONE;
     sql.filter_lp = NONE;
+    sql.filter_fir_fpga = false;
+    sql.filter_wavelet = false;
+    sql.mode_recognition = false;
 }
 
 void SqlCfg::hfct_default(H_CHANNEL_SQL &sql)
@@ -239,6 +242,9 @@ void SqlCfg::hfct_default(H_CHANNEL_SQL &sql)
     sql.offset_linearity = 0;
     sql.filter_hp = NONE;
     sql.filter_lp = NONE;
+    sql.filter_fir_fpga = false;
+    sql.filter_wavelet = false;
+    sql.mode_recognition = false;
 }
 
 void SqlCfg::uhf_default(H_CHANNEL_SQL &sql)
@@ -257,6 +263,9 @@ void SqlCfg::uhf_default(H_CHANNEL_SQL &sql)
     sql.offset_linearity = 0;
     sql.filter_hp = NONE;
     sql.filter_lp = NONE;
+    sql.filter_fir_fpga = false;
+    sql.filter_wavelet = false;
+    sql.mode_recognition = false;
 }
 
 void SqlCfg::aa_default(L_CHANNEL_SQL &sql)

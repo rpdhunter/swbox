@@ -48,7 +48,8 @@ private:
     void setScroll(int value);      //根据数值不同，改变显示内容
 
     void fresh();
-    double get_peak_freq(int i);     //返回坐标i附近的波峰频率
+    QString get_peak_freq(int current);     //返回坐标i附近的波峰频率
+    qreal get_zero(qreal x1, qreal y1, qreal x2, qreal y2);     //寻找过零点,返回过零点的横坐标
 
     MODE mode;
 

@@ -6,7 +6,7 @@
 #include <qwt_plot_curve.h>
 #include <qwt_scale_widget.h>
 #include <qwt_plot_layout.h>
-#include "IO/Other/filetools.h"
+#include "IO/File/filetools.h"
 #include <QThreadPool>
 #include "IO/Com/rdb/rdb.h"
 

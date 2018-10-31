@@ -2,20 +2,12 @@
 #define HFCTWIDGET_H
 
 #include "channelwidget.h"
-#include "Gui/Common/fir.h"
-#include "Gui/Algorithm/Bp/bpcable.h"
-//#include <dwt.h>
-//#include "dwt.h"
+#include "Algorithm/fir.h"
+#include "Algorithm/Bp/bpcable.h"
 
 namespace Ui {
 class HFCTWidget;
 }
-
-//using namespace std;
-//using namespace splab;
-
-
-//typedef float   Type;
 
 class HFCTWidget : public ChannelWidget
 {
@@ -40,10 +32,7 @@ private:
     Ui::HFCTWidget *ui;
     H_CHANNEL_SQL *hfct_sql;
     Fir *fir;
-
-#ifdef TEST_LAB
     BpCable *bpcable;
-#endif
 
     void do_key_ok();
     void do_key_up_down(int d);
@@ -63,8 +52,6 @@ private:
     MODE mode_continuous;
 
     QTimer *timer_test;
-
-//    DWT<Type> discreteWT("db4");
 };
 
 #endif // HFCTWIDGET_H

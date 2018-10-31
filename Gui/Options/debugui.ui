@@ -44,7 +44,7 @@
       <enum>QTabWidget::Rounded</enum>
      </property>
      <property name="currentIndex">
-      <number>4</number>
+      <number>0</number>
      </property>
      <property name="elideMode">
       <enum>Qt::ElideRight</enum>
@@ -53,41 +53,20 @@
       <attribute name="title">
        <string/>
       </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_2">
-       <property name="spacing">
-        <number>6</number>
-       </property>
-       <property name="leftMargin">
-        <number>20</number>
-       </property>
-       <property name="topMargin">
-        <number>9</number>
-       </property>
-       <property name="rightMargin">
-        <number>15</number>
-       </property>
-       <property name="bottomMargin">
-        <number>9</number>
-       </property>
+      <layout class="QVBoxLayout" name="verticalLayout">
        <item>
         <layout class="QGridLayout" name="gridLayout">
-         <property name="horizontalSpacing">
-          <number>10</number>
-         </property>
-         <property name="verticalSpacing">
-          <number>0</number>
-         </property>
-         <item row="2" column="1">
-          <widget class="QLabel" name="lab_Tev_offset2">
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_H1">
            <property name="text">
-            <string>噪声偏置</string>
+            <string>TEV1</string>
            </property>
            <property name="alignment">
-            <set>Qt::AlignCenter</set>
+            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
            </property>
           </widget>
          </item>
-         <item row="1" column="1">
+         <item row="0" column="1">
           <widget class="QLabel" name="lab_Tev_offset1">
            <property name="text">
             <string>中心偏置</string>
@@ -97,51 +76,7 @@
            </property>
           </widget>
          </item>
-         <item row="2" column="4">
-          <widget class="QLabel" name="lab_offset_noise_h1">
-           <property name="baseSize">
-            <size>
-             <width>20</width>
-             <height>0</height>
-            </size>
-           </property>
-           <property name="frameShape">
-            <enum>QFrame::Panel</enum>
-           </property>
-           <property name="frameShadow">
-            <enum>QFrame::Sunken</enum>
-           </property>
-           <property name="text">
-            <string notr="true">0</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="2">
-          <widget class="QLineEdit" name="lineEdit_H1_NOISE">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>80</width>
-             <height>22</height>
-            </size>
-           </property>
-           <property name="text">
-            <string notr="true">0</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="2">
+         <item row="0" column="2">
           <widget class="QLineEdit" name="lineEdit_H1_ZERO">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -156,14 +91,24 @@
             </size>
            </property>
            <property name="text">
-            <string notr="true">0</string>
+            <string notr="true"/>
            </property>
            <property name="alignment">
             <set>Qt::AlignCenter</set>
            </property>
           </widget>
          </item>
-         <item row="1" column="4">
+         <item row="0" column="3">
+          <widget class="QLabel" name="label_4">
+           <property name="text">
+            <string>参考值</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="4">
           <widget class="QLabel" name="lab_offset_zero_h1">
            <property name="baseSize">
             <size>
@@ -185,47 +130,10 @@
            </property>
           </widget>
          </item>
-         <item row="1" column="3">
-          <widget class="QLabel" name="label_4">
-           <property name="text">
-            <string>参考值</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="0">
-          <widget class="QLabel" name="label_H1">
-           <property name="text">
-            <string>TEV1</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <widget class="Line" name="line">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <layout class="QGridLayout" name="gridLayout_2">
-         <property name="horizontalSpacing">
-          <number>10</number>
-         </property>
-         <property name="verticalSpacing">
-          <number>0</number>
-         </property>
          <item row="1" column="1">
-          <widget class="QLabel" name="lab_Tev_offset1_3">
+          <widget class="QLabel" name="lab_noise_h1">
            <property name="text">
-            <string>中心偏置</string>
+            <string>噪声偏置</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignCenter</set>
@@ -233,7 +141,7 @@
           </widget>
          </item>
          <item row="1" column="2">
-          <widget class="QLineEdit" name="lineEdit_H2_ZERO">
+          <widget class="QLineEdit" name="lineEdit_H1_NOISE">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -247,25 +155,21 @@
             </size>
            </property>
            <property name="text">
-            <string notr="true">0</string>
+            <string notr="true"/>
            </property>
            <property name="alignment">
             <set>Qt::AlignCenter</set>
            </property>
           </widget>
          </item>
-         <item row="1" column="3">
-          <widget class="QLabel" name="label_9">
-           <property name="text">
-            <string>参考值</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-           </property>
-          </widget>
-         </item>
          <item row="1" column="4">
-          <widget class="QLabel" name="lab_offset_zero_h2">
+          <widget class="QLabel" name="lab_offset_noise_h1">
+           <property name="baseSize">
+            <size>
+             <width>20</width>
+             <height>0</height>
+            </size>
+           </property>
            <property name="frameShape">
             <enum>QFrame::Panel</enum>
            </property>
@@ -281,7 +185,142 @@
           </widget>
          </item>
          <item row="2" column="1">
-          <widget class="QLabel" name="lab_Tev_offset2_3">
+          <widget class="QLabel" name="lab_bp_h1">
+           <property name="text">
+            <string>模式识别</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="2">
+          <layout class="QHBoxLayout" name="layout_bp_h1">
+           <item>
+            <widget class="QRadioButton" name="rbt_bp_on_h1">
+             <property name="text">
+              <string>开</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="rbt_bp_off_h1">
+             <property name="text">
+              <string>关</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item row="3" column="1">
+          <widget class="QLabel" name="lab_filter_h1">
+           <property name="text">
+            <string>前置滤波</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="2">
+          <layout class="QHBoxLayout" name="horizontalLayout_5">
+           <item>
+            <widget class="QCheckBox" name="cbx_FIR_h1">
+             <property name="text">
+              <string>FIR</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="cbx_wavelet_h1">
+             <property name="text">
+              <string>小波</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="Line" name="line">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QGridLayout" name="gridLayout_2">
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_H2">
+           <property name="text">
+            <string>TEV2</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLabel" name="lab_Tev_offset1_3">
+           <property name="text">
+            <string>中心偏置</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="2">
+          <widget class="QLineEdit" name="lineEdit_H2_ZERO">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>80</width>
+             <height>22</height>
+            </size>
+           </property>
+           <property name="text">
+            <string notr="true"/>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="3">
+          <widget class="QLabel" name="label_9">
+           <property name="text">
+            <string>参考值</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="4">
+          <widget class="QLabel" name="lab_offset_zero_h2">
+           <property name="frameShape">
+            <enum>QFrame::Panel</enum>
+           </property>
+           <property name="frameShadow">
+            <enum>QFrame::Sunken</enum>
+           </property>
+           <property name="text">
+            <string notr="true">0</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QLabel" name="lab_noise_h2">
            <property name="text">
             <string>噪声偏置</string>
            </property>
@@ -290,7 +329,7 @@
            </property>
           </widget>
          </item>
-         <item row="2" column="2">
+         <item row="1" column="2">
           <widget class="QLineEdit" name="lineEdit_H2_NOISE">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -305,14 +344,14 @@
             </size>
            </property>
            <property name="text">
-            <string notr="true">0</string>
+            <string notr="true"/>
            </property>
            <property name="alignment">
             <set>Qt::AlignCenter</set>
            </property>
           </widget>
          </item>
-         <item row="2" column="4">
+         <item row="1" column="4">
           <widget class="QLabel" name="lab_offset_noise_h2">
            <property name="frameShape">
             <enum>QFrame::Panel</enum>
@@ -328,30 +367,63 @@
            </property>
           </widget>
          </item>
-         <item row="1" column="0">
-          <widget class="QLabel" name="label_H2">
+         <item row="2" column="1">
+          <widget class="QLabel" name="lab_bp_h2">
            <property name="text">
-            <string>TEV2</string>
+            <string>模式识别</string>
            </property>
            <property name="alignment">
-            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+            <set>Qt::AlignCenter</set>
            </property>
           </widget>
          </item>
+         <item row="2" column="2">
+          <layout class="QHBoxLayout" name="layout_bp_h2">
+           <item>
+            <widget class="QRadioButton" name="rbt_bp_on_h2">
+             <property name="text">
+              <string>开</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="rbt_bp_off_h2">
+             <property name="text">
+              <string>关</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item row="3" column="1">
+          <widget class="QLabel" name="lab_filter_h2">
+           <property name="text">
+            <string>前置滤波</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="2">
+          <layout class="QHBoxLayout" name="horizontalLayout_6">
+           <item>
+            <widget class="QCheckBox" name="cbx_FIR_h2">
+             <property name="text">
+              <string>FIR</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="cbx_wavelet_h2">
+             <property name="text">
+              <string>小波</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
         </layout>
-       </item>
-       <item>
-        <spacer name="verticalSpacer_3">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
-         </property>
-        </spacer>
        </item>
       </layout>
      </widget>
@@ -366,7 +438,7 @@
        <item>
         <layout class="QGridLayout" name="gridLayout_3">
          <item row="1" column="2">
-          <widget class="QLineEdit" name="lineEdit_AA1_offset">
+          <widget class="QLineEdit" name="lineEdit_L1_offset">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -379,7 +451,7 @@
           </widget>
          </item>
          <item row="0" column="2">
-          <widget class="QLineEdit" name="lineEdit_AA1_Step">
+          <widget class="QLineEdit" name="lineEdit_L1_Step">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -389,7 +461,7 @@
           </widget>
          </item>
          <item row="0" column="1">
-          <widget class="QLabel" name="label_3">
+          <widget class="QLabel" name="label_L1_SET1">
            <property name="text">
             <string>幅值变化门槛</string>
            </property>
@@ -410,7 +482,7 @@
           </widget>
          </item>
          <item row="1" column="4">
-          <widget class="QLabel" name="lab_offset_noise_aa1">
+          <widget class="QLabel" name="lab_offset_noise_L1">
            <property name="frameShape">
             <enum>QFrame::Panel</enum>
            </property>
@@ -435,14 +507,14 @@
             <number>3</number>
            </property>
            <item>
-            <widget class="QRadioButton" name="rbt_AA1_original">
+            <widget class="QRadioButton" name="rbt_L1_original">
              <property name="text">
               <string>原始值</string>
              </property>
             </widget>
            </item>
            <item>
-            <widget class="QRadioButton" name="rbt_AA1_envelope">
+            <widget class="QRadioButton" name="rbt_L1_envelope">
              <property name="text">
               <string>包络线</string>
              </property>
@@ -451,7 +523,7 @@
           </layout>
          </item>
          <item row="0" column="0">
-          <widget class="QLabel" name="label_AA1">
+          <widget class="QLabel" name="label_L1">
            <property name="text">
             <string>AA1</string>
            </property>
@@ -469,14 +541,14 @@
        <item>
         <layout class="QGridLayout" name="gridLayout_7">
          <item row="0" column="1">
-          <widget class="QLabel" name="label_6">
+          <widget class="QLabel" name="label_L2_SET1">
            <property name="text">
             <string>幅值变化门槛</string>
            </property>
           </widget>
          </item>
          <item row="1" column="4">
-          <widget class="QLabel" name="lab_offset_noise_aa2">
+          <widget class="QLabel" name="lab_offset_noise_L2">
            <property name="frameShape">
             <enum>QFrame::Panel</enum>
            </property>
@@ -489,7 +561,7 @@
           </widget>
          </item>
          <item row="1" column="2">
-          <widget class="QLineEdit" name="lineEdit_AA2_offset">
+          <widget class="QLineEdit" name="lineEdit_L2_offset">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -502,7 +574,7 @@
           </widget>
          </item>
          <item row="0" column="2">
-          <widget class="QLineEdit" name="lineEdit_AA2_Step">
+          <widget class="QLineEdit" name="lineEdit_L2_Step">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -531,14 +603,14 @@
             <number>3</number>
            </property>
            <item>
-            <widget class="QRadioButton" name="rbt_AA2_original">
+            <widget class="QRadioButton" name="rbt_L2_original">
              <property name="text">
               <string>原始值</string>
              </property>
             </widget>
            </item>
            <item>
-            <widget class="QRadioButton" name="rbt_AA2_envelope">
+            <widget class="QRadioButton" name="rbt_L2_envelope">
              <property name="text">
               <string>包络线</string>
              </property>
@@ -554,215 +626,9 @@
           </widget>
          </item>
          <item row="0" column="0">
-          <widget class="QLabel" name="label_AA2">
+          <widget class="QLabel" name="label_L2">
            <property name="text">
             <string>AA2</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="tab_AE">
-      <attribute name="title">
-       <string/>
-      </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_4">
-       <item>
-        <layout class="QGridLayout" name="gridLayout_9">
-         <item row="1" column="2">
-          <widget class="QLineEdit" name="lineEdit_AE1_offset">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="text">
-            <string/>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="2">
-          <widget class="QLineEdit" name="lineEdit_AE1_Sensor">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="1">
-          <widget class="QLabel" name="label_15">
-           <property name="text">
-            <string>传感器中心频率</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="3">
-          <widget class="QLabel" name="label_16">
-           <property name="text">
-            <string>参考值：</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="1">
-          <widget class="QLabel" name="label_17">
-           <property name="text">
-            <string>噪声偏置</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="4">
-          <widget class="QLabel" name="lab_offset_noise_ae1">
-           <property name="frameShape">
-            <enum>QFrame::Panel</enum>
-           </property>
-           <property name="frameShadow">
-            <enum>QFrame::Sunken</enum>
-           </property>
-           <property name="text">
-            <string notr="true">0</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="1">
-          <widget class="QLabel" name="label_18">
-           <property name="text">
-            <string>声音输出</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="2">
-          <layout class="QHBoxLayout" name="horizontalLayout_6">
-           <property name="spacing">
-            <number>3</number>
-           </property>
-           <item>
-            <widget class="QRadioButton" name="rbt_AE1_original">
-             <property name="text">
-              <string>原始值</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QRadioButton" name="rbt_AE1_envelope">
-             <property name="text">
-              <string>包络线</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-         <item row="0" column="0">
-          <widget class="QLabel" name="label_AE1">
-           <property name="text">
-            <string>AE1</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <widget class="Line" name="line_5">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <layout class="QGridLayout" name="gridLayout_8">
-         <item row="0" column="1">
-          <widget class="QLabel" name="label_11">
-           <property name="text">
-            <string>传感器中心频率</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="4">
-          <widget class="QLabel" name="lab_offset_noise_ae2">
-           <property name="frameShape">
-            <enum>QFrame::Panel</enum>
-           </property>
-           <property name="frameShadow">
-            <enum>QFrame::Sunken</enum>
-           </property>
-           <property name="text">
-            <string notr="true">0</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="2">
-          <widget class="QLineEdit" name="lineEdit_AE2_offset">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="text">
-            <string/>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="2">
-          <widget class="QLineEdit" name="lineEdit_AE2_Sensor">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="3">
-          <widget class="QLabel" name="label_12">
-           <property name="text">
-            <string>参考值：</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="1">
-          <widget class="QLabel" name="label_13">
-           <property name="text">
-            <string>噪声偏置</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="2">
-          <layout class="QHBoxLayout" name="horizontalLayout_5">
-           <property name="spacing">
-            <number>3</number>
-           </property>
-           <item>
-            <widget class="QRadioButton" name="rbt_AE2_original">
-             <property name="text">
-              <string>原始值</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QRadioButton" name="rbt_AE2_envelope">
-             <property name="text">
-              <string>包络线</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-         <item row="3" column="1">
-          <widget class="QLabel" name="label_14">
-           <property name="text">
-            <string>声音输出</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="0">
-          <widget class="QLabel" name="label_AE2">
-           <property name="text">
-            <string>AE2</string>
            </property>
           </widget>
          </item>

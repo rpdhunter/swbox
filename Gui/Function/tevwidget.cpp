@@ -97,7 +97,7 @@ void TEVWidget::do_key_ok()
         else{
             data->set_send_para(sp_auto_rec, 0);
             timer_rec_close_delay->start();
-//                data->set_send_para (sp_rec_on, 0);
+            //                data->set_send_para (sp_rec_on, 0);
         }
         break;
     case 9:
@@ -139,7 +139,7 @@ void TEVWidget::do_key_left_right(int d)
         break;
     case 6:
         Common::change_index(tev_sql->fpga_threshold, d * Common::code_value(1,mode), Common::code_value(100,mode), Common::code_value(2,mode) );
-//        tev_sql->fpga_threshold += Common::code_value(1,mode) * d;
+        //        tev_sql->fpga_threshold += Common::code_value(1,mode) * d;
         break;
     case 7:
         Common::change_index(tev_sql->pulse_time, d, MAX_PULSE_CNT, 1 );
@@ -196,7 +196,7 @@ void TEVWidget::calc_tev_value (double &tev_val, double &tev_db, int &pulse_cnt_
         pulse_cnt = data->recv_para_normal.hpulse1_totol;
     }
 
-//    qDebug()<<"pulse_cnt"<<pulse_cnt;
+    //    qDebug()<<"pulse_cnt"<<pulse_cnt;
 
     pulse_cnt_list.append(pulse_cnt);
     if(pulse_cnt_list.count() > MAX_PULSE_CNT){
@@ -218,7 +218,7 @@ void TEVWidget::calc_tev_value (double &tev_val, double &tev_db, int &pulse_cnt_
         d_min = data->recv_para_normal.hdata1.ad.ad_min;
     }
 
-//    qDebug()<<"d_max="<<d_max - 0x8000<<"\td_min="<<d_min - 0x8000 << "\ttev_sql->fpga_zero="<<tev_sql->fpga_zero;
+    //    qDebug()<<"d_max="<<d_max - 0x8000<<"\td_min="<<d_min - 0x8000 << "\ttev_sql->fpga_zero="<<tev_sql->fpga_zero;
 
     sug_zero_offset = ((d_max + d_min) / 2) - 0x8000;
 
@@ -234,7 +234,7 @@ void TEVWidget::calc_tev_value (double &tev_val, double &tev_db, int &pulse_cnt_
     if(pulse_cnt > 500000 && !amp_1000ms.isEmpty()){
         tev_db = Common::avrage(amp_1000ms);
         double k = Common::tev_freq_compensation(pulse_cnt);
-//        qDebug()<<"k="<<k;
+        //        qDebug()<<"k="<<k;
         tev_db += 20 * log10 (k);
     }
     amp_1000ms.clear();
@@ -390,43 +390,47 @@ void TEVWidget::fresh_100ms()
 //每一次脉冲数据,生成一个脉冲点
 void TEVWidget::fresh_1ms()
 {
-    if( group_num != short_data->time ){         //判断数据有效性
+    if( group_num != short_data->time  && short_data->empty == 0 && short_data->time != 0x55aa){         //判断数据有效性
         group_num = short_data->time;
-        if(short_data->empty == 0){              //0为有数据
-            if(token == 0){
-                return;
+        //        if(short_data->empty == 0){              //0为有数据
+        if(token == 0){
+            return;
+        }
+        else{
+            token--;
+        }
+        //拷贝数据
+        QVector<qint32> list;
+        for (int i = 0; i < 256; ++i) {
+            if(short_data->data[i] == 0x55aa){
+                break;
             }
             else{
-                token--;
-            }
-            //拷贝数据
-            QVector<qint32> list;
-            for (int i = 0; i < 256; ++i) {
-                if(short_data->data[i] == 0x55aa){
-                    break;
-                }
-                else{
-                    list.append(((qint32)short_data->data[i] - 0x8000 - tev_sql->fpga_zero));
-                }
-            }
-
-//            qDebug()<<"len = "<<list.count();
-
-            //分析数据
-            qint32 max = 0, min = 0;
-            foreach (qint32 l, list) {
-                max = MAX(max,l);
-                min = MIN(min,l);
-            }
-
-            if(qAbs(max) > qAbs(min)){
-                pulse_100ms.append(Compute::trans_data(short_data->time,max,mode));
-            }
-            else{
-                pulse_100ms.append(Compute::trans_data(short_data->time,min,mode));
+                list.append(((qint32)short_data->data[i] - 0x8000 - tev_sql->fpga_zero));
             }
         }
+
+        //            qDebug()<<"len = "<<list.count();
+
+        //分析数据
+        qint32 max = 0, min = 0;
+        foreach (qint32 l, list) {
+            max = MAX(max,l);
+            min = MIN(min,l);
+        }
+
+        if(qAbs(max) > qAbs(min)){
+            pulse_100ms.append(Compute::trans_data(short_data->time,max,mode));
+        }
+        else{
+            pulse_100ms.append(Compute::trans_data(short_data->time,min,mode));
+        }
+
+        if(pulse_100ms.last().x() < 5){
+            qDebug()<<"short_data->time:"<<short_data->time << '\t'<<pulse_100ms.last().x();
+        }
     }
+    //    }
 }
 
 

@@ -1,7 +1,7 @@
 ﻿#include "assetfilemanagement.h"
 #include <QtDebug>
 #include <QHeaderView>
-#include "IO/Other/report.h"
+#include "IO/File/report.h"
 
 #define DIR_NUM 3           //文件夹菜单条目数
 #define FILE_NUM 2          //文件菜单条目数

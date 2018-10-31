@@ -6,6 +6,7 @@
 #include <QPixmap>
 #include <QApplication>
 #include <QScreen>
+#include "IO/File/spacecontrol.h"
 
 #define LOW_POWER_TIMES     3
 #define TAB_NUM     7       //通道数量
@@ -37,6 +38,9 @@ MainWindow::MainWindow(QSplashScreen *sp, QWidget *parent ) :
     sp->showMessage(tr("正在初始化按键..."),Qt::AlignBottom|Qt::AlignLeft);
     keydetect = new KeyDetect(this);
     connect(keydetect, SIGNAL(sendkey(quint8)), this, SLOT(trans_key(quint8)));
+
+    sp->showMessage(tr("正在初始化同步..."),Qt::AlignBottom|Qt::AlignLeft);
+    syncThread = new SyncThread(this);
 
     sp->showMessage(tr("正在设置FPGA..."),Qt::AlignBottom|Qt::AlignLeft);
     fifodata = new FifoData(data);
@@ -75,6 +79,8 @@ MainWindow::MainWindow(QSplashScreen *sp, QWidget *parent ) :
 
     fifodata->start();                                      //开启数据线程
     keydetect->start();
+//    syncThread->start();
+//    SpaceControl::removeOldFile_smart();
 }
 
 MainWindow::~MainWindow()
@@ -454,6 +460,7 @@ void MainWindow::options_init()
     connect(options, SIGNAL(closeTimeChanged(int)), this, SLOT(set_reboot_time()) );
     connect(options,SIGNAL(fregChanged(int)),this,SLOT(fresh_status()) );
     connect(debugset,SIGNAL(update_statusBar(QString)), this, SLOT(show_message(QString)) );
+    connect(syncThread,SIGNAL(update_statusBar(QString)), this, SLOT(show_message(QString)) );
     //播放声音
     connect(recwavemanage,SIGNAL(play_voice(VectorList)),fifodata,SIGNAL(playVoiceData(VectorList)));
     connect(recwavemanage,SIGNAL(stop_play_voice()),fifodata,SIGNAL(stop_play_voice()));
@@ -468,7 +475,8 @@ void MainWindow::options_init()
     //状态栏
     connect(options,SIGNAL(show_wifi_icon(int)), this, SLOT(set_wifi_icon(int)) );
     //同步
-    connect(debugset, SIGNAL(send_sync(qint64,qint64)), fifodata, SIGNAL(send_sync(qint64,qint64)) );
+    connect(syncThread, SIGNAL(send_sync(qint64,qint64)), fifodata, SIGNAL(send_sync(qint64,qint64)) );
+    connect(options,SIGNAL(change_sync_status()), syncThread, SLOT(change_thread_status()));
 }
 
 void MainWindow::qml_init()
@@ -490,9 +498,10 @@ void MainWindow::trans_key(quint8 key_code)
     case KEY_OK:
         if(box->isVisible()){
             if(box->defaultButton() == box->button(QMessageBox::Ok)){
-                qDebug()<<"shut down!!!!!!!!!!!!";
                 save_channel();
-                data->set_send_para(sp_reboot,1);
+                SpaceControl::dir_byNum(DIR_ASSET_NORMAL, 500);         //设定存500个资产测量数据
+                system("reboot");
+//                data->set_send_para(sp_reboot,1);
             }
             box->hide();
             return;

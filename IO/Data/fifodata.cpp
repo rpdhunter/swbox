@@ -39,7 +39,7 @@ FifoData::FifoData(G_PARA *g_data)
     connect(this,SIGNAL(send_sync(qint64,qint64)),fifocontrol,SLOT(send_sync(qint64,qint64)) );
 
     /* Start qthread */
-//    this->start();
+    this->start();
 //    this->setPriority(QThread::TimeCriticalPriority);
 }
 
@@ -58,6 +58,9 @@ void FifoData::run(void)
 
 //    QTime t1 = QTime::currentTime(), t2;
 
+    data->recv_para_short1.empty = 1;           //初始化这两个值,目的是降低
+    data->recv_para_short2.empty = 1;
+
     while (true) {
         //慢速数据(100ms更新一次)
         if(read_slow){
@@ -70,8 +73,13 @@ void FifoData::run(void)
         //短脉冲数据
         if(sqlcfg->get_para()->menu_h1 != Disable){
             fifocontrol->read_fpga(sp_read_fpga_hfct1);
-            fifocontrol->read_short1_data();
+            ret = fifocontrol->read_short1_data();
+//            qDebug()<<"ret="<<ret;
             if(data->recv_para_short1.empty == 0){
+//                if(data->recv_para_short1.time == 0x55aa){
+//                    qDebug()<<"ret="<<ret;
+//                }
+
                 emit short1_update();
             }
         }
@@ -114,6 +122,7 @@ void FifoData::run(void)
         fifocontrol->read_fpga(sp_read_fpga_rec);
         usleep(delay_time);
         ret = fifocontrol->read_rec_data();
+//        qDebug()<<"ret = "<<ret;
         if(ret > 2 && data->recv_para_rec.recComplete > 0 && data->recv_para_rec.recComplete < 255){
 //            qDebug()<<"data->recv_para_rec.recComplete:"<<data->recv_para_rec.recComplete;
 //            qDebug()<<"ret = "<<ret;
@@ -149,7 +158,7 @@ void FifoData::run(void)
 //        }
 //        t1 = t2;
 
-//        qDebug()<<n << "\tdelay_time = "<< delay_time;
+//        qDebug() << "\tdelay_time = "<< delay_time;
 
     }
     exit(0);        //跳出循环，理论上永远不会执行此句？

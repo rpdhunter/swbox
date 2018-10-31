@@ -141,10 +141,10 @@ void RecWave::h_channel_rec_core()
     if (groupNum == GROUP_NUM_MAX) {        //接收组装数据完毕
         switch (channel) {
         case CHANNEL_H1:
-            data->set_send_para (sp_rec_start_h1, 0);		//数据上传开始
+            data->set_send_para (sp_rec_start_h1, 0);		//数据传输结束
             break;
         case CHANNEL_H2:
-            data->set_send_para (sp_rec_start_h2, 0);		//数据上传开始
+            data->set_send_para (sp_rec_start_h2, 0);		//数据传输结束
             break;
         default:
             break;
@@ -169,6 +169,7 @@ void RecWave::l_channel_rec_core()
 
         groupNum++;
         if (groupNum == 16){         //接受完16组数据，重新开始
+//        if (groupNum == 8){         //接受完16组数据，重新开始
             groupNum = 0;
         }
         data->set_send_para (sp_group_num, groupNum + groupNum_Offset);

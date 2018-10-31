@@ -4,6 +4,7 @@
 #include <QtDebug>
 #include "IO/SqlCfg/sqlcfg.h"
 #include "Gui/Common/common.h"
+#include "spacecontrol.h"
 
 
 LogTools::LogTools(MODE mode, QObject *parent) : QObject(parent)
@@ -69,7 +70,7 @@ void LogTools::dealRPRDLog(QVector<QwtPoint3D> points)
         return;
     }
     save_PRPD_zdit(points);
-    save_PRPD_State_Grid(points);
+//    save_PRPD_State_Grid(points);
 }
 
 void LogTools::save_PRPD_zdit(QVector<QwtPoint3D> points)
@@ -97,6 +98,8 @@ void LogTools::save_PRPD_zdit(QVector<QwtPoint3D> points)
         file.close();
         Common::create_hard_link(str_src, file_name);           //建立硬连接
     }
+
+    SpaceControl::file_bySize(DIR_PRPDLOG, 200e6);         //大于200M,开删
 }
 
 void LogTools::save_PRPD_State_Grid(QVector<QwtPoint3D> points)
@@ -193,6 +196,7 @@ void LogTools::save_log()
     write_normal_log(path_asset,data_asset);
 
     qDebug()<<"save_log"<<mode;
+
 }
 
 void LogTools::write_normal_log(QString path, QVector<LOG_DATA> log_data)
@@ -218,7 +222,8 @@ void LogTools::write_normal_log(QString path, QVector<LOG_DATA> log_data)
     }
     else{
         qDebug()<<"log file saved failed! ";
-    }
+    }    
+    SpaceControl::file_bySize(path, 200e6);         //大于200M,开删
 }
 
 

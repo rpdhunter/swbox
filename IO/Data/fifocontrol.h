@@ -2,6 +2,7 @@
 #define FIFOCONTROL_H
 
 #include <QObject>
+#include <QMutex>
 #include "zynq.h"
 #include "data.h"
 
@@ -19,8 +20,6 @@ public:
     void read_fpga(send_params sp_n);     //从FPGA读取数据的前置步骤
 
     int read_normal_data();
-    int read_prpd1_data();
-    int read_prpd2_data();
     int read_short1_data();
     int read_short2_data();
     int read_ae1_data();
@@ -37,7 +36,7 @@ public slots:
     void send_sync(qint64 s,qint64 u);       //发送同步信号
 
 signals:
-    void playVoiceProgress(int cur, int all, bool);        //返回播放声音的实时进度，前2个参数是播放进度，后一个是是否播完，0未播完，1播完
+    void playVoiceProgress(int cur, int all, bool);        //返回播放声音的实时进度，cur表示当前播放时间(s),all表示总长度(s)，后一个是是否播完，1未播完，0播完
 
 private:
     // send parameters' register map
@@ -104,8 +103,8 @@ private:
     G_PARA * tdata;
 
     //基地址群
-    volatile quint32 *vbase_normal, *vbase_send;
-    volatile quint32 *vbase_play_voice_1, *vbase_play_voice_2;
+    volatile quint32 *vbase_normal_recv, *vbase_normal_send;
+    volatile quint32 *vbase_play_voice, *vbase_play_voice_2;
     volatile quint32 *vbase_sync;
     volatile quint32 *vbase_hfct1, *vbase_hfct2;
     volatile quint32 *vbase_prpd1, *vbase_prpd2;
@@ -114,6 +113,8 @@ private:
 
     bool play_voice_flag;     //是否播放声音
     VectorList wave;    //保存播放的声音文件
+
+    QMutex mutex;
 };
 
 #endif // FIFOCONTROL_H

@@ -4,9 +4,9 @@
 #
 #-------------------------------------------------
 
-QT  += core gui widgets network
-QT  += serialport sql qml quick quickwidgets xml
-#QT += opengl
+QT  += core gui widgets
+QT  += network sql xml charts
+QT  += qml quick quickwidgets
 
 static{
     QTPLUGIN+=qtvirtualkeyboardplugin
@@ -22,16 +22,9 @@ DEFINES += AMG             #OEM
 #DEFINES += ZDIT            #OEM
 #DEFINES += NO_OEM           #OEM
 
-#DEFINES += TEST_LAB
-
+DEFINES += TEST_LAB
 
 TRANSLATIONS += trans/en.ts
-
-#if(contains(DEFINES,ARM)) {
-#    message( "Configuring for arm build..." )
-#} else {
-#    message( "Configuring for pc build..." )
-#}
 
 SOURCES += \
     IO/Data/fifodata.cpp \
@@ -57,34 +50,37 @@ SOURCES += \
     Gui/Common/recwaveform.cpp \
     Gui/Function/aewidget.cpp \
     Gui/mainwindow.cpp \
-    IO/Other/logtools.cpp \
-    IO/Other/filetools.cpp \
     IO/Data/reccontrol.cpp \
     IO/Data/fifocontrol.cpp \
     Gui/Qml/quickview.cpp \
     IO/Other/CPU/xadc_core.c \
     IO/Other/CPU/cpustatus.cpp \
     Gui/Common/prpsscene.cpp \
-    Gui/Common/fft.cpp \
     Gui/Function/uhfwidget.cpp \
     IO/Other/buzzer.cpp \
     Gui/Function/Asset/assetview.cpp \
     Gui/Function/Asset/assetmodel.cpp \
     Gui/Function/Asset/assetsql.cpp \
     Gui/Function/Asset/assetwidget.cpp \
-    Gui/Common/compute.cpp \
-    IO/Other/report.cpp \
     Gui/Function/Asset/assetfilemanagement.cpp \
-    Gui/Common/fir.cpp \
     IO/Other/cpu.c \
     Gui/Common/basewidget.cpp \
     Gui/Function/channelwidget.cpp \
     IO/Com/socket.cpp \
     IO/Com/rdb/gpio_oper.c \
     Gui/Common/wifipassword.cpp \
-    Gui/Algorithm/Bp/bp.cpp \
-    Gui/Algorithm/Bp/bpcable.cpp \
-    Gui/Algorithm/Wavelet/wavelet.cpp
+    IO/File/filetools.cpp \
+    IO/File/logtools.cpp \
+    IO/File/report.cpp \
+    Algorithm/Bp/bp.cpp \
+    Algorithm/Bp/bpcable.cpp \
+    Algorithm/Wavelet/wavelet.cpp \
+    Algorithm/compute.cpp \
+    Algorithm/fft.cpp \
+    Algorithm/fir.cpp \
+    IO/Sync/syncthread.cpp \
+    IO/File/spacecontrol.cpp \
+    IO/TempThread/cameradecode.cpp
 
 
 HEADERS  += \
@@ -116,8 +112,6 @@ HEADERS  += \
     Gui/Common/recwaveform.h \
     Gui/Function/aewidget.h \
     Gui/mainwindow.h \
-    IO/Other/logtools.h \
-    IO/Other/filetools.h \
     IO/Data/reccontrol.h \
     IO/Data/fifocontrol.h \
     Gui/Qml/quickview.h \
@@ -127,17 +121,13 @@ HEADERS  += \
     IO/Other/CPU/events.h \
     IO/Other/CPU/cpustatus.h \
     Gui/Common/prpsscene.h \
-    Gui/Common/fft.h \
     Gui/Function/uhfwidget.h \
     IO/Other/buzzer.h \
     Gui/Function/Asset/assetview.h \
     Gui/Function/Asset/assetmodel.h \
     Gui/Function/Asset/assetsql.h \
     Gui/Function/Asset/assetwidget.h \
-    Gui/Common/compute.h \
-    IO/Other/report.h \
     Gui/Function/Asset/assetfilemanagement.h \
-    Gui/Common/fir.h \
     IO/Other/cpu.h \
     Gui/Common/basewidget.h \
     Gui/Function/channelwidget.h \
@@ -145,9 +135,18 @@ HEADERS  += \
     IO/Com/rdb/global_define.h \
     IO/Com/rdb/gpio_oper.h \
     Gui/Common/wifipassword.h \
-    Gui/Algorithm/Bp/bp.h \
-    Gui/Algorithm/Bp/bpcable.h \
-    Gui/Algorithm/Wavelet/wavelet.h
+    IO/File/filetools.h \
+    IO/File/logtools.h \
+    IO/File/report.h \
+    Algorithm/Bp/bp.h \
+    Algorithm/Bp/bpcable.h \
+    Algorithm/Wavelet/wavelet.h \
+    Algorithm/compute.h \
+    Algorithm/fft.h \
+    Algorithm/fir.h \
+    IO/Sync/syncthread.h \
+    IO/File/spacecontrol.h \
+    IO/TempThread/cameradecode.h
 
 FORMS += \
     Gui/Function/tevwidget.ui \
@@ -178,7 +177,7 @@ DISTFILES += \
 
 ################################################################################
 
-#qwt
+#qwt & sqlite3
 INCLUDEPATH += \
     /usr/local/qwt-6.1.3/include \
     /usr/local/sqlite3/include
@@ -192,17 +191,39 @@ INCLUDEPATH += $$PWD/../../../../pub/toolchain/arm-xilinx-linux-gnueabi-4.9.2/ar
 DEPENDPATH += $$PWD/../../../../pub/toolchain/arm-xilinx-linux-gnueabi-4.9.2/arm-xilinx-linux-gnueabi/libc/usr/include
 unix:!macx: PRE_TARGETDEPS += $$PWD/../../../../pub/toolchain/arm-xilinx-linux-gnueabi-4.9.2/arm-xilinx-linux-gnueabi/libc/usr/lib/libpthread.a
 
-#NE10
+#FFT-NE10
 unix:!macx: LIBS += -L$$PWD/lib/ -lNE10
 INCLUDEPATH += $$PWD/lib/NE10
 DEPENDPATH += $$PWD/lib/NE10
 unix:!macx: PRE_TARGETDEPS += $$PWD/lib/libNE10.a
 
-#小波变换
+#小波变换-SP++3.0
 unix:!macx: LIBS += -L$$PWD/../../../disk1/lib/SP++3.0/lib/ -lfftw3
 INCLUDEPATH += $$PWD/../../../disk1/lib/SP++3.0/include
 DEPENDPATH += $$PWD/../../../disk1/lib/SP++3.0/include
 unix:!macx: PRE_TARGETDEPS += $$PWD/../../../disk1/lib/SP++3.0/lib/libfftw3.a
+
+#视频解码-ffmpeg4.0.2
+#INCLUDEPATH += /usr/local/ffmpeg/include
+#LIBS += /usr/local/ffmpeg/lib/avcodec.a\
+#        /usr/local/ffmpeg/lib/avdevice.a\
+#        /usr/local/ffmpeg/lib/avfilter.a\
+#        /usr/local/ffmpeg/lib/avformat.a\
+#        /usr/local/ffmpeg/lib/avutil.a\
+#        /usr/local/ffmpeg/lib/postproc.a\
+#        /usr/local/ffmpeg/lib/swresample.a\
+#        /usr/local/ffmpeg/lib/swscale.a
+INCLUDEPATH += $$/usr/local/ffmpeg/include
+DEPENDPATH += $$/usr/local/ffmpeg/include
+
+LIBS += -L$$/usr/local/ffmpeg/lib/ -lavcodec\
+        -L$$/usr/local/ffmpeg/lib/ -lavdevice\
+        -L$$/usr/local/ffmpeg/lib/ -lavfilter\
+        -L$$/usr/local/ffmpeg/lib/ -lavformat\
+        -L$$/usr/local/ffmpeg/lib/ -lavutil\
+        -L$$/usr/local/ffmpeg/lib/ -lpostproc\
+        -L$$/usr/local/ffmpeg/lib/ -lswresample\
+        -L$$/usr/local/ffmpeg/lib/ -lswscale
 
 
 

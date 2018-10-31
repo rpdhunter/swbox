@@ -1,4 +1,4 @@
-#include "cpustatus.h"
+﻿#include "cpustatus.h"
 
 //#define VVPN_ZERO   0
 //#define VVPN_ZERO   489
@@ -32,7 +32,7 @@ int CPUStatus::get_cpu_vcc(float *cpu_vcc)
     return 0;
 }
 
-int CPUStatus::get_vvpn(float *vvpn)
+int CPUStatus::get_sync_vvpn(float *vvpn)
 {
     if (vvpn != NULL) {
         * vvpn = xadc_touch (command_list [EParamVVpn].parameter_id) - VVPN_ZERO;

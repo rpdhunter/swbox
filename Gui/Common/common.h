@@ -148,6 +148,8 @@ public:
     static void adjust_filter_list(QList<int> &list, double cut_off_low, double cut_off_high);      //修正滤波器的可选范围
     static int time_interval(struct timeval start_time, struct timeval stop_time);      //返回两时间间隔(us)
     static void time_addusec(struct timeval &time, int usec);                //添加微秒数,可为负值
+//    static quint64 dirFileSize(const QString &path);                //返回路径文件夹大小
+//    static QString
 };
 
 #endif // COMMON_H

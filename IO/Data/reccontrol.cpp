@@ -1,12 +1,12 @@
 ﻿#include "reccontrol.h"
 #include <QtDebug>
-#include "IO/Other/filetools.h"
+#include "IO/File/filetools.h"
 #include <QThreadPool>
 #include "IO/SqlCfg/sqlcfg.h"
-#include "Gui/Common/fft.h"
+#include "Algorithm/fft.h"
 #include "Gui/Common/common.h"
-#include "Gui/Common/fir.h"
-#include "Gui/Algorithm/Wavelet/wavelet.h"
+#include "Algorithm/fir.h"
+#include "Algorithm/Wavelet/wavelet.h"
 
 RecControl::RecControl(G_PARA *g_data, FifoControl *fifocontrol, QObject *parent) : QObject(parent)
 {
@@ -124,8 +124,10 @@ void RecControl::recv_rec_data()
     }
 
     //如果是自动录波,需要改变模式
-    if(this->_mode == Disable && mode != Disable){
-        if(this->_mode != HFCT1_CONTINUOUS && this->_mode != HFCT2_CONTINUOUS && this->_mode != Double_Channel){     //自动录波且非连续录波
+    if(this->_mode == Disable && mode != Disable){          //判自动录波
+        //自动录波且非连续录波,且录波通道没被占用(这里困扰了很长时间,不加这个判断会出现波形不完整的bug,解决时间:2018-9-17)
+        if(this->_mode != HFCT1_CONTINUOUS && this->_mode != HFCT2_CONTINUOUS && this->_mode != Double_Channel
+                && channel_h1->status == RecWave::Free && channel_h2->status == RecWave::Free ){
             if(timer_interval == NULL){         //首次运行,初始化
                 timer_interval = new QTimer;
                 timer_interval->setSingleShot(true);

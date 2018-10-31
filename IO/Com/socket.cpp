@@ -4,38 +4,30 @@ Socket::Socket(QObject *parent) : QObject(parent)
 {
     mSocket = new QUdpSocket();
     connect(mSocket,SIGNAL(readyRead()),this,SLOT(read_data()));
-}
 
-void Socket::wifi_set_baud(int b)
-{
-    send_data(QString("wifi:baud:%1").arg(b) );
-}
+    mSocket_data = new QUdpSocket();
+    mSocket_data->bind(6205);
+    connect(mSocket_data,SIGNAL(readyRead()),this,SLOT(read_data1()));
 
-void Socket::wifi_set_mode(WIFI_MODE mode)
-{
-    switch (mode) {
-    case WIFI_AP:
-        send_data("wifi:apsta:AP");
-        break;
-    case WIFI_STA:
-        send_data("wifi:apsta:STA");
-        break;
-    case WIFI_APSTA:
-        send_data("wifi:apsta:APSTA");
-        break;
-    default:
-        break;
-    }
+//    buf0 = (char *)malloc(3e6);
+//    buf1 = (char *)malloc(3e6);
+//    buf2 = (char *)malloc(3e6);
+
+//    flag0 = false;
+//    flag1 = false;
+//    flag2 = false;
+
+    flag = 0;
 }
 
 void Socket::wifi_aplist()
 {
-    send_data("wifi:aplist");
+    send_data("wifi:aplist",6666);
 }
 
 void Socket::wifi_connect_route(QString name, QString key)
 {
-    send_data(QString("wifi:route:%1,WPA2PSK,AES,%2,DHCP").arg(name).arg(key));
+    send_data(QString("wifi:route:%1,WPA2PSK,AES,%2,DHCP").arg(name).arg(key),6666);
 }
 
 void Socket::wifi_create_ap(QString name, QString key, QString gateway, QString mask)
@@ -46,40 +38,27 @@ void Socket::wifi_create_ap(QString name, QString key, QString gateway, QString 
     if(mask.isEmpty()){
         mask = "255.255.255.0";
     }
-    send_data(QString("wifi:ap:%1,%2,%3,%4").arg(name).arg(key).arg(gateway).arg(mask));
+    send_data(QString("wifi:ap:%1,%2,%3,%4").arg(name).arg(key).arg(gateway).arg(mask),6666);
 }
 
-void Socket::telnet_start(int baud, int port)
+void Socket::open_camera()
 {
-    send_data(QString("telnet:start:%1,TCP,server,%2").arg(baud).arg(port));
+    qDebug()<<"open_camera";
+    char buf1[5] ={0xeb,0x90,0xeb,0x90,0x55};
+    QByteArray str(buf1);
+    qint64 len = mSocket->writeDatagram(str,QHostAddress::LocalHost,6200);
+    if(len<0){
+        qDebug()<<"Socket error : "<<mSocket->errorString();
+    }
 }
 
-void Socket::telnet_stop()
+void Socket::close_camera()
 {
-    send_data("telnet:stop");
+    qDebug()<<"close_camera";
+    send_data(QString::number(0xeb90eb90aa,16),6200);
 }
 
-void Socket::ftp_start(int baud, int port)
-{
-    send_data(QString("ftp:start:%1,TCP,server,%2").arg(baud).arg(port));
-}
-
-void Socket::ftp_stop()
-{
-    send_data("ftp:stop");
-}
-
-void Socket::_104_start(int baud, int port)
-{
-    send_data(QString("104:start:%1,TCP,server,%2").arg(baud).arg(port));
-}
-
-void Socket::_104_stop()
-{
-    send_data("104:stop");
-}
-
-void Socket::send_data(QString str)
+void Socket::send_data(QString str, int port)
 {
     //单播
 //     qint64 len = mSocket->writeDatagram(ui->textEdit->toPlainText().toUtf8(),QHostAddress("192.168.20.17"),6666);
@@ -93,7 +72,7 @@ void Socket::send_data(QString str)
 
 //    qint64 len = mSocket->writeDatagram("222",QHostAddress::Broadcast,6666);
 
-    qint64 len = mSocket->writeDatagram(str.toUtf8(),QHostAddress::LocalHost,6666);
+    qint64 len = mSocket->writeDatagram(str.toUtf8(),QHostAddress::LocalHost,port);
     qDebug()<<"Socket writeDatagram : "<<str.toUtf8();
     if(len<0){
         qDebug()<<"Socket error : "<<mSocket->errorString();
@@ -102,46 +81,100 @@ void Socket::send_data(QString str)
 
 void Socket::read_data()
 {
-//    qDebug()<<"get Socket data";
+    qDebug()<<"get Socket data";
     QByteArray array;
     QHostAddress address;
     quint16 port;
     array.resize(mSocket->bytesAvailable());//根据可读数据来设置空间大小
     int len = mSocket->readDatagram(array.data(),array.size(),&address,&port); //读取数据
     qDebug()<<"recv len = "<<len  << "\taddress: "<< address << "\tport: "<< port << "\ndata: "<<array.data();
+}
+
+//接收摄像头数据,并组装发送
+//数据使用UDPSocket侦听6205端口
+//一个完整的包(包含一帧图像)可能由不止一次UDP报文组成
+//UDP报文最大为8192个数据,所以认为如果数据不满8192个即是尾包
+//算法不完美,但出错概率较低
+void Socket::read_data1()
+{
 
 
-    QString str(array.data());
-    qDebug()<<str;
-    QStringList list;
-    list = str.split(",");
-    if(list.first() == "AP"){                       //累计APList
-        aplist.append(str);
+#if 0
+
+    QByteArray array;
+    QHostAddress address;
+    quint16 port;
+    array.resize(mSocket_data->bytesAvailable());//根据可读数据来设置空间大小
+    int len = mSocket_data->readDatagram(array.data(),array.size(),&address,&port); //读取数据
+    //    qDebug()<<"recv len = "<<len  << "\taddress: "<< address << "\tport: "<< port /*<< "\ndata: "<<array.data()*/;
+    buf_data.append(array);
+    if(len != 8192){
+        QByteArray a = buf_data;
+
+        emit s_camera_packet(a);         //发送一个数据包(包含完整的一帧)
+        buf_data.clear();           //这里可能会有问题,需要测试,如果不行,需要做显式拷贝
     }
-    else if(list.first() == "APLISTEND"){           //发送APList
-        emit s_wifi_aplist(true,aplist);
-        aplist.clear();
+#endif
+
+//    qDebug()<<"get Socket data, flag=" << flag;
+
+    QByteArray array;
+    QHostAddress address;
+    quint16 port;
+    array.resize(mSocket_data->bytesAvailable());//根据可读数据来设置空间大小
+    int len = mSocket_data->readDatagram(array.data(),array.size(),&address,&port); //读取数据
+
+    switch (flag) {
+    case 0:
+        buf_data0.append(array);
+        if(len != 8192){
+            emit s_camera_packet(buf_data0, 0);         //发送一个数据包(包含完整的一帧)
+
+            flag ++ ;
+        }
+        break;
+    case 1:
+        buf_data1.append(array);
+        if(len != 8192){
+            emit s_camera_packet(buf_data1, 1);         //发送一个数据包(包含完整的一帧)
+
+            flag ++ ;
+        }
+        break;
+    case 2:
+        buf_data2.append(array);
+        if(len != 8192){
+            emit s_camera_packet(buf_data2, 2);         //发送一个数据包(包含完整的一帧)
+
+            flag = 0 ;
+        }
+        break;
+    default:
+        break;
     }
-    else if(list.first() == "wifi_baud"){           //验证波特率
-        bool b = list.at(1) == "OK" ? true : false;
-        emit s_wifi_set_baud(b);
-    }
-    else if(list.first() == "wifi_apsta"){           //验证wifi模式
-        bool b = list.at(1) == "OK" ? true : false;
-        emit s_wifi_set_mode(b);
-    }
-    else if(list.first() == "wifi_route"){           //验证连接路由
-        bool b = list.at(1) == "OK" ? true : false;
-        list.removeFirst();
-        list.removeFirst();
-        s_wifi_connect_route(b,list);
-//        if(list.at(1) == "password_is_error"){
-//            qDebug()<<"password_is_error";
-//        }
-    }
-    else if(list.first() == "wifi_ap"){
-        bool b = list.at(1) == "OK" ? true : false;
-        emit s_wifi_create_ap(b);
+
+
+
+    //    qDebug()<<"recv len = "<<len  << "\taddress: "<< address << "\tport: "<< port /*<< "\ndata: "<<array.data()*/;
+}
+
+void Socket::read_done(int f)
+{
+    switch (f) {
+    case 0:
+        buf_data0.clear();
+//        qDebug()<<" buf_data0.clear()";
+        break;
+    case 1:
+        buf_data1.clear();
+//        qDebug()<<" buf_data1.clear()";
+        break;
+    case 2:
+        buf_data2.clear();
+//        qDebug()<<" buf_data2.clear()";
+        break;
+    default:
+        break;
     }
 }
 

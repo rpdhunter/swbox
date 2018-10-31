@@ -2,7 +2,7 @@
 #include <QtDebug>
 #include <QFile>
 #include <QScrollBar>
-#include "IO/Other/filetools.h"
+#include "IO/File/filetools.h"
 #include <QThreadPool>
 
 #include <qwt_plot_curve.h>
@@ -133,7 +133,6 @@ void RecWaveForm::working(CURRENT_KEY_VALUE *val,VectorList buf, MODE mod)
     }
     mode = mod;
     plot->setTitle(tr("按OK键寻找峰值"));
-
     start_work(buf,mod);
 }
 
@@ -314,15 +313,15 @@ void RecWaveForm::set_canvas()
     }
 
     d_marker_peak_max->setValue(wave1.at(max_i));
-    QString label;
-    label.sprintf( "max %.3g", wave1.at(max_i).y() );
-    QwtText text( label );
+    QString label1;
+    label1.sprintf( "max %.3g  ", wave1.at(max_i).y() );
+    QwtText text( label1 + get_peak_freq(max_i));
     text.setColor( Qt::darkYellow );
     d_marker_peak_max->setLabel( text );
 
     d_marker_peak_min->setValue(wave1.at(min_i));
-    label.sprintf( "min %.3g", wave1.at(min_i).y() );
-    text.setText(label);
+    label1.sprintf( "min %.3g  ", wave1.at(min_i).y() );
+    text.setText(label1 + get_peak_freq(min_i));
     d_marker_peak_min->setLabel( text );
 
     plot->setAxisScale(QwtPlot::yLeft, min, max);
@@ -330,7 +329,8 @@ void RecWaveForm::set_canvas()
     plot->axisWidget(QwtPlot::xBottom)->setMargin(0);
     plot->axisWidget(QwtPlot::yLeft)->setMargin(0);
     plot->axisWidget(QwtPlot::yLeft)->setSpacing(10);
-    if(mode == AA1 || mode == AA2 || mode == AE1 || mode == AE2){
+    if(mode == AA1 || mode == AA2 || mode == AE1 || mode == AE2
+            || mode == AA1_ENVELOPE || mode == AA2_ENVELOPE || mode == AE1_ENVELOPE || mode == AE2_ENVELOPE){
         plot->axisWidget(QwtPlot::xBottom)->setTitle("ms");
         plot->axisWidget(QwtPlot::yLeft)->setTitle("V u");
     }
@@ -368,14 +368,14 @@ void RecWaveForm::find_peaks()
                 continue;
             }
         }
-        a = (wave1.at(j).y() > d_marker_threshold1->yValue())
+        a = (wave1.at(j).y() > d_marker_threshold1->yValue())       //极大值存在
                 && (wave1.at(j).y() > wave1.at(j1).y())
                 && (wave1.at(j).y() > wave1.at(j2).y());
-        b = (wave1.at(j).y() < d_marker_threshold2->yValue())
+        b = (wave1.at(j).y() < d_marker_threshold2->yValue())       //极小值存在
                 && (wave1.at(j).y() < wave1.at(j1).y())
                 && (wave1.at(j).y() < wave1.at(j2).y());
 
-        if( a || b){
+        if( a || b){            //j就是极值点
             x = j-100;
             if(x < 0){
                 x = 0;
@@ -383,7 +383,7 @@ void RecWaveForm::find_peaks()
             d_marker_peak->setValue(wave1.at(j));
             QString label;
             label.sprintf( "peak %.3g", wave1.at(j).y() );
-            QwtText text( label );
+            QwtText text( label  + get_peak_freq(j));
             text.setColor( Qt::darkGreen );
             d_marker_peak->setLabel( text );
             qDebug()<<"find peaks!"<<wave1.at(j);
@@ -441,10 +441,136 @@ void RecWaveForm::fresh()
     plot->replot();
 }
 
-double RecWaveForm::get_peak_freq(int i)
+/*****************************************************
+ * 智能计算一个波峰的等效频率
+ * 从波峰开始,分别向前向后寻找波形起点/终点
+ * 原则:
+ * 1.区分正波和负波,分别计算
+ * 2.如果遇到过零点,波形结束,根据线性插值算出过零点坐标
+ * 3.如果在过零点前,且在上下阈值范围之内,得到一个新的极值,则放弃寻找过零点,波形提前结束
+ * ****************************************************/
+QString RecWaveForm::get_peak_freq(int current)
 {
+    int front = current-1, back =  current+1;
+    qreal x1,x2,x3,y1,y2,y3,t1=0,t2=0;
 
+    if(wave1.at(current).y() > 0){      //正值波
+        while (front > 0) {                                         //寻找前极值点
+            x1 = wave1.at(front-1).x();
+            x2 = wave1.at(front).x();
+            x3 = wave1.at(front+1).x();
+            y1 = wave1.at(front-1).y();
+            y2 = wave1.at(front).y();
+            y3 = wave1.at(front+1).y();
+            if( y2 * y1 <= 0){                      //过零点
+                t1 = get_zero(x1, y1, x2, y2);
+                break;
+            }
+            else if( y2<=y1 && y2<=y3 && y2<d_marker_threshold1->yValue()){      //找到前极值点
+                t1 = x2;
+                break;
+            }
+            else{
+                t1 = x2;
+                front--;
+            }
+        }
+        while (back < wave1.count() - 1) {                                  //寻找后极值点
+            x1 = wave1.at(back-1).x();
+            x2 = wave1.at(back).x();
+            x3 = wave1.at(back+1).x();
+            y1 = wave1.at(back-1).y();
+            y2 = wave1.at(back).y();
+            y3 = wave1.at(back+1).y();
+            if( y2 * y3 <= 0){                      //过零点
+                t2 = get_zero(x2, y2, x3, y3);
+                break;
+            }
+            else if( y2<=y1 && y2<=y3 && y2<d_marker_threshold1->yValue()){      //找到后极值点
+                t2 = x2;
+                break;
+            }
+            else{
+                t2 = x2;
+                back++;
+            }
+        }
+    }
+    else if(wave1.at(current).y() < 0){ //负值波
+        while (front > 0) {                                         //寻找前极值点
+            x1 = wave1.at(front-1).x();
+            x2 = wave1.at(front).x();
+            x3 = wave1.at(front+1).x();
+            y1 = wave1.at(front-1).y();
+            y2 = wave1.at(front).y();
+            y3 = wave1.at(front+1).y();
+            if( y2 * y1 <= 0){                      //过零点
+                t1 = get_zero(x1, y1, x2, y2);
+                break;
+            }
+            else if( y2>=y1 && y2>=y3 && y2>d_marker_threshold2->yValue()){      //找到前极值点
+                t1 = x2;
+                break;
+            }
+            else{
+                t1 = x2;
+                front--;
+            }
+        }
+        while (back < wave1.count() - 1) {                                  //寻找后极值点
+            x1 = wave1.at(back-1).x();
+            x2 = wave1.at(back).x();
+            x3 = wave1.at(back+1).x();
+            y1 = wave1.at(back-1).y();
+            y2 = wave1.at(back).y();
+            y3 = wave1.at(back+1).y();
+            if( y2 * y3 <= 0){                      //过零点
+                t2 = get_zero(x2, y2, x3, y3);
+                break;
+            }
+            else if( y2>=y1 && y2>=y3 && y2>d_marker_threshold2->yValue()){      //找到后极值点
+                t2 = x2;
+                break;
+            }
+            else{
+                t2 = x2;
+                back++;
+            }
+        }
+    }
+    qreal T = t2 - t1;     //周期(近似值)
+    qDebug()<<"T="<<T << "\tT1="<<t1<<"\tT2="<<t2;
+    qreal F = 1 / T;        //频率(近似值)
+    QString str;
+    str.sprintf( "freq %.3g", F );
+    if(mode == AA1 || mode == AA2 || mode == AE1 || mode == AE2
+            || mode == AA1_ENVELOPE || mode == AA2_ENVELOPE || mode == AE1_ENVELOPE || mode == AE2_ENVELOPE){
+        str.append("KHz");
+    }
+    else{
+        str.append("MHz");
+    }
+    return str;
 }
+
+qreal RecWaveForm::get_zero(qreal x1, qreal y1, qreal x2, qreal y2)
+{
+    qreal t1;
+    if(y1 == 0 && y2 == 0){
+        t1 = x2;
+    }
+    else{
+        t1 = (x1*y2 - y1*x2) / (y2 - y1);
+    }
+    return t1;
+}
+
+
+
+
+
+
+
 
 
 

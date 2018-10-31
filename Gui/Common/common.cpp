@@ -584,33 +584,41 @@ QString Common::MODE_toString(MODE val)
 
 void Common::write_fpga_offset_debug(G_PARA *data)
 {
+    int h1=0, h2=0;
     switch (sqlcfg->get_para()->menu_h1) {
     case TEV1:
         data->set_send_para (sp_h1_zero, 0x8000 + sqlcfg->get_para()->tev1_sql.fpga_zero );
+        h1 = sqlcfg->get_para()->tev1_sql.filter_fir_fpga;
         break;
     case HFCT1:
         data->set_send_para (sp_h1_zero, 0x8000 + sqlcfg->get_para()->hfct1_sql.fpga_zero );
+        h1 = sqlcfg->get_para()->hfct1_sql.filter_fir_fpga;
         break;
     case UHF1:
         data->set_send_para (sp_h1_zero, 0x8000 + sqlcfg->get_para()->uhf1_sql.fpga_zero );
+        h1 = sqlcfg->get_para()->uhf1_sql.filter_fir_fpga;
         break;
     default:
         break;
-    }
+    }    
 
     switch (sqlcfg->get_para()->menu_h2) {
     case TEV2:
         data->set_send_para (sp_h2_zero, 0x8000 + sqlcfg->get_para()->tev2_sql.fpga_zero );
+        h2 = sqlcfg->get_para()->tev2_sql.filter_fir_fpga;
         break;
     case HFCT2:
         data->set_send_para (sp_h2_zero, 0x8000 + sqlcfg->get_para()->hfct2_sql.fpga_zero );
+        h2 = sqlcfg->get_para()->hfct2_sql.filter_fir_fpga;
         break;
     case UHF2:
         data->set_send_para (sp_h2_zero, 0x8000 + sqlcfg->get_para()->uhf2_sql.fpga_zero );
+        h2 = sqlcfg->get_para()->uhf2_sql.filter_fir_fpga;
         break;
     default:
         break;
     }
+    data->set_send_para(sp_filter_mode, h1 + (h2<<8) );
 
     switch (sqlcfg->get_para()->menu_l1) {
     case AA1:
@@ -1107,6 +1115,8 @@ QString Common::filter_to_string(int f)
         return "32M";
     case hp_35M:
         return "35M";
+    case lp_100Hz:
+        return "100Hz";
     case lp_2M:
         return "2M";
     case lp_5M:
@@ -1189,6 +1199,8 @@ double Common::filter_to_number(int f)
         return 32;
     case hp_35M:
         return 35;
+    case lp_100Hz:
+        return 100e-6;
     case lp_2M:
         return 2;
     case lp_5M:
@@ -1262,7 +1274,6 @@ void Common::time_addusec(timeval &time, int usec)
     time.tv_sec += s;
     time.tv_usec = u;
 }
-
 
 
 

@@ -19,6 +19,18 @@ AAWidget::AAWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu_ind
     reload(-1);
     chart_ini();
     reload(menu_index);
+
+    socket = new Socket;
+    socket->open_camera();
+    decode = new CameraDecode;
+
+    connect(socket, SIGNAL(s_camera_packet(QByteArray,int)), decode, SLOT(getOnePacket(QByteArray, int)));      //socket-->解码器
+    connect(decode,SIGNAL(sigGetOneFrame(QImage)),this,SLOT(slotGetOneFrame(QImage)));                          //解码器-->主界面
+    connect(decode,SIGNAL(read_done(int)), socket, SLOT(read_done(int)));
+
+    decode->start();
+
+//    ui->widget->hide();
 }
 
 AAWidget::~AAWidget()
@@ -111,7 +123,7 @@ void AAWidget::do_key_left_right(int d)
         aaultra_sql->mode = !aaultra_sql->mode;
         break;
     case 2:
-        list << BASIC << Spectra;
+        list << BASIC << Spectra << Camera;
         Common::change_index(aaultra_sql->chart, d, list);
         break;
     case 3:
@@ -230,6 +242,35 @@ void AAWidget::fresh(bool f)
 
 }
 
+void AAWidget::slotGetOneFrame(QImage img)
+{
+    mImage = img.copy();
+    //调用update将执行 paintEvent函数
+    update();
+}
+
+void AAWidget::paintEvent(QPaintEvent *)
+{
+    QRect rect(ui->widget->x(), ui->widget->y(), ui->widget->width(), ui->widget->height() );
+    QPainter painter(this);
+
+    if(aaultra_sql->chart != Camera){
+        painter.setBrush(Qt::transparent);
+        painter.setPen(Qt::transparent);
+        painter.drawRect(rect);
+        return;
+    }
+
+    if (mImage.size().width() <= 0){
+        painter.setPen(Qt::yellow);
+        painter.drawText(rect,tr("请确认摄像设备已连接"));
+        return;
+    }
+
+
+    painter.drawImage(rect,mImage);
+}
+
 void AAWidget::fresh_1000ms()
 {
     fresh(true);
@@ -262,12 +303,18 @@ void AAWidget::fresh_setting()
 
     switch (aaultra_sql->chart) {
     case BASIC:
+        ui->widget->show();
         ui->qwtPlot->show();
         ui->comboBox->setItemText(1,tr("图形显示 \t[时序图]"));
         break;
     case Spectra:
+        ui->widget->show();
         plot_Spectra->show();
         ui->comboBox->setItemText(1,tr("图形显示  \t[频谱图]"));
+        break;
+    case Camera:
+        ui->widget->hide();
+        ui->comboBox->setItemText(1,tr("图形显示  \t[摄像头]"));
         break;
     default:
         break;

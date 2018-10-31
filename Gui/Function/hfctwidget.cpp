@@ -2,7 +2,7 @@
 #include "ui_hfctwidget.h"
 #include <QLineEdit>
 #include <QGraphicsView>
-#include "../Algorithm/Wavelet/wavelet.h"
+#include "Algorithm/Wavelet/wavelet.h"
 
 #define VALUE_MAX       9999           //RPPD最大值
 #define SETTING_NUM     11           //设置菜单条目数
@@ -21,12 +21,8 @@ HFCTWidget::HFCTWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu
     reload(-1);
     max_100ms = 0;
 
-//    DWT<float> discreteWT("db4");
-
-#ifdef TEST_LAB
     bpcable = new BpCable;
-    bpcable->test();
-#endif
+//    bpcable->test();
 
     chart_ini();
     recWaveForm->raise();
@@ -84,9 +80,6 @@ void HFCTWidget::reload(int index)
         else if(mode == HFCT2){
             data->set_send_para(sp_h2_threshold, hfct_sql->fpga_threshold);
         }
-        //设置滤波器
-        //滤波模式设定，高八位控制H2,低八位控制H1,0无滤波，2为1.8M高通，1为500K高通
-//        data->set_send_para (sp_filter_mode, sqlcfg->get_para()->hfct1_sql.filter_hp + sqlcfg->get_para()->hfct2_sql.filter_hp * 0x100);
         fresh_setting();
     }
 }
@@ -299,7 +292,9 @@ void HFCTWidget::fresh_1ms()
             list = fir->set_filter(list, (FILTER)hfct_sql->filter_lp);
 
             //加入小波滤波器
-            list = Wavelet::set_filter(list, 3);
+            if(hfct_sql->filter_wavelet){
+                list = Wavelet::set_filter(list, 3);
+            }
 
             qint32 max = MAX(max_100ms, list.at(Common::max_at(list)) );
             if(max > max_100ms ){
@@ -318,8 +313,10 @@ void HFCTWidget::fresh_1ms()
 void HFCTWidget::test_rec_wave()
 {
     if(!isBusy){
-        emit startRecWave(mode_continuous,hfct_sql->rec_time);     //开始连续录波
-        emit show_indicator(true);
+//        emit startRecWave(mode_continuous,hfct_sql->rec_time);     //开始连续录波
+//        emit show_indicator(true);
+        emit startRecWave(mode,0);     //开始录波
+        manual = true;
     }
 }
 
@@ -430,11 +427,12 @@ void HFCTWidget::fresh_1000ms()
     ui->label_pluse->setText(tr("脉冲数: ") + Common::secton_three(pulse_cnt_show) );//按三位分节法显示脉冲计数
     ui->label_degree->setText(tr("严重度: %1").arg(degree));
 
-#ifdef TEST_LAB
-    ui->label_judge->setText(tr("模式判断: %1").arg(bpcable->cable_prpd_mode(points_PRPD)));
-#else
-    ui->label_judge->hide();
-#endif
+    if(hfct_sql->mode_recognition){
+        ui->label_judge->setText(tr("模式判断: %1").arg(bpcable->cable_prpd_mode(points_PRPD)));
+    }
+    else{
+        ui->label_judge->hide();
+    }
 //    pclist_1000ms.clear();
 
     if ( db >= hfct_sql->high) {

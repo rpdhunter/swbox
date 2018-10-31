@@ -116,6 +116,13 @@ enum yc_e {
     AE2_gain,                               //0x4050	AE2增益
     AE2_biased,                             //0x4051	AE2偏置
 
+    CPU_temp,                               //CPU温度
+    CPU_vcc,                                //CPU电压
+
+    Battery_vcc,                            //电池电压
+    Battery_cur,                            //电池电流
+
+
 
 	version=95,                             //0x4060	版本
 

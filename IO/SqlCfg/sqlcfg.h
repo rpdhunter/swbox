@@ -49,6 +49,7 @@ enum DISPLAY {
     FLY = 5,        //飞行图
     Exponent = 6,   //特征指数图
     Spectra = 7,    //频谱图
+    Camera = 8,     //摄像头
 };
 
 //滤波器
@@ -75,6 +76,7 @@ enum FILTER {
     hp_32M,
     hp_35M,
 
+    lp_100Hz,
     lp_2M,
     lp_5M,
     lp_8M,
@@ -121,10 +123,13 @@ typedef struct H_CHANNEL_SQL {
     int offset_noise;               //噪声偏置
     int offset_linearity;           //线性度补偿偏置
     int fpga_zero;                  //零点（需要FPGA同步）
-    int fpga_threshold;            //阈值（需要FPGA同步）
-    int filter_hp;                  //高通滤波器（部分需要FPGA同步）
+    int fpga_threshold;             //阈值（需要FPGA同步）
+    int filter_hp;                  //高通滤波器
     int filter_lp;                  //低通滤波器
     bool auto_rec;                  //自动录波（需要FPGA同步）
+    bool filter_fir_fpga;           //开启500K-30M的带通滤波（需要FPGA同步）
+    bool filter_wavelet;            //录波开启小波变换
+    bool mode_recognition;          //模式识别
 } H_CHANNEL_SQL;
 
 typedef struct LOCATION_SQL {
@@ -191,9 +196,9 @@ typedef struct SQL_PARA {
     int menu_l1, menu_l2;                   //低速通道模式
     int menu_double, menu_asset;            //其他菜单模式
     int sync_mode;                          //同步模式
-    int sync_internal_val;                  //内同步时间
-    int sync_external_val;                  //外同步时间
-    char current_dir[500];                    //当前工作目录
+    int sync_internal_val;                  //内同步补偿值(角度)
+    int sync_external_val;                  //外同步补偿值(角度)
+    char current_dir[500];                   //当前工作目录
 
 } SQL_PARA;
 

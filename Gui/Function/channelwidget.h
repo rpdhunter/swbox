@@ -5,15 +5,15 @@
 #include <QVector>
 #include "IO/Data/data.h"
 #include "IO/SqlCfg/sqlcfg.h"
-#include "IO/Other/logtools.h"
+#include "IO/File/logtools.h"
 #include "IO/Com/rdb/rdb.h"
 
 #include "../Common/barchart.h"
 #include "../Common/prpsscene.h"
 #include "../Common/recwaveform.h"
 #include "../Common/common.h"
-#include "../Common/compute.h"
-#include "../Common/fft.h"
+#include "Algorithm/compute.h"
+#include "Algorithm/fft.h"
 #include "../Common/basewidget.h"
 
 class QTimer;

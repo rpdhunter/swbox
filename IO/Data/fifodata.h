@@ -4,7 +4,7 @@
 #include <QThread>
 #include "zynq.h"
 #include "data.h"
-#include "IO/Other/filetools.h"
+#include "IO/File/filetools.h"
 #include "IO/SqlCfg/sqlcfg.h"
 #include "reccontrol.h"
 #include "fifocontrol.h"

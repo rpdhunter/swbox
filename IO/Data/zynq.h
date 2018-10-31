@@ -3,20 +3,14 @@
 
 //基地址
 #if 1       //新版
-#define AXI_STREAM_BASE0		0x43c10000  //基本读（读）
-#define AXI_STREAM_BASE1		0x43c20000  //基本写（写）
-
-#define AXI_STREAM_BASE2		0x43c00000  //超声1（写）x
-#define AXI_STREAM_BASE3		0x43c20000  //超声2（读）
-#define AXI_STREAM_BASE4		0x43c30000  //同步(写) x
-
-#define AXI_STREAM_BASE5		0x43c40000  //HFCT1（读）
-#define AXI_STREAM_BASE6		0x43c50000  //HFCT2（读）
-//#define AXI_STREAM_BASE7		0x43d60000  //PRPD1（读）
-//#define AXI_STREAM_BASE8		0x43c80000  //PRPD2（读）
-#define AXI_STREAM_BASE9		0x43c60000  //录波（读）
-#define AXI_STREAM_BASE10		0x43c70000  //ae1（读）
-#define AXI_STREAM_BASE11		0x43c80000  //ae2（读）
+#define AXI_STREAM_BASE0		0x43c00000  //超声（写）
+#define AXI_STREAM_BASE1		0x43c10000  //基本读（读）
+#define AXI_STREAM_BASE2		0x43c20000  //基本写（写）
+#define AXI_STREAM_BASE4		0x43c40000  //HFCT1（读）
+#define AXI_STREAM_BASE5		0x43c50000  //HFCT2（读）
+#define AXI_STREAM_BASE6		0x43c60000  //录波（读）
+#define AXI_STREAM_BASE7		0x43c70000  //ae1（读）
+#define AXI_STREAM_BASE8		0x43c80000  //ae2（读）
 
 #else       //旧版
 
@@ -59,7 +53,7 @@
 #define BUZZER                  0x0006          //蜂鸣器(0不响,1为响)
 #define BUZZER_FREQ             0x0007          //蜂鸣器频率,目标频率f, 则写入值为100 000 000/f/2/16 (f范围100-20000)
 #define REBOOT                  0x0008          //关机指令(1为关机)
-#define FILTER_MODE             0x0009          //滤波模式设定，高八位控制H2,低八位控制H1,0无滤波，1为500K高通2为1.8M高通，3为32M低通
+#define FILTER_MODE             0x0009          //滤波模式设定，高八位控制H2,低八位控制H1,0无滤波，1为500K-30M带通
 #define L1_CHANNEL_MODE         0x000a          //低频通道模式，0为录波声音使用原始模式，1为录波声音使用包络线模式
 #define L2_CHANNEL_MODE         0x000b          //低频通道模式，0为录波声音使用原始模式，1为录波声音使用包络线模式
 
@@ -82,7 +76,7 @@
 #define REC_START_L2            0x0025          //AA2录波控制信号（0为常态，1为录波开始，2为上传开始）
 
 
-//组号，录波时用于数据组标志，范围(0-15)+通道编号(0x100-TEV1,0x200-TEV2,0x400-HFCT1,0x800-HFCT2,0x1000-AA1,0x2000-AA2)
+//组号，录波时用于数据组标志，范围(0-15)+通道编号(0x100-H1,0x200-H2,0x400-L1,0x800-L2)
 #define GROUP_NUM				0x002a
 #define AUTO_REC                0x002b          //自动录波标志位（0为关闭所有自动录波，1为1通道自动，2为2通道自动，3为双通道自动，12为1通道触发同步，20为2通道触发同步，28为双通道触发同步）
 

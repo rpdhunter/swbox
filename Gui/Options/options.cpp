@@ -7,11 +7,17 @@
 #include <QThreadPool>
 #include <QHeaderView>
 #include <QSettings>
+#include <QChart>
+#include <QtCharts/QChartView>
+#include <QtCharts/QPieSeries>
+#include <QtCharts/QPieSlice>
+#include "IO/File/spacecontrol.h"
 
-#define GRADE_1             3
+#define GRADE_1             4
 #define GRADE_2_NORMAL      6
 #define GRADE_2_WIFI        2
 #define GRADE_2_ADVANCED    6
+
 #define SYNC_WIFI_DISABLE   1       //关闭复杂功能
 
 
@@ -40,6 +46,9 @@ Options::Options(QWidget *parent, G_PARA *g_data) : BaseWidget(NULL, parent),
     connect(socket,SIGNAL(s_wifi_aplist(bool,QStringList)), this, SLOT(wifi_aplist(bool,QStringList)));
     connect(socket,SIGNAL(s_wifi_connect_route(bool,QStringList)),this,SLOT(wifi_connect_route(bool,QStringList)));
     connect(socket,SIGNAL(s_wifi_create_ap(bool)), this, SLOT(wifi_hotpot_finished(bool)));
+
+//    socket->open_camera();
+
     ui->tableWidget->setColumnCount(4);
     ui->tableWidget->horizontalHeader()->resizeSection(0,0);
     ui->tableWidget->horizontalHeader()->resizeSection(1,120);
@@ -63,9 +72,9 @@ Options::Options(QWidget *parent, G_PARA *g_data) : BaseWidget(NULL, parent),
 
     contextMenu_num = 2;        //显示菜单条目
 
-#if SYNC_WIFI_DISABLE
+#ifdef SYNC_WIFI_DISABLE
     ui->tabWidget->widget(1)->setDisabled(true);
-    ui->groupBox_sync->setDisabled(true);
+//    ui->groupBox_sync->setDisabled(true);
     tab1->setFixedHeight(0);
 #endif
 
@@ -92,10 +101,13 @@ void Options::optionIni()
     Common::setTab(tab1);
     tab2 = new QLabel(tr("高级设置"),ui->tabWidget->tabBar());
     Common::setTab(tab2);
+    tab3 = new QLabel(tr("存储管理"),ui->tabWidget->tabBar());
+    Common::setTab(tab3);
 
     ui->tabWidget->tabBar()->setTabButton(0,QTabBar::RightSide,tab0);
     ui->tabWidget->tabBar()->setTabButton(1,QTabBar::RightSide,tab1);
     ui->tabWidget->tabBar()->setTabButton(2,QTabBar::RightSide,tab2);
+    ui->tabWidget->tabBar()->setTabButton(3,QTabBar::RightSide,tab3);
 
     for (int i = 0; i < ui->tabWidget->count(); ++i) {
         ui->tabWidget->widget(i)->setStyleSheet("QWidget {background-color:lightGray;}");
@@ -127,6 +139,56 @@ void Options::optionIni()
     if(!str.isEmpty()){
         ui->lineEdit_wifi_hot_mask->setText(str);
     }
+
+    spaceMangagementIni();
+}
+
+void Options::spaceMangagementIni()
+{
+    chart = new QChart;
+    chart->setTitle(tr("总空间3.2G"));
+    chart->setAnimationOptions(QChart::AllAnimations);
+    m_series = new QPieSeries();
+    *m_series << new QPieSlice(tr("已使用"), 0);
+    *m_series << new QPieSlice(tr("未使用"), 100);
+    m_series->slices().at(0)->setColor(Qt::blue);
+    m_series->slices().at(1)->setColor(Qt::darkGray);
+    m_series->setLabelsVisible();
+    chart->addSeries(m_series);
+    chart->legend()->hide();
+    chart->setBackgroundBrush(Qt::lightGray);
+    chart->setMargins(QMargins(0,0,0,0));
+    ui->chartView->setChart(chart);
+
+    m_series->setPieSize(0.5);
+
+    reloadChart();
+}
+
+void Options::reloadChart()
+{
+    float m_DataLog, m_PRPDLog, m_Asset, m_WaveForm, m_Others;
+    m_DataLog = SpaceControl::dirFileSize(DIR_DATALOG);
+    m_PRPDLog = SpaceControl::dirFileSize(DIR_PRPDLOG);
+    m_Asset = SpaceControl::dirFileSize(DIR_ASSET);
+    m_WaveForm = SpaceControl::dirFileSize(DIR_WAVE);
+    m_Others = qAbs(SpaceControl::dirFileSize(DIR_DATA) - m_WaveForm - m_Asset - m_PRPDLog - m_DataLog);
+
+    qint64 total, used, available;
+    QString persent;
+    SpaceControl::disk_info(total, used, available, persent);
+
+    ui->label_data->setText(SpaceControl::size_to_string(m_DataLog));
+    ui->label_PRPD->setText(SpaceControl::size_to_string(m_PRPDLog));
+    ui->label_Asset->setText(SpaceControl::size_to_string(m_Asset));
+    ui->label_Waveform->setText(SpaceControl::size_to_string(m_WaveForm));
+    ui->label_Others->setText(SpaceControl::size_to_string(m_Others));
+
+    ui->label_Available->setText(SpaceControl::size_to_string(available * 1000));
+
+    m_series->slices().at(0)->setValue(used);
+    m_series->slices().at(1)->setValue(available);
+    chart->setTitle(tr("总空间%1").arg(SpaceControl::size_to_string((available + used) * 1000)));
 }
 
 void Options::working(CURRENT_KEY_VALUE *val)
@@ -170,7 +232,7 @@ void Options::do_key_ok()
         return;
     }
     if(key_val->grade.val3 != 0){
-        if(key_val->grade.val2 == 2){
+        if(key_val->grade.val2 == 2){               //wifi界面
             if(key_val->grade.val3 == 1){           //wifi设置
                 if(key_val->grade.val4 == 0){       //刷新wifi列表
                     emit show_indicator(true);
@@ -221,6 +283,17 @@ void Options::do_key_ok()
                 }
             }
         }
+        else if(key_val->grade.val2 == 4){          //存储管理
+            if(key_val->grade.val3 == 1){           //智能清除
+                qDebug()<<"smart del!";
+                spaceMangagementIni();
+            }
+            else if(key_val->grade.val3 == 2){      //全部清除
+                qDebug()<<"del all!";
+                Common::del_dir(DIR_DATA);
+                spaceMangagementIni();
+            }
+        }
         else{
             saveOptions();      //保存退出状态
         }
@@ -259,7 +332,7 @@ void Options::do_key_up_down(int d)
 
     if(key_val->grade.val3 == 0){   //在一级菜单        
         Common::change_index(key_val->grade.val2, d, GRADE_1 , 1);
-#if SYNC_WIFI_DISABLE
+#ifdef SYNC_WIFI_DISABLE
         if(key_val->grade.val2 == 2){
             Common::change_index(key_val->grade.val2, d, GRADE_1 , 1);
         }
@@ -318,11 +391,7 @@ void Options::do_key_up_down(int d)
             }
             break;
         case 3:     //高级
-#if SYNC_WIFI_DISABLE
-            Common::change_index(key_val->grade.val3, d, 3 , 1);
-#else
             Common::change_index(key_val->grade.val3, d, GRADE_2_ADVANCED , 1);
-#endif
             switch (key_val->grade.val3) {
             case 4:
                 sql_para.sync_mode = SYNC_NONE;
@@ -425,14 +494,17 @@ void Options::do_key_left_right(int d)
             Common::change_index(sql_para.auto_rec_interval, d, 100, 0);
             break;
         case 5:         //内同步补偿值
-            Common::change_index(sql_para.sync_internal_val, d, 360, 0);
+            Common::change_index(sql_para.sync_internal_val, d, 359, 0);
             break;
         case 6:         //外同步补偿值
-            Common::change_index(sql_para.sync_external_val, d, 360, 0);
+            Common::change_index(sql_para.sync_external_val, d, 359, 0);
             break;
         default:
             break;
         }
+        break;
+    case 4:     //存储
+        Common::change_index(key_val->grade.val3,d,2,0);
         break;
     default:
         break;
@@ -449,15 +521,24 @@ void Options::saveOptions()
     saveDatetime();
 
     //语言(需要重启)
-    bool flag = true;   //重启标志位
-    if(sql_para.language == sqlcfg->get_para()->language){
-        flag = false;
+    bool flag = false;   //重启标志位
+    if(sql_para.language != sqlcfg->get_para()->language){
+        flag = true;
+    }
+
+    bool sync_flag = false;         //同步标志位
+    if(sql_para.sync_mode != sqlcfg->get_para()->sync_mode){
+        sync_flag = true;
     }
 
     sqlcfg->sql_save(&sql_para);    //保存
 
     emit closeTimeChanged(sql_para.close_time );
     emit update_statusBar(tr("【参数设置】已保存！"));
+
+    if(sync_flag){
+        emit change_sync_status();
+    }
 
     if(flag){
         QCoreApplication::quit();
@@ -566,6 +647,9 @@ void Options::refresh()
     //外同步补偿
     ui->lineEdit_sync_external->setText(QString("%1").arg(sql_para.sync_external_val));
 
+    //存储状态刷新
+    reloadChart();
+
     //以下是ui视觉效果
     if(key_val != NULL){
         if(ap_info_widget_button == 0){         //关闭
@@ -582,6 +666,7 @@ void Options::refresh()
         tab0->setStyleSheet("QLabel{border: 0px solid darkGray;}");
         tab1->setStyleSheet("QLabel{border: 0px solid darkGray;}");
         tab2->setStyleSheet("QLabel{border: 0px solid darkGray;}");
+        tab3->setStyleSheet("QLabel{border: 0px solid darkGray;}");
 
         switch (key_val->grade.val2) {
         case 1:             //基本
@@ -598,6 +683,7 @@ void Options::refresh()
                 tab0->setStyleSheet("QLabel{border: 1px solid darkGray;}");
                 tab1->setStyleSheet("QLabel{border: 0px solid darkGray;}");
                 tab2->setStyleSheet("QLabel{border: 0px solid darkGray;}");
+                tab3->setStyleSheet("QLabel{border: 0px solid darkGray;}");
                 break;
             case 1:
                 ui->lab_freq->setFrameShadow(QFrame::Sunken);
@@ -636,6 +722,7 @@ void Options::refresh()
                 tab0->setStyleSheet("QLabel{border: 0px solid darkGray;}");
                 tab1->setStyleSheet("QLabel{border: 1px solid darkGray;}");
                 tab2->setStyleSheet("QLabel{border: 0px solid darkGray;}");
+                tab3->setStyleSheet("QLabel{border: 0px solid darkGray;}");
 
                 break;
             case 1:         //wifi设置
@@ -698,6 +785,7 @@ void Options::refresh()
                 tab0->setStyleSheet("QLabel{border: 0px solid darkGray;}");
                 tab1->setStyleSheet("QLabel{border: 0px solid darkGray;}");
                 tab2->setStyleSheet("QLabel{border: 1px solid darkGray;}");
+                tab3->setStyleSheet("QLabel{border: 0px solid darkGray;}");
                 break;
             case 1:     //文件个数
                 ui->lineEdit_MaxFileNum->selectAll();
@@ -715,6 +803,28 @@ void Options::refresh()
             case 6:
                 ui->rbt_sync_external->setChecked(true);
                 ui->lineEdit_sync_external->selectAll();
+                break;
+            default:
+                break;
+            }
+            break;
+        case 4:     //内存管理
+            switch (key_val->grade.val3) {
+            case 0:
+                tab0->setStyleSheet("QLabel{border: 0px solid darkGray;}");
+                tab1->setStyleSheet("QLabel{border: 0px solid darkGray;}");
+                tab2->setStyleSheet("QLabel{border: 0px solid darkGray;}");
+                tab3->setStyleSheet("QLabel{border: 1px solid darkGray;}");
+                ui->pbt_del_smart->setStyleSheet("");
+                ui->pbt_del_all->setStyleSheet("");
+                break;
+            case 1:     //智能清理
+                ui->pbt_del_smart->setStyleSheet("QPushButton {background-color:gray;}");
+                ui->pbt_del_all->setStyleSheet("");
+                break;
+            case 2:     //全部清除
+                ui->pbt_del_smart->setStyleSheet("r");
+                ui->pbt_del_all->setStyleSheet("QPushButton {background-color:gray;}");
                 break;
             default:
                 break;
@@ -772,7 +882,7 @@ void Options::wifi_connect()
     emit show_wifi_icon(WIFI_MODE::WIFI_NONE);
 
     if(contextMenu->item(0)->text() == tr("断开连接")){        
-        socket->wifi_set_mode(WIFI_AP);         //改变模式断开连接
+//        socket->wifi_set_mode(WIFI_AP);         //改变模式断开连接
         emit update_statusBar(tr("wifi连接%1已断开").arg(ui->tableWidget->item(current_ap_index,1)->text()));
         current_ap_index = -1;
     }
@@ -806,13 +916,13 @@ void Options::wifi_connect_route(bool f, QStringList iplist)
         ui->tableWidget->setItem(current_ap_index,2,item);             //已连接
         switch (sql_para.wifi_trans_mode) {
         case wifi_ftp:
-            socket->ftp_start();
+//            socket->ftp_start();
             break;
         case wifi_telnet:
-            socket->telnet_start();
+//            socket->telnet_start();
             break;
         case wifi_104:
-            socket->_104_start();
+//            socket->_104_start();
             break;
         default:
             break;
@@ -874,13 +984,13 @@ void Options::wifi_hotpot_finished(bool f)
         ui->tableWidget->setItem(current_ap_index,2,item);             //已连接
         switch (sql_para.wifi_trans_mode) {
         case wifi_ftp:
-            socket->ftp_start();
+//            socket->ftp_start();
             break;
         case wifi_telnet:
-            socket->telnet_start();
+//            socket->telnet_start();
             break;
         case wifi_104:
-            socket->_104_start();
+//            socket->_104_start();
             break;
         default:
             break;
