@@ -21,8 +21,8 @@ void SyncThread::write_to_rdb()
     float temp, vcc;
     cpu_status->get_cpu_temp(&temp);
     cpu_status->get_cpu_vcc(&vcc);
-    Common::rdb_set_yc_value(CPU_temp, temp);
-    Common::rdb_set_yc_value(CPU_vcc, vcc);
+    Common::rdb_set_yc_value(CPU_temp_yc, temp);
+    Common::rdb_set_yc_value(CPU_vcc_yc, vcc);
 }
 
 void SyncThread::change_thread_status()

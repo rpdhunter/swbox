@@ -54,15 +54,15 @@ static void rdb_recv_task (void * arg);
 
 static void rdb_task (void * arg)
 {
-	while (1) {
-		usleep (RDB_CHECK_TIME);	/* 100ms */
-		
-		check_yx_event_list ();
-		check_yc_event_list ();
-		check_yk_list ();
-	}
+    while (1) {
+        usleep (RDB_CHECK_TIME);	/* 100ms */
 
-	//fdOpenSession(Task_self());
+        check_yx_event_list ();
+        check_yc_event_list ();
+        check_yk_list ();
+    }
+
+    //fdOpenSession(Task_self());
 }
 
 static int init_rdb_task ()
@@ -79,7 +79,7 @@ static int init_rdb_task ()
 int init_rdb_table ()
 {
     int i;
-	float init_dz_val;
+    char init_dz_val;
 
     for (i = 0; i < YX_NUMBER; i++) {		//yx点表初始化，默认值为DP_OPEN | DIQ_IV;
         memset (&yx_lst [i], 0, sizeof (yx_t));		//内存初始化
@@ -99,7 +99,7 @@ int init_rdb_table ()
             return -1;
         }
     }
-    for (i = 0; i < YK_NUMBER; i++) {       //yx点表初始化
+    for (i = 0; i < YK_NUMBER; i++) {       //yk点表初始化
         memset (&yk_lst [i], 0, sizeof (yk_t));
         yk_lst [i].ctl_mode = YK_SBO;
         yk_lst [i].ctl_step = YK_VAL;
@@ -110,12 +110,12 @@ int init_rdb_table ()
         }
     }
 
-	 for (i = 0; i < DZ_NUMBER; i++) {       //dz点表初始化
+     for (i = 0; i < DZ_NUMBER; i++) {       //dz点表初始化
         memset (&dz_lst [i], 0, sizeof (dz_t));
-        dz_lst [i].tag = DZ_FLOAT;
-        dz_lst [i].data_len = sizeof(float);
-		init_dz_val = 0.01;
-		memcpy(dz_lst [i].data_buf,&init_dz_val,sizeof(init_dz_val));
+        dz_lst [i].tag = DZ_CHAR;
+        dz_lst [i].data_len = sizeof(char);
+        init_dz_val = -1;
+        memcpy(dz_lst [i].data_buf,&init_dz_val,sizeof(init_dz_val));
 //		dz_lst [i].sn = 1;
 //		dz_lst [i].sn_min = 1;
 //		dz_lst [i].sn_max = 1;
@@ -123,7 +123,7 @@ int init_rdb_table ()
             return -1;
         }
     }
-  
+
     return 0;
 }
 
@@ -150,12 +150,18 @@ int init_rdb ()
         return -1;
     }
 
-	dz_lst = (dz_t *)malloc (sizeof (dz_t) * DZ_NUMBER);        //dz点表
+    dz_lst = (dz_t *)malloc (sizeof (dz_t) * DZ_NUMBER);        //dz点表
     if (dz_lst == NULL) {
         return -1;
     }
 
+    /* 用于rdb通信的结构体空间分配 */
     rdb_udp = (rdb_udp_t *)malloc(sizeof (rdb_udp_t));
+    rdb_udp->yc_param.val = (yc_data_type *)malloc(sizeof(yc_data_type));
+    rdb_udp->yc_param.ts = (time_type *)malloc(sizeof(time_type));
+    rdb_udp->yx_param.val = (unsigned int  *)malloc(sizeof(unsigned int));
+    rdb_udp->yx_param.ts = (time_type *)malloc(sizeof(time_type));
+
     if (init_rdb_table () < 0){                                 //点表初始化
         return -1;
     }
@@ -329,7 +335,7 @@ static int check_yx_event_list ()
                 while (ahook != NULL) {
                     if (dhook->app_id == ahook->app_id) {
                         write_hook_msg (ahook, (unsigned char *)p_i_msg, p_i_msg->content_len + INTERNAL_MSG_HEAD_LEN);
-                        _DPRINTF ("hook msg send to %d\n", ahook->app_id);
+ //                       _DPRINTF ("hook msg send to %d\n", ahook->app_id);
                         break;
                     }
                     ahook = ahook->next;
@@ -386,7 +392,7 @@ static int check_yc_event_list ()
                 while (ahook != NULL) {
                     if (dhook->app_id == ahook->app_id) {
                         write_hook_msg (ahook, (unsigned char *)p_i_msg, p_i_msg->content_len + INTERNAL_MSG_HEAD_LEN);
-                        _DPRINTF ("hook msg send to %d\n", ahook->app_id);
+//                        _DPRINTF ("hook msg send to %d\n", ahook->app_id);
                         break;
                     }
                     ahook = ahook->next;
@@ -505,15 +511,15 @@ int reg_rdb_data (
     app_id = iec104_server.app_id;, RDB_TYPE_YX=0x01, i, i
     */
 {
-	data_hook_t * phook;
-	yx_t * yx_entry = yx_lst;
-	yc_t * yc_entry = yc_lst;
-	yk_t * yk_entry = yk_lst;
-	dz_t * dz_entry = dz_lst;
-	
-	if (app_id < 0) {
-		return -1;
-	}
+    data_hook_t * phook;
+    yx_t * yx_entry = yx_lst;
+    yc_t * yc_entry = yc_lst;
+    yk_t * yk_entry = yk_lst;
+    dz_t * dz_entry = dz_lst;
+
+    if (app_id < 0) {
+        return -1;
+    }
 
     if (rdb_type == RDB_TYPE_YX) {
         if (rdb_no >= YX_NUMBER) {
@@ -585,30 +591,30 @@ int reg_rdb_data (
         }
     }
 
-	
-	else if (rdb_type == RDB_TYPE_DZ) {
-		if (rdb_no >= DZ_NUMBER) {
-		    _DPRINTF ("reg_rdb_data: dz index %d, over max index %d\n", rdb_no, DZ_NUMBER);
-		    return -1;
-		}
-		else {
-		    phook = (data_hook_t *)malloc (sizeof (data_hook_t) * 1);
-		    if (phook == NULL) {
-		        _DPRINTF ("reg_rdb_data: malloc error\n");
-		        return -1;
-		    }
-		    phook->app_id = app_id;
-		    phook->proto_data_no = proto_no;
-		    phook->next = NULL;
-		    if (dz_entry [rdb_no].p_hook == NULL) {
-		        dz_entry [rdb_no].p_hook = phook;
-		    }
-		    else {
-		        phook->next = dz_entry [rdb_no].p_hook;
-		        dz_entry [rdb_no].p_hook = phook;
-		    }
-		}
-	}
+
+    else if (rdb_type == RDB_TYPE_DZ) {
+        if (rdb_no >= DZ_NUMBER) {
+            _DPRINTF ("reg_rdb_data: dz index %d, over max index %d\n", rdb_no, DZ_NUMBER);
+            return -1;
+        }
+        else {
+            phook = (data_hook_t *)malloc (sizeof (data_hook_t) * 1);
+            if (phook == NULL) {
+                _DPRINTF ("reg_rdb_data: malloc error\n");
+                return -1;
+            }
+            phook->app_id = app_id;
+            phook->proto_data_no = proto_no;
+            phook->next = NULL;
+            if (dz_entry [rdb_no].p_hook == NULL) {
+                dz_entry [rdb_no].p_hook = phook;
+            }
+            else {
+                phook->next = dz_entry [rdb_no].p_hook;
+                dz_entry [rdb_no].p_hook = phook;
+            }
+        }
+    }
     else {
         _DPRINTF ("reg_rdb_data: type error %d\n", rdb_type);
         return -1;
@@ -618,64 +624,84 @@ int reg_rdb_data (
 }
 int proto_rdb_reg_data (int com_no)
 {
-	int i, rdb_no, proto_no;
-	int protect_num;
+    int i, rdb_no, proto_no;
+    int protect_num;
 
 /* YX */
-	proto_no = 0;
+    proto_no = 0;
 
-	/* YX board 1 */
-	for (
-		 rdb_no = device_status; 
-		 rdb_no <= num_of_yx; 
-		 rdb_no++, proto_no++
-		) {
-		reg_rdb_data (com_no, RDB_TYPE_YX, rdb_no, proto_no);
-	}
+    /* YX board 1 */
+    for (
+         rdb_no = device_status_yx;
+         rdb_no <= num_of_yx;
+         rdb_no++, proto_no++
+        ) {
+        reg_rdb_data (com_no, RDB_TYPE_YX, rdb_no, proto_no);
+    }
 
 /* YC */
-	proto_no = 0;
+    proto_no = 0;
 
-	/* voltage */
+    for (
+         rdb_no = TEV1_amplitude_yc;
+         rdb_no <= num_of_yc;
+         rdb_no++, proto_no++
+        ) {
+        reg_rdb_data (com_no, RDB_TYPE_YC, rdb_no, proto_no);
+    }
 
-	for (
-		 rdb_no = TEV1_amplitude; 
-		 rdb_no <= AE2_biased_adv; 
-		 rdb_no++, proto_no++
-		) {
-		reg_rdb_data (com_no, RDB_TYPE_YC, rdb_no, proto_no);
-	}
-
-	for (
-	 rdb_no = TEV1_gain; 
-	 rdb_no <= AE2_biased; 
-	 rdb_no++, proto_no++
-	) {
-		reg_rdb_data (com_no, RDB_TYPE_YC, rdb_no, proto_no);
-	}
-
-	for (
-	 rdb_no = version; 
-	 rdb_no <= num_of_yc; 
-	 rdb_no++, proto_no++
-	) {
-		reg_rdb_data (com_no, RDB_TYPE_YC, rdb_no, proto_no);
-	}
-	
 /* YK */
-	proto_no = 0;
-	for(rdb_no = start;rdb_no < num_of_yk;rdb_no++,proto_no++)
-	{
-		reg_rdb_data (com_no, RDB_TYPE_YK, rdb_no, proto_no);
-	}
+    proto_no = 0;
+    for(rdb_no = TEV1_waverec_single_yk;rdb_no < num_of_yk;rdb_no++,proto_no++)
+    {
+        reg_rdb_data (com_no, RDB_TYPE_YK, rdb_no, proto_no);
+    }
 /* DZ */
-	proto_no = 0;
-	for(rdb_no = TEV1_gain_sdz;rdb_no < num_of_sdz;rdb_no++,proto_no++)
-	{
-		reg_rdb_data (com_no, RDB_TYPE_DZ, rdb_no, proto_no);
-	}
-	return 0;
+    proto_no = 0;
+    for(rdb_no = TEV1_test_mode_dz;rdb_no < TEV1_noise_biased_dz;rdb_no++,proto_no++)
+    {
+        reg_rdb_data (com_no, RDB_TYPE_DZ, rdb_no, proto_no);
+    }
+    for(rdb_no = TEV2_test_mode_dz;rdb_no < TEV2_noise_biased_dz;rdb_no++,proto_no++)
+    {
+        reg_rdb_data (com_no, RDB_TYPE_DZ, rdb_no, proto_no);
+    }
+    for(rdb_no = HFCT1_test_mode_dz;rdb_no < HFCT1_noise_biased_dz;rdb_no++,proto_no++)
+    {
+        reg_rdb_data (com_no, RDB_TYPE_DZ, rdb_no, proto_no);
+    }
+    for(rdb_no = HFCT2_test_mode_dz;rdb_no < HFCT2_noise_biased_dz;rdb_no++,proto_no++)
+    {
+        reg_rdb_data (com_no, RDB_TYPE_DZ, rdb_no, proto_no);
+    }
+    for(rdb_no = UHF1_test_mode_dz;rdb_no < UHF1_noise_biased_dz;rdb_no++,proto_no++)
+    {
+        reg_rdb_data (com_no, RDB_TYPE_DZ, rdb_no, proto_no);
+    }
+    for(rdb_no = UHF2_test_mode_dz;rdb_no < UHF2_noise_biased_dz;rdb_no++,proto_no++)
+    {
+        reg_rdb_data (com_no, RDB_TYPE_DZ, rdb_no, proto_no);
+    }
+    for(rdb_no = AA1_test_mode_dz;rdb_no < AA1_niose_biased_dz;rdb_no++,proto_no++)
+    {
+        reg_rdb_data (com_no, RDB_TYPE_DZ, rdb_no, proto_no);
+    }
+    for(rdb_no = AA2_test_mode_dz;rdb_no < AA2_niose_biased_dz;rdb_no++,proto_no++)
+    {
+        reg_rdb_data (com_no, RDB_TYPE_DZ, rdb_no, proto_no);
+    }
+    for(rdb_no = AE1_test_mode_dz;rdb_no < AE1_niose_biased_dz;rdb_no++,proto_no++)
+    {
+        reg_rdb_data (com_no, RDB_TYPE_DZ, rdb_no, proto_no);
+    }
+    for(rdb_no = AE2_test_mode_dz;rdb_no < AE2_niose_biased_dz;rdb_no++,proto_no++)
+    {
+        reg_rdb_data (com_no, RDB_TYPE_DZ, rdb_no, proto_no);
+    }
+
+    return 0;
 }
+
 
 int yx_set_value (
         unsigned int yx_no,		/* 从0到YX_NUMBER-1 */
@@ -685,22 +711,21 @@ int yx_set_value (
         int flag                /* 是否发送给QT的rdb */
         )
 {
-	Uint32 dpi;
-	int ret = -1;
-	yx_t * yx_entry;
-	rdb_event_t * p_event = NULL;
-	char s_msg [100];
-	internal_msg_t * p_i_msg;
-	unsigned char sbuf [MAX_MSG_LEN];
-	rdb_yx_param_t * yx_temp;
-	int i;
-	
-	if (yx_no >= YX_NUMBER) {
-		return -1;
-	}
-	if (val == NULL/* || ts == NULL*/) {
-		return -1;
-	}
+    Uint32 dpi;
+    int ret = -1;
+    yx_t * yx_entry;
+    rdb_event_t * p_event = NULL;
+    char s_msg [100];
+    internal_msg_t * p_i_msg;
+    unsigned char sbuf [MAX_MSG_LEN];
+    rdb_yx_param_t * yx_temp;
+    int i;
+    if (yx_no >= YX_NUMBER) {
+        return -1;
+    }
+    if (val == NULL/* || ts == NULL*/) {
+        return -1;
+    }
 #if 0
     dpi = * val & 0x03;
 #else
@@ -724,32 +749,32 @@ int yx_set_value (
         return 0;
     }
 
-	/* 初始化时不打印变位信息 */
-	if ((yx_entry->cur_val & (DIQ_IV | DIQ_NT)) != (DIQ_IV | DIQ_NT)) {
+    /* 初始化时不打印变位信息 */
+    if ((yx_entry->cur_val & (DIQ_IV | DIQ_NT)) != (DIQ_IV | DIQ_NT)) {
 //		printf("yx_no %d\n",yx_no);
-	
-	}
-	if(flag){
-		/*将参数发送给QT的rdb*/
-		p_i_msg = (internal_msg_t *)sbuf;
-		p_i_msg->type = MSG_YX_EVENT;
-		p_i_msg->sub_type = MSG_NONE_TYPE;
-		yx_temp = (rdb_yx_param_t *)p_i_msg->content;
-		rdb_udp->yx_param.yx_no = yx_no;
-		rdb_udp->yx_param.cos_soe_flag = cos_soe_flag;
-		memcpy (rdb_udp->yx_param.val, val, sizeof (unsigned int));
-		memcpy (rdb_udp->yx_param.ts, ts, sizeof (time_type));
-		memcpy (yx_temp,&rdb_udp->yx_param,sizeof(rdb_yx_param_t));
-		p_i_msg->content_len = sizeof(rdb_yx_param_t);
-		sendto(rdb_udp->rdb_client_id,sbuf, p_i_msg->content_len + INTERNAL_MSG_HEAD_LEN, 0, (struct sockaddr *)&(rdb_udp->client_addr), sizeof(rdb_udp->client_addr));
-		printf("Send rdb msg:");
-		for(i=0;i<p_i_msg->content_len+INTERNAL_MSG_HEAD_LEN;i++){
-			printf("0x%02x ",sbuf[i]);							
-		}
-		printf("\n");		
-	}
-	/* 获取互斥信号量 */
-	sem_timewait (&yx_entry->mutex, NULL);
+
+    }
+    if(flag){
+        /*将参数发送给QT的rdb*/
+        p_i_msg = (internal_msg_t *)sbuf;
+        p_i_msg->type = MSG_YX_EVENT;
+        p_i_msg->sub_type = MSG_NONE_TYPE;
+        yx_temp = (rdb_yx_param_t *)p_i_msg->content;
+        rdb_udp->yx_param.yx_no = yx_no;
+        rdb_udp->yx_param.cos_soe_flag = cos_soe_flag;
+        memcpy (rdb_udp->yx_param.val, val, sizeof (unsigned int));
+        memcpy (rdb_udp->yx_param.ts, ts, sizeof (time_type));
+        memcpy (yx_temp,&rdb_udp->yx_param,sizeof(rdb_yx_param_t));
+        p_i_msg->content_len = sizeof(rdb_yx_param_t);
+        sendto(rdb_udp->rdb_client_id,sbuf, p_i_msg->content_len + INTERNAL_MSG_HEAD_LEN, 0, (struct sockaddr *)&(rdb_udp->client_addr), sizeof(rdb_udp->client_addr));
+        printf("Send rdb msg:");
+        for(i=0;i<p_i_msg->content_len+INTERNAL_MSG_HEAD_LEN;i++){
+            printf("0x%02x ",sbuf[i]);
+        }
+        printf("\n");
+    }
+    /* 获取互斥信号量 */
+    sem_timewait (&yx_entry->mutex, NULL);
 
     yx_entry->cur_val = dpi;
 
@@ -891,15 +916,15 @@ int yc_set_value (
         int flag				/* 是否发送给QT的rdb */
         )
 {
-	int ret = -1;
-	yc_t * yc_entry;
-	rdb_event_t * p_event = NULL;
-	yc_data_type old_data;
-	Int32 i_delt;			/*整形变量增量*/
-	internal_msg_t * p_i_msg;
-	unsigned char sbuf [MAX_MSG_LEN];
-	rdb_yc_param_t * yc_temp;
-	int i;
+    int ret = -1;
+    yc_t * yc_entry;
+    rdb_event_t * p_event = NULL;
+    yc_data_type old_data;
+    Int32 i_delt;			/*整形变量增量*/
+    internal_msg_t * p_i_msg;
+    unsigned char sbuf [MAX_MSG_LEN];
+    rdb_yc_param_t * yc_temp;
+    int i;
 
     if (yc_no >= YC_NUMBER) {
         return -1;
@@ -913,22 +938,22 @@ int yc_set_value (
         p_i_msg->sub_type = MSG_NONE_TYPE;
         yc_temp = (rdb_yc_param_t *)p_i_msg->content;
 
-		/*将参数发送给QT的rdb*/
-		rdb_udp->yc_param.yc_no = yc_no;
-		rdb_udp->yc_param.qds = qds;
-		rdb_udp->yc_param.b_event = b_event;
-		memcpy (rdb_udp->yc_param.val, val, sizeof (yc_data_type));
-		memcpy (rdb_udp->yc_param.ts, ts, sizeof (time_type));
-		memcpy (yc_temp,&rdb_udp->yx_param,sizeof(rdb_yc_param_t));
-		p_i_msg->content_len = sizeof(rdb_yc_param_t);
-		sendto(rdb_udp->rdb_client_id,sbuf, p_i_msg->content_len + INTERNAL_MSG_HEAD_LEN, 0, (struct sockaddr *)&(rdb_udp->client_addr), sizeof(rdb_udp->client_addr));
-		printf("Send rdb msg:");
-		for(i=0;i<p_i_msg->content_len+INTERNAL_MSG_HEAD_LEN;i++){
-			printf("0x%02x ",sbuf[i]);							
-		}
-		printf("\n");	
-	}
-	yc_entry = yc_lst + yc_no;
+        /*将参数发送给QT的rdb*/
+        rdb_udp->yc_param.yc_no = yc_no;
+        rdb_udp->yc_param.qds = qds;
+        rdb_udp->yc_param.b_event = b_event;
+        memcpy (rdb_udp->yc_param.val, val, sizeof (yc_data_type));
+        memcpy (rdb_udp->yc_param.ts, ts, sizeof (time_type));
+        memcpy (yc_temp,&rdb_udp->yc_param,sizeof(rdb_yc_param_t));
+        p_i_msg->content_len = sizeof(rdb_yc_param_t);
+        sendto(rdb_udp->rdb_client_id,sbuf, p_i_msg->content_len + INTERNAL_MSG_HEAD_LEN, 0, (struct sockaddr *)&(rdb_udp->client_addr), sizeof(rdb_udp->client_addr));
+        printf("Send rdb msg:");
+        for(i=0;i<p_i_msg->content_len+INTERNAL_MSG_HEAD_LEN;i++){
+            printf("0x%02x ",sbuf[i]);
+        }
+        printf("\n");
+    }
+    yc_entry = yc_lst + yc_no;
 
     if (yc_entry->data_type == YC_INT &&
             yc_entry->cur_val.i_val == val->i_val) {
@@ -1113,158 +1138,161 @@ int yc_get_total_num_proto (
     }
 }
 int dz_set_value (
-	rdb_dz_param_t * dz,
-	int flag					/* 是否发送给QT的rdb */
-	)
+    rdb_dz_param_t * dz,
+    int flag					/* 是否发送给QT的rdb */
+    )
 {
-	dz_t * dz_entry;
-	int ret = -1, proto_no = -1;
-	internal_msg_t * p_i_msg;
-	unsigned char sbuf [MAX_MSG_LEN];
-	rdb_yc_param_t * dz_temp;
-	data_hook_t * dhook;
-	int i;
-	
-	if (dz->dz_no >= DZ_NUMBER) {
-		return -1;
-	}
-	if (dz->data_buf == NULL && dz->data_len == 0) {
-		return -1;
-	}
-	
-	if(flag){
-		p_i_msg = (internal_msg_t *)sbuf;
-		p_i_msg->type = MSG_DZ_EVENT;
-		p_i_msg->sub_type = MSG_NONE_TYPE;
-		dz_temp = (rdb_yc_param_t *)p_i_msg->content;
+    dz_t * dz_entry;
+    int ret = -1, proto_no = -1;
+    internal_msg_t * p_i_msg;
+    unsigned char sbuf [MAX_MSG_LEN];
+    rdb_dz_param_t * dz_temp;
+    data_hook_t * dhook;
+    int i;
+    int j;
+    if (dz->dz_no >= DZ_NUMBER) {
+        return -1;
+    }
+    if (dz->data_buf == NULL && dz->data_len == 0) {
+        return -1;
+    }
 
-		/*将参数发送给QT的rdb*/
-		rdb_udp->dz_param.dz_no = dz->dz_no;
-		rdb_udp->dz_param.tag = dz->tag;
-		rdb_udp->dz_param.data_len = dz->data_len;
-		memcpy(rdb_udp->dz_param.data_buf,dz->data_buf,dz->data_len);
-		memcpy (dz_temp,&rdb_udp->dz_param,sizeof(rdb_dz_param_t));
-		p_i_msg->content_len = sizeof(rdb_dz_param_t);
-		sendto(rdb_udp->rdb_client_id,sbuf, p_i_msg->content_len + INTERNAL_MSG_HEAD_LEN, 0, (struct sockaddr *)&(rdb_udp->client_addr), sizeof(rdb_udp->client_addr));
-		printf("IEC104 Send rdb msg:");
-		for(i=0;i<p_i_msg->content_len+INTERNAL_MSG_HEAD_LEN;i++){
-			printf("0x%02x ",sbuf[i]);							
-		}
-		printf("\n");	
-	}
+    if(flag){
+        p_i_msg = (internal_msg_t *)sbuf;
+        p_i_msg->type = MSG_DZ_EVENT;
+        p_i_msg->sub_type = MSG_NONE_TYPE;
+        dz_temp = (rdb_dz_param_t *)p_i_msg->content;
 
-	/* 获取互斥信号量 */
-	sem_timewait (&dz_entry->mutex, NULL);
-	dz_entry = dz_lst + dz->dz_no;
-	memcpy(dz_entry->data_buf,dz->data_buf,dz->data_len);
-	dz_entry->tag = dz->tag;
-	dz_entry->data_len = dz->data_len;
-	/* 释放互斥信号量 */
-	sem_post (&dz_entry->mutex);
-	return ret;
+        /*将参数发送给QT的rdb*/
+        rdb_udp->dz_param.dz_no = dz->dz_no;
+        rdb_udp->dz_param.tag = dz->tag;
+        rdb_udp->dz_param.data_len = dz->data_len;
+        memcpy(rdb_udp->dz_param.data_buf,dz->data_buf,8);
+        memcpy (dz_temp,&rdb_udp->dz_param,sizeof(rdb_dz_param_t));
+//        printf("dz->dz_no:%d\n",dz->dz_no);
+//        for(j=0;j<8;j++)
+//            printf("%d\n",dz->data_buf[j]);
+        p_i_msg->content_len = sizeof(rdb_dz_param_t);
+        sendto(rdb_udp->rdb_client_id,sbuf, p_i_msg->content_len + INTERNAL_MSG_HEAD_LEN, 0, (struct sockaddr *)&(rdb_udp->client_addr), sizeof(rdb_udp->client_addr));
+//        printf("Send rdb msg:");
+//        for(i=0;i<p_i_msg->content_len+INTERNAL_MSG_HEAD_LEN;i++){
+//            printf("0x%02x ",sbuf[i]);
+//        }
+//        printf("\n");
+    }
+
+    dz_entry = dz_lst + dz->dz_no;					/* 复制值 */
+    /* 获取互斥信号量 */
+    sem_timewait (&dz_entry->mutex, NULL);
+    memcpy(dz_entry->data_buf,dz->data_buf,dz->data_len);
+    dz_entry->tag = dz->tag;
+    dz_entry->data_len = dz->data_len;
+    /* 释放互斥信号量 */
+    sem_post (&dz_entry->mutex);
+    return ret;
 }
-	
+
 int dz_get_value (
 //	int app_id,
-	rdb_dz_param_t * dz
-	)
+    rdb_dz_param_t * dz
+    )
 {
-	unsigned int i, j, proto_no;
-	
-	dz_t * dz_entry;
-	if ((dz->dz_no > DZ_NUMBER) || (dz->dz_no < 1)) {
-		return -1;
-	}
-	
-	/* 获取互斥信号量 */
-	sem_timewait (&dz_entry->mutex, NULL);
-	proto_no = dz->dz_no;
-	dz_entry = dz_lst + proto_no;
-	dz->tag = dz_entry->tag;
-	dz->data_len = dz_entry->data_len;
-	memcpy(dz->data_buf,dz_entry->data_buf,dz->data_len);
-	
-	/* 释放互斥信号量 */
-	sem_post (&dz_entry->mutex);
-	
-	return 0;
+    unsigned int i, j, proto_no;
+
+    dz_t * dz_entry;
+    if ((dz->dz_no > DZ_NUMBER) || (dz->dz_no < 1)) {
+        return -1;
+    }
+
+    /* 获取互斥信号量 */
+    sem_timewait (&dz_entry->mutex, NULL);
+    proto_no = dz->dz_no;
+    dz_entry = dz_lst + proto_no;
+    dz->tag = dz_entry->tag;
+    dz->data_len = dz_entry->data_len;
+    memcpy(dz->data_buf,dz_entry->data_buf,dz->data_len);
+
+    /* 释放互斥信号量 */
+    sem_post (&dz_entry->mutex);
+
+    return 0;
 }
 int dz_get_value_proto (
-	int app_id,
-	rdb_dz_param_t * dz
-	)
+    int app_id,
+    rdb_dz_param_t * dz
+    )
 {
-	unsigned int i,proto_no;
-	dz_t * dz_entry = dz_lst;
-	data_hook_t * dhook;
+    unsigned int i,proto_no;
+    dz_t * dz_entry = dz_lst;
+    data_hook_t * dhook;
 
-	i = proto_no = dz->dz_no;
-	if ((proto_no > DZ_NUMBER) || (proto_no < 1)) {
-		return -1;
-	}
-	
-	dhook = dz_entry [i].p_hook;
-	while (dhook != NULL) {
-		if (dhook->app_id == app_id) {
-			if (dhook->proto_data_no == proto_no) {
-				/* 获取互斥信号量 */
-				sem_timewait (&dz_entry->mutex, NULL);
-				dz->tag = dz_entry [i].tag;
-				dz->data_len = dz_entry [i].data_len;
-				memcpy(dz->data_buf,dz_entry [i].data_buf,dz->data_len);
-	
-				/* 释放互斥信号量 */
-				sem_post (&dz_entry->mutex);
-			}
-			break;
-		}
-		dhook = dhook->next;
-		i++;
-	}
-	return 0;
+    i = proto_no = dz->dz_no;
+    if ((proto_no > DZ_NUMBER) || (proto_no < 1)) {
+        return -1;
+    }
+
+    dhook = dz_entry [i].p_hook;
+    while (dhook != NULL) {
+        if (dhook->app_id == app_id) {
+            if (dhook->proto_data_no == proto_no) {
+                /* 获取互斥信号量 */
+                sem_timewait (&dz_entry->mutex, NULL);
+                dz->tag = dz_entry [i].tag;
+                dz->data_len = dz_entry [i].data_len;
+                memcpy(dz->data_buf,dz_entry [i].data_buf,dz->data_len);
+
+                /* 释放互斥信号量 */
+                sem_post (&dz_entry->mutex);
+            }
+            break;
+        }
+        dhook = dhook->next;
+        i++;
+    }
+    return 0;
 }
 
 int dz_get_total_num (
-	int app_id,
-	unsigned int * num		/* 返回遥测总数目 */
-	)
+    int app_id,
+    unsigned int * num		/* 返回遥测总数目 */
+    )
 {
-	if (num != NULL) {
-		* num = DZ_NUMBER;
-		return 0;
-	}
-	else {
-		return -1;
-	}
+    if (num != NULL) {
+        * num = DZ_NUMBER;
+        return 0;
+    }
+    else {
+        return -1;
+    }
 }
 
 int dz_get_total_num_proto (
-	int app_id,
-	unsigned int * num		/* 返回定值总数目 */
-	)
+    int app_id,
+    unsigned int * num		/* 返回定值总数目 */
+    )
 {
-	dz_t * dz_entry = dz_lst;
-	data_hook_t * dhook;
-	int i, dz_num;
+    dz_t * dz_entry = dz_lst;
+    data_hook_t * dhook;
+    int i, dz_num;
 
-	if (num != NULL) {
-		dz_num = 0;
-		for (i = 0; i < DZ_NUMBER; i++) {
-			dhook = dz_entry [i].p_hook;
-			while (dhook != NULL) {
-				if (dhook->app_id == app_id) {
-					dz_num++;
-					break;
-				}
-				dhook = dhook->next;
-			}
-		}
-		* num = dz_num;
-		return 0;
-	}
-	else {
-		return -1;
-	}
+    if (num != NULL) {
+        dz_num = 0;
+        for (i = 0; i < DZ_NUMBER; i++) {
+            dhook = dz_entry [i].p_hook;
+            while (dhook != NULL) {
+                if (dhook->app_id == app_id) {
+                    dz_num++;
+                    break;
+                }
+                dhook = dhook->next;
+            }
+        }
+        * num = dz_num;
+        return 0;
+    }
+    else {
+        return -1;
+    }
 }
 
 int yk_select (
@@ -1321,41 +1349,41 @@ int yk_select_proto (
         int flag				/* 是否发送给QT的rdb */
         )
 {
-	unsigned int i, ctl_val;
-	int ret = -1, proto_no = -1;
-	yk_t * yk_entry = yk_lst;
-	data_hook_t * dhook;
-	time_type ts;
-	internal_msg_t * p_i_msg;
-	unsigned char sbuf [MAX_MSG_LEN];
-	rdb_yk_select_t * yk_select_temp;
-	if (yk_no >= YK_NUMBER) {
-		return -1;
-	}
+    unsigned int i, ctl_val;
+    int ret = -1, proto_no = -1;
+    yk_t * yk_entry = yk_lst;
+    data_hook_t * dhook;
+    time_type ts;
+    internal_msg_t * p_i_msg;
+    unsigned char sbuf [MAX_MSG_LEN];
+    rdb_yk_select_t * yk_select_temp;
+    if (yk_no >= YK_NUMBER) {
+        return -1;
+    }
 
-	ctl_val = val;
-	if (ctl_val != DP_OPEN && ctl_val != DP_CLOSE) {
-		return -1;
-	}
-	
-	for (i = 0; i < YK_NUMBER; i++) {
-		dhook = yk_entry [i].p_hook;
-		while (dhook != NULL) {
-			if (dhook->app_id == app_id) {
-				if (dhook->proto_data_no == yk_no) {
-					proto_no = i;
-					break;
-				}
-			}
-			dhook = dhook->next;
-		}
-		if (proto_no != -1) {
-			break;
-		}
-	}
-	if (proto_no == -1) {
-		return -1;
-	}
+    ctl_val = val;
+    if (ctl_val != DP_OPEN && ctl_val != DP_CLOSE) {
+        return -1;
+    }
+
+    for (i = 0; i < YK_NUMBER; i++) {
+        dhook = yk_entry [i].p_hook;
+        while (dhook != NULL) {
+            if (dhook->app_id == app_id) {
+                if (dhook->proto_data_no == yk_no) {
+                    proto_no = i;
+                    break;
+                }
+            }
+            dhook = dhook->next;
+        }
+        if (proto_no != -1) {
+            break;
+        }
+    }
+    if (proto_no == -1) {
+        return -1;
+    }
 
     yk_entry = &yk_entry [proto_no];
     /* 获取互斥信号量 */
@@ -1376,28 +1404,28 @@ int yk_select_proto (
     }
     else {
         //_DPRINTF ("yk(%d) selected(%s) by app(%d) check failed\n", yk_no, ctl_val == DP_OPEN ? "OPEN" : "CLOSE", app_id);
-		 rdb_udp->yk_select.yk_result = 0x55;
+         rdb_udp->yk_select.yk_result = 0x55;
     }
-	if(flag){
-		/*将参数发送给104的rdb*/
-		p_i_msg = (internal_msg_t *)sbuf;
-		p_i_msg->type = MSG_YK_EVENT;
-		p_i_msg->sub_type = MSG_YK_SELECT;
-		yk_select_temp = (rdb_yk_select_t *)p_i_msg->content;
-		rdb_udp->yk_select.yk_no = yk_no;
-		rdb_udp->yk_select.val = val;
-		rdb_udp->yk_select.app_id = app_id;
-		
-		memcpy (yk_select_temp,&rdb_udp->yk_select,sizeof(rdb_yk_select_t));
-		p_i_msg->content_len = sizeof(rdb_yk_select_t);
-		printf("Send rdb msg:");
-		for(i=0;i<p_i_msg->content_len+INTERNAL_MSG_HEAD_LEN;i++){
-			printf("0x%02x ",sbuf[i]);							
-		}
-		printf("\n");	
-		sendto(rdb_udp->rdb_client_id,sbuf, p_i_msg->content_len + INTERNAL_MSG_HEAD_LEN, 0, (struct sockaddr *)&(rdb_udp->client_addr), sizeof(rdb_udp->client_addr));
-		
-	}
+    if(flag){
+        /*将参数发送给104的rdb*/
+        p_i_msg = (internal_msg_t *)sbuf;
+        p_i_msg->type = MSG_YK_EVENT;
+        p_i_msg->sub_type = MSG_YK_SELECT;
+        yk_select_temp = (rdb_yk_select_t *)p_i_msg->content;
+        rdb_udp->yk_select.yk_no = yk_no;
+        rdb_udp->yk_select.val = val;
+        rdb_udp->yk_select.app_id = app_id;
+
+        memcpy (yk_select_temp,&rdb_udp->yk_select,sizeof(rdb_yk_select_t));
+        p_i_msg->content_len = sizeof(rdb_yk_select_t);
+        printf("Send rdb msg:");
+        for(i=0;i<p_i_msg->content_len+INTERNAL_MSG_HEAD_LEN;i++){
+            printf("0x%02x ",sbuf[i]);
+        }
+        printf("\n");
+        sendto(rdb_udp->rdb_client_id,sbuf, p_i_msg->content_len + INTERNAL_MSG_HEAD_LEN, 0, (struct sockaddr *)&(rdb_udp->client_addr), sizeof(rdb_udp->client_addr));
+
+    }
 
     /* 释放互斥信号量 */
     sem_post (&yk_entry->mutex);
@@ -1450,35 +1478,35 @@ int yk_unselect_proto (
         int flag				/* 是否发送给QT的rdb */
         )
 {
-	unsigned int i;
-	int ret = -1, proto_no = -1;
-	yk_t * yk_entry = yk_lst;
-	data_hook_t * dhook;
-	time_type ts;
-	
-	internal_msg_t * p_i_msg;
-	unsigned char sbuf [MAX_MSG_LEN];
-	rdb_yk_unselect_t * yk_unselect_temp;
-	
-	if (yk_no >= YK_NUMBER) {
-		return -1;
-	}
-	
-	for (i = 0; i < YK_NUMBER; i++) {
-		dhook = yk_entry [i].p_hook;
-		while (dhook != NULL) {
-			if (dhook->app_id == app_id) {
-				if (dhook->proto_data_no == yk_no) {
-					proto_no = i;
-					break;
-				}
-			}
-			dhook = dhook->next;
-		}
-		if (proto_no != -1) {
-			break;
-		}
-	}
+    unsigned int i;
+    int ret = -1, proto_no = -1;
+    yk_t * yk_entry = yk_lst;
+    data_hook_t * dhook;
+    time_type ts;
+
+    internal_msg_t * p_i_msg;
+    unsigned char sbuf [MAX_MSG_LEN];
+    rdb_yk_unselect_t * yk_unselect_temp;
+
+    if (yk_no >= YK_NUMBER) {
+        return -1;
+    }
+
+    for (i = 0; i < YK_NUMBER; i++) {
+        dhook = yk_entry [i].p_hook;
+        while (dhook != NULL) {
+            if (dhook->app_id == app_id) {
+                if (dhook->proto_data_no == yk_no) {
+                    proto_no = i;
+                    break;
+                }
+            }
+            dhook = dhook->next;
+        }
+        if (proto_no != -1) {
+            break;
+        }
+    }
 
     if (proto_no == -1) {
         return -1;
@@ -1503,30 +1531,30 @@ int yk_unselect_proto (
             //	send_co_msg (yk_no, &ts, CO_CANCEL, DP_OPEN /* 单点 */);
             rdb_udp->yk_unselect.yk_result = 0xff;
         }
-		else{
-		 	rdb_udp->yk_unselect.yk_result = 0x55;
-		}
+        else{
+            rdb_udp->yk_unselect.yk_result = 0x55;
+        }
     }
-	
-	if(flag){
-		/*将参数发送给QT的rdb*/
-		p_i_msg = (internal_msg_t *)sbuf;
-		p_i_msg->type = MSG_YK_EVENT;
-		p_i_msg->sub_type = MSG_YK_UNSELECT;
-		yk_unselect_temp = (rdb_yk_select_t *)p_i_msg->content;
-		rdb_udp->yk_unselect.yk_no = yk_no;
-		rdb_udp->yk_unselect.app_id = app_id;
-		
-		memcpy (yk_unselect_temp,&rdb_udp->yk_unselect,sizeof(rdb_yk_unselect_t));
-		p_i_msg->content_len = sizeof(rdb_yk_unselect_t);
-		sendto(rdb_udp->rdb_client_id,sbuf, p_i_msg->content_len + INTERNAL_MSG_HEAD_LEN, 0, (struct sockaddr *)&(rdb_udp->client_addr), sizeof(rdb_udp->client_addr));
-		p_i_msg->content_len = sizeof(rdb_yk_select_t);
-		printf("Send rdb msg:");
-		for(i=0;i<p_i_msg->content_len+INTERNAL_MSG_HEAD_LEN;i++){
-			printf("0x%02x ",sbuf[i]);							
-		}
-		printf("\n");
-	}
+
+    if(flag){
+        /*将参数发送给QT的rdb*/
+        p_i_msg = (internal_msg_t *)sbuf;
+        p_i_msg->type = MSG_YK_EVENT;
+        p_i_msg->sub_type = MSG_YK_UNSELECT;
+        yk_unselect_temp = (rdb_yk_select_t *)p_i_msg->content;
+        rdb_udp->yk_unselect.yk_no = yk_no;
+        rdb_udp->yk_unselect.app_id = app_id;
+
+        memcpy (yk_unselect_temp,&rdb_udp->yk_unselect,sizeof(rdb_yk_unselect_t));
+        p_i_msg->content_len = sizeof(rdb_yk_unselect_t);
+        sendto(rdb_udp->rdb_client_id,sbuf, p_i_msg->content_len + INTERNAL_MSG_HEAD_LEN, 0, (struct sockaddr *)&(rdb_udp->client_addr), sizeof(rdb_udp->client_addr));
+        p_i_msg->content_len = sizeof(rdb_yk_select_t);
+        printf("Send rdb msg:");
+        for(i=0;i<p_i_msg->content_len+INTERNAL_MSG_HEAD_LEN;i++){
+            printf("0x%02x ",sbuf[i]);
+        }
+        printf("\n");
+    }
     /* 释放互斥信号量 */
     sem_post (&yk_entry->mutex);
 
@@ -1598,24 +1626,24 @@ int yk_operate_proto (
     if (yk_no >= YK_NUMBER) {
         return -1;
     }
-	ctl_val = val;
-	if (ctl_val != DP_OPEN && ctl_val != DP_CLOSE) {
-		return -1;
+    ctl_val = val;
+    if (ctl_val != DP_OPEN && ctl_val != DP_CLOSE) {
+        return -1;
     }
-	for (i = 0; i < YK_NUMBER; i++) {
-		dhook = yk_entry [i].p_hook;
-		while (dhook != NULL) {
-			if (dhook->app_id == app_id) {
-				if (dhook->proto_data_no == yk_no) {
-					proto_no = i;
-					break;
-				}
-			}
-			dhook = dhook->next;
-		}
-		if (proto_no != -1) {
-			break;
-		}
+    for (i = 0; i < YK_NUMBER; i++) {
+        dhook = yk_entry [i].p_hook;
+        while (dhook != NULL) {
+            if (dhook->app_id == app_id) {
+                if (dhook->proto_data_no == yk_no) {
+                    proto_no = i;
+                    break;
+                }
+            }
+            dhook = dhook->next;
+        }
+        if (proto_no != -1) {
+            break;
+        }
     }
     if (proto_no == -1) {
         return -1;
@@ -1642,27 +1670,27 @@ int yk_operate_proto (
     }
     else {
 //       _DPRINTF ("yk(%d) operate(%s) by app(%d) check failed\n", yk_no, ctl_val == DP_OPEN ? "OPEN" : "CLOSE", app_id);
-		rdb_udp->yk_operate.yk_result = 0x55;
+        rdb_udp->yk_operate.yk_result = 0x55;
         printf("rdb:yk_result%d\n",rdb_udp->yk_operate.yk_result);
     }
-	if(flag){
-		/*将参数发送给QT的rdb*/
-		p_i_msg = (internal_msg_t *)sbuf;
-		p_i_msg->type = MSG_YK_EVENT;
-		p_i_msg->sub_type = MSG_YK_OPERATE;
-		yk_operate_temp = (rdb_yk_operate_t *)p_i_msg->content;
-		rdb_udp->yk_operate.yk_no = yk_no;
-		rdb_udp->yk_operate.val = val;
-		rdb_udp->yk_operate.app_id = app_id;
+    if(flag){
+        /*将参数发送给QT的rdb*/
+        p_i_msg = (internal_msg_t *)sbuf;
+        p_i_msg->type = MSG_YK_EVENT;
+        p_i_msg->sub_type = MSG_YK_OPERATE;
+        yk_operate_temp = (rdb_yk_operate_t *)p_i_msg->content;
+        rdb_udp->yk_operate.yk_no = yk_no;
+        rdb_udp->yk_operate.val = val;
+        rdb_udp->yk_operate.app_id = app_id;
         memcpy (yk_operate_temp,&rdb_udp->yk_operate,sizeof(rdb_yk_operate_t));
-		p_i_msg->content_len = sizeof(rdb_yk_operate_t);
-		sendto(rdb_udp->rdb_client_id,sbuf, p_i_msg->content_len + INTERNAL_MSG_HEAD_LEN, 0, (struct sockaddr *)&(rdb_udp->client_addr), sizeof(rdb_udp->client_addr));
-		printf("Send rdb msg:");
-		for(i=0;i<p_i_msg->content_len+INTERNAL_MSG_HEAD_LEN;i++){
-			printf("0x%02x ",sbuf[i]);							
-		}
-		printf("\n");	
-	}
+        p_i_msg->content_len = sizeof(rdb_yk_operate_t);
+        sendto(rdb_udp->rdb_client_id,sbuf, p_i_msg->content_len + INTERNAL_MSG_HEAD_LEN, 0, (struct sockaddr *)&(rdb_udp->client_addr), sizeof(rdb_udp->client_addr));
+        printf("Send rdb msg:");
+        for(i=0;i<p_i_msg->content_len+INTERNAL_MSG_HEAD_LEN;i++){
+            printf("0x%02x ",sbuf[i]);
+        }
+        printf("\n");
+    }
     /* 释放互斥信号量 */
     sem_post (&yk_entry->mutex);
 
@@ -1718,27 +1746,27 @@ int yk_done_proto (
     unsigned char sbuf [MAX_MSG_LEN];
     rdb_yk_done_t * yk_done_temp;
 
-	if (yk_no >= YK_NUMBER) {
-		return -1;
-	}
-	for (i = 0; i < YK_NUMBER; i++) {
-		dhook = yk_entry [i].p_hook;
-		while (dhook != NULL) {
-			if (dhook->app_id == app_id) {
-				if (dhook->proto_data_no == yk_no) {
-					proto_no = i;
-					break;
-				}
-			}
-			dhook = dhook->next;
-		}
-		if (proto_no != -1) {
-			break;
-		}
-	}
-	if (proto_no == -1) {
-		return -1;
-	}
+    if (yk_no >= YK_NUMBER) {
+        return -1;
+    }
+    for (i = 0; i < YK_NUMBER; i++) {
+        dhook = yk_entry [i].p_hook;
+        while (dhook != NULL) {
+            if (dhook->app_id == app_id) {
+                if (dhook->proto_data_no == yk_no) {
+                    proto_no = i;
+                    break;
+                }
+            }
+            dhook = dhook->next;
+        }
+        if (proto_no != -1) {
+            break;
+        }
+    }
+    if (proto_no == -1) {
+        return -1;
+    }
 
     yk_entry = &yk_entry [proto_no];
 
@@ -1756,25 +1784,25 @@ int yk_done_proto (
         //_DPRINTF ("yk(%d) operate(%s) by app(%d) done check failed\n", yk_no, yk_entry->ctl_val == DP_OPEN ? "OPEN" : "CLOSE", yk_entry->app_id);
     }
 #if 0
-	if(flag){
-		/*将参数发送给QT的rdb*/
-		p_i_msg = (internal_msg_t *)sbuf;
-		p_i_msg->type = MSG_YK_EVENT;
-		p_i_msg->sub_type = MSG_YK_DONE;
-		yk_done_temp = (rdb_yk_done_t *)p_i_msg->content;
-		rdb_udp->yk_done.yk_no = yk_no;
-		rdb_udp->yk_done.ret = ret;
-		rdb_udp->yk_done.app_id = app_id;
-		
-		memcpy (yk_done_temp,&rdb_udp->yk_done,sizeof(rdb_yk_done_t));
-		p_i_msg->content_len = sizeof(rdb_yk_done_t);
-		sendto(rdb_udp->rdb_client_id,sbuf, p_i_msg->content_len + INTERNAL_MSG_HEAD_LEN, 0, (struct sockaddr *)&(rdb_udp->client_addr), sizeof(rdb_udp->client_addr));
-		printf("Send rdb msg:");
-		for(i=0;i<p_i_msg->content_len+INTERNAL_MSG_HEAD_LEN;i++){
-			printf("0x%02x ",sbuf[i]);							
-		}
-		printf("\n");	
-	}		
+    if(flag){
+        /*将参数发送给QT的rdb*/
+        p_i_msg = (internal_msg_t *)sbuf;
+        p_i_msg->type = MSG_YK_EVENT;
+        p_i_msg->sub_type = MSG_YK_DONE;
+        yk_done_temp = (rdb_yk_done_t *)p_i_msg->content;
+        rdb_udp->yk_done.yk_no = yk_no;
+        rdb_udp->yk_done.ret = ret;
+        rdb_udp->yk_done.app_id = app_id;
+
+        memcpy (yk_done_temp,&rdb_udp->yk_done,sizeof(rdb_yk_done_t));
+        p_i_msg->content_len = sizeof(rdb_yk_done_t);
+        sendto(rdb_udp->rdb_client_id,sbuf, p_i_msg->content_len + INTERNAL_MSG_HEAD_LEN, 0, (struct sockaddr *)&(rdb_udp->client_addr), sizeof(rdb_udp->client_addr));
+        printf("Send rdb msg:");
+        for(i=0;i<p_i_msg->content_len+INTERNAL_MSG_HEAD_LEN;i++){
+            printf("0x%02x ",sbuf[i]);
+        }
+        printf("\n");
+    }
     /* 释放互斥信号量 */
 #endif
     /*sem_post (&yk_entry->mutex);*/
@@ -1959,7 +1987,7 @@ static void rdb_recv_task (void * arg)
     int read_len, ret,temp_fd,offset;
     /*struct*/ fd_set read_fds;
     struct sockaddr_in cli;
-	struct timeval tv;
+    struct timeval tv;
     socklen_t cli_addr_len;
     unsigned char rbuf [MAX_MSG_LEN];
     internal_msg_t * p_i_msg;
@@ -1970,7 +1998,7 @@ static void rdb_recv_task (void * arg)
     rdb_yk_operate_t * yk_operate_temp;
     rdb_yk_done_t * yk_done_temp;
     rdb_dz_param_t * dz_temp;
-	int i;
+    int i;
     while (1) {
         /* external msg */
         temp_fd = rdb_udp->rdb_server_id;
@@ -1993,17 +2021,17 @@ static void rdb_recv_task (void * arg)
             if (FD_ISSET (temp_fd, &read_fds)) {/*检查是否有客户端发来消息*/
                 read_len = recvfrom (temp_fd, (char *)rbuf, sizeof (rbuf),0, (struct sockaddr *)&cli, &cli_addr_len);
                 if (read_len <= 0) {
-                    _DPRINTF ("sfd(%d) recv external msg timeout or error, closed\n", temp_fd);                 
+                    _DPRINTF ("sfd(%d) recv external msg timeout or error, closed\n", temp_fd);
                     continue;
                 }
                 else {
                     offset = 0;
                     while (offset < read_len) {
 #if 1
-						printf("Recv rdb msg:");
-						for(i=0;i<read_len;i++){
-							printf("0x%02x ",rbuf[i+offset]);							
-						}
+                        printf("Recv rdb msg:");
+                        for(i=0;i<read_len;i++){
+                            printf("0x%02x ",rbuf[i+offset]);
+                        }
                         printf("\n");
 #endif
                         p_i_msg = (internal_msg_t *)(rbuf + offset);
@@ -2042,10 +2070,10 @@ static void rdb_recv_task (void * arg)
                             }
                             offset += (p_i_msg->content_len + INTERNAL_MSG_HEAD_LEN);
                             break;
-						case MSG_DZ_EVENT:
-							dz_temp = (rdb_dz_param_t *)p_i_msg->content;
-							dz_set_value(dz_temp,0);							
-							offset += (p_i_msg->content_len + INTERNAL_MSG_HEAD_LEN);
+                        case MSG_DZ_EVENT:
+                            dz_temp = (rdb_dz_param_t *)p_i_msg->content;
+                            dz_set_value(dz_temp,0);
+                            offset += (p_i_msg->content_len + INTERNAL_MSG_HEAD_LEN);
                         default:
                             offset += sizeof (internal_msg_t);
                             break;

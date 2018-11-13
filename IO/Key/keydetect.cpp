@@ -45,7 +45,7 @@ KeyDetect::KeyDetect (QObject *parent) : QThread(parent)
     }
 
     /* start pthread */
-    this->start ();
+//    this->start ();
 }
 
 void KeyDetect::check_press_once (int pin, enum KEY_VALUE key)

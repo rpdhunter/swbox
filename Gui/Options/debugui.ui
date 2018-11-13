@@ -44,7 +44,7 @@
       <enum>QTabWidget::Rounded</enum>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <property name="elideMode">
       <enum>Qt::ElideRight</enum>
@@ -431,77 +431,24 @@
       <attribute name="title">
        <string/>
       </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_3">
-       <property name="leftMargin">
-        <number>20</number>
-       </property>
+      <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
         <layout class="QGridLayout" name="gridLayout_3">
-         <item row="1" column="2">
-          <widget class="QLineEdit" name="lineEdit_L1_offset">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
+         <item row="2" column="1">
+          <widget class="QLabel" name="label_L1_Camera">
            <property name="text">
-            <string/>
+            <string>摄像头</string>
            </property>
           </widget>
          </item>
-         <item row="0" column="2">
-          <widget class="QLineEdit" name="lineEdit_L1_Step">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="1">
-          <widget class="QLabel" name="label_L1_SET1">
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_L1">
            <property name="text">
-            <string>幅值变化门槛</string>
+            <string>AA1</string>
            </property>
           </widget>
          </item>
-         <item row="1" column="3">
-          <widget class="QLabel" name="label_8">
-           <property name="text">
-            <string>参考值：</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="1">
-          <widget class="QLabel" name="label_5">
-           <property name="text">
-            <string>噪声偏置</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="4">
-          <widget class="QLabel" name="lab_offset_noise_L1">
-           <property name="frameShape">
-            <enum>QFrame::Panel</enum>
-           </property>
-           <property name="frameShadow">
-            <enum>QFrame::Sunken</enum>
-           </property>
-           <property name="text">
-            <string notr="true">0</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="1">
-          <widget class="QLabel" name="label">
-           <property name="text">
-            <string>声音输出</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="2">
+         <item row="6" column="2">
           <layout class="QHBoxLayout" name="horizontalLayout_2">
            <property name="spacing">
             <number>3</number>
@@ -522,10 +469,85 @@
            </item>
           </layout>
          </item>
-         <item row="0" column="0">
-          <widget class="QLabel" name="label_L1">
+         <item row="6" column="1">
+          <widget class="QLabel" name="label">
            <property name="text">
-            <string>AA1</string>
+            <string>声音输出</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="2">
+          <layout class="QHBoxLayout" name="horizontalLayout_7">
+           <item>
+            <widget class="QRadioButton" name="rbt_L1_camera_on">
+             <property name="text">
+              <string>开启</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="rbt_L1_camera_off">
+             <property name="text">
+              <string>关闭</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item row="0" column="2">
+          <widget class="QLineEdit" name="lineEdit_L1_offset">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="4">
+          <widget class="QLabel" name="lab_offset_noise_L1">
+           <property name="frameShape">
+            <enum>QFrame::Panel</enum>
+           </property>
+           <property name="frameShadow">
+            <enum>QFrame::Sunken</enum>
+           </property>
+           <property name="text">
+            <string notr="true">0</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLabel" name="label_5">
+           <property name="text">
+            <string>噪声偏置</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="3">
+          <widget class="QLabel" name="label_8">
+           <property name="text">
+            <string>参考值：</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QLabel" name="label_L1_Freq">
+           <property name="text">
+            <string>传感器中心频率</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="2">
+          <widget class="QLineEdit" name="lineEdit_L1_Freq">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
            </property>
           </widget>
          </item>
@@ -540,64 +562,7 @@
        </item>
        <item>
         <layout class="QGridLayout" name="gridLayout_7">
-         <item row="0" column="1">
-          <widget class="QLabel" name="label_L2_SET1">
-           <property name="text">
-            <string>幅值变化门槛</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="4">
-          <widget class="QLabel" name="lab_offset_noise_L2">
-           <property name="frameShape">
-            <enum>QFrame::Panel</enum>
-           </property>
-           <property name="frameShadow">
-            <enum>QFrame::Sunken</enum>
-           </property>
-           <property name="text">
-            <string notr="true">0</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="2">
-          <widget class="QLineEdit" name="lineEdit_L2_offset">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="text">
-            <string/>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="2">
-          <widget class="QLineEdit" name="lineEdit_L2_Step">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="3">
-          <widget class="QLabel" name="label_10">
-           <property name="text">
-            <string>参考值：</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="1">
-          <widget class="QLabel" name="label_7">
-           <property name="text">
-            <string>噪声偏置</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="2">
+         <item row="5" column="2">
           <layout class="QHBoxLayout" name="horizontalLayout_4">
            <property name="spacing">
             <number>3</number>
@@ -618,7 +583,7 @@
            </item>
           </layout>
          </item>
-         <item row="3" column="1">
+         <item row="5" column="1">
           <widget class="QLabel" name="label_2">
            <property name="text">
             <string>声音输出</string>
@@ -629,6 +594,88 @@
           <widget class="QLabel" name="label_L2">
            <property name="text">
             <string>AA2</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QLabel" name="label_L2_Camera">
+           <property name="text">
+            <string>摄像头</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="2">
+          <layout class="QHBoxLayout" name="horizontalLayout_8">
+           <item>
+            <widget class="QRadioButton" name="rbt_L2_camera_on">
+             <property name="text">
+              <string>开启</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="rbt_L2_camera_off">
+             <property name="text">
+              <string>关闭</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item row="1" column="1">
+          <widget class="QLabel" name="label_L2_Freq">
+           <property name="text">
+            <string>传感器中心频率</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="2">
+          <widget class="QLineEdit" name="lineEdit_L2_Freq">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLabel" name="label_7">
+           <property name="text">
+            <string>噪声偏置</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="2">
+          <widget class="QLineEdit" name="lineEdit_L2_offset">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="3">
+          <widget class="QLabel" name="label_10">
+           <property name="text">
+            <string>参考值：</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="4">
+          <widget class="QLabel" name="lab_offset_noise_L2">
+           <property name="frameShape">
+            <enum>QFrame::Panel</enum>
+           </property>
+           <property name="frameShadow">
+            <enum>QFrame::Sunken</enum>
+           </property>
+           <property name="text">
+            <string notr="true">0</string>
            </property>
           </widget>
          </item>

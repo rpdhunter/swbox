@@ -73,5 +73,7 @@
         <file>widgetphoto/wifi/wifi0_b.png</file>
         <file>MyInputPanel.qml</file>
         <file>MyKeyboard.qml</file>
+        <file>widgetphoto/wifi/key.png</file>
+        <file>widgetphoto/wifi/lock.png</file>
     </qresource>
 </RCC>

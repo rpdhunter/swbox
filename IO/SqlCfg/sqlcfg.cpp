@@ -115,31 +115,19 @@ SQL_PARA *SqlCfg::default_config(void)
     sql_para.location_sql.chart = CURVE;
 
     /* setting para */
+
     sql_para.freq_val = SYSTEM_FREQ;						//default 50Hz
+    qDebug()<<"sql_para.freq_val"<<sql_para.freq_val;
     sql_para.backlight = BACK_LIGTH;						//backlight 0~7
     sql_para.key_backlight = 0;                             //默认键盘背光关闭
     sql_para.screen_dark_time = SCREEN_DARK_TIME;
     sql_para.screen_close_time = SCREEN_CLOSE_TIME;
-    sql_para.wifi_trans_mode = wifi_ftp;
     sql_para.close_time = SHUT_DOWN_TIME;
-    sql_para.language = LANGUAGE_DEF;
+    sql_para.language = CN;
 
     sql_para.max_rec_num = MAX_REC_NUM;
     sql_para.buzzer_on = false;
     sql_para.auto_rec_interval = 1;
-
-//    sql_para.menu_h1 = TEV1;
-//    sql_para.menu_h2 = HFCT2;
-//    sql_para.menu_l1 = AA1;
-//#ifdef OHV
-//    sql_para.menu_l2 = Disable;
-//    sql_para.menu_double = Disable;
-//    sql_para.menu_asset = Disable;
-//#else
-//    sql_para.menu_l2 = AE2;
-//    sql_para.menu_double = Double_Channel;
-//    sql_para.menu_asset = ASSET;
-//#endif
 
 
     sql_para.sync_mode = SYNC_NONE;
@@ -282,6 +270,7 @@ void SqlCfg::aa_default(L_CHANNEL_SQL &sql)
     sql.envelope = 1;                      //默认使用包络线
     sql.fpga_threshold = FPGA_THRESHOLD;
     sql.sensor_freq = 40;
+    sql.camera = false;
 }
 
 void SqlCfg::ae_default(L_CHANNEL_SQL &sql)
@@ -298,6 +287,7 @@ void SqlCfg::ae_default(L_CHANNEL_SQL &sql)
     sql.envelope = 1;                      //默认使用包络线
     sql.fpga_threshold = FPGA_THRESHOLD;
     sql.sensor_freq = 30;                   //默认传感器中心频率
+    sql.camera = false;
 }
 
 void SqlCfg::sql_save(SQL_PARA *sql_para)

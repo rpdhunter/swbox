@@ -84,6 +84,7 @@ void AEWidget::fresh_100ms()
 
     plot_Histogram->replot();
 
+    //频谱图
     do_Spectra_compute();
 
 
@@ -361,18 +362,18 @@ void AEWidget::fresh(bool f)
         }
 
         if(mode == AE1){
-            Common::rdb_set_yc_value(AE1_amplitude,val_db,is_current);
-            Common::rdb_set_yc_value(AE1_severity,0,is_current);
-            Common::rdb_set_yc_value(AE1_gain,aeultra_sql->gain,is_current);
-            Common::rdb_set_yc_value(AE1_biased,aeultra_sql->offset,is_current);
-            Common::rdb_set_yc_value(AE1_biased_adv,offset,is_current);
+            Common::rdb_set_yc_value(AE1_amplitude_yc,val_db,is_current);
+//            Common::rdb_set_yc_value(AE1_severity,0,is_current);
+//            Common::rdb_set_yc_value(AE1_gain,aeultra_sql->gain,is_current);
+//            Common::rdb_set_yc_value(AE1_biased,aeultra_sql->offset,is_current);
+            Common::rdb_set_yc_value(AE1_noise_biased_adv_yc,offset,is_current);
         }
         else if(mode == AE2){
-            Common::rdb_set_yc_value(AE2_amplitude,val_db,is_current);
-            Common::rdb_set_yc_value(AE2_severity,0,is_current);
-            Common::rdb_set_yc_value(AE2_gain,aeultra_sql->gain,is_current);
-            Common::rdb_set_yc_value(AE2_biased,aeultra_sql->offset,is_current);
-            Common::rdb_set_yc_value(AE2_biased_adv,offset,is_current);
+            Common::rdb_set_yc_value(AE2_amplitude_yc,val_db,is_current);
+//            Common::rdb_set_yc_value(AE2_severity,0,is_current);
+//            Common::rdb_set_yc_value(AE2_gain,aeultra_sql->gain,is_current);
+//            Common::rdb_set_yc_value(AE2_biased,aeultra_sql->offset,is_current);
+            Common::rdb_set_yc_value(AE2_noise_biased_adv_yc,offset,is_current);
         }
         emit send_log_data(val_db,0,0,is_current);
     }

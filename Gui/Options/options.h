@@ -10,6 +10,7 @@
 #include "Gui/Common/basewidget.h"
 #include "Gui/Common/wifipassword.h"
 #include <QtCharts/QChartGlobal>
+#include "../Common/wifi.h"
 
 namespace Ui {
 class OptionUi;
@@ -41,7 +42,7 @@ public slots:
 signals:
     void fregChanged(int );
     void closeTimeChanged(int);
-    void update_statusBar(QString);
+//    void update_statusBar(QString);
     void change_sync_status();
 
     void show_input(QString,QString);
@@ -49,9 +50,9 @@ signals:
     void show_wifi_icon(int);
 
 private slots:
-    void wifi_aplist(bool f, QStringList list);
+    void refresh_wifi_aplist();
     void wifi_hotpot_finished(bool f);
-    void wifi_connect_route(bool f, QStringList iplist);
+    void wifi_connect_route(bool f);
 
 private:
     Ui::OptionUi *ui;
@@ -76,6 +77,8 @@ private:
     QStringList aplist;
     int current_ap_index;       //当前连接的AP序号
 
+    Wifi *wifi;
+
     QChart *chart;
     QPieSeries *m_series;
     void reloadChart();         //重新读取chart数据
@@ -87,7 +90,7 @@ private:
     void saveDatetime();
     void refresh();
 
-    void ap_info_widget_init(QString str);
+    void ap_info_widget_init(AP_INFO ap);
 
     void do_key_ok();
     void do_key_cancel();

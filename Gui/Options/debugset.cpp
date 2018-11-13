@@ -58,26 +58,45 @@ void DebugSet::iniUi()
         ui->tabWidget->widget(i)->setStyleSheet("QWidget {background-color:lightGray;}");
     }
 
-    if(sqlcfg->get_para()->menu_h1 == HFCT1){       //高频模式隐藏噪声设置
+    if(sqlcfg->get_para()->menu_h1 == HFCT1){       //HFCT模式隐藏噪声设置
         ui->lab_noise_h1->hide();
         ui->lineEdit_H1_NOISE->hide();
         ui->lab_offset_noise_h1->hide();
     }
-    else{                                           //非高频模式隐藏模式判断
+    else{                                           //非HFCT模式隐藏模式判断
         ui->lab_bp_h1->hide();
         ui->rbt_bp_on_h1->hide();
         ui->rbt_bp_off_h1->hide();
     }
 
-    if(sqlcfg->get_para()->menu_h2 == HFCT2){       //高频模式隐藏噪声设置
+    if(sqlcfg->get_para()->menu_h2 == HFCT2){       //HFCT模式隐藏噪声设置
         ui->lab_noise_h2->hide();
         ui->lineEdit_H2_NOISE->hide();
         ui->lab_offset_noise_h2->hide();
     }
-    else{                                           //非高频模式隐藏模式判断
+    else{                                           //非HFCT模式隐藏模式判断
         ui->lab_bp_h2->hide();
         ui->rbt_bp_on_h2->hide();
         ui->rbt_bp_off_h2->hide();
+    }
+
+    if(sqlcfg->get_para()->menu_l1 == AA1){         //AA模式隐藏传感器频率
+        ui->label_L1_Freq->hide();
+        ui->lineEdit_L1_Freq->hide();
+    }
+    else{                                           //AE模式隐藏摄像头
+        ui->label_L1_Camera->hide();
+        ui->rbt_L1_camera_on->hide();
+        ui->rbt_L1_camera_off->hide();
+    }
+    if(sqlcfg->get_para()->menu_l2 == AE2){         //AE模式隐藏摄像头
+        ui->label_L2_Camera->hide();
+        ui->rbt_L2_camera_on->hide();
+        ui->rbt_L2_camera_off->hide();
+    }
+    else{                                           //AA模式隐藏传感器频率
+        ui->label_L2_Freq->hide();
+        ui->lineEdit_L2_Freq->hide();
     }
 
     QString style = "QLabel {font-family:WenQuanYi Micro Hei;font: bold; font-size:16px;color:green}";
@@ -94,16 +113,11 @@ void DebugSet::iniUi()
     if(sqlcfg->get_para()->menu_l1 == AA1 || sqlcfg->get_para()->menu_l1 == AE1){
         ui->label_L1->setStyleSheet(style);
         ui->label_L1->setText(Common::MODE_toString((MODE)sqlcfg->get_para()->menu_l1));
-        if(sqlcfg->get_para()->menu_l1 == AE1){
-            ui->label_L1_SET1->setText(tr("传感器中心频率"));
-        }
+
     }
     if(sqlcfg->get_para()->menu_l2 == AA2 || sqlcfg->get_para()->menu_l2 == AE2){
         ui->label_L2->setStyleSheet(style);
         ui->label_L2->setText(Common::MODE_toString((MODE)sqlcfg->get_para()->menu_l2));
-        if(sqlcfg->get_para()->menu_l2 == AE2){
-            ui->label_L2_SET1->setText(tr("传感器中心频率"));
-        }
     }
 
     ui->lineEdit_CompileTime->setText(QString("%1 %2").arg(__TIME__).arg(__DATE__));
@@ -117,6 +131,7 @@ void DebugSet::iniUi()
     QButtonGroup *group7 = new QButtonGroup(this);
     QButtonGroup *group8 = new QButtonGroup(this);
     QButtonGroup *group9 = new QButtonGroup(this);
+    QButtonGroup *group10 = new QButtonGroup(this);
     group1->addButton( ui->rb_HC1_TEV );
     group1->addButton( ui->rb_HC1_HFCT );;
     group1->addButton( ui->rb_HC1_UHF );
@@ -141,6 +156,8 @@ void DebugSet::iniUi()
     group8->addButton( ui->rbt_bp_on_h1 );
     group9->addButton( ui->rbt_bp_off_h2 );
     group9->addButton( ui->rbt_bp_on_h2 );
+    group10->addButton( ui->rbt_L1_camera_off );
+    group10->addButton( ui->rbt_L1_camera_on );
 
     chk_status_h1 = 00;
     chk_status_h2 = 00;
@@ -184,7 +201,10 @@ void DebugSet::saveSql()
     bool flag = true;      //判断是否需要重启标志
     if(sql_para.menu_l1 == sqlcfg->get_para()->menu_l1 && sql_para.menu_l2 == sqlcfg->get_para()->menu_l2
             && sql_para.menu_h1 == sqlcfg->get_para()->menu_h1 && sql_para.menu_h2 == sqlcfg->get_para()->menu_h2
-            && sql_para.menu_double == sqlcfg->get_para()->menu_double && sql_para.menu_asset == sqlcfg->get_para()->menu_asset){
+            && sql_para.menu_double == sqlcfg->get_para()->menu_double && sql_para.menu_asset == sqlcfg->get_para()->menu_asset
+            && sql_para.aa1_sql.camera == sqlcfg->get_para()->aa1_sql.camera && sql_para.aa2_sql.camera == sqlcfg->get_para()->aa2_sql.camera
+            && sql_para.hfct1_sql.mode_recognition == sqlcfg->get_para()->hfct1_sql.mode_recognition
+            && sql_para.hfct2_sql.mode_recognition == sqlcfg->get_para()->hfct2_sql.mode_recognition){
         flag = false;
     }
     sqlcfg->sql_save(&sql_para);
@@ -249,13 +269,14 @@ void DebugSet::reload()
     }
     switch (sqlcfg->get_para()->menu_l1) {
     case AA1:
-        ui->lineEdit_L1_Step->setText(QString("%1").arg(sql_para.aa1_sql.step ) );
+        ui->rbt_L1_camera_on->setChecked(sql_para.aa1_sql.camera);
+        ui->rbt_L1_camera_off->setChecked(!sql_para.aa1_sql.camera);
         ui->lineEdit_L1_offset->setText(QString("%1").arg(sql_para.aa1_sql.offset ) );
         ui->rbt_L1_envelope->setChecked(sql_para.aa1_sql.envelope);
         ui->rbt_L1_original->setChecked(!sql_para.aa1_sql.envelope);
         break;
     case AE1:
-        ui->lineEdit_L1_Step->setText(QString("%1").arg(sql_para.ae1_sql.sensor_freq ) );
+        ui->lineEdit_L1_Freq->setText(QString("%1").arg(sql_para.ae1_sql.sensor_freq ) );
         ui->lineEdit_L1_offset->setText(QString("%1").arg(sql_para.ae1_sql.offset ) );
         ui->rbt_L1_envelope->setChecked(sql_para.ae1_sql.envelope);
         ui->rbt_L1_original->setChecked(!sql_para.ae1_sql.envelope);
@@ -265,13 +286,14 @@ void DebugSet::reload()
     }
     switch (sqlcfg->get_para()->menu_l2) {
     case AA2:
-        ui->lineEdit_L2_Step->setText(QString("%1").arg(sql_para.aa2_sql.step ) );
+        ui->rbt_L2_camera_on->setChecked(sql_para.aa2_sql.camera);
+        ui->rbt_L2_camera_off->setChecked(!sql_para.aa2_sql.camera);
         ui->lineEdit_L2_offset->setText(QString("%1").arg(sql_para.aa2_sql.offset ) );
         ui->rbt_L2_envelope->setChecked(sql_para.aa2_sql.envelope);
         ui->rbt_L2_original->setChecked(!sql_para.aa2_sql.envelope);
         break;
     case AE2:
-        ui->lineEdit_L2_Step->setText(QString("%1").arg(sql_para.ae2_sql.sensor_freq ) );
+        ui->lineEdit_L2_Freq->setText(QString("%1").arg(sql_para.ae2_sql.sensor_freq ) );
         ui->lineEdit_L2_offset->setText(QString("%1").arg(sql_para.ae2_sql.offset ) );
         ui->rbt_L2_envelope->setChecked(sql_para.ae2_sql.envelope);
         ui->rbt_L2_original->setChecked(!sql_para.ae2_sql.envelope);
@@ -554,6 +576,8 @@ void DebugSet::do_key_cancel()
     }
     else{
         key_val->grade.val4 = 0;    //退出三级菜单
+        chk_status_h1 = 00;
+        chk_status_h2 = 00;
     }
 }
 
@@ -640,21 +664,21 @@ void DebugSet::do_key_left_right(int d)
             }
             break;
         case 2:     //低频
-            switch (key_val->grade.val4) {
-            case 1:
-                if(sqlcfg->get_para()->menu_l1 == AA1){
-                    Common::change_index(sql_para.aa1_sql.step, 0.5 * d, 10, 0.5);
-                }
-                else if(sqlcfg->get_para()->menu_l1 == AE1){
-                    Common::change_index(sql_para.ae1_sql.sensor_freq, 10 * d, 90, 30);
-                }
-                break;
-            case 2:     //L1噪声
+            switch (key_val->grade.val4) {            
+            case 1:     //L1噪声
                 if(sqlcfg->get_para()->menu_l1 == AA1){
                     sql_para.aa1_sql.offset += d;
                 }
                 else if(sqlcfg->get_para()->menu_l1 == AE1){
                     sql_para.ae1_sql.offset += d;
+                }
+                break;
+            case 2:     //L1摄像头/传感器中心频率
+                if(sqlcfg->get_para()->menu_l1 == AA1){
+                    sql_para.aa1_sql.camera = !sql_para.aa1_sql.camera;
+                }
+                else if(sqlcfg->get_para()->menu_l1 == AE1){
+                    Common::change_index(sql_para.ae1_sql.sensor_freq, 10 * d, 90, 30);
                 }
                 break;
             case 3:     //L1包络线
@@ -664,28 +688,28 @@ void DebugSet::do_key_left_right(int d)
                 else if(sqlcfg->get_para()->menu_l1 == AE1){
                     sql_para.ae1_sql.envelope = !sql_para.ae1_sql.envelope;
                 }
-                break;
-            case 4:
-                if(sqlcfg->get_para()->menu_l1 == AA1){
-                    Common::change_index(sql_para.aa2_sql.step, 0.5 * d, 10, 0.5);
-                }
-                else if(sqlcfg->get_para()->menu_l1 == AE1){
-                    Common::change_index(sql_para.ae2_sql.sensor_freq, 10 * d, 90, 30);
-                }
-                break;
-            case 5:     //L2噪声
-                if(sqlcfg->get_para()->menu_l1 == AA1){
+                break;            
+            case 4:     //L2噪声
+                if(sqlcfg->get_para()->menu_l2 == AA2){
                     sql_para.aa2_sql.offset += d;
                 }
-                else if(sqlcfg->get_para()->menu_l1 == AE1){
+                else if(sqlcfg->get_para()->menu_l2 == AE2){
                     sql_para.ae2_sql.offset += d;
                 }
                 break;
+            case 5:     //L2摄像头/传感器中心频率
+                if(sqlcfg->get_para()->menu_l2 == AA2){
+                    sql_para.aa2_sql.camera = !sql_para.aa2_sql.camera;
+                }
+                else if(sqlcfg->get_para()->menu_l2 == AE2){
+                    Common::change_index(sql_para.ae2_sql.sensor_freq, 10 * d, 90, 30);
+                }
+                break;
             case 6:     //L2包络线
-                if(sqlcfg->get_para()->menu_l1 == AA1){
+                if(sqlcfg->get_para()->menu_l2 == AA2){
                     sql_para.aa2_sql.envelope = !sql_para.aa2_sql.envelope;
                 }
-                else if(sqlcfg->get_para()->menu_l1 == AE1){
+                else if(sqlcfg->get_para()->menu_l2 == AE2){
                     sql_para.ae2_sql.envelope = !sql_para.ae2_sql.envelope;
                 }
                 break;
@@ -770,16 +794,16 @@ void DebugSet::fresh_rdb_data()
 {
     switch (sqlcfg->get_para()->menu_h1) {
     case TEV1:
-        ui->lab_offset_zero_h1->setText(QString("%1").arg(Common::rdb_get_yc_value(TEV1_center_biased_adv)));
-        ui->lab_offset_noise_h1->setText(QString("%1").arg(Common::rdb_get_yc_value(TEV1_noise_biased_adv)));;
+        ui->lab_offset_zero_h1->setText(QString("%1").arg(Common::rdb_get_yc_value(TEV1_center_biased_adv_yc)));
+        ui->lab_offset_noise_h1->setText(QString("%1").arg(Common::rdb_get_yc_value(TEV1_noise_biased_adv_yc)));;
         break;
     case HFCT1:
-        ui->lab_offset_zero_h1->setText(QString("%1").arg(Common::rdb_get_yc_value(HFCT1_center_biased_adv)));
-        ui->lab_offset_noise_h1->setText(QString("%1").arg(Common::rdb_get_yc_value(HFCT1_noise_biased_adv)));;
+        ui->lab_offset_zero_h1->setText(QString("%1").arg(Common::rdb_get_yc_value(HFCT1_center_biased_adv_yc)));
+        ui->lab_offset_noise_h1->setText(QString("%1").arg(Common::rdb_get_yc_value(HFCT1_noise_biased_adv_yc)));;
         break;
     case UHF1:
-        ui->lab_offset_zero_h1->setText(QString("%1").arg(Common::rdb_get_yc_value(UHF1_center_biased_adv)));
-        ui->lab_offset_noise_h1->setText(QString("%1").arg(Common::rdb_get_yc_value(UHF1_noise_biased_adv)));;
+        ui->lab_offset_zero_h1->setText(QString("%1").arg(Common::rdb_get_yc_value(UHF1_center_biased_adv_yc)));
+        ui->lab_offset_noise_h1->setText(QString("%1").arg(Common::rdb_get_yc_value(UHF1_noise_biased_adv_yc)));;
         break;
     default:
         break;
@@ -787,16 +811,16 @@ void DebugSet::fresh_rdb_data()
 
     switch (sqlcfg->get_para()->menu_h2) {
     case TEV2:
-        ui->lab_offset_zero_h2->setText(QString("%1").arg(Common::rdb_get_yc_value(TEV2_center_biased_adv)));
-        ui->lab_offset_noise_h2->setText(QString("%1").arg(Common::rdb_get_yc_value(TEV2_noise_biased_adv)));;
+        ui->lab_offset_zero_h2->setText(QString("%1").arg(Common::rdb_get_yc_value(TEV2_center_biased_adv_yc)));
+        ui->lab_offset_noise_h2->setText(QString("%1").arg(Common::rdb_get_yc_value(TEV2_noise_biased_adv_yc)));;
         break;
     case HFCT2:
-        ui->lab_offset_zero_h2->setText(QString("%1").arg(Common::rdb_get_yc_value(HFCT2_center_biased_adv)));
-        ui->lab_offset_noise_h2->setText(QString("%1").arg(Common::rdb_get_yc_value(HFCT2_noise_biased_adv)));;
+        ui->lab_offset_zero_h2->setText(QString("%1").arg(Common::rdb_get_yc_value(HFCT2_center_biased_adv_yc)));
+        ui->lab_offset_noise_h2->setText(QString("%1").arg(Common::rdb_get_yc_value(HFCT2_noise_biased_adv_yc)));;
         break;
     case UHF2:
-        ui->lab_offset_zero_h2->setText(QString("%1").arg(Common::rdb_get_yc_value(UHF2_center_biased_adv)));
-        ui->lab_offset_noise_h2->setText(QString("%1").arg(Common::rdb_get_yc_value(UHF2_noise_biased_adv)));;
+        ui->lab_offset_zero_h2->setText(QString("%1").arg(Common::rdb_get_yc_value(UHF2_center_biased_adv_yc)));
+        ui->lab_offset_noise_h2->setText(QString("%1").arg(Common::rdb_get_yc_value(UHF2_noise_biased_adv_yc)));;
         break;
     default:
         break;
@@ -804,27 +828,27 @@ void DebugSet::fresh_rdb_data()
 
     switch (sqlcfg->get_para()->menu_l1) {
     case AA1:
-        ui->lab_offset_noise_L1->setText(QString("%1").arg(Common::rdb_get_yc_value(AA1_biased_adv)));
+        ui->lab_offset_noise_L1->setText(QString("%1").arg(Common::rdb_get_yc_value(AA1_noise_biased_adv_yc)));
         break;
     case AE1:
-        ui->lab_offset_noise_L1->setText(QString("%1").arg(Common::rdb_get_yc_value(AE1_biased_adv)));
+        ui->lab_offset_noise_L1->setText(QString("%1").arg(Common::rdb_get_yc_value(AE1_noise_biased_adv_yc)));
         break;
     default:
         break;
     }
     switch (sqlcfg->get_para()->menu_l2) {
     case AA2:
-        ui->lab_offset_noise_L2->setText(QString("%1").arg(Common::rdb_get_yc_value(AA2_biased_adv)));
+        ui->lab_offset_noise_L2->setText(QString("%1").arg(Common::rdb_get_yc_value(AA2_noise_biased_adv_yc)));
         break;
     case AE2:
-        ui->lab_offset_noise_L2->setText(QString("%1").arg(Common::rdb_get_yc_value(AE2_biased_adv)));
+        ui->lab_offset_noise_L2->setText(QString("%1").arg(Common::rdb_get_yc_value(AE2_noise_biased_adv_yc)));
         break;
     default:
         break;
     }
 
-    ui->lineEdit_CPU_TEMP->setText(QString("%1").arg(Common::rdb_get_yc_value(CPU_temp)) );
-    ui->lineEdit_CPU_VCC->setText(QString("%1").arg(Common::rdb_get_yc_value(CPU_vcc)) );
+    ui->lineEdit_CPU_TEMP->setText(QString("%1").arg(Common::rdb_get_yc_value(CPU_temp_yc)) );
+    ui->lineEdit_CPU_VCC->setText(QString("%1").arg(Common::rdb_get_yc_value(CPU_vcc_yc)) );
     float v = battery->battVcc(), c = battery->battCur();
     ui->lineEdit_BATT_VCC->setText(QString("%1").arg(v) );
     ui->lineEdit_BATT_CUR->setText(QString("%1").arg(c) );
@@ -877,6 +901,10 @@ void DebugSet::fresh()
             ui->lineEdit_H1_NOISE->deselect();
             ui->lineEdit_H2_ZERO->deselect();
             ui->lineEdit_H2_NOISE->deselect();
+            ui->rbt_bp_on_h1->setStyleSheet("");
+            ui->rbt_bp_off_h1->setStyleSheet("");
+            ui->rbt_bp_on_h2->setStyleSheet("");
+            ui->rbt_bp_off_h2->setStyleSheet("");
             switch (key_val->grade.val4) {
             case 0:
                 tab0->setStyleSheet("QLabel{border: 1px solid darkGray;}");
@@ -889,22 +917,32 @@ void DebugSet::fresh()
                 break;
             case 2:
                 ui->lineEdit_H1_NOISE->selectAll();
+                Common::change_rbt_status(sql_para.hfct1_sql.mode_recognition, ui->rbt_bp_on_h1, ui->rbt_bp_off_h1);
                 break;
             case 4:
                 ui->lineEdit_H2_ZERO->selectAll();
                 break;
             case 5:
                 ui->lineEdit_H2_NOISE->selectAll();
+                Common::change_rbt_status(sql_para.hfct2_sql.mode_recognition, ui->rbt_bp_on_h2, ui->rbt_bp_off_h2);
                 break;
             default:
                 break;
             }
             break;
         case 2:         //低频
-            ui->lineEdit_L1_Step->deselect();
             ui->lineEdit_L1_offset->deselect();
-            ui->lineEdit_L2_Step->deselect();
             ui->lineEdit_L2_offset->deselect();
+            ui->lineEdit_L1_Freq->deselect();
+            ui->lineEdit_L2_Freq->deselect();
+            ui->rbt_L1_camera_off->setStyleSheet("");
+            ui->rbt_L1_camera_on->setStyleSheet("");
+            ui->rbt_L2_camera_off->setStyleSheet("");
+            ui->rbt_L2_camera_on->setStyleSheet("");
+            ui->rbt_L1_envelope->setStyleSheet("");
+            ui->rbt_L1_original->setStyleSheet("");
+            ui->rbt_L2_envelope->setStyleSheet("");
+            ui->rbt_L2_original->setStyleSheet("");
             switch (key_val->grade.val4) {
             case 0:
                 tab0->setStyleSheet("QLabel{border: 0px solid darkGray;}");
@@ -913,16 +951,34 @@ void DebugSet::fresh()
                 tab3->setStyleSheet("QLabel{border: 0px solid darkGray;}");
                 break;
             case 1:
-                ui->lineEdit_L1_Step->selectAll();
-                break;
-            case 2:
                 ui->lineEdit_L1_offset->selectAll();
                 break;
+            case 2:
+                Common::change_rbt_status(sql_para.aa1_sql.camera, ui->rbt_L1_camera_on, ui->rbt_L1_camera_off);
+                ui->lineEdit_L1_Freq->selectAll();
+                break;
+            case 3:
+                if(sqlcfg->get_para()->menu_l1 == AA1){
+                    Common::change_rbt_status(sql_para.aa1_sql.envelope, ui->rbt_L1_envelope, ui->rbt_L1_original);
+                }
+                else if(sqlcfg->get_para()->menu_l1 == AE1){
+                    Common::change_rbt_status(sql_para.ae1_sql.envelope, ui->rbt_L1_envelope, ui->rbt_L1_original);
+                }
+                break;
             case 4:
-                ui->lineEdit_L2_Step->selectAll();
+                ui->lineEdit_L2_offset->selectAll();
                 break;
             case 5:
-                ui->lineEdit_L2_offset->selectAll();
+                Common::change_rbt_status(sql_para.aa2_sql.camera, ui->rbt_L2_camera_on, ui->rbt_L2_camera_off);
+                ui->lineEdit_L2_Freq->selectAll();
+                break;
+            case 6:
+                if(sqlcfg->get_para()->menu_l2 == AA2){
+                    Common::change_rbt_status(sql_para.aa2_sql.envelope, ui->rbt_L2_envelope, ui->rbt_L2_original);
+                }
+                else if(sqlcfg->get_para()->menu_l2 == AE2){
+                    Common::change_rbt_status(sql_para.ae2_sql.envelope, ui->rbt_L2_envelope, ui->rbt_L2_original);
+                }
                 break;
             default:
                 break;

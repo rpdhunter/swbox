@@ -20,17 +20,26 @@ AAWidget::AAWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu_ind
     chart_ini();
     reload(menu_index);
 
-    socket = new Socket;
-    socket->open_camera();
-    decode = new CameraDecode;
 
-    connect(socket, SIGNAL(s_camera_packet(QByteArray,int)), decode, SLOT(getOnePacket(QByteArray, int)));      //socket-->解码器
-    connect(decode,SIGNAL(sigGetOneFrame(QImage)),this,SLOT(slotGetOneFrame(QImage)));                          //解码器-->主界面
-    connect(decode,SIGNAL(read_done(int)), socket, SLOT(read_done(int)));
+    if(aaultra_sql->camera){
+        socket = new Socket;
+        socket->open_camera();
+        decode = new CameraDecode;
+        timer_5000ms = new QTimer();
+        timer_5000ms->setInterval(5000);
+        timer_5000ms->setSingleShot(true);
+        connect(timer_5000ms, SIGNAL(timeout()), this, SLOT(check_camera()));
+        connect(socket, SIGNAL(s_camera_packet(QByteArray,int)), decode, SLOT(getOnePacket(QByteArray, int)));      //socket-->解码器
+        connect(socket, SIGNAL(s_camera_packet(QByteArray,int)), this, SLOT(change_camera_status()));
+        connect(decode,SIGNAL(sigGetOneFrame(QImage)),this,SLOT(slotGetOneFrame(QImage)));                          //解码器-->主界面
+        connect(decode,SIGNAL(read_done(int)), socket, SLOT(read_done(int)));
+        system("/root/camera/camera &");
 
-    decode->start();
-
-//    ui->widget->hide();
+        decode->camera_init();      //做一下连接初始化动作（打开AP，打开camera外部程序）
+        decode->start();
+        camera_fullsize = false;
+        camera_hasdata = false;
+    }
 }
 
 AAWidget::~AAWidget()
@@ -48,7 +57,7 @@ void AAWidget::reload(int index)
     }
     else if(mode == AA2){
         aaultra_sql = &sql_para.aa2_sql;
-        ae_pulse_data = &data->recv_para_envelope1;
+        ae_pulse_data = &data->recv_para_envelope2;
     }
 
     //构造函数中计时器不启动
@@ -92,12 +101,13 @@ void AAWidget::do_key_ok()
 {
     sqlcfg->sql_save(&sql_para);
     reload(menu_index);
+
     switch (key_val->grade.val2) {
     case 7:
         key_val->grade.val1 = 1;        //为了锁住主界面，防止左右键切换通道
         emit startRecWave(mode, aaultra_sql->time);        //发送录波信号
         emit show_indicator(true);
-//        isBusy = true;
+        //        isBusy = true;
         return;
     case 8:
         maxReset(ui->label_max);
@@ -105,25 +115,69 @@ void AAWidget::do_key_ok()
     default:
         break;
     }
-    ChannelWidget::do_key_ok();
+
+        ChannelWidget::do_key_ok();
+
+    if(aaultra_sql->chart == Camera){
+        if(camera_hasdata == false){
+            socket->open_camera();
+            return;
+        }
+
+        if(camera_fullsize == false && mImage.size().width() > 0){       //进入全屏模式
+            camera_fullsize = true;
+            return;
+        }
+
+        if(camera_fullsize == true){
+            //插入保存谱图代码
+            save_camera_picture();
+            return;
+        }
+    }
+
+}
+
+void AAWidget::do_key_cancel()
+{
+    if(camera_fullsize == true && aaultra_sql->chart == Camera){    //取消全屏
+        camera_fullsize = false;
+        this->update();
+        return;
+    }
+    ChannelWidget::do_key_cancel();
 }
 
 void AAWidget::do_key_up_down(int d)
 {
+//    if(camera_fullsize == true && aaultra_sql->chart == Camera){
+//        //上下移动焦点框
+//        return;
+//    }
+
     key_val->grade.val1 = 1;
     Common::change_index(key_val->grade.val2, d, SETTING_NUM, 1);
 }
 
 void AAWidget::do_key_left_right(int d)
 {
-    QList<int> list;
+    if(camera_fullsize == true && aaultra_sql->chart == Camera){
+        //左右移动焦点框
+        return;
+    }
 
+    QList<int> list;
     switch (key_val->grade.val2) {
     case 1:
         aaultra_sql->mode = !aaultra_sql->mode;
         break;
     case 2:
-        list << BASIC << Spectra << Camera;
+        if(aaultra_sql->camera){
+            list << BASIC << Spectra << Camera;
+        }
+        else{
+            list << BASIC << Spectra;
+        }
         Common::change_index(aaultra_sql->chart, d, list);
         break;
     case 3:
@@ -153,6 +207,7 @@ void AAWidget::do_key_left_right(int d)
 
 void AAWidget::fresh(bool f)
 {
+
     int offset;
     double val,val_db;
 
@@ -181,7 +236,7 @@ void AAWidget::fresh(bool f)
         } else {
             ui->label_val->setStyleSheet("QLabel {font-family:WenQuanYi Micro Hei;font-size:60px;color:green}");
         }
-//        #if 0
+        //        #if 0
 
         int is_current = 0;
         if((int)key_val->grade.val0 == menu_index){
@@ -189,21 +244,21 @@ void AAWidget::fresh(bool f)
         }
 
         if(mode == AA1){
-            Common::rdb_set_yc_value(AA1_amplitude,val_db,is_current);
-            Common::rdb_set_yc_value(AA1_severity,0,is_current);
-            Common::rdb_set_yc_value(AA1_gain,aaultra_sql->gain,is_current);
-            Common::rdb_set_yc_value(AA1_biased,aaultra_sql->offset,is_current);
-            Common::rdb_set_yc_value(AA1_biased_adv,offset,is_current);
+            Common::rdb_set_yc_value(AA1_amplitude_yc,val_db,is_current);
+//            Common::rdb_set_yc_value(AA1_severity,0,is_current);
+//            Common::rdb_set_yc_value(AA1_gain,aaultra_sql->gain,is_current);
+//            Common::rdb_set_yc_value(AA1_biased,aaultra_sql->offset,is_current);
+            Common::rdb_set_yc_value(AA1_noise_biased_adv_yc,offset,is_current);
         }
         else if(mode == AA2){
-            Common::rdb_set_yc_value(AA2_amplitude,val_db,is_current);
-            Common::rdb_set_yc_value(AA2_severity,0,is_current);
-            Common::rdb_set_yc_value(AA2_gain,aaultra_sql->gain,is_current);
-            Common::rdb_set_yc_value(AA2_biased,aaultra_sql->offset,is_current);
-            Common::rdb_set_yc_value(AA2_biased_adv,offset,is_current);
+            Common::rdb_set_yc_value(AA2_amplitude_yc,val_db,is_current);
+//            Common::rdb_set_yc_value(AA2_severity,0,is_current);
+//            Common::rdb_set_yc_value(AA2_gain,aaultra_sql->gain,is_current);
+//            Common::rdb_set_yc_value(AA2_biased,aaultra_sql->offset,is_current);
+            Common::rdb_set_yc_value(AA2_noise_biased_adv_yc,offset,is_current);
         }
         emit send_log_data(val_db,0,0,is_current);
-//        #endif
+        //        #endif
     }
     else{   //条件显示
         if(qAbs(val_db-temp_db ) >= aaultra_sql->step){
@@ -242,6 +297,17 @@ void AAWidget::fresh(bool f)
 
 }
 
+void AAWidget::save_camera_picture()
+{
+    Common::mk_dir(DIR_CAMERASHOTS);
+    QString str = QString(DIR_CAMERASHOTS"/camerashot_%1.png").arg(QDateTime::currentDateTime().toString("yyyy-MM-dd-HH-mm-ss-zzz") );
+    int f = mImage.save(str , "PNG");
+    qDebug()<<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>save pic :"<<f;
+
+    qDebug()<<"save camera picture";
+    emit update_statusBar(tr("摄像头截屏已保存"));
+}
+
 void AAWidget::slotGetOneFrame(QImage img)
 {
     mImage = img.copy();
@@ -249,10 +315,27 @@ void AAWidget::slotGetOneFrame(QImage img)
     update();
 }
 
+void AAWidget::change_camera_status()
+{
+    timer_5000ms->start();
+    camera_hasdata = true;
+}
+
+void AAWidget::check_camera()
+{
+    camera_hasdata = false;
+}
+
 void AAWidget::paintEvent(QPaintEvent *)
 {
     QRect rect(ui->widget->x(), ui->widget->y(), ui->widget->width(), ui->widget->height() );
     QPainter painter(this);
+
+    ui->label_val->show();
+    ui->label_3->show();
+    ui->label_max->show();
+    ui->comboBox->show();
+    ui->progressBar->show();
 
     if(aaultra_sql->chart != Camera){
         painter.setBrush(Qt::transparent);
@@ -261,14 +344,35 @@ void AAWidget::paintEvent(QPaintEvent *)
         return;
     }
 
-    if (mImage.size().width() <= 0){
+    if (camera_hasdata == false){
+
         painter.setPen(Qt::yellow);
-        painter.drawText(rect,tr("请确认摄像设备已连接"));
+        painter.drawText(rect,tr("摄像头未连接，按OK键尝试连接摄像头"));
         return;
     }
 
+    if(camera_fullsize == true && aaultra_sql->chart == Camera){        //摄像头大图显示
+        ui->label_val->hide();
+        ui->label_3->hide();
+        ui->label_max->hide();
+        ui->comboBox->hide();
+        ui->progressBar->hide();
+        QImage img = mImage.scaled(this->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
+        int x = this->width() - img.width();
+        int y = this->height() - img.height();
 
-    painter.drawImage(rect,mImage);
+        x /= 2;
+        y /= 2;
+
+        painter.drawImage(QPoint(x,y),img);
+        painter.setPen(Qt::red);
+        painter.drawRect(x+img.width()/4, y+img.height()/4, img.width()/2,img.height()/2);
+        painter.drawText(x+img.width()/4, y+img.height()*3/4 + 12,ui->label_val->text().append("dbμV"));
+    }
+    else if(camera_fullsize == false && aaultra_sql->chart == Camera){  //摄像头小图显示
+        painter.drawImage(rect,mImage);
+    }
+
 }
 
 void AAWidget::fresh_1000ms()
@@ -281,9 +385,9 @@ void AAWidget::fresh_1000ms()
 void AAWidget::fresh_100ms()
 {
     fresh(false);
-//    if(aaultra_sql->chart == Spectra){
-            do_Spectra_compute();
-//    }
+    //    if(aaultra_sql->chart == Spectra){
+    do_Spectra_compute();
+    //    }
 }
 
 void AAWidget::fresh_setting()

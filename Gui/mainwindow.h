@@ -60,6 +60,7 @@ signals:
 
 private slots:
     void fresh_menu_icon();
+    void fresh_standed_status_message();
     void fresh_status();
     void fresh_batt();
     void system_reboot();

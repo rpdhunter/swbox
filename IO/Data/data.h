@@ -18,6 +18,7 @@
 #define DIR_ASSET_NORMAL    DIR_ASSET"/Normal"
 
 #define DIR_SCREENSHOTS     DIR_DATA"/ScreenShots"
+#define DIR_CAMERASHOTS     DIR_DATA"/CameraShots"
 
 #define SDCARD_DIR          "/mmc/sdcard"
 #define WAVE_DIR_SD         SDCARD_DIR "/WaveForm"

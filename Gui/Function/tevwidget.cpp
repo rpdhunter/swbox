@@ -305,44 +305,44 @@ void TEVWidget::fresh_1000ms()
 
     //实时数据库
     if(mode == TEV1){
-        Common::rdb_set_yc_value(TEV1_amplitude,db,is_current);
-        Common::rdb_set_yc_value(TEV1_num,pulse_cnt_show,is_current);
-        Common::rdb_set_yc_value(TEV1_severity,degree,is_current);
-        Common::rdb_set_yc_value(TEV1_gain,tev_sql->gain,is_current);
-        Common::rdb_set_yc_value(TEV1_center_biased,tev_sql->fpga_zero,is_current);
-        Common::rdb_set_yc_value(TEV1_noise_biased,tev_sql->offset_noise,is_current);
-        Common::rdb_set_yc_value(TEV1_center_biased_adv,sug_zero_offset,is_current);
-        Common::rdb_set_yc_value(TEV1_noise_biased_adv,sug_noise_offset,is_current);
+        Common::rdb_set_yc_value(TEV1_amplitude_yc,db,is_current);
+        Common::rdb_set_yc_value(TEV1_num_yc,pulse_cnt_show,is_current);
+        Common::rdb_set_yc_value(TEV1_severity_yc,degree,is_current);
+//        Common::rdb_set_yc_value(TEV1_gain,tev_sql->gain,is_current);
+//        Common::rdb_set_yc_value(TEV1_center_biased,tev_sql->fpga_zero,is_current);
+//        Common::rdb_set_yc_value(TEV1_noise_biased,tev_sql->offset_noise,is_current);
+        Common::rdb_set_yc_value(TEV1_center_biased_adv_yc,sug_zero_offset,is_current);
+        Common::rdb_set_yc_value(TEV1_noise_biased_adv_yc,sug_noise_offset,is_current);
     }
     else if(mode == TEV2){
-        Common::rdb_set_yc_value(TEV2_amplitude,db,is_current);
-        Common::rdb_set_yc_value(TEV2_num,pulse_cnt_show,is_current);
-        Common::rdb_set_yc_value(TEV2_severity,degree,is_current);
-        Common::rdb_set_yc_value(TEV2_gain,tev_sql->gain,is_current);
-        Common::rdb_set_yc_value(TEV2_center_biased,tev_sql->fpga_zero,is_current);
-        Common::rdb_set_yc_value(TEV2_noise_biased,tev_sql->offset_noise,is_current);
-        Common::rdb_set_yc_value(TEV2_center_biased_adv,sug_zero_offset,is_current);
-        Common::rdb_set_yc_value(TEV2_noise_biased_adv,sug_noise_offset,is_current);
+        Common::rdb_set_yc_value(TEV2_amplitude_yc,db,is_current);
+        Common::rdb_set_yc_value(TEV2_num_yc,pulse_cnt_show,is_current);
+        Common::rdb_set_yc_value(TEV2_severity_yc,degree,is_current);
+//        Common::rdb_set_yc_value(TEV2_gain,tev_sql->gain,is_current);
+//        Common::rdb_set_yc_value(TEV2_center_biased,tev_sql->fpga_zero,is_current);
+//        Common::rdb_set_yc_value(TEV2_noise_biased,tev_sql->offset_noise,is_current);
+        Common::rdb_set_yc_value(TEV2_center_biased_adv_yc,sug_zero_offset,is_current);
+        Common::rdb_set_yc_value(TEV2_noise_biased_adv_yc,sug_noise_offset,is_current);
     }
     else if(mode == UHF1){
-        Common::rdb_set_yc_value(UHF1_amplitude,db,is_current);
-        Common::rdb_set_yc_value(UHF1_num,pulse_cnt_show,is_current);
-        Common::rdb_set_yc_value(UHF1_severity,degree,is_current);
-        Common::rdb_set_yc_value(UHF1_gain,tev_sql->gain,is_current);
-        Common::rdb_set_yc_value(UHF1_center_biased,tev_sql->fpga_zero,is_current);
-        Common::rdb_set_yc_value(UHF1_noise_biased,tev_sql->offset_noise,is_current);
-        Common::rdb_set_yc_value(UHF1_center_biased_adv,sug_zero_offset,is_current);
-        Common::rdb_set_yc_value(UHF1_noise_biased_adv,sug_noise_offset,is_current);
+        Common::rdb_set_yc_value(UHF1_amplitude_yc,db,is_current);
+        Common::rdb_set_yc_value(UHF1_num_yc,pulse_cnt_show,is_current);
+        Common::rdb_set_yc_value(UHF1_severity_yc,degree,is_current);
+//        Common::rdb_set_yc_value(UHF1_gain,tev_sql->gain,is_current);
+//        Common::rdb_set_yc_value(UHF1_center_biased,tev_sql->fpga_zero,is_current);
+//        Common::rdb_set_yc_value(UHF1_noise_biased,tev_sql->offset_noise,is_current);
+        Common::rdb_set_yc_value(UHF1_center_biased_adv_yc,sug_zero_offset,is_current);
+        Common::rdb_set_yc_value(UHF1_noise_biased_adv_yc,sug_noise_offset,is_current);
     }
     else if(mode == UHF2){
-        Common::rdb_set_yc_value(UHF2_amplitude,db,is_current);
-        Common::rdb_set_yc_value(UHF2_num,pulse_cnt_show,is_current);
-        Common::rdb_set_yc_value(UHF2_severity,degree,is_current);
-        Common::rdb_set_yc_value(UHF2_gain,tev_sql->gain,is_current);
-        Common::rdb_set_yc_value(UHF2_center_biased,tev_sql->fpga_zero,is_current);
-        Common::rdb_set_yc_value(UHF2_noise_biased,tev_sql->offset_noise,is_current);
-        Common::rdb_set_yc_value(UHF2_center_biased_adv,sug_zero_offset,is_current);
-        Common::rdb_set_yc_value(UHF2_noise_biased_adv,sug_noise_offset,is_current);
+        Common::rdb_set_yc_value(UHF2_amplitude_yc,db,is_current);
+        Common::rdb_set_yc_value(UHF2_num_yc,pulse_cnt_show,is_current);
+        Common::rdb_set_yc_value(UHF2_severity_yc,degree,is_current);
+//        Common::rdb_set_yc_value(UHF2_gain,tev_sql->gain,is_current);
+//        Common::rdb_set_yc_value(UHF2_center_biased,tev_sql->fpga_zero,is_current);
+//        Common::rdb_set_yc_value(UHF2_noise_biased,tev_sql->offset_noise,is_current);
+        Common::rdb_set_yc_value(UHF2_center_biased_adv_yc,sug_zero_offset,is_current);
+        Common::rdb_set_yc_value(UHF2_noise_biased_adv_yc,sug_noise_offset,is_current);
     }
 
     fresh_Histogram();

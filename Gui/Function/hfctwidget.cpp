@@ -21,8 +21,9 @@ HFCTWidget::HFCTWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu
     reload(-1);
     max_100ms = 0;
 
-    bpcable = new BpCable;
-//    bpcable->test();
+    if(hfct_sql->mode_recognition){         //模式识别
+        bpcable = new BpCable;
+    }
 
     chart_ini();
     recWaveForm->raise();
@@ -453,28 +454,28 @@ void HFCTWidget::fresh_1000ms()
     //实时数据库
     int d_max, d_min;
     if(mode == HFCT1){
-        Common::rdb_set_yc_value(HFCT1_amplitude,db,is_current);
-        Common::rdb_set_yc_value(HFCT1_num,pulse_cnt,is_current);
-        Common::rdb_set_yc_value(HFCT1_severity,degree,is_current);
-        Common::rdb_set_yc_value(HFCT1_gain,hfct_sql->gain,is_current);
-        Common::rdb_set_yc_value(HFCT1_center_biased,hfct_sql->fpga_zero,is_current);
+        Common::rdb_set_yc_value(HFCT1_amplitude_yc,db,is_current);
+        Common::rdb_set_yc_value(HFCT1_num_yc,pulse_cnt,is_current);
+        Common::rdb_set_yc_value(HFCT1_severity_yc,degree,is_current);
+//        Common::rdb_set_yc_value(HFCT1_gain,hfct_sql->gain,is_current);
+//        Common::rdb_set_yc_value(HFCT1_center_biased,hfct_sql->fpga_zero,is_current);
         d_max = data->recv_para_normal.hdata0.ad.ad_max;
         d_min = data->recv_para_normal.hdata0.ad.ad_min;
-        Common::rdb_set_yc_value(HFCT1_center_biased_adv, ((d_max + d_min) / 2) - 0x8000, is_current);
-        Common::rdb_set_yc_value(HFCT1_noise_biased,0,is_current);
-        Common::rdb_set_yc_value(HFCT1_noise_biased_adv,0,is_current);
+        Common::rdb_set_yc_value(HFCT1_center_biased_adv_yc, ((d_max + d_min) / 2) - 0x8000, is_current);
+//        Common::rdb_set_yc_value(HFCT1_noise_biased,0,is_current);
+        Common::rdb_set_yc_value(HFCT1_noise_biased_adv_yc,0,is_current);
     }
     else{
-        Common::rdb_set_yc_value(HFCT2_amplitude,db,is_current);
-        Common::rdb_set_yc_value(HFCT2_num,pulse_cnt,is_current);
-        Common::rdb_set_yc_value(HFCT2_severity,degree,is_current);
-        Common::rdb_set_yc_value(HFCT2_gain,hfct_sql->gain,is_current);
-        Common::rdb_set_yc_value(HFCT2_center_biased,hfct_sql->fpga_zero,is_current);
+        Common::rdb_set_yc_value(HFCT2_amplitude_yc,db,is_current);
+        Common::rdb_set_yc_value(HFCT2_num_yc,pulse_cnt,is_current);
+        Common::rdb_set_yc_value(HFCT2_severity_yc,degree,is_current);
+//        Common::rdb_set_yc_value(HFCT2_gain,hfct_sql->gain,is_current);
+//        Common::rdb_set_yc_value(HFCT2_center_biased,hfct_sql->fpga_zero,is_current);
         d_max = data->recv_para_normal.hdata1.ad.ad_max;
         d_min = data->recv_para_normal.hdata1.ad.ad_min;
-        Common::rdb_set_yc_value(HFCT2_center_biased_adv, ((d_max + d_min) / 2) - 0x8000, is_current);
-        Common::rdb_set_yc_value(HFCT2_noise_biased,0,is_current);
-        Common::rdb_set_yc_value(HFCT2_noise_biased_adv,0,is_current);
+        Common::rdb_set_yc_value(HFCT2_center_biased_adv_yc, ((d_max + d_min) / 2) - 0x8000, is_current);
+//        Common::rdb_set_yc_value(HFCT2_noise_biased,0,is_current);
+        Common::rdb_set_yc_value(HFCT2_noise_biased_adv_yc,0,is_current);
     }
 
     if (max_db < db) {

@@ -26,7 +26,6 @@
 #define SCREEN_DARK_TIME    60
 #define SCREEN_CLOSE_TIME   90
 #define SHUT_DOWN_TIME		5
-#define LANGUAGE_DEF		CN
 #define MAX_REC_NUM			200
 #define MAX_PULSE_CNT       10              //最大脉冲计数时长
 
@@ -156,8 +155,9 @@ typedef struct L_CHANNEL_SQL {
     double step;                    //显示幅值变化门槛
     int offset;                     //偏置值
     bool envelope;                  //包络线模式（需要FPGA同步）
-    uint fpga_threshold;            //脉冲阈值（需要FPGA同步）
+    uint fpga_threshold;            //脉冲阈值
     int sensor_freq;                //传感器中心频率
+    bool camera;                    //摄像头开关
 } L_CHANNEL_SQL;
 
 //typedef struct SYNCMODE_SQL {
@@ -188,7 +188,6 @@ typedef struct SQL_PARA {
     int screen_dark_time;                   //屏幕自动变暗时间,单位为秒
     int screen_close_time;                  //屏幕自动关闭时间，单位为秒
     int close_time;                         //自动关机时间,单位为分钟
-    int wifi_trans_mode;                    //wifi传输协议
     int max_rec_num;                        //录波文件保存个数
     bool buzzer_on;                         //蜂鸣器
     int auto_rec_interval;                  //自动录波间隔

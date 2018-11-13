@@ -39,7 +39,7 @@ FifoData::FifoData(G_PARA *g_data)
     connect(this,SIGNAL(send_sync(qint64,qint64)),fifocontrol,SLOT(send_sync(qint64,qint64)) );
 
     /* Start qthread */
-    this->start();
+//    this->start();
 //    this->setPriority(QThread::TimeCriticalPriority);
 }
 
@@ -52,6 +52,8 @@ void FifoData::run(void)
 {
     pthread_t tid = pthread_self();
     set_thread_cpu(tid,CPU_1);
+
+//    qDebug()<<"222";
 
     int ret = 0;
     int delay_time = DELAY_TIME_LONG;

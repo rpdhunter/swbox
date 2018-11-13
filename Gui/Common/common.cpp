@@ -928,10 +928,10 @@ void Common::rdb_set_yc_value(uint yc_no, double val, uint qc)
     yc_data_type temp_data;
     temp_data.f_val = val;
     if(qc == 1){
-        yc_set_value(yc_no, &temp_data, QDS_FO, 0,NULL,0);
+        yc_set_value(yc_no, &temp_data, QDS_FO, 0, 0, 0);
     }
     else{
-        yc_set_value(yc_no, &temp_data, QDS_BA, 0, NULL,0);
+        yc_set_value(yc_no, &temp_data, QDS_BA, 0, 0, 0);
     }
 }
 
@@ -957,6 +957,162 @@ bool Common::rdb_check_test_start()
         }
     }
     return false;
+}
+
+void Common::rdb_set_dz_value(uint dz_no, char val)
+{
+    rdb_dz_param_t dz;
+    dz.dz_no = dz_no;
+    dz.tag = DZ_CHAR;
+    dz.data_len = sizeof(char);
+    dz.data_buf[0] = val;
+    dz_set_value(&dz, 1);
+}
+
+void Common::rdb_dz_init()
+{
+    SQL_PARA *sql = sqlcfg->get_para();
+    switch (sql->menu_h1) {
+    case TEV1:
+        rdb_set_dz_value(TEV1_test_mode_dz, (char)sql->tev1_sql.mode);
+        rdb_set_dz_value(TEV1_show_mode_dz, (char)sql->tev1_sql.chart);
+        rdb_set_dz_value(TEV1_gain_dz, (char)sql->tev1_sql.gain);
+        rdb_set_dz_value(TEV1_low_threshold_dz, (char)sql->tev1_sql.low);
+        rdb_set_dz_value(TEV1_high_threshold_dz, (char)sql->tev1_sql.high);
+        rdb_set_dz_value(TEV1_pulse_trigger_dz, (char)sql->tev1_sql.fpga_threshold);
+        rdb_set_dz_value(TEV1_pulse_counttime_dz, (char)sql->tev1_sql.pulse_time);
+        rdb_set_dz_value(TEV1_waverec_auto_dz, (char)sql->tev1_sql.auto_rec);
+        rdb_set_dz_value(TEV1_waverec_time_dz, (char)sql->tev1_sql.rec_time);
+        rdb_set_dz_value(TEV1_center_biased_dz, (char)sql->tev1_sql.fpga_zero);
+        rdb_set_dz_value(TEV1_noise_biased_dz, (char)sql->tev1_sql.offset_noise);
+        break;
+    case HFCT1:
+        rdb_set_dz_value(HFCT1_test_mode_dz, (char)sql->hfct1_sql.mode);
+        rdb_set_dz_value(HFCT1_show_mode_dz, (char)sql->hfct1_sql.chart);
+        rdb_set_dz_value(HFCT1_gain_dz, (char)sql->hfct1_sql.gain);
+        rdb_set_dz_value(HFCT1_passband_down_limit_dz, (char)sql->hfct1_sql.filter_hp);
+        rdb_set_dz_value(HFCT1_passband_up_limit_dz, (char)sql->hfct1_sql.filter_lp);
+        rdb_set_dz_value(HFCT1_pulse_trigger_dz, (char)sql->hfct1_sql.fpga_threshold);
+        rdb_set_dz_value(HFCT1_pulse_counttime_dz, (char)sql->hfct1_sql.pulse_time);
+        rdb_set_dz_value(HFCT1_waverec_auto_dz, (char)sql->hfct1_sql.auto_rec);
+        rdb_set_dz_value(HFCT1_waverec_time_dz, (char)sql->hfct1_sql.rec_time);
+        rdb_set_dz_value(HFCT1_center_biased_dz, (char)sql->hfct1_sql.fpga_zero);
+        rdb_set_dz_value(HFCT1_noise_biased_dz, (char)sql->hfct1_sql.offset_noise);
+        break;
+    case UHF1:
+        rdb_set_dz_value(UHF1_test_mode_dz, (char)sql->uhf1_sql.mode);
+        rdb_set_dz_value(UHF1_show_mode_dz, (char)sql->uhf1_sql.chart);
+        rdb_set_dz_value(UHF1_gain_dz, (char)sql->uhf1_sql.gain);
+        rdb_set_dz_value(UHF1_low_threshold_dz, (char)sql->uhf1_sql.low);
+        rdb_set_dz_value(UHF1_high_threshold_dz, (char)sql->uhf1_sql.high);
+        rdb_set_dz_value(UHF1_pulse_trigger_dz, (char)sql->uhf1_sql.fpga_threshold);
+        rdb_set_dz_value(UHF1_pulse_counttime_dz, (char)sql->uhf1_sql.pulse_time);
+        rdb_set_dz_value(UHF1_waverec_auto_dz, (char)sql->uhf1_sql.auto_rec);
+        rdb_set_dz_value(UHF1_waverec_time_dz, (char)sql->uhf1_sql.rec_time);
+        rdb_set_dz_value(UHF1_center_biased_dz, (char)sql->uhf1_sql.fpga_zero);
+        rdb_set_dz_value(UHF1_noise_biased_dz, (char)sql->uhf1_sql.offset_noise);
+        break;
+    default:
+        break;
+    }
+
+    switch (sql->menu_h2) {
+    case TEV2:
+        rdb_set_dz_value(TEV2_test_mode_dz, (char)sql->tev2_sql.mode);
+        rdb_set_dz_value(TEV2_show_mode_dz, (char)sql->tev2_sql.chart);
+        rdb_set_dz_value(TEV2_gain_dz, (char)sql->tev2_sql.gain);
+        rdb_set_dz_value(TEV2_low_threshold_dz, (char)sql->tev2_sql.low);
+        rdb_set_dz_value(TEV2_high_threshold_dz, (char)sql->tev2_sql.high);
+        rdb_set_dz_value(TEV2_pulse_trigger_dz, (char)sql->tev2_sql.fpga_threshold);
+        rdb_set_dz_value(TEV2_pulse_counttime_dz, (char)sql->tev2_sql.pulse_time);
+        rdb_set_dz_value(TEV2_waverec_auto_dz, (char)sql->tev2_sql.auto_rec);
+        rdb_set_dz_value(TEV2_waverec_time_dz, (char)sql->tev2_sql.rec_time);
+        rdb_set_dz_value(TEV2_center_biased_dz, (char)sql->tev2_sql.fpga_zero);
+        rdb_set_dz_value(TEV2_noise_biased_dz, (char)sql->tev2_sql.offset_noise);
+        break;
+    case HFCT2:
+        rdb_set_dz_value(HFCT2_test_mode_dz, (char)sql->hfct2_sql.mode);
+        rdb_set_dz_value(HFCT2_show_mode_dz, (char)sql->hfct2_sql.chart);
+        rdb_set_dz_value(HFCT2_gain_dz, (char)sql->hfct2_sql.gain);
+        rdb_set_dz_value(HFCT2_passband_down_limit_dz, (char)sql->hfct2_sql.filter_hp);
+        rdb_set_dz_value(HFCT2_passband_up_limit_dz, (char)sql->hfct2_sql.filter_lp);
+        rdb_set_dz_value(HFCT2_pulse_trigger_dz, (char)sql->hfct2_sql.fpga_threshold);
+        rdb_set_dz_value(HFCT2_pulse_counttime_dz, (char)sql->hfct2_sql.pulse_time);
+        rdb_set_dz_value(HFCT2_waverec_auto_dz, (char)sql->hfct2_sql.auto_rec);
+        rdb_set_dz_value(HFCT2_waverec_time_dz, (char)sql->hfct2_sql.rec_time);
+        rdb_set_dz_value(HFCT2_center_biased_dz, (char)sql->hfct2_sql.fpga_zero);
+        rdb_set_dz_value(HFCT2_noise_biased_dz, (char)sql->hfct2_sql.offset_noise);
+        break;
+    case UHF2:
+        rdb_set_dz_value(UHF2_test_mode_dz, (char)sql->uhf2_sql.mode);
+        rdb_set_dz_value(UHF2_show_mode_dz, (char)sql->uhf2_sql.chart);
+        rdb_set_dz_value(UHF2_gain_dz, (char)sql->uhf2_sql.gain);
+        rdb_set_dz_value(UHF2_low_threshold_dz, (char)sql->uhf2_sql.low);
+        rdb_set_dz_value(UHF2_high_threshold_dz, (char)sql->uhf2_sql.high);
+        rdb_set_dz_value(UHF2_pulse_trigger_dz, (char)sql->uhf2_sql.fpga_threshold);
+        rdb_set_dz_value(UHF2_pulse_counttime_dz, (char)sql->uhf2_sql.pulse_time);
+        rdb_set_dz_value(UHF2_waverec_auto_dz, (char)sql->uhf2_sql.auto_rec);
+        rdb_set_dz_value(UHF2_waverec_time_dz, (char)sql->uhf2_sql.rec_time);
+        rdb_set_dz_value(UHF2_center_biased_dz, (char)sql->uhf2_sql.fpga_zero);
+        rdb_set_dz_value(UHF2_noise_biased_dz, (char)sql->uhf2_sql.offset_noise);
+        break;
+    default:
+        break;
+    }
+
+    switch (sql->menu_l1) {
+    case AA1:
+        rdb_set_dz_value(AA1_test_mode_dz, (char)sql->aa1_sql.mode);
+        rdb_set_dz_value(AA1_show_mode_dz, (char)sql->aa1_sql.chart);
+        rdb_set_dz_value(AA1_gain_dz, (char)sql->aa1_sql.gain);
+        rdb_set_dz_value(AA1_voice_dz, (char)sql->aa1_sql.vol);
+        rdb_set_dz_value(AA1_low_threshold_dz, (char)sql->aa1_sql.low);
+        rdb_set_dz_value(AA1_high_threshold_dz, (char)sql->aa1_sql.high);
+    //    rdb_set_dz_value(AA1_waverec_auto_dz, (char)sql->aa1_sql.auto_rec);
+        rdb_set_dz_value(AA1_waverec_time_dz, (char)sql->aa1_sql.time);
+        rdb_set_dz_value(AA1_niose_biased_dz, (char)sql->aa1_sql.offset);
+        break;
+    case AE1:
+        rdb_set_dz_value(AE1_test_mode_dz, (char)sql->ae1_sql.mode);
+        rdb_set_dz_value(AE1_show_mode_dz, (char)sql->ae1_sql.chart);
+        rdb_set_dz_value(AE1_gain_dz, (char)sql->ae1_sql.gain);
+        rdb_set_dz_value(AE1_voice_dz, (char)sql->ae1_sql.vol);
+        rdb_set_dz_value(AE1_low_threshold_dz, (char)sql->ae1_sql.low);
+        rdb_set_dz_value(AE1_high_threshold_dz, (char)sql->ae1_sql.high);
+    //    rdb_set_dz_value(AE1_waverec_auto_dz, (char)sql->ae1_sql.auto_rec);
+        rdb_set_dz_value(AE1_waverec_time_dz, (char)sql->ae1_sql.time);
+        rdb_set_dz_value(AE1_niose_biased_dz, (char)sql->ae1_sql.offset);
+        break;
+    default:
+        break;
+    }
+
+    switch (sql->menu_l2) {
+    case AA2:
+        rdb_set_dz_value(AA2_test_mode_dz, (char)sql->aa2_sql.mode);
+        rdb_set_dz_value(AA2_show_mode_dz, (char)sql->aa2_sql.chart);
+        rdb_set_dz_value(AA2_gain_dz, (char)sql->aa2_sql.gain);
+        rdb_set_dz_value(AA2_voice_dz, (char)sql->aa2_sql.vol);
+        rdb_set_dz_value(AA2_low_threshold_dz, (char)sql->aa2_sql.low);
+        rdb_set_dz_value(AA2_high_threshold_dz, (char)sql->aa2_sql.high);
+    //    rdb_set_dz_value(AA2_waverec_auto_dz, (char)sql->aa2_sql.auto_rec);
+        rdb_set_dz_value(AA2_waverec_time_dz, (char)sql->aa2_sql.time);
+        rdb_set_dz_value(AA2_niose_biased_dz, (char)sql->aa2_sql.offset);
+        break;
+    case AE2:
+        rdb_set_dz_value(AE2_test_mode_dz, (char)sql->ae2_sql.mode);
+        rdb_set_dz_value(AE2_show_mode_dz, (char)sql->ae2_sql.chart);
+        rdb_set_dz_value(AE2_gain_dz, (char)sql->ae2_sql.gain);
+        rdb_set_dz_value(AE2_voice_dz, (char)sql->ae2_sql.vol);
+        rdb_set_dz_value(AE2_low_threshold_dz, (char)sql->ae2_sql.low);
+        rdb_set_dz_value(AE2_high_threshold_dz, (char)sql->ae2_sql.high);
+    //    rdb_set_dz_value(AE2_waverec_auto_dz, (char)sql->ae2_sql.auto_rec);
+        rdb_set_dz_value(AE2_waverec_time_dz, (char)sql->ae2_sql.time);
+        rdb_set_dz_value(AE2_niose_biased_dz, (char)sql->ae2_sql.offset);
+        break;
+    default:
+        break;
+    }
 }
 
 void Common::select_root(QTreeView *v, QAbstractItemModel *model)
@@ -1273,6 +1429,16 @@ void Common::time_addusec(timeval &time, int usec)
     }
     time.tv_sec += s;
     time.tv_usec = u;
+}
+
+void Common::change_rbt_status(bool flag, QRadioButton *b0, QRadioButton *b1)
+{
+    if(flag){
+        b0->setStyleSheet("QRadioButton {background-color:darkGray;}");
+    }
+    else{
+        b1->setStyleSheet("QRadioButton {background-color:darkGray;}");
+    }
 }
 
 

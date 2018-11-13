@@ -24,6 +24,7 @@ public:
 
 public slots:
     void getOnePacket(QByteArray buf, int f);  //接收到原始数据帧
+    void camera_init();
 
 signals:
     void sigGetOneFrame(QImage);        //转码后的一帧
@@ -49,6 +50,8 @@ private:
 
     uint8_t *camera_buf0, *camera_buf1, *camera_buf2;       //接收UDPSocket数据的缓冲区
     int flag0, flag1, flag2;                                //缓冲区对应的标志位
+
+    bool camera_init_flag;
 
 };
 

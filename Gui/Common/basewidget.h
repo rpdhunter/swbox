@@ -15,6 +15,7 @@ signals:
     void fresh_parent();
     void send_key(quint8);
     void show_indicator(bool);      //显示菊花
+    void update_statusBar(QString);
 
 protected slots:
     virtual void trans_key(quint8 key_code);

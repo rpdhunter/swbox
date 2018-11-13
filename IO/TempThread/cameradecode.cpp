@@ -21,6 +21,8 @@ CameraDecode::CameraDecode(QObject *parent) : QThread(parent)
     get_packet = 0;
 
     init_ffmpeg_stream();
+
+    camera_init_flag = false;
 }
 
 CameraDecode::~CameraDecode()
@@ -59,7 +61,7 @@ void CameraDecode::init_ffmpeg_stream()
 
 void CameraDecode::getOnePacket(QByteArray buf, int f)
 {
-//    qDebug()<< "CameraDecode Class get one packet : length = "<<buf.length() << "\t" << f;
+    qDebug()<< "CameraDecode Class get one packet : length = "<<buf.length() << "\t" << f;
     av_init_packet(packet);                         //packet初始化
     if(flag0 == 0){
         qDebug()<<"get_packet0";
@@ -90,15 +92,29 @@ void CameraDecode::getOnePacket(QByteArray buf, int f)
 //    }
 //    else{
 //        get_packet = 1;
-//    }
+    //    }
+}
+
+void CameraDecode::camera_init()
+{
+    qDebug()<<"camera_init()";
+    camera_init_flag = true;
 }
 
 void CameraDecode::run()
 {
     while (1) {
-        if(flag0 == 1){
+        if(camera_init_flag == true){
+            camera_init_flag = false;
+
+            qDebug()<<"open AP";
+//            system("./camera");
+            system("/root/wifi/ap.sh    ZZDDIITT  zdit.com.cn    192.168.150.1    255.255.255.0");      //开启AP
+        }
+        else if(flag0 == 1){
             flag0 = 2;
             decode();           //解码一帧
+            qDebug()<<"flag0"<<flag0;
             flag0 = 0;
         }
         else if(flag1 == 1){
@@ -114,17 +130,6 @@ void CameraDecode::run()
         else{
             msleep(1);
         }
-
-//        if(get_packet == 1){
-//            qDebug()<<"begin decode!";
-//            get_packet = 2;
-//            decode();           //解码一帧
-//            get_packet = 0;
-//        }
-//        else{
-//            msleep(1);
-//        }
-
     }
 }
 

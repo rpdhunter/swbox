@@ -395,18 +395,18 @@ void FaultLocation::showProgress()
     yc_data_type tev1_a, tev2_a, tev1_p, tev2_p, hf1_a, hf2_a, hf1_p, hf2_p, uhf1_a, uhf2_a, uhf1_p, uhf2_p;
     unsigned char a[1],b[1];
 
-    yc_get_value(0,TEV1_amplitude,1, &tev1_a, b, a);
-    yc_get_value(0,TEV1_num,1, &tev1_p, b, a);
-    yc_get_value(0,TEV2_amplitude,1, &tev2_a, b, a);
-    yc_get_value(0,TEV2_num,1, &tev2_p, b, a);
-    yc_get_value(0,HFCT1_amplitude,1, &hf1_a, b, a);
-    yc_get_value(0,HFCT1_num,1, &hf1_p, b, a);
-    yc_get_value(0,HFCT2_amplitude,1, &hf2_a, b, a);
-    yc_get_value(0,HFCT2_num,1, &hf2_p, b, a);
-    yc_get_value(0,UHF1_amplitude,1, &uhf1_a, b, a);
-    yc_get_value(0,UHF1_num,1, &uhf1_p, b, a);
-    yc_get_value(0,UHF2_amplitude,1, &uhf2_a, b, a);
-    yc_get_value(0,UHF2_num,1, &uhf2_p, b, a);
+    yc_get_value(0,TEV1_amplitude_yc,1, &tev1_a, b, a);
+    yc_get_value(0,TEV1_num_yc,1, &tev1_p, b, a);
+    yc_get_value(0,TEV2_amplitude_yc,1, &tev2_a, b, a);
+    yc_get_value(0,TEV2_num_yc,1, &tev2_p, b, a);
+    yc_get_value(0,HFCT1_amplitude_yc,1, &hf1_a, b, a);
+    yc_get_value(0,HFCT1_num_yc,1, &hf1_p, b, a);
+    yc_get_value(0,HFCT2_amplitude_yc,1, &hf2_a, b, a);
+    yc_get_value(0,HFCT2_num_yc,1, &hf2_p, b, a);
+    yc_get_value(0,UHF1_amplitude_yc,1, &uhf1_a, b, a);
+    yc_get_value(0,UHF1_num_yc,1, &uhf1_p, b, a);
+    yc_get_value(0,UHF2_amplitude_yc,1, &uhf2_a, b, a);
+    yc_get_value(0,UHF2_num_yc,1, &uhf2_p, b, a);
 
     switch (mode_list.at(0)) {
     case TEV1:

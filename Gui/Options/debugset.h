@@ -31,7 +31,7 @@ public slots:
 
 signals:
     void fregChanged(int);      //频率设置变化
-    void update_statusBar(QString);
+//    void update_statusBar(QString);
 
 private slots:
     void fresh_rdb_data();

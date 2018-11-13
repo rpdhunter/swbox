@@ -16,9 +16,9 @@ static{
 TARGET = swbox
 TEMPLATE = app
 
-DEFINES += AMG             #OEM
+#DEFINES += AMG             #OEM
 #DEFINES += XDP_II          #OEM
-#DEFINES += OHV             #OEM
+DEFINES += OHV             #OEM
 #DEFINES += ZDIT            #OEM
 #DEFINES += NO_OEM           #OEM
 
@@ -80,7 +80,8 @@ SOURCES += \
     Algorithm/fir.cpp \
     IO/Sync/syncthread.cpp \
     IO/File/spacecontrol.cpp \
-    IO/TempThread/cameradecode.cpp
+    IO/TempThread/cameradecode.cpp \
+    Gui/Common/wifi.cpp
 
 
 HEADERS  += \
@@ -146,7 +147,8 @@ HEADERS  += \
     Algorithm/fir.h \
     IO/Sync/syncthread.h \
     IO/File/spacecontrol.h \
-    IO/TempThread/cameradecode.h
+    IO/TempThread/cameradecode.h \
+    Gui/Common/wifi.h
 
 FORMS += \
     Gui/Function/tevwidget.ui \

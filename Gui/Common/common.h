@@ -14,6 +14,7 @@
 #include <QTreeView>
 #include <QAbstractItemModel>
 #include <QMessageBox>
+#include <QRadioButton>
 
 #define FREEZE_TIME     5000            //秒界面锁定时间
 
@@ -134,6 +135,8 @@ public:
     static double rdb_get_yc_value(uint yc_no);
     static void rdb_set_yk_value(uint yc_no,double val,uint qc = 0);
     static bool rdb_check_test_start();
+    static void rdb_set_dz_value(uint dz_no, char val);        //修改rdb设定值
+    static void rdb_dz_init();          //初始化rdb定值表
 
     static void select_root(QTreeView *v, QAbstractItemModel *model);
     static void select_up(QTreeView *v, QAbstractItemModel *model);
@@ -150,6 +153,8 @@ public:
     static void time_addusec(struct timeval &time, int usec);                //添加微秒数,可为负值
 //    static quint64 dirFileSize(const QString &path);                //返回路径文件夹大小
 //    static QString
+
+    static void change_rbt_status(bool flag, QRadioButton *b0, QRadioButton *b1);       //改变一对QRadioButton的选择状态样式
 };
 
 #endif // COMMON_H
