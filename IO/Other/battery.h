@@ -27,6 +27,7 @@
 #include <linux/i2c.h>
 #include <linux/i2c-dev.h>
 #include "IO/Com/rdb/gpio_oper.h"
+#include <QList>
 
 #define I2C_DEV_0		"/dev/i2c-0"
 
@@ -50,34 +51,38 @@
 
 #define DELT_VOL				0.02			/* 电量调整电压 */
 #define SHUTDOWN_VOL			6.6				/* 强制关机电压 */
+#define LOWPOWER_VOL			6.9				/* 强制关机电压 */
+#define CHARGEING_DEL_VOL       0.5             /* 充电变化电压 */
 
 
 //class Battery : public QObject
-class Battery
+class Battery : public QObject
 {
+    Q_OBJECT
 public:
-    explicit Battery();
+    explicit Battery(QObject *parent = nullptr);
 
-    int battValue();        //返回当前电量
+    int battPercentValue();        //返回当前电量
     bool is_low_power();    //返回是否低电量
+    bool is_charging();     //返回是否充电
 
     float battVcc();        //返回电池电压
     float battCur();        //返回电池电流
+protected:
+    void timerEvent(QTimerEvent *);
 
 private:
     typedef struct battery_power_s {
         unsigned char adm1191_addr;		/* 电源监视芯片地址 */
         float vol;						/* 电池电压 */
         float cur;						/* 电池输出电流 */
-        unsigned int power;				/* 0-100 */
+        unsigned int percent_power;				/* 电量百分比0-100 */
         unsigned int lo_pwr_alarm;		/* 低电量告警 */
         unsigned int pwr_loss_alarm;	/* 失电告警 */
         unsigned int force_pwr_off;		/* 强制关机信号 */
     } battery_power_t;
 
     battery_power_t battery_power;
-
-    int force_pwr_off_num;
 
     int adm1191_conv_init ();
 
@@ -99,8 +104,13 @@ private:
 
     int check_battery_power (battery_power_t * bp);
 
+    QList<float> vcc_list;      //电压序列
+    QList<float> vcc_delta;     //电压变化序列
 
-
+    bool _isCharging;           //充电标志
+    bool _isLowPower;           //低电量标志
+    int _powerPercent;               //当前应当显示的电量百分比
+    int vcc_to_percent(float v);
 };
 
 #endif // BATTERY_H

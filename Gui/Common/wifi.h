@@ -30,27 +30,46 @@ class Wifi : public QObject
 public:
     explicit Wifi(QObject *parent = nullptr);
 
-    void fresh_ap_list();       //刷新AP列表
-    QList<AP_INFO> ap_list;     //AP列表
 
-    void ap_connect(QString ssid, QString password);        //连接AP
+    QList<AP_INFO> ap_list;         //AP列表
+    int connect_ap_index;   //当前已连接的AP序号
+
 
 
 signals:
-    void ap_list_complete();    //刷新AP列表结束
+    void ap_fresh_list_complete();            //发送AP列表
     void ap_connect_complete(bool);     //连接AP完成
 
 public slots:
-    void process_done(int, QProcess::ExitStatus status);
+    void wifi_init();                   //初始化
+
+    void ap_fresh_list();                                       //刷新AP列表
+
+    void ap_connect(QString ssid, QString password);            //连接某一AP(信号ap_connect_complete(bool)用于返回结果)
+    void ap_connect_output();                                   //用此项返回连接结果
+    void ap_connect_failed();
+    void ap_disconnect();               //断开当前连接（无返回结果）
+
+    void ap_refresh_info();         //刷新当前网络信息
     void process_1s_deal();         //每秒钟处理输出
 
+    void ap_create(QString name, QString key, QString gateway = "192.168.150.1", QString mask = "255.255.255.0");       //创建热点
+
+
 private:
-    QProcess *process;
+    QProcess *process1, *process2, *process3;
     AP_INFO get_one_apinfo(QString str);            //获得一个AP的具体信息
     QString get_one_section(QString start, QString end, QString str);    //找到start和end之间的字符串
 
-    QTimer *timer;
+    QTimer *timer1, *timer2;
     void executeCMD(const char *cmd, char *result);
+
+
 };
 
 #endif // WIFI_H
+
+
+
+
+

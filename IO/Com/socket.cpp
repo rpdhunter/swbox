@@ -9,13 +9,7 @@ Socket::Socket(QObject *parent) : QObject(parent)
     mSocket_data->bind(6205);
     connect(mSocket_data,SIGNAL(readyRead()),this,SLOT(read_data1()));
 
-//    buf0 = (char *)malloc(3e6);
-//    buf1 = (char *)malloc(3e6);
-//    buf2 = (char *)malloc(3e6);
-
-//    flag0 = false;
-//    flag1 = false;
-//    flag2 = false;
+    startTimer(1000 * 20);
 
     flag = 0;
 }
@@ -89,7 +83,7 @@ void Socket::read_data()
     int len = mSocket->readDatagram(array.data(),array.size(),&address,&port); //读取数据
     qDebug()<<"recv len = "<<len  << "\taddress: "<< address << "\tport: "<< port << "\ndata: "<<array.data();
 }
-
+#include <QTime>
 //接收摄像头数据,并组装发送
 //数据使用UDPSocket侦听6205端口
 //一个完整的包(包含一帧图像)可能由不止一次UDP报文组成
@@ -124,6 +118,8 @@ void Socket::read_data1()
     array.resize(mSocket_data->bytesAvailable());//根据可读数据来设置空间大小
     int len = mSocket_data->readDatagram(array.data(),array.size(),&address,&port); //读取数据
 
+
+//    qDebug()<<"tcp begin:"<<QTime::currentTime().toString("HH-mm-ss-zzz");
     switch (flag) {
     case 0:
         buf_data0.append(array);

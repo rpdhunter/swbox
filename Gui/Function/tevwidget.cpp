@@ -301,7 +301,7 @@ void TEVWidget::fresh_1000ms()
         is_current = 1;
     }
 
-    emit send_log_data(db,pulse_cnt_show,degree,is_current);
+    emit send_log_data(db,pulse_cnt_show,degree,is_current,"NOISE");
 
     //实时数据库
     if(mode == TEV1){
@@ -356,6 +356,7 @@ void TEVWidget::fresh_100ms()
     int x,y;
     for(int i=0; i<pulse_100ms.count(); i++){
         x = pulse_100ms.at(i).x();
+        x = (x/2)*2;            //去掉奇数项
         y = pulse_100ms.at(i).y();
         if(x<360 && x>=0 && y<=60 &&y>=-60){
             QwtPoint3D p0(x,y,map[x][y+60]);
@@ -427,7 +428,7 @@ void TEVWidget::fresh_1ms()
         }
 
         if(pulse_100ms.last().x() < 5){
-            qDebug()<<"short_data->time:"<<short_data->time << '\t'<<pulse_100ms.last().x();
+//            qDebug()<<"short_data->time:"<<short_data->time << '\t'<<pulse_100ms.last().x();
         }
     }
     //    }
@@ -489,7 +490,7 @@ void TEVWidget::fresh_setting()
 
     ui->comboBox->setCurrentIndex(key_val->grade.val2-1);
 
-    if (key_val->grade.val2 && key_val->grade.val0 == menu_index) {
+    if (key_val->grade.val2 && key_val->grade.val0 == menu_index && isBusy != true) {
         ui->comboBox->showPopup();
     }
     else{

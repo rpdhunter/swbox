@@ -166,12 +166,18 @@ void Common::set_barchart_style(QwtPlot *plot, int v_max)
     plot->axisScaleDraw(QwtPlot::xBottom)->enableComponent(QwtAbstractScaleDraw::Ticks, false);
 }
 
-void Common::set_PRPD_style(QwtPlot *plot, QwtPlotSpectroCurve *d_PRPD, int max_value)
+void Common::set_PRPD_style(QwtPlot *plot, QwtPlotSpectroCurve *d_PRPD, int max_value, PRPD_MODE mode)
 {
     plot->setStyleSheet("background:transparent;color:gray;");
 
     plot->setAxisScale(QwtPlot::xBottom, 0, 360, 180);
-    plot->setAxisScale(QwtPlot::yLeft, -max_value, max_value, max_value);
+    if(mode == PRPD_double){
+        plot->setAxisScale(QwtPlot::yLeft, -max_value, max_value, max_value);
+    }
+    else{
+        plot->setAxisScale(QwtPlot::yLeft, 0, max_value, max_value/2);
+    }
+
 
     plot->axisScaleDraw(QwtPlot::yLeft)->enableComponent(QwtAbstractScaleDraw::Backbone, true);
     plot->axisScaleDraw(QwtPlot::yLeft)->enableComponent(QwtAbstractScaleDraw::Ticks, false);
@@ -198,15 +204,17 @@ void Common::set_PRPD_style(QwtPlot *plot, QwtPlotSpectroCurve *d_PRPD, int max_
     grid->enableYMin( false );
     grid->attach(plot);
 
-    QVector<double> X,Y;
+    QVector<double> X,Y;    
     for(int i=0;i<360;i++){
         X.append(i);
-        Y.append(max_value*qSin(2*3.1416*i/360));
+        if(mode == PRPD_double){
+            Y.append(max_value*qSin(2*3.1416*i/360));
+        }
+        else{
+            Y.append((max_value/2)*(qSin(2*3.1416*i/360) + 1));
+        }
     }
     curve_grid->setSamples(X,Y);
-
-//    d_PRPD = new QwtPlotSpectroCurve;
-//    d_curve->setPenWidth(2);
 
     QwtLinearColorMap *colorMap = new QwtLinearColorMap;
     colorMap->setColorInterval(Qt::blue,Qt::red);
@@ -546,21 +554,6 @@ QString Common::MODE_toString(MODE val)
     case UHF2:
         tmpStr = "UHF2";
         break;
-    case AA1:
-        tmpStr = "AA1";
-        break;
-    case AA2:
-        tmpStr = "AA2";
-        break;
-    case AE1:
-        tmpStr = "AE1";
-        break;
-    case AE2:
-        tmpStr = "AE2";
-        break;
-    case Double_Channel:
-        tmpStr = "Double_Channel";
-        break;
     case TEV1_CONTINUOUS:
         tmpStr = "TEV1_CONTINUOUS";
         break;
@@ -572,6 +565,39 @@ QString Common::MODE_toString(MODE val)
         break;
     case HFCT2_CONTINUOUS:
         tmpStr = "HFCT2_CONTINUOUS";
+        break;
+    case UHF1_CONTINUOUS:
+        tmpStr = "UHF1_CONTINUOUS";
+        break;
+    case UHF2_CONTINUOUS:
+        tmpStr = "UHF2_CONTINUOUS";
+        break;
+    case AA1:
+        tmpStr = "AA1";
+        break;
+    case AA2:
+        tmpStr = "AA2";
+        break;
+    case AE1:
+        tmpStr = "AE1";
+        break;
+    case AE2:
+        tmpStr = "AE2";
+        break;    
+    case AA1_ENVELOPE:
+        tmpStr = "AA1_ENVELOPE";
+        break;
+    case AA2_ENVELOPE:
+        tmpStr = "AA2_ENVELOPE";
+        break;
+    case AE1_ENVELOPE:
+        tmpStr = "AE1_ENVELOPE";
+        break;
+    case AE2_ENVELOPE:
+        tmpStr = "AE2_ENVELOPE";
+        break;
+    case Double_Channel:
+        tmpStr = "Double_Channel";
         break;
     case Options_Mode:
         tmpStr = "Options_Mode";
@@ -647,33 +673,6 @@ void Common::write_fpga_offset_debug(G_PARA *data)
     }
 }
 
-void Common::calc_aa_value(G_PARA *data, MODE mode, L_CHANNEL_SQL *x_sql, double *aa_val, double *aa_db, int *offset)
-{
-    int d;
-
-    if(mode == AA1 || mode == AE1){
-        d = ((int)data->recv_para_normal.ldata0_max - (int)data->recv_para_normal.ldata0_min) / 2 ;      //最大值-最小值=幅值
-    }
-    else {
-        d = ((int)data->recv_para_normal.ldata1_max - (int)data->recv_para_normal.ldata1_min) / 2 ;      //最大值-最小值=幅值
-    }
-
-    double factor = AA_FACTOR;
-    if(mode == AE1){
-        factor = sqlcfg->ae1_factor();
-    }
-    else if(mode == AE2){
-        factor = sqlcfg->ae2_factor();
-    }
-
-    * offset = ( d - 1 / x_sql->gain / factor ) / 100;
-    * aa_val = (d - x_sql->offset * 100) * x_sql->gain * factor;
-    if(* aa_val < 0.1){         //保证结果有值，最小是-20dB
-        * aa_val = 0.1;
-    }
-    * aa_db = 20 * log10 (* aa_val);
-}
-
 //在给定数组中，根据给定的阈值判定脉冲
 QVector<QPoint> Common::calc_pulse_list(QVector<int> datalist, QVector<int> timelist, int threshold)
 {
@@ -694,12 +693,17 @@ QVector<QPoint> Common::calc_pulse_list(QVector<int> datalist, QVector<int> time
 QVector<QPoint> Common::calc_pulse_list(QVector<int> datalist, int threshold)
 {
     QVector<QPoint> pulse_list;
-    for (int i = 1; i < datalist.count()-1; ++i) {
+//    qDebug()<<"pulse_list111"<<pulse_list;
+    for (int i = 2; i < datalist.count()-2; ++i) {
         //注意判定当前点为峰值点的条件为【大于阈值】【大于前点，大于等于后点】，这样避免了方波出现连续波峰的情况，又不会遗漏
-        if(datalist.at(i) > threshold && datalist.at(i)-datalist.at(i-1) > 0 && datalist.at(i) - datalist.at(i+1) >= 0){
+        if(datalist.at(i) > threshold && datalist.at(i-1)-datalist.at(i-2) > 0 && datalist.at(i)-datalist.at(i-1) > 0
+                && datalist.at(i) - datalist.at(i+1) >= 0 && datalist.at(i+1) - datalist.at(i+2) >= 0){
             pulse_list.append(QPoint(i, datalist.at(i)));
+            i+=2;
         }
     }
+//    qDebug()<<"datalist"<<datalist;
+//    qDebug()<<"pulse_list222"<<pulse_list;
     return pulse_list;
 }
 
@@ -795,6 +799,15 @@ int Common::avrage(QVector<int> list)
 {
     int tmp=0;
     foreach (int p, list) {
+        tmp += p;
+    }
+    return tmp / list.count();
+}
+
+float Common::avrage(QList<float> list)
+{
+    float tmp=0;
+    foreach (float p, list) {
         tmp += p;
     }
     return tmp / list.count();
@@ -928,10 +941,10 @@ void Common::rdb_set_yc_value(uint yc_no, double val, uint qc)
     yc_data_type temp_data;
     temp_data.f_val = val;
     if(qc == 1){
-        yc_set_value(yc_no, &temp_data, QDS_FO, 0, 0, 0);
+        yc_set_value(yc_no, &temp_data, QDS_FO, NULL, 0, 1);
     }
     else{
-        yc_set_value(yc_no, &temp_data, QDS_BA, 0, 0, 0);
+        yc_set_value(yc_no, &temp_data, QDS_BA, NULL, 0, 1);
     }
 }
 
@@ -972,6 +985,12 @@ void Common::rdb_set_dz_value(uint dz_no, char val)
 void Common::rdb_dz_init()
 {
     SQL_PARA *sql = sqlcfg->get_para();
+
+    rdb_set_dz_value(HF_Channel1, (char)sql->menu_h1);
+    rdb_set_dz_value(HF_Channel2, (char)sql->menu_h2);
+    rdb_set_dz_value(LF_Channel1, (char)sql->menu_l1);
+    rdb_set_dz_value(LF_Channel2, (char)sql->menu_l2);
+    rdb_set_dz_value(Dual_Channel, (char)sql->menu_double);
     switch (sql->menu_h1) {
     case TEV1:
         rdb_set_dz_value(TEV1_test_mode_dz, (char)sql->tev1_sql.mode);
@@ -1439,6 +1458,21 @@ void Common::change_rbt_status(bool flag, QRadioButton *b0, QRadioButton *b1)
     else{
         b1->setStyleSheet("QRadioButton {background-color:darkGray;}");
     }
+}
+
+void Common::check_restart_file()
+{
+    QFile file("/root/restart");
+    if (!file.open(QIODevice::ReadWrite | QIODevice::Text | QIODevice::Truncate))
+        return;
+    QByteArray t = file.readAll();
+    if(!t.isEmpty()){
+        qDebug()<<"read restart file: "<<t;
+        QTextStream out(&file);
+        out << 0;
+    }
+
+    file.close();
 }
 
 

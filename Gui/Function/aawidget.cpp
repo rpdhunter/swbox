@@ -2,7 +2,7 @@
 #include "ui_aawidget.h"
 #include <QLineEdit>
 
-#define SETTING_NUM 8           //设置菜单条目数
+#define SETTING_NUM 9           //设置菜单条目数
 #define VALUE_MAX 60
 
 AAWidget::AAWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu_index, QWidget *parent) :
@@ -47,6 +47,12 @@ AAWidget::~AAWidget()
     delete ui;
 }
 
+void AAWidget::save_channel()
+{
+    PRPDReset();
+    ChannelWidget::save_channel();
+}
+
 void AAWidget::reload(int index)
 {
     //基本sql内容的初始化
@@ -85,12 +91,19 @@ void AAWidget::reload(int index)
 
 void AAWidget::chart_ini()
 {
-    //图形设置
+    //barchart
     Common::set_barchart_style(ui->qwtPlot, VALUE_MAX);
     d_BarChart = new BarChart(ui->qwtPlot, &db, &aaultra_sql->high, &aaultra_sql->low);
     d_BarChart->resize(200, 140);
 
-    //Spectra
+    //PRPD
+    plot_PRPD = new QwtPlot(ui->widget);
+    plot_PRPD->resize(200, 140);
+    d_PRPD = new QwtPlotSpectroCurve;
+    Common::set_PRPD_style(plot_PRPD,d_PRPD,VALUE_MAX,PRPD_single);
+    PRPDReset();
+
+    //频谱图
     plot_Spectra = new QwtPlot(ui->widget);
     plot_Spectra->resize(200, 140);
     d_Spectra = new QwtPlotHistogram;
@@ -103,14 +116,14 @@ void AAWidget::do_key_ok()
     reload(menu_index);
 
     switch (key_val->grade.val2) {
-    case 7:
+    case 8:             //连续录波
         key_val->grade.val1 = 1;        //为了锁住主界面，防止左右键切换通道
         emit startRecWave(mode, aaultra_sql->time);        //发送录波信号
         emit show_indicator(true);
-        //        isBusy = true;
         return;
-    case 8:
+    case 9:             //测量值重置
         maxReset(ui->label_max);
+        PRPDReset();
         break;
     default:
         break;
@@ -173,10 +186,10 @@ void AAWidget::do_key_left_right(int d)
         break;
     case 2:
         if(aaultra_sql->camera){
-            list << BASIC << Spectra << Camera;
+            list << BASIC << PRPD << Spectra << Camera;
         }
         else{
-            list << BASIC << Spectra;
+            list << BASIC << PRPD << Spectra;
         }
         Common::change_index(aaultra_sql->chart, d, list);
         break;
@@ -198,6 +211,9 @@ void AAWidget::do_key_left_right(int d)
         Common::change_index(aaultra_sql->high, d, 60, aaultra_sql->low );
         break;
     case 7:
+        aaultra_sql->fpga_threshold += Common::code_value(1,mode) * d;
+        break;
+    case 8:
         Common::change_index(aaultra_sql->time, d, TIME_MAX, TIME_MIN );
         break;
     default:
@@ -211,7 +227,7 @@ void AAWidget::fresh(bool f)
     int offset;
     double val,val_db;
 
-    Common::calc_aa_value(data,mode,aaultra_sql,&val, &val_db, &offset);
+    Compute::calc_aa_value(data,mode,aaultra_sql,&val, &val_db, &offset);
 
     if(db < int(val_db)){
         db = int(val_db);      //每秒的最大值
@@ -257,7 +273,7 @@ void AAWidget::fresh(bool f)
 //            Common::rdb_set_yc_value(AA2_biased,aaultra_sql->offset,is_current);
             Common::rdb_set_yc_value(AA2_noise_biased_adv_yc,offset,is_current);
         }
-        emit send_log_data(val_db,0,0,is_current);
+        emit send_log_data(val_db,0,0,is_current,"NOISE");
         //        #endif
     }
     else{   //条件显示
@@ -357,17 +373,23 @@ void AAWidget::paintEvent(QPaintEvent *)
         ui->label_max->hide();
         ui->comboBox->hide();
         ui->progressBar->hide();
-        QImage img = mImage.scaled(this->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
-        int x = this->width() - img.width();
-        int y = this->height() - img.height();
+//        QImage img = mImage.scaled(this->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
+//        int x = this->width() - img.width();
+//        int y = this->height() - img.height();
 
-        x /= 2;
-        y /= 2;
+//        x /= 2;
+//        y /= 2;
 
-        painter.drawImage(QPoint(x,y),img);
+//        painter.drawImage(QPoint(x,y),img);
+        QRect rect_full = this->rect().adjusted(80,0,-80,0);      //修正之后是258×192，约为4×3
+        QRect rect_red = rect_full.adjusted(100,60,-100,-60);
+        painter.drawImage(rect_full,mImage);
+
         painter.setPen(Qt::red);
-        painter.drawRect(x+img.width()/4, y+img.height()/4, img.width()/2,img.height()/2);
-        painter.drawText(x+img.width()/4, y+img.height()*3/4 + 12,ui->label_val->text().append("dbμV"));
+        painter.drawRect(rect_red);
+        painter.drawText(rect_red.bottomRight(),ui->label_val->text().append("dbμV"));
+//        painter.drawRect(x+img.width()/4, y+img.height()/4, img.width()/2,img.height()/2);
+//        painter.drawText(x+img.width()/4, y+img.height()*3/4 + 12,ui->label_val->text().append("dbμV"));
     }
     else if(camera_fullsize == false && aaultra_sql->chart == Camera){  //摄像头小图显示
         painter.drawImage(rect,mImage);
@@ -385,9 +407,49 @@ void AAWidget::fresh_1000ms()
 void AAWidget::fresh_100ms()
 {
     fresh(false);
-    //    if(aaultra_sql->chart == Spectra){
+    pulse_100ms = Common::calc_pulse_list(ae_datalist,aaultra_sql->fpga_threshold);
     do_Spectra_compute();
-    //    }
+
+    int x,y, time;
+    double _y;
+    for(int i=0; i<pulse_100ms.count(); i++){
+        time = pulse_100ms.at(i).x() * 320000 / 128 + ae_timelist.first();  //时标
+//        qDebug()<<"ae_timelist clear"<<ae_timelist;
+//        ae_timelist.clear();
+        x = Common::time_to_phase(time );              //时标(待定)
+        x = (x/2)*2;            //去掉奇数项
+        _y = Common::physical_value(pulse_100ms.at(i).y(),mode);         //强度
+        y = (int)20*log(qAbs(_y) );
+
+
+        if(x<360 && x>=0 && y<=60 &&y>=-60){
+            QwtPoint3D p0(x,y,map[x][y+60]);
+            map[x][y+60]++;
+            QwtPoint3D p1(x,y,map[x][y+60]);
+            if(map[x][y+60]>1){
+                int n = prpd_samples.indexOf(p0);
+                prpd_samples[n] = p1;
+            }
+            else{
+                prpd_samples.append(p1);
+            }
+        }
+    }
+
+    d_PRPD->setSamples(prpd_samples);
+    plot_PRPD->replot();
+    ae_timelist.clear();
+}
+
+void AAWidget::PRPDReset()
+{
+    for(int i=0;i<360;i++){
+        for(int j=0;j<121;j++){
+            map[i][j]=0;
+        }
+    }
+    emit send_PRPD_data(prpd_samples);
+    prpd_samples.clear();
 }
 
 void AAWidget::fresh_setting()
@@ -403,6 +465,7 @@ void AAWidget::fresh_setting()
     }
 
     ui->qwtPlot->hide();
+    plot_PRPD->hide();
     plot_Spectra->hide();
 
     switch (aaultra_sql->chart) {
@@ -410,6 +473,11 @@ void AAWidget::fresh_setting()
         ui->widget->show();
         ui->qwtPlot->show();
         ui->comboBox->setItemText(1,tr("图形显示 \t[时序图]"));
+        break;
+    case PRPD:
+        ui->widget->show();
+        plot_PRPD->show();
+        ui->comboBox->setItemText(1,tr("图形显示\t[PRPD]"));
         break;
     case Spectra:
         ui->widget->show();
@@ -428,11 +496,12 @@ void AAWidget::fresh_setting()
     ui->comboBox->setItemText(3,tr("音量调节\t[×%1]").arg(QString::number(aaultra_sql->vol)));
     ui->comboBox->setItemText(4,tr("黄色报警阈值\t[%1]dB").arg(QString::number(aaultra_sql->low)));
     ui->comboBox->setItemText(5,tr("红色报警阈值\t[%1]dB").arg(QString::number(aaultra_sql->high)));
-    ui->comboBox->setItemText(6,tr("连续录波\t[%1]s").arg(aaultra_sql->time));
+    ui->comboBox->setItemText(6,tr("脉冲触发\t[%1]mV").arg(QString::number((int)Common::physical_value(aaultra_sql->fpga_threshold,mode) )));
+    ui->comboBox->setItemText(7,tr("连续录波\t[%1]s").arg(aaultra_sql->time));
 
     ui->comboBox->setCurrentIndex(key_val->grade.val2-1);
 
-    if (key_val->grade.val2 && key_val->grade.val0 == menu_index && key_val->grade.val5 == 0) {
+    if (key_val->grade.val2 && key_val->grade.val0 == menu_index && key_val->grade.val5 == 0 && isBusy != true) {
         ui->comboBox->showPopup();
     }
     else{
@@ -442,6 +511,7 @@ void AAWidget::fresh_setting()
     ui->comboBox->lineEdit()->setText(tr(" 参 数 设 置"));
     emit fresh_parent();
 }
+
 
 
 

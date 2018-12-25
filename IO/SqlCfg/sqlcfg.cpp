@@ -209,7 +209,7 @@ void SqlCfg::tev_default(H_CHANNEL_SQL &sql)
     sql.offset_linearity = 0;
     sql.filter_hp = NONE;
     sql.filter_lp = NONE;
-    sql.filter_fir_fpga = false;
+    sql.filter_fir_fpga = true;
     sql.filter_wavelet = false;
     sql.mode_recognition = false;
 }
@@ -268,7 +268,7 @@ void SqlCfg::aa_default(L_CHANNEL_SQL &sql)
     sql.step = 2;
     sql.offset = 0;
     sql.envelope = 1;                      //默认使用包络线
-    sql.fpga_threshold = FPGA_THRESHOLD;
+    sql.fpga_threshold = FPGA_THRESHOLD / 2;
     sql.sensor_freq = 40;
     sql.camera = false;
 }
@@ -285,7 +285,7 @@ void SqlCfg::ae_default(L_CHANNEL_SQL &sql)
     sql.step = 2;
     sql.offset = 0;
     sql.envelope = 1;                      //默认使用包络线
-    sql.fpga_threshold = FPGA_THRESHOLD;
+    sql.fpga_threshold = FPGA_THRESHOLD / 2;
     sql.sensor_freq = 30;                   //默认传感器中心频率
     sql.camera = false;
 }

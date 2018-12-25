@@ -5,7 +5,7 @@
 #-------------------------------------------------
 
 QT  += core gui widgets
-QT  += network sql xml charts
+QT  += network sql xml charts serialport
 QT  += qml quick quickwidgets
 
 static{
@@ -16,9 +16,9 @@ static{
 TARGET = swbox
 TEMPLATE = app
 
-#DEFINES += AMG             #OEM
+DEFINES += AMG             #OEM
 #DEFINES += XDP_II          #OEM
-DEFINES += OHV             #OEM
+#DEFINES += OHV             #OEM
 #DEFINES += ZDIT            #OEM
 #DEFINES += NO_OEM           #OEM
 
@@ -81,7 +81,9 @@ SOURCES += \
     IO/Sync/syncthread.cpp \
     IO/File/spacecontrol.cpp \
     IO/TempThread/cameradecode.cpp \
-    Gui/Common/wifi.cpp
+    Gui/Common/wifi.cpp \
+    IO/Com/modbus.cpp \
+    IO/Com/tcpsocket.cpp
 
 
 HEADERS  += \
@@ -148,7 +150,9 @@ HEADERS  += \
     IO/Sync/syncthread.h \
     IO/File/spacecontrol.h \
     IO/TempThread/cameradecode.h \
-    Gui/Common/wifi.h
+    Gui/Common/wifi.h \
+    IO/Com/modbus.h \
+    IO/Com/tcpsocket.h
 
 FORMS += \
     Gui/Function/tevwidget.ui \

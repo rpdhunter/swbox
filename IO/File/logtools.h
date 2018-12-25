@@ -16,7 +16,8 @@ struct LOG_DATA {
     double val;             //测量值
     int pulse;              //2秒内脉冲数
     double degree;          //严重度
-    uint is_current;        //是否是前台数据，1-前台，2-后台
+    uint is_current;        //是否是前台数据，1-前台，0-后台
+    QString result;         //智能判断的结果，中文，如：噪声，局放
 };
 
 class LogTools : public QObject
@@ -29,7 +30,7 @@ public:
     void save_log();            //保存所有日志
 
 public slots:
-    void dealLog(double val, int pulse, double degree, int is_current = 0);     //处理日志文件（管理，保存）
+    void dealLog(double val, int pulse, double degree, int is_current = 0, QString result = "NOISE");     //处理日志文件（管理，保存）
     void dealRPRDLog(QVector<QwtPoint3D> points);
     void change_current_asset_dir();
 

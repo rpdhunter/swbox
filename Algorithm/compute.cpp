@@ -50,10 +50,10 @@ QVector<PC_DATA> Compute::compute_pc_1ms(QVector<int> list, int x_origin, double
             if(last-first > 1){         //至少有3个点
                 QVector<int> list_1node = list.mid(first,last-first+1);
 
-//                if(max_abs(list_1node.mid(1,list_1node.count()-2)).y() > threshold ){
+                //                if(max_abs(list_1node.mid(1,list_1node.count()-2)).y() > threshold ){
                 QPoint P = max_abs(list_1node.mid(1,list_1node.count()-2));
                 if(P.y() > threshold ){
-//                    qDebug()<<"max value:"<< P << "\tthreshold"<<threshold<<list_1node;
+                    //                    qDebug()<<"max value:"<< P << "\tthreshold"<<threshold<<list_1node;
                     pc_data = compute_pc_1node(list_1node, x_origin, gain);  //计算一个脉冲的pC值
                     if(qAbs(pc_data.pc_value) > 10){            //认为值严格为0的点是无意义点(可加入更严格的筛选条件)
                         pclist_1ms.append( pc_data );
@@ -64,9 +64,9 @@ QVector<PC_DATA> Compute::compute_pc_1ms(QVector<int> list, int x_origin, double
         }
     }
 
-//    if(pclist_1ms.isEmpty()  && max_abs(list).y() > threshold){           //序列没有子脉冲，则把整个序列看做一个脉冲
-//        pclist_1ms.append(compute_pc_1node(list, x_origin, gain) );
-//    }
+    //    if(pclist_1ms.isEmpty()  && max_abs(list).y() > threshold){           //序列没有子脉冲，则把整个序列看做一个脉冲
+    //        pclist_1ms.append(compute_pc_1node(list, x_origin, gain) );
+    //    }
 
     return pclist_1ms;
 }
@@ -239,3 +239,113 @@ QVector<int> Compute::sim_pulse(int amp, int n)
     }
     return list;
 }
+
+double Compute::l_channel_modify(double val)
+{
+    if(val > 609.5368972){
+        return val * 5.446758047;
+    }
+    else if(val > 568.8529308){
+        return val * interpolation(val, 568.8529308, 609.5368972, 5.273770842, 5.446758047);
+    }
+    else if(val > 489.7788194){
+        return val * interpolation(val, 489.7788194, 568.8529308, 5.104344862, 5.273770842);
+    }
+    else if(val > 402.7170343){
+        return val * interpolation(val, 402.7170343, 489.7788194, 4.966266211, 5.104344862);
+    }
+    else if(val > 312.6079367){
+        return val * interpolation(val, 312.6079367, 402.7170343, 4.798342665, 4.966266211);
+    }
+    else if(val > 216.2718524){
+        return val * interpolation(val, 216.2718524, 312.6079367, 4.623810214, 4.798342665);
+    }
+    else if(val > 114.8153621){
+        return val * interpolation(val, 114.8153621, 216.2718524, 4.35481795, 4.623810214);
+    }
+    else if(val > 93.32543008){
+        return val * interpolation(val, 93.32543008, 114.8153621, 4.286077221, 4.35481795);
+    }
+    else if(val > 71.61434102){
+        return val * interpolation(val, 71.61434102, 93.32543008, 4.189105083, 4.286077221);
+    }
+    else if(val > 48.97788194){
+        return val * interpolation(val, 48.97788194, 71.61434102, 4.083475889, 4.189105083);
+    }
+    else if(val > 25.11886432){
+        return val * interpolation(val, 25.11886432, 48.97788194, 3.981071706, 4.083475889);
+    }
+    else if(val > 13.03166778){
+        return val * interpolation(val, 13.03166778, 25.11886432, 3.836807447, 3.981071706);
+    }
+    else if(val > 10.59253725){
+        return val * interpolation(val, 10.59253725, 13.03166778, 3.776243505, 3.836807447);
+    }
+    else if(val > 8.413951416){
+        return val * interpolation(val, 8.413951416, 10.59253725, 3.565506682, 3.776243505);
+    }
+    else if(val > 3.090295433){
+        return val * interpolation(val, 3.090295433, 8.413951416, 3.235936569, 3.565506682);
+    }
+    else if(val > 1.9498446){
+        return val * interpolation(val, 1.9498446, 3.090295433, 2.56430692, 3.235936569);
+    }
+    else if(val > 1.548816619){
+        return val * interpolation(val, 1.548816619, 1.9498446, 1.936962687, 2.56430692);
+    }
+    else if(val > 1.096478196){
+        return val * interpolation(val, 1.096478196, 1.548816619, 1.266681721, 1.936962687);
+    }
+    else{
+        return val;
+    }
+}
+
+double Compute::interpolation(double x, double x1, double x2, double f1, double f2)
+{
+    return (f1 + (f2 - f1) * (x - x1) / (x2 - x1));
+}
+
+void Compute::calc_aa_value(G_PARA *data, MODE mode, L_CHANNEL_SQL *x_sql, double *aa_val, double *aa_db, int *offset)
+{
+    int d;
+
+    if(mode == AA1 || mode == AE1){
+        d = ((int)data->recv_para_normal.ldata0_max - (int)data->recv_para_normal.ldata0_min) / 2 ;      //最大值-最小值=幅值
+    }
+    else {
+        d = ((int)data->recv_para_normal.ldata1_max - (int)data->recv_para_normal.ldata1_min) / 2 ;      //最大值-最小值=幅值
+    }
+
+    double factor = AA_FACTOR;
+    if(mode == AE1){
+        factor = sqlcfg->ae1_factor();
+    }
+    else if(mode == AE2){
+        factor = sqlcfg->ae2_factor();
+    }
+
+    * offset = ( d - 1 / x_sql->gain / factor ) / 100;
+    * aa_val = l_channel_modify( (d - x_sql->offset * 100) * x_sql->gain * factor );
+    if(* aa_val < 0.1){         //保证结果有值，最小是-20dB
+        * aa_val = 0.1;
+    }
+    * aa_db = 20 * log10 (* aa_val);
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

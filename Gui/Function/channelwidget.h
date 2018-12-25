@@ -49,7 +49,7 @@ signals:
 //    void show_indicator(bool);      //显示菊花
 
     void startRecWave(MODE, int);
-    void send_log_data(double val, int pulse, double degree, int qc);    //发送日志数据
+    void send_log_data(double val, int pulse, double degree, int qc, QString r);    //发送日志数据
     void send_PRPD_data(QVector<QwtPoint3D>);
     void beep(int index, int red_alert);        //蜂鸣器报警(参数：通道，严重程度(0,1,2))
 

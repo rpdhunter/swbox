@@ -15,8 +15,8 @@
 #define FPGA_THRESHOLD		0x120
 
 #define AA_VOL_DEFAULT				8
-#define AA_HIGH				40
-#define AA_LOW				20
+#define AA_HIGH				20
+#define AA_LOW				7
 
 #define HFCT_HIGH           2000
 #define HFCT_LOW			1000

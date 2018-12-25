@@ -4,7 +4,7 @@
 #include <QGraphicsView>
 #include "Algorithm/Wavelet/wavelet.h"
 
-#define VALUE_MAX       9999           //RPPD最大值
+#define VALUE_MAX       6000           //RPPD最大值
 #define SETTING_NUM     11           //设置菜单条目数
 
 
@@ -483,7 +483,7 @@ void HFCTWidget::fresh_1000ms()
         ui->label_max->setText(tr("最大值: ") + QString::number(max_db) + "pC");
     }
 
-    emit send_log_data(db,pulse_cnt,degree,is_current);
+    emit send_log_data(db,pulse_cnt,degree,is_current, "NOISE");
 
     plot_Barchart->replot();        //这里replot()包含了db清零的操作
 }
@@ -544,7 +544,7 @@ void HFCTWidget::fresh_setting()
 
     ui->comboBox->setCurrentIndex(key_val->grade.val2-1);
 
-    if (key_val->grade.val2 && key_val->grade.val0 == menu_index && key_val->grade.val5 == 0) {
+    if (key_val->grade.val2 && key_val->grade.val0 == menu_index && key_val->grade.val5 == 0 && isBusy != true) {
         ui->comboBox->showPopup();
     }
     else{

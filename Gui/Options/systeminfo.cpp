@@ -46,9 +46,9 @@ SystemInfo::SystemInfo(QWidget *parent) : BaseWidget(NULL, parent),ui(new Ui::Sy
 #ifdef OHV
             line = "PDTEV";
 #elif AMG
-//            line = "PDcable";
+            line = "PDcable";
 //            line = "PDswitch";
-            line = "TAH-300";
+//            line = "TAH-300";
 #elif ZDIT
             line = "PD3000";
 #elif XDP_II

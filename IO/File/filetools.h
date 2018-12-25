@@ -55,7 +55,7 @@ private:
     VectorList _data;
     MODE _mode;
     WaveFormat *wfh1;
-    QString filepath, filepath_SD;
+    QString filepath;
     QString cfgfilepath;
     QString filename;
     FileMode _fileMode;

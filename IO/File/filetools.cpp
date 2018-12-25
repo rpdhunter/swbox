@@ -230,111 +230,15 @@ void FileTools::getReadFilePath(QString str)
 void FileTools::getWriteFilePath()
 {
     filename = QString("%1").arg(QDateTime::currentDateTime().toString("yyyy-MM-dd-HH-mm-ss-zzz"));
-
-    switch (_mode) {
-    case TEV1:
-        filename.prepend("TEV1_");
-        break;
-    case TEV2:
-        filename.prepend("TEV2_");
-        break;
-    case Double_Channel:
-        filename.prepend("Double_");
-        break;
-    case AA1:
-        filename.prepend("AA1_");
-        break;
-    case AA2:
-        filename.prepend("AA2_");
-        break;
-    case AE1:
-        filename.prepend("AE1_");
-        break;
-    case AE2:
-        filename.prepend("AE2_");
-        break;
-    case HFCT1:
-        filename.prepend("HFCT1_");
-        break;
-    case HFCT2:
-        filename.prepend("HFCT2_");
-        break;
-    case UHF1:
-        filename.prepend("UHF1_");
-        break;
-    case UHF2:
-        filename.prepend("UHF2_");
-        break;
-    case TEV1_CONTINUOUS:
-        filename.prepend("TEV1_CONTINUOUS_");
-        break;
-    case TEV2_CONTINUOUS:
-        filename.prepend("TEV2_CONTINUOUS_");
-        break;
-    case HFCT1_CONTINUOUS:
-        filename.prepend("HFCT1_CONTINUOUS_");
-        break;
-    case HFCT2_CONTINUOUS:
-        filename.prepend("HFCT2_CONTINUOUS_");
-        break;
-    case UHF1_CONTINUOUS:
-        filename.prepend("UHF1_CONTINUOUS_");
-        break;
-    case UHF2_CONTINUOUS:
-        filename.prepend("UHF2_CONTINUOUS_");
-        break;
-    case AA1_ENVELOPE:
-        filename.prepend("AA1_ENVELOPE_");
-        break;
-    case AA2_ENVELOPE:
-        filename.prepend("AA2_ENVELOPE_");
-        break;
-    case AE1_ENVELOPE:
-        filename.prepend("AE1_ENVELOPE_");
-        break;
-    case AE2_ENVELOPE:
-        filename.prepend("AE2_ENVELOPE_");
-        break;
-    default:
-        break;
-    }
+    filename.prepend(Common::MODE_toString(_mode).append("_") );
 
     //文件夹操作
-//    QDir dir;
-    //创建文件夹
-//    if(!dir.exists("/mmc/sdcard/WaveForm/")){
-//        dir.mkdir("/mmc/sdcard/WaveForm/");
-//    }
-
-//    if(!dir.exists("/mmc/sdcard/WaveForm/favorite")){
-//        dir.mkdir("/mmc/sdcard/WaveForm/favorite");
-//    }
-
-//    if(!dir.exists(DIR_USB"/") ){
-//        dir.mkdir(DIR_USB"/");
-//    }
-
-//    if(!dir.exists(DIR_DATA"/") ){
-//        dir.mkdir(DIR_DATA"/");
-//    }
-
-//    if(!dir.exists(DIR_WAVE"/") ){
-//        dir.mkdir(DIR_WAVE"/");
-//    }
-
-//    if(!dir.exists(DIR_FAVORITE"/") ){
-//        dir.mkdir(DIR_FAVORITE"/");
-//    }
-
     Common::mk_dir(DIR_USB);
     Common::mk_dir(DIR_DATA);
     Common::mk_dir(DIR_WAVE);
     Common::mk_dir(DIR_FAVORITE);
 
     filepath = QString(DIR_WAVE"/" + filename);
-    filepath_SD = QString("/mmc/sdcard/WaveForm/" + filename);
-//    qDebug()<<filepath;
-//    qDebug()<<filepath_SD;
 }
 
 void FileTools::saveDataFile()
@@ -388,17 +292,6 @@ void FileTools::saveDataFile()
 
 //        qDebug()<<tr("save %1 success").arg(filepath + ".DAT");
 
-#if 0
-        //拷贝到SD卡
-        if(sqlcfg->get_para()->buzzer_on){
-            if(file.copy(filepath_SD + ".DAT")){
-                qDebug()<<"copy " + filename + ".DAT to SDCard succeed!";
-            }
-            else{
-                qDebug()<<"copy " + filename + ".DAT to SDCard failed!";
-            }
-        }
-#endif
         file.close();
     }
     else{
@@ -452,16 +345,6 @@ void FileTools::saveCfgFile()
         out << Common::filter_to_string(sqlcfg->get_para()->hfct2_sql.filter_hp) << "-"
             << Common::filter_to_string(sqlcfg->get_para()->hfct2_sql.filter_lp) << "\n";
     }
-#if 0
-    if(sqlcfg->get_para()->buzzer_on){
-        if(file.copy(filepath_SD + ".CFG")){
-            //        qDebug()<<"copy " + filename + ".CFG to SDCard succeed!";
-        }
-        else{
-            qDebug()<<"copy " + filename + ".CFG to SDCard failed!";
-        }
-    }
-#endif
 
     file.close();
 }

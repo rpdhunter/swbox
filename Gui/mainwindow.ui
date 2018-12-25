@@ -290,9 +290,9 @@ background:transparent;
   <widget class="QLabel" name="lab_freq">
    <property name="geometry">
     <rect>
-     <x>375</x>
+     <x>360</x>
      <y>10</y>
-     <width>41</width>
+     <width>50</width>
      <height>17</height>
     </rect>
    </property>
@@ -383,6 +383,34 @@ background:transparent;
     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
    </property>
   </widget>
+  <widget class="QLabel" name="lab_temp">
+   <property name="geometry">
+    <rect>
+     <x>320</x>
+     <y>250</y>
+     <width>152</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QLabel {color:white;}</string>
+   </property>
+   <property name="text">
+    <string notr="true"/>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+   </property>
+  </widget>
+  <zorder>lab_asset</zorder>
+  <zorder>tabWidget</zorder>
+  <zorder>lab_imformation</zorder>
+  <zorder>lab_freq</zorder>
+  <zorder>lab_time</zorder>
+  <zorder>lab_pwr</zorder>
+  <zorder>lab_pwr_num</zorder>
+  <zorder>lab_wifi</zorder>
+  <zorder>lab_temp</zorder>
  </widget>
  <resources/>
  <connections/>

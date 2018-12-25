@@ -24,6 +24,9 @@ public:
      static QPoint max_abs(QVector<int> list);  //返回绝对值最大点
      static QVector<int> sim_sin(int amp, int f, int n);        //生成模拟正弦波,频率为f MHz,幅值为amp, 点数是n
      static QVector<int> sim_pulse(int amp, int n);        //生成模拟脉冲,幅值为amp, 点数是n
+     static double l_channel_modify(double val);            //低频通道系数修正
+     static double interpolation(double x, double x1, double x2, double f1, double f2); //插值公式
+     static void calc_aa_value (G_PARA *data, MODE mode, L_CHANNEL_SQL *x_sql, double * aa_val, double * aa_db, int * offset);
 signals:
 
 public slots:

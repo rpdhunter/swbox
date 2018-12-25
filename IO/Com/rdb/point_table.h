@@ -254,6 +254,17 @@ enum dz_e {
     AE2_waverec_time_dz,			/* 连续录波时长 */
     AE2_niose_biased_dz, 				/* 偏置 */
 
+	DualCH_Tri_mode = 0x160,		/* 触发模式 */
+	DualCH_show_mode,				/* 显示模式 */
+	DualCH_Tri_CH,					/* 触发通道 */
+	DualCH_Tri_time,				/* 触发时长 */
+	DualCH_save_wave,				/* 保存当前波形 */
+
+	HF_Channel1 = 0x180,			/* 高频通道1     */
+	HF_Channel2,					/* 高频通道2	 */
+	LF_Channel1,					/* 低频通道1     */
+	LF_Channel2,					/* 低频通道2	 */
+	Dual_Channel,					/* 双通道模式 */
     Get_cur_page_dz = 0x200,					/* 获取当前各个页面配置指令 */
 
 /* 设定值数量 */

@@ -27,6 +27,7 @@
 //#include "record_log.h"
 
 #define RDB_APP_ID			5
+//#define ENABLE_PRINT      /*允许打印输出*/
 
 static yx_t * yx_lst;		/* YX_NUMBER */
 static yc_t * yc_lst;		/* YC_NUMBER */
@@ -622,10 +623,11 @@ int reg_rdb_data (
 
     return 0;
 }
+
 int proto_rdb_reg_data (int com_no)
 {
-    int i, rdb_no, proto_no;
-    int protect_num;
+	int i, rdb_no, proto_no;
+	int protect_num;
 
 /* YX */
     proto_no = 0;
@@ -657,51 +659,50 @@ int proto_rdb_reg_data (int com_no)
         reg_rdb_data (com_no, RDB_TYPE_YK, rdb_no, proto_no);
     }
 /* DZ */
-    proto_no = 0;
-    for(rdb_no = TEV1_test_mode_dz;rdb_no < TEV1_noise_biased_dz;rdb_no++,proto_no++)
-    {
-        reg_rdb_data (com_no, RDB_TYPE_DZ, rdb_no, proto_no);
-    }
-    for(rdb_no = TEV2_test_mode_dz;rdb_no < TEV2_noise_biased_dz;rdb_no++,proto_no++)
-    {
-        reg_rdb_data (com_no, RDB_TYPE_DZ, rdb_no, proto_no);
-    }
-    for(rdb_no = HFCT1_test_mode_dz;rdb_no < HFCT1_noise_biased_dz;rdb_no++,proto_no++)
-    {
-        reg_rdb_data (com_no, RDB_TYPE_DZ, rdb_no, proto_no);
-    }
-    for(rdb_no = HFCT2_test_mode_dz;rdb_no < HFCT2_noise_biased_dz;rdb_no++,proto_no++)
-    {
-        reg_rdb_data (com_no, RDB_TYPE_DZ, rdb_no, proto_no);
-    }
-    for(rdb_no = UHF1_test_mode_dz;rdb_no < UHF1_noise_biased_dz;rdb_no++,proto_no++)
-    {
-        reg_rdb_data (com_no, RDB_TYPE_DZ, rdb_no, proto_no);
-    }
-    for(rdb_no = UHF2_test_mode_dz;rdb_no < UHF2_noise_biased_dz;rdb_no++,proto_no++)
-    {
-        reg_rdb_data (com_no, RDB_TYPE_DZ, rdb_no, proto_no);
-    }
+	proto_no = 0;
+	for(rdb_no = TEV1_test_mode_dz;rdb_no < TEV1_noise_biased_dz;rdb_no++,proto_no++)
+	{
+		reg_rdb_data (com_no, RDB_TYPE_DZ, rdb_no, proto_no);
+	}
+	for(rdb_no = TEV2_test_mode_dz;rdb_no < TEV2_noise_biased_dz;rdb_no++,proto_no++)
+	{
+		reg_rdb_data (com_no, RDB_TYPE_DZ, rdb_no, proto_no);
+	}
+	for(rdb_no = HFCT1_test_mode_dz;rdb_no < HFCT1_noise_biased_dz;rdb_no++,proto_no++)
+	{
+		reg_rdb_data (com_no, RDB_TYPE_DZ, rdb_no, proto_no);
+	}
+	for(rdb_no = HFCT2_test_mode_dz;rdb_no < HFCT2_noise_biased_dz;rdb_no++,proto_no++)
+	{
+		reg_rdb_data (com_no, RDB_TYPE_DZ, rdb_no, proto_no);
+	}
+	for(rdb_no = UHF1_test_mode_dz;rdb_no < UHF1_noise_biased_dz;rdb_no++,proto_no++)
+	{
+		reg_rdb_data (com_no, RDB_TYPE_DZ, rdb_no, proto_no);
+	}
+	for(rdb_no = UHF2_test_mode_dz;rdb_no < UHF2_noise_biased_dz;rdb_no++,proto_no++)
+	{
+		reg_rdb_data (com_no, RDB_TYPE_DZ, rdb_no, proto_no);
+	}
     for(rdb_no = AA1_test_mode_dz;rdb_no < AA1_niose_biased_dz;rdb_no++,proto_no++)
-    {
-        reg_rdb_data (com_no, RDB_TYPE_DZ, rdb_no, proto_no);
-    }
+	{
+		reg_rdb_data (com_no, RDB_TYPE_DZ, rdb_no, proto_no);
+	}
     for(rdb_no = AA2_test_mode_dz;rdb_no < AA2_niose_biased_dz;rdb_no++,proto_no++)
-    {
-        reg_rdb_data (com_no, RDB_TYPE_DZ, rdb_no, proto_no);
-    }
+	{
+		reg_rdb_data (com_no, RDB_TYPE_DZ, rdb_no, proto_no);
+	}
     for(rdb_no = AE1_test_mode_dz;rdb_no < AE1_niose_biased_dz;rdb_no++,proto_no++)
-    {
-        reg_rdb_data (com_no, RDB_TYPE_DZ, rdb_no, proto_no);
-    }
+	{
+		reg_rdb_data (com_no, RDB_TYPE_DZ, rdb_no, proto_no);
+	}
     for(rdb_no = AE2_test_mode_dz;rdb_no < AE2_niose_biased_dz;rdb_no++,proto_no++)
-    {
-        reg_rdb_data (com_no, RDB_TYPE_DZ, rdb_no, proto_no);
-    }
-
-    return 0;
+	{
+		reg_rdb_data (com_no, RDB_TYPE_DZ, rdb_no, proto_no);
+	}
+	
+	return 0;
 }
-
 
 int yx_set_value (
         unsigned int yx_no,		/* 从0到YX_NUMBER-1 */
@@ -767,11 +768,13 @@ int yx_set_value (
         memcpy (yx_temp,&rdb_udp->yx_param,sizeof(rdb_yx_param_t));
         p_i_msg->content_len = sizeof(rdb_yx_param_t);
         sendto(rdb_udp->rdb_client_id,sbuf, p_i_msg->content_len + INTERNAL_MSG_HEAD_LEN, 0, (struct sockaddr *)&(rdb_udp->client_addr), sizeof(rdb_udp->client_addr));
+#ifdef ENABLE_PRINT
         printf("Send rdb msg:");
         for(i=0;i<p_i_msg->content_len+INTERNAL_MSG_HEAD_LEN;i++){
             printf("0x%02x ",sbuf[i]);
         }
         printf("\n");
+#endif
     }
     /* 获取互斥信号量 */
     sem_timewait (&yx_entry->mutex, NULL);
@@ -942,16 +945,22 @@ int yc_set_value (
         rdb_udp->yc_param.yc_no = yc_no;
         rdb_udp->yc_param.qds = qds;
         rdb_udp->yc_param.b_event = b_event;
+
         memcpy (rdb_udp->yc_param.val, val, sizeof (yc_data_type));
-        memcpy (rdb_udp->yc_param.ts, ts, sizeof (time_type));
+        if(ts != NULL){
+            memcpy (rdb_udp->yc_param.ts, ts, sizeof (time_type));
+        }
+
         memcpy (yc_temp,&rdb_udp->yc_param,sizeof(rdb_yc_param_t));
         p_i_msg->content_len = sizeof(rdb_yc_param_t);
         sendto(rdb_udp->rdb_client_id,sbuf, p_i_msg->content_len + INTERNAL_MSG_HEAD_LEN, 0, (struct sockaddr *)&(rdb_udp->client_addr), sizeof(rdb_udp->client_addr));
+#ifdef ENABLE_PRINT
         printf("Send rdb msg:");
         for(i=0;i<p_i_msg->content_len+INTERNAL_MSG_HEAD_LEN;i++){
             printf("0x%02x ",sbuf[i]);
         }
         printf("\n");
+#endif
     }
     yc_entry = yc_lst + yc_no;
 
@@ -1418,11 +1427,13 @@ int yk_select_proto (
 
         memcpy (yk_select_temp,&rdb_udp->yk_select,sizeof(rdb_yk_select_t));
         p_i_msg->content_len = sizeof(rdb_yk_select_t);
+#ifdef ENABLE_PRINT
         printf("Send rdb msg:");
         for(i=0;i<p_i_msg->content_len+INTERNAL_MSG_HEAD_LEN;i++){
             printf("0x%02x ",sbuf[i]);
         }
         printf("\n");
+#endif
         sendto(rdb_udp->rdb_client_id,sbuf, p_i_msg->content_len + INTERNAL_MSG_HEAD_LEN, 0, (struct sockaddr *)&(rdb_udp->client_addr), sizeof(rdb_udp->client_addr));
 
     }
@@ -1549,11 +1560,13 @@ int yk_unselect_proto (
         p_i_msg->content_len = sizeof(rdb_yk_unselect_t);
         sendto(rdb_udp->rdb_client_id,sbuf, p_i_msg->content_len + INTERNAL_MSG_HEAD_LEN, 0, (struct sockaddr *)&(rdb_udp->client_addr), sizeof(rdb_udp->client_addr));
         p_i_msg->content_len = sizeof(rdb_yk_select_t);
+#ifdef ENABLE_PRINT
         printf("Send rdb msg:");
         for(i=0;i<p_i_msg->content_len+INTERNAL_MSG_HEAD_LEN;i++){
             printf("0x%02x ",sbuf[i]);
         }
         printf("\n");
+#endif
     }
     /* 释放互斥信号量 */
     sem_post (&yk_entry->mutex);
@@ -1685,11 +1698,13 @@ int yk_operate_proto (
         memcpy (yk_operate_temp,&rdb_udp->yk_operate,sizeof(rdb_yk_operate_t));
         p_i_msg->content_len = sizeof(rdb_yk_operate_t);
         sendto(rdb_udp->rdb_client_id,sbuf, p_i_msg->content_len + INTERNAL_MSG_HEAD_LEN, 0, (struct sockaddr *)&(rdb_udp->client_addr), sizeof(rdb_udp->client_addr));
+#ifdef ENABLE_PRINT
         printf("Send rdb msg:");
         for(i=0;i<p_i_msg->content_len+INTERNAL_MSG_HEAD_LEN;i++){
             printf("0x%02x ",sbuf[i]);
         }
         printf("\n");
+#endif
     }
     /* 释放互斥信号量 */
     sem_post (&yk_entry->mutex);
@@ -1797,11 +1812,13 @@ int yk_done_proto (
         memcpy (yk_done_temp,&rdb_udp->yk_done,sizeof(rdb_yk_done_t));
         p_i_msg->content_len = sizeof(rdb_yk_done_t);
         sendto(rdb_udp->rdb_client_id,sbuf, p_i_msg->content_len + INTERNAL_MSG_HEAD_LEN, 0, (struct sockaddr *)&(rdb_udp->client_addr), sizeof(rdb_udp->client_addr));
+#ifdef ENABLE_PRINT
         printf("Send rdb msg:");
         for(i=0;i<p_i_msg->content_len+INTERNAL_MSG_HEAD_LEN;i++){
             printf("0x%02x ",sbuf[i]);
         }
         printf("\n");
+#endif
     }
     /* 释放互斥信号量 */
 #endif
@@ -1975,11 +1992,13 @@ void send_path(unsigned char meas_path[],int len)
     memcpy (p_i_msg->content,meas_path,len);
     p_i_msg->content_len = len;
     sendto(rdb_udp->rdb_client_id,sbuf, p_i_msg->content_len + INTERNAL_MSG_HEAD_LEN, 0, (struct sockaddr *)&(rdb_udp->client_addr), sizeof(rdb_udp->client_addr));
+#ifdef ENABLE_PRINT
     printf("Send rdb msg:");
     for(i=0;i<p_i_msg->content_len+INTERNAL_MSG_HEAD_LEN;i++){
         printf("0x%02x ",sbuf[i]);
     }
     printf("\n");
+#endif
 }
 
 static void rdb_recv_task (void * arg)

@@ -20,7 +20,7 @@ DebugSet::DebugSet(G_PARA *g_data,QWidget *parent) : BaseWidget(NULL, parent),ui
     this->move(3, 3);
     ui->setupUi(this);
 
-    battery = new Battery;
+//    battery = new Battery;
     timer_rdb = new QTimer;
     timer_rdb->start(1000);
     connect(timer_rdb, SIGNAL(timeout()), this, SLOT(fresh_rdb_data()) );
@@ -676,6 +676,9 @@ void DebugSet::do_key_left_right(int d)
             case 2:     //L1摄像头/传感器中心频率
                 if(sqlcfg->get_para()->menu_l1 == AA1){
                     sql_para.aa1_sql.camera = !sql_para.aa1_sql.camera;
+                    if(sql_para.aa1_sql.chart == Camera && sql_para.aa1_sql.camera == false){       //关闭摄像头，把显示界面重置
+                        sql_para.aa1_sql.chart = BASIC;
+                    }
                 }
                 else if(sqlcfg->get_para()->menu_l1 == AE1){
                     Common::change_index(sql_para.ae1_sql.sensor_freq, 10 * d, 90, 30);
@@ -700,6 +703,9 @@ void DebugSet::do_key_left_right(int d)
             case 5:     //L2摄像头/传感器中心频率
                 if(sqlcfg->get_para()->menu_l2 == AA2){
                     sql_para.aa2_sql.camera = !sql_para.aa2_sql.camera;
+                    if(sql_para.aa2_sql.chart == Camera && sql_para.aa2_sql.camera == false){       //关闭摄像头，把显示界面重置
+                        sql_para.aa2_sql.chart = BASIC;
+                    }
                 }
                 else if(sqlcfg->get_para()->menu_l2 == AE2){
                     Common::change_index(sql_para.ae2_sql.sensor_freq, 10 * d, 90, 30);
@@ -849,10 +855,14 @@ void DebugSet::fresh_rdb_data()
 
     ui->lineEdit_CPU_TEMP->setText(QString("%1").arg(Common::rdb_get_yc_value(CPU_temp_yc)) );
     ui->lineEdit_CPU_VCC->setText(QString("%1").arg(Common::rdb_get_yc_value(CPU_vcc_yc)) );
-    float v = battery->battVcc(), c = battery->battCur();
+    float v = Common::rdb_get_yc_value(Battery_vcc_yc), c = Common::rdb_get_yc_value(Battery_cur_yc);
     ui->lineEdit_BATT_VCC->setText(QString("%1").arg(v) );
     ui->lineEdit_BATT_CUR->setText(QString("%1").arg(c) );
     ui->lineEdit_BATT_P->setText(QString("%1").arg(v*c/1000) );
+//    float v = battery->battVcc(), c = battery->battCur();
+//    ui->lineEdit_BATT_VCC->setText(QString("%1").arg(v) );
+//    ui->lineEdit_BATT_CUR->setText(QString("%1").arg(c) );
+//    ui->lineEdit_BATT_P->setText(QString("%1").arg(v*c/1000) );
 }
 
 void DebugSet::fresh()

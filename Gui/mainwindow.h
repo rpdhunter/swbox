@@ -33,6 +33,7 @@
 #include "Common/common.h"
 #include "IO/Com/rdb/rdb.h"
 #include "IO/Other/CPU/cpustatus.h"
+#include "IO/Com/modbus.h"
 //#include <dwt.h>
 
 //using namespace splab;
@@ -72,6 +73,7 @@ private slots:
     void set_wifi_icon(int w);
     void do_beep(int index, int red_alert);
     void set_current_equ(QString new_equ, QString new_path);
+    void fresh_freq(short f);           //显示频率
 
     void printSc(); //截屏
 
@@ -116,7 +118,6 @@ private:
     QTimer *timer_message;              //状态栏信息计时器
     Battery *battery;
     int low_power;                      //自动关机计数
-    QVector<int> power_list;            //电量序列
 
     QQuickWidget *busyIndicator;
 
@@ -124,6 +125,8 @@ private:
     Buzzer *buzzer;
     QMessageBox *box;       //关机确认框
     int power_num;          //电源键记数
+    Modbus *modbus;
+    float freq;             //实时频率值
 
     void menu_init();
     void statusbar_init();

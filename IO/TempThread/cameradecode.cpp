@@ -1,5 +1,7 @@
 ﻿#include "cameradecode.h"
 #include <QtDebug>
+#include <QFile>
+//#define REC_ON
 
 CameraDecode::CameraDecode(QObject *parent) : QThread(parent)
 {
@@ -11,18 +13,18 @@ CameraDecode::CameraDecode(QObject *parent) : QThread(parent)
     this->packet=NULL;
     this->img_convert_ctx=NULL;
 
-    camera_buf0 = (uint8_t *)malloc(1e6);
-    camera_buf1 = (uint8_t *)malloc(1e6);
-    camera_buf2 = (uint8_t *)malloc(1e6);
-
-    flag0 = 0;
-    flag1 = 0;
-    flag2 = 0;
-    get_packet = 0;
+    data_buf = (uint8_t *)malloc(1e6);
 
     init_ffmpeg_stream();
 
     camera_init_flag = false;
+
+#ifdef REC_ON
+    timer = new QTimer;
+    timer->setSingleShot(true);
+    timer->setInterval(10 * 1000);
+    connect(timer, SIGNAL(timeout()), this, SLOT(save_test_video_file()));
+#endif
 }
 
 CameraDecode::~CameraDecode()
@@ -55,44 +57,33 @@ void CameraDecode::init_ffmpeg_stream()
 
     packet = (AVPacket *) av_malloc(sizeof(AVPacket));  //申请包空间
     pFrame = av_frame_alloc();                          //申请帧空间
-    pFrameRGB = av_frame_alloc();
+    pFrameRGB = av_frame_alloc();                       //申请转换帧空间
+
+    av_log_set_level(AV_LOG_QUIET);                     //禁止输出
 }
 
 
 void CameraDecode::getOnePacket(QByteArray buf, int f)
 {
-    qDebug()<< "CameraDecode Class get one packet : length = "<<buf.length() << "\t" << f;
-    av_init_packet(packet);                         //packet初始化
-    if(flag0 == 0){
-        qDebug()<<"get_packet0";
-        memcpy(camera_buf0, buf.data(), buf.length());
-        packet->data = camera_buf0;                      //packets数据初始化
-        packet->size = buf.length();
-        flag0 = 1;
-    }
-    else if(flag1 == 0){
-        qDebug()<<"get_packet1";
-        memcpy(camera_buf1, buf.data(), buf.length());
-        packet->data = camera_buf1;                      //packets数据初始化
-        packet->size = buf.length();
-        flag1 = 1;
-    }
-    else if(flag2 == 0){
-        qDebug()<<"get_packet2";
-        memcpy(camera_buf2, buf.data(), buf.length());
-        packet->data = camera_buf2;                      //packets数据初始化
-        packet->size = buf.length();
-        flag2 = 1;
-    }
-    emit read_done(f);
+    frame_list.append(buf);
 
-//    qDebug()<<"get_packet:"<<get_packet;
-//    if(get_packet == 2){
-//        qDebug()<<"decode imcomplete";
-//    }
-//    else{
-//        get_packet = 1;
-    //    }
+
+    qDebug()<< "CameraDecode Class get one packet : length = "<<buf.length() << "\t" << f;
+    qDebug()<< "current frame buf num:" << frame_list.count();
+
+#ifdef REC_ON
+    if(timer->isActive()){
+        for(int i=0; i<10; i++){
+            printf("%02x ", *(buf.data()+i) );
+        }
+        printf("\n");
+        video_rec.append(buf);
+    }
+    else{
+        timer->start();
+    }
+#endif
+    emit read_done(f);
 }
 
 void CameraDecode::camera_init()
@@ -101,6 +92,30 @@ void CameraDecode::camera_init()
     camera_init_flag = true;
 }
 
+void CameraDecode::save_test_video_file()
+{
+#ifdef REC_ON
+    QFile file;
+    bool flag;
+    //保存二进制文件（小端）
+    file.setFileName("test.h264");
+    flag = file.open(QIODevice::WriteOnly);
+    if(flag){
+        QDataStream out(&file);
+        out.setByteOrder(QDataStream::LittleEndian);
+        out.writeBytes(video_rec.data(), video_rec.length());
+
+        file.close();
+        qDebug()<<"test video file saved!";
+
+        video_rec.clear();
+    }
+    else{
+        qDebug()<<"file open failed!";
+    }
+#endif
+}
+#include <QTime>
 void CameraDecode::run()
 {
     while (1) {
@@ -108,53 +123,37 @@ void CameraDecode::run()
             camera_init_flag = false;
 
             qDebug()<<"open AP";
-//            system("./camera");
             system("/root/wifi/ap.sh    ZZDDIITT  zdit.com.cn    192.168.150.1    255.255.255.0");      //开启AP
         }
-        else if(flag0 == 1){
-            flag0 = 2;
-            decode();           //解码一帧
-            qDebug()<<"flag0"<<flag0;
-            flag0 = 0;
-        }
-        else if(flag1 == 1){
-            flag1 = 2;
-            decode();           //解码一帧
-            flag1 = 0;
-        }
-        else if(flag2 == 1){
-            flag2 = 2;
-            decode();           //解码一帧
-            flag2 = 0;
+        else if(!frame_list.isEmpty()){
+//            qDebug()<<"decode prepare:"<<QTime::currentTime().toString("HH-mm-ss-zzz");
+            av_init_packet(packet);                         //packet初始化
+            memcpy(data_buf, frame_list.first().data(), frame_list.first().length());
+
+            packet->data = data_buf;                      //packets数据初始化
+            packet->size = frame_list.first().length();
+
+            frame_list.removeFirst();
+
+            decode();
         }
         else{
-            msleep(1);
+            msleep(10);
         }
     }
 }
 
 void CameraDecode::decode()
 {
+//    qDebug()<<"decode begin:"<<QTime::currentTime().toString("HH-mm-ss-zzz");
     int re = avcodec_send_packet(pCodecCtx, packet);        //将原始数据包输入解码器
-
-//    if(packet->size > 10)
-//        qDebug()<< *packet->data << *(packet->data+1) << *(packet->data+2) << *(packet->data+3) << *(packet->data+4)
-//                << *(packet->data+5) << *(packet->data+6) << *(packet->data+7) << *(packet->data+8) << *(packet->data+9)
-//                << *(packet->data+10) << *(packet->data+11) << *(packet->data+12) << *(packet->data+13) << *(packet->data+14)
-//                << *(packet->data+15) << *(packet->data+16) << *(packet->data+17) << *(packet->data+18) << *(packet->data+19);
-
-
     if (re != 0 /*|| pCodecCtx->pix_fmt == -1*/)
     {
-
         qDebug()<<"decode failed";
         return;
     }
 
-
-
-    if(img_convert_ctx == NULL){
-        qDebug()<<"11";
+    if(img_convert_ctx == NULL){                            //初始化格式转换，只运行一次
         if(pCodecCtx->pix_fmt == -1){
             pCodecCtx->pix_fmt = AV_PIX_FMT_YUV420P;
         }
@@ -168,21 +167,24 @@ void CameraDecode::decode()
                              pCodecCtx->width, pCodecCtx->height, 1);
 
     }
-    qDebug()<<pCodecCtx->width<<pCodecCtx->height<<pCodecCtx->pix_fmt;
+//    qDebug()<<pCodecCtx->width<<pCodecCtx->height<<pCodecCtx->pix_fmt;
 
     while( avcodec_receive_frame(pCodecCtx, pFrame) == 0)   //从解码器输出解码后的一帧数据
     {
-        qDebug()<<"one frame";
         //将解码后的帧转换成RGB格式，输出在pFrameRGB里面（实际也存储在out_buffer_rgb中）
+//        qDebug()<<"1:"<<QTime::currentTime().toString("HH-mm-ss-zzz");
         sws_scale(img_convert_ctx,
                   (uint8_t const * const *) pFrame->data,
                   pFrame->linesize, 0, pCodecCtx->height, pFrameRGB->data,
                   pFrameRGB->linesize);
         //用QImage装载pFrameRGB中的数据
+//        qDebug()<<"2:"<<QTime::currentTime().toString("HH-mm-ss-zzz");
         QImage tmpImg((uchar *)out_buffer_rgb,pCodecCtx->width,pCodecCtx->height,QImage::Format_RGB888);
         finalImage = tmpImg.convertToFormat(QImage::Format_RGB888,Qt::NoAlpha);
+//        qDebug()<<"3:"<<QTime::currentTime().toString("HH-mm-ss-zzz");
         emit sigGetOneFrame(finalImage);
     }
+//    qDebug()<<"decode end:"<<QTime::currentTime().toString("HH-mm-ss-zzz");
 }
 
 

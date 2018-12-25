@@ -17,7 +17,7 @@ public:
     ~AAWidget();
 
 public slots:
-
+    void save_channel();        //保存通道数据
 
 private slots:
     void fresh_1000ms();
@@ -33,6 +33,7 @@ private:
     void do_key_ok();
     void do_key_cancel();
     void fresh_setting();
+    void PRPDReset();
 
     void chart_ini();
     void fresh(bool f); //刷新数据核

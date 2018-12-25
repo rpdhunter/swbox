@@ -42,17 +42,21 @@ public slots:
 signals:
     void fregChanged(int );
     void closeTimeChanged(int);
-//    void update_statusBar(QString);
     void change_sync_status();
 
     void show_input(QString,QString);
     void send_input_key(quint8);    //专门的虚拟键盘事件
     void show_wifi_icon(int);
 
+    void ap_fresh_list();
+    void ap_connect(QString,QString);    
+    void ap_refresh_info();
+
 private slots:
-    void refresh_wifi_aplist();
+    void ap_fresh_list_complete();
+    void ap_connect_complete(bool f);
+
     void wifi_hotpot_finished(bool f);
-    void wifi_connect_route(bool f);
 
 private:
     Ui::OptionUi *ui;
@@ -78,19 +82,21 @@ private:
     int current_ap_index;       //当前连接的AP序号
 
     Wifi *wifi;
+    QThread *thread;
 
     QChart *chart;
     QPieSeries *m_series;
     void reloadChart();         //重新读取chart数据
 
-    void optionIni();
+    void ui_init();
+    void wifi_init();
     void spaceMangagementIni();     //初始化内存管理
     void wifi_connect();
     void saveOptions();
     void saveDatetime();
     void refresh();
 
-    void ap_info_widget_init(AP_INFO ap);
+    void ap_info_widget_init();
 
     void do_key_ok();
     void do_key_cancel();

@@ -1,78 +1,131 @@
-#include "battery.h"
+﻿#include "battery.h"
 #include <QtDebug>
+#include "Gui/Common/common.h"
+#include "IO/Com/rdb/rdb.h"
 
 /* 5%一个电压 */
 static float bat_pwr_percent [BAT_PWR_PER_NUM] = {
-    //4.12f * 2 - DELT_VOL,		/* 95% */
     4.00f * 2 - DELT_VOL ,		/* 90% */
-    //4.03f * 2 - DELT_VOL,		/* 85% */
     3.94f * 2 - DELT_VOL,		/* 80% */
-    //3.93f * 2 - DELT_VOL,		/* 75% */
     3.88f * 2 - DELT_VOL,		/* 70% */
-    //3.87f * 2 - DELT_VOL,		/* 65% */
     3.82f * 2 - DELT_VOL,		/* 60% */
-    //3.81f * 2 - DELT_VOL,		/* 55% */
     3.76f * 2 - DELT_VOL,		/* 50% */
-    //3.77f * 2 - DELT_VOL,		/* 45% */
     3.70f * 2 - DELT_VOL,		/* 40% */
-    //3.74f * 2 - DELT_VOL,		/* 35% */
     3.64f * 2 - DELT_VOL,		/* 30% */
-    //3.72f * 2 - DELT_VOL,		/* 25% */
     3.58f * 2 - DELT_VOL,		/* 20% */
-    //3.69f * 2 - DELT_VOL,		/* 15% */
     3.52f * 2 - DELT_VOL,		/* 10% */
-    //3.63f * 2 - DELT_VOL,		/* 5% */
     3.46f * 2 - DELT_VOL,		/* 1% */
 };
 
 
-Battery::Battery()
+Battery::Battery(QObject *parent) : QObject(parent)
 {
     init_battery_power (&battery_power);
-    force_pwr_off_num = 2;      //2次检查低电量机会
+    _isCharging = false;
+    _isLowPower = false;
+
+    check_battery_power (&battery_power);
+    _powerPercent = battery_power.percent_power;
+    startTimer(1000);           //内部计时器，用于监控电量趋势，以获得充放电、稳定的百分比电量等高阶数据
 }
 
-int Battery::battValue()
+//电量百分比
+//引入平均电量+磁滞回线机制，保证稳定
+/*******************************
+ *  100%:   8.00 ±0.1 v
+ *  90% :   7.88 ±0.1 v
+ *  70% :   7.76 ±0.1 v
+ *  60% :   7.64 ±0.1 v
+ *  50% :   7.52 ±0.1 v
+ *  40% :   7.40 ±0.1 v
+ *  30% :   7.28 ±0.1 v
+ *  20% :   7.16 ±0.1 v
+ *  10% :   7.04 ±0.1 v
+ *  1%  :   6.92 ±0.1 v
+ *  alarm:  6.6v
+ * ********************************/
+int Battery::battPercentValue()
 {
-    check_battery_power (&battery_power);
+    if(vcc_list.count() == 10){
+        float v = Common::avrage(vcc_list);
+        int p_v = vcc_to_percent(v);
 
-//    低电量自动关机
-    if (battery_power.force_pwr_off) {
-        force_pwr_off_num --;
-        if(force_pwr_off_num == 0){
-            qDebug()<<"is batt!!!! batt = "<< battery_power.power;
-            system ("reboot");
+        if(p_v - _powerPercent > 10 && _powerPercent < 100){
+            _powerPercent += 10;
         }
-        else {
-            force_pwr_off_num = 2;
+        else if(p_v - _powerPercent < -10 && _powerPercent > 0){
+            _powerPercent -= 10;
         }
+//        if(qAbs(Common::avrage(vcc_delta) ) > 0.05){
+//            qDebug()<<"v:"<<v<<"\tp_v:"<<p_v << "\t_powerPercent:"<<_powerPercent<<"\tcharge:"<<_isCharging<<"\tdelta:"<<Common::avrage(vcc_delta);
+//        }
+//        else{
+//            qDebug()<<"v:"<<v<<"\tp_v:"<<p_v << "\t_powerPercent:"<<_powerPercent<<"\tcharge:"<<_isCharging;
+//        }
+
     }
-    return battery_power.power;
+    else{
+        _powerPercent = battery_power.percent_power;
+    }
+    return _powerPercent;
 }
 
 bool Battery::is_low_power()
 {
-    check_battery_power (&battery_power);
+    return _isLowPower;
+}
 
-    if (battery_power.power == 0) {
-        qDebug()<<"batt vol = "<< battery_power.vol;
-//        qDebug()<<"is batt!!!! batt = "<< battery_power.power;
-        return true;
-    }
-    return false;
-    //    return battery_power.force_pwr_off;
+bool Battery::is_charging()
+{
+    return _isCharging;
 }
 
 float Battery::battVcc()
 {
-    check_battery_power (&battery_power);
     return battery_power.vol;
 }
 
 float Battery::battCur()
 {
-    check_battery_power (&battery_power);
     return battery_power.cur;
+}
+
+void Battery::timerEvent(QTimerEvent *)
+{
+    check_battery_power (&battery_power);
+
+    //记录10s的vcc值，用以判断充放电
+    vcc_list.append(battery_power.vol);
+    if(vcc_list.count() > 10){
+        vcc_list.removeFirst();
+        float a = Common::avrage(vcc_list.mid(0,7) );
+        float b = Common::avrage(vcc_list.mid(7,3) );
+        float del = b-a;
+        vcc_delta.append(del);
+        if(vcc_delta.count() > 3){
+            vcc_delta.removeFirst();
+        }
+
+        if(Common::avrage(vcc_delta) > 0.11){       //认定充电
+            _isCharging = true;
+        }
+        else if(Common::avrage(vcc_delta) < -0.11){
+            _isCharging = false;
+        }
+
+        //低电量自动关机（内部保护机制）
+        if(b < SHUTDOWN_VOL){
+            qDebug()<<"is batt!!!! batt = "<< battery_power.percent_power;
+            system ("reboot");
+        }
+        else if( b < LOWPOWER_VOL){
+            _isLowPower = true;
+        }
+
+        //电压电流传入RDB
+        Common::rdb_set_yc_value(Battery_vcc_yc, battery_power.vol );
+        Common::rdb_set_yc_value(Battery_cur_yc, battery_power.cur );
+    }
 }
 
 int Battery::adm1191_conv_init()
@@ -215,16 +268,16 @@ int Battery::calc_bat_pwr_percent(Battery::battery_power_t *bp)
         }
     }
 
-    bp->power = 100 - i * 10;
+    bp->percent_power = 100 - i * 10;
 
-    if (bp->power <= BAT_PWR_ALARM_PER) {
+    if (bp->percent_power <= BAT_PWR_ALARM_PER) {
         bp->lo_pwr_alarm = 1;
     }
     else {
         bp->lo_pwr_alarm = 0;
     }
 
-    if (bp->power <= BAT_PWR_LOSS_PER) {
+    if (bp->percent_power <= BAT_PWR_LOSS_PER) {
         bp->pwr_loss_alarm = 1;
     }
     else {
@@ -245,7 +298,7 @@ int Battery::init_battery_power(Battery::battery_power_t *bp)
 {
     bp->cur = 400.0f;			/* 400ma */
     bp->vol = 8.2f;				/* 8.2v */
-    bp->power = 100;			/* 100% */
+    bp->percent_power = 100;			/* 100% */
     bp->lo_pwr_alarm = 0;		/* 低电压告警 */
     bp->pwr_loss_alarm = 0;
     bp->force_pwr_off = 0;
@@ -276,4 +329,9 @@ int Battery::check_battery_power(Battery::battery_power_t *bp)
     }
 
     return 0;
+}
+
+int Battery::vcc_to_percent(float v)
+{
+    return 100*v - 700;
 }

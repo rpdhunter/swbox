@@ -32,45 +32,10 @@ Options::Options(QWidget *parent, G_PARA *g_data) : BaseWidget(NULL, parent),
     sql_para = *sqlcfg->get_para();
     _datetime = QDateTime::currentDateTime();
     inputStatus = false;
-    optionIni();
+    ui_init();
 
-    ap_info_widget = new QFrame(this);
-    ui_ap->setupUi(ap_info_widget);
-    ap_info_widget->resize(CHANNEL_X-97, CHANNEL_Y-60);
-    ap_info_widget->move(90, 50);
-    ap_info_widget->setStyleSheet("QFrame {background-color:darkGray;}");
-    ap_info_widget->hide();
-
- #ifdef ENABLE_WIFI
-    wifiPassword = new WifiPassword;
-    current_ap_index = -1;
-
-    socket = new Socket;
-    //    connect(socket,SIGNAL(s_wifi_aplist(bool,QStringList)), this, SLOT(wifi_aplist(bool,QStringList)));
-    //    connect(socket,SIGNAL(s_wifi_connect_route(bool,QStringList)),this,SLOT(wifi_connect_route(bool,QStringList)));
-    connect(socket,SIGNAL(s_wifi_create_ap(bool)), this, SLOT(wifi_hotpot_finished(bool)));
-
-    wifi = new Wifi;
-    connect(wifi,SIGNAL(ap_list_complete()), this, SLOT(refresh_wifi_aplist()));        //刷新AP列表完成
-    connect(wifi,SIGNAL(ap_connect_complete(bool)),this,SLOT(wifi_connect_route(bool)));    //连接成功/失败处理
-
-    ui->tableWidget->setColumnCount(4);
-    ui->tableWidget->horizontalHeader()->resizeSection(0,0);
-    ui->tableWidget->horizontalHeader()->resizeSection(1,125);
-    ui->tableWidget->horizontalHeader()->resizeSection(2,25);
-
-    contextMenu = new QListWidget(this);        //右键菜单
-    contextMenu->setStyleSheet("QListWidget {border-image: url(:/widgetphoto/bk/para_child.png);color:gray;outline: none;}");
-    QStringList list;
-    list << tr("连接/断开连接") << tr("查看连接信息") ;
-    contextMenu->addItems(list);
-    contextMenu->resize(100, 40);
-    contextMenu->move(250,80);
-    contextMenu->setSpacing(2);
-    contextMenu->hide();
-
-    contextMenu_num = 2;        //显示菜单条目
-
+#ifdef ENABLE_WIFI
+    wifi_init();
 #else
     ui->tabWidget->widget(1)->setDisabled(true);
     tab1->setFixedHeight(0);
@@ -86,7 +51,7 @@ Options::~Options()
     delete ui;
 }
 
-void Options::optionIni()
+void Options::ui_init()
 {
     ui->tabWidget->setStyleSheet("QTabBar::tab {border: 0px solid white; min-width: 0ex;padding: 2px 0px 2px 8px; }"
                                  "QTabBar::tab:selected{ background:lightGray;  }"
@@ -138,7 +103,62 @@ void Options::optionIni()
         ui->lineEdit_wifi_hot_mask->setText(str);
     }
 
+    ui->label_mask->hide();
+    ui->label_gateway->hide();
+    ui->lineEdit_wifi_hot_mask->hide();
+    ui->lineEdit_wifi_hot_gate->hide();
+
     spaceMangagementIni();
+}
+
+void Options::wifi_init()
+{
+    QWidget *w = ui->tabWidget;
+    ap_info_widget = new QFrame(w);
+    ui_ap->setupUi(ap_info_widget);
+    int tab_width = tab1->width() + 8;
+    ap_info_widget->resize(w->width()-6-tab_width, w->height()-4);
+    ap_info_widget->move(tab_width + 3, 2);
+    ap_info_widget->setStyleSheet("QFrame {background-color:darkGray;}");
+    ap_info_widget->hide();
+
+    wifiPassword = new WifiPassword;
+    current_ap_index = -1;
+
+    socket = new Socket;
+    connect(socket,SIGNAL(s_wifi_create_ap(bool)), this, SLOT(wifi_hotpot_finished(bool)));
+
+    wifi = new Wifi;
+    thread = new QThread;                       //Options中的附属线程，完成wifi的耗时操作
+    wifi->moveToThread(thread);
+    connect(thread, SIGNAL(started()), wifi, SLOT(wifi_init()));    //初始化
+
+    connect(this, SIGNAL(ap_fresh_list()), wifi, SLOT(ap_fresh_list()));
+    connect(wifi, SIGNAL(ap_fresh_list_complete()), this, SLOT(ap_fresh_list_complete()));          //刷新AP列表完成
+
+    connect(this, SIGNAL(ap_connect(QString,QString)), wifi, SLOT(ap_connect(QString,QString)) );
+    connect(wifi, SIGNAL(ap_connect_complete(bool)), this, SLOT(ap_connect_complete(bool)));        //连接成功/失败处理
+
+    connect(this, SIGNAL(ap_refresh_info()), wifi, SLOT(ap_refresh_info()));
+    thread->start();
+//    connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()) );
+
+    ui->tableWidget->setColumnCount(4);
+    ui->tableWidget->horizontalHeader()->resizeSection(0,0);
+    ui->tableWidget->horizontalHeader()->resizeSection(1,125);
+    ui->tableWidget->horizontalHeader()->resizeSection(2,25);
+
+    contextMenu = new QListWidget(this);        //右键菜单
+    contextMenu->setStyleSheet("QListWidget {border-image: url(:/widgetphoto/bk/para_child.png);color:gray;outline: none;}");
+    QStringList list;
+    list << tr("连接/断开连接") << tr("查看连接信息") ;
+    contextMenu->addItems(list);
+    contextMenu->resize(100, 40);
+    contextMenu->move(250,80);
+    contextMenu->setSpacing(2);
+    contextMenu->hide();
+
+    contextMenu_num = 2;        //显示菜单条目
 }
 
 void Options::spaceMangagementIni()
@@ -220,6 +240,7 @@ void Options::trans_key(quint8 key_code)
 
 void Options::do_key_ok()
 {
+#ifdef ENABLE_WIFI
     if(ap_info_widget->isVisible()){
         if(ap_info_widget_button == 0){
             ap_info_widget->hide();
@@ -230,15 +251,15 @@ void Options::do_key_ok()
         }
         return;
     }
+#endif
+
     if(key_val->grade.val3 != 0){
         if(key_val->grade.val2 == 2){               //wifi界面
 #ifdef ENABLE_WIFI
             if(key_val->grade.val3 == 1){           //wifi设置
                 if(key_val->grade.val4 == 0){       //刷新wifi列表
                     emit show_indicator(true);
-                    //                    socket->wifi_aplist();
-                    wifi->fresh_ap_list();
-
+                    emit ap_fresh_list();
                 }
                 else{
                     switch (key_val->grade.val5) {
@@ -247,9 +268,13 @@ void Options::do_key_ok()
                         wifi_connect();
                         break;
                     case 2:         //显示信息
-                        qDebug()<<aplist.at(ui->tableWidget->currentRow() );
+                        qDebug()<<"show info!!";
+                        emit ap_refresh_info();
+
+                        wifi->ap_connect_output();
+                        qDebug()<<"current_ap_index:"<<current_ap_index;
+                        ap_info_widget_init();
                         ap_info_widget->show();
-                        //                        ap_info_widget_init(aplist.at(ui->tableWidget->currentRow()));
                         break;
                     default:
                         break;
@@ -260,7 +285,8 @@ void Options::do_key_ok()
             else {              //wifi热点
                 switch (key_val->grade.val4) {
                 case 0:         //开启热点
-                    socket->wifi_create_ap(ui->lineEdit_wifi_hot_name->text(), ui->lineEdit_wifi_hot_password->text());
+//                    socket->wifi_create_ap(ui->lineEdit_wifi_hot_name->text(), ui->lineEdit_wifi_hot_password->text());
+                    wifi->ap_create(ui->lineEdit_wifi_hot_name->text(),ui->lineEdit_wifi_hot_password->text());
                     emit show_indicator(true);
                     break;
                 case 1:         //修改名称
@@ -304,10 +330,12 @@ void Options::do_key_ok()
 
 void Options::do_key_cancel()
 {
+#ifdef ENABLE_WIFI
     if(ap_info_widget->isVisible()){
         ap_info_widget->hide();
         return;
     }
+#endif
     if(key_val->grade.val5!=0){     //退出右键菜单
         key_val->grade.val5=0;
     }
@@ -328,9 +356,11 @@ void Options::do_key_cancel()
 
 void Options::do_key_up_down(int d)
 {
+#ifdef ENABLE_WIFI
     if(ap_info_widget->isVisible()){
         return;
     }
+#endif
 
     if(key_val->grade.val3 == 0){   //在一级菜单
         Common::change_index(key_val->grade.val2, d, GRADE_1 , 1);
@@ -416,10 +446,12 @@ void Options::do_key_up_down(int d)
 
 void Options::do_key_left_right(int d)
 {
+#ifdef ENABLE_WIFI
     if(ap_info_widget->isVisible()){
         Common::change_index(ap_info_widget_button,d,1,0);
         return;
     }
+#endif
 
     switch (key_val->grade.val2) {
     case 1:     //常规
@@ -626,6 +658,7 @@ void Options::refresh()
 
     //以下是ui视觉效果
     if(key_val != NULL){
+#ifdef ENABLE_WIFI
         if(ap_info_widget_button == 0){         //关闭
             ui_ap->pbt_forget->setStyleSheet("QPushButton {background-color:darkGray;}");
             ui_ap->pbt_close->setStyleSheet("QPushButton {background-color:gray;}");
@@ -634,6 +667,7 @@ void Options::refresh()
             ui_ap->pbt_forget->setStyleSheet("QPushButton {background-color:gray;}");
             ui_ap->pbt_close->setStyleSheet("QPushButton {background-color:darkGray;}");
         }
+#endif
 
         ui->tabWidget->setCurrentIndex(key_val->grade.val2-1);
 
@@ -816,7 +850,7 @@ void Options::refresh()
  *  wifi操作
  * ***********************************************************/
 //ap列表回应
-void Options::refresh_wifi_aplist()
+void Options::ap_fresh_list_complete()
 {
     emit show_indicator(false);
     ui->tableWidget->clear();       //清空内容,释放指针
@@ -874,13 +908,12 @@ void Options::wifi_connect()
         inputStatus = true;
     }
     else{
-        //        socket->wifi_connect_route(name, password);
-        wifi->ap_connect(name, password);
+        emit ap_connect(name, password);
     }
 }
 
 //连接回应
-void Options::wifi_connect_route(bool f)
+void Options::ap_connect_complete(bool f)
 {
     emit show_indicator(false);
     if(f){
@@ -904,7 +937,8 @@ void Options::input_finished(QString str)
             QString name = ui->tableWidget->item(ui->tableWidget->currentRow(),1)->text();
             wifiPassword->add_new(name, str);
             //            socket->wifi_connect_route(name,str);
-            wifi->ap_connect(name,str);
+//            wifi->ap_connect(name,str);
+            emit ap_connect(name,str);
         }
         else if(key_val->grade.val2 == 2 && key_val->grade.val3 == 2 && !str.isEmpty()){
             QSettings settings(QSettings::IniFormat,QSettings::SystemScope,"ZDIT","swbox");                             //保存设置信息
@@ -964,31 +998,35 @@ void Options::wifi_hotpot_finished(bool f)
 }
 
 
-void Options::ap_info_widget_init(AP_INFO ap)
+void Options::ap_info_widget_init()
 {
-    ui_ap->lab_SSID->setText(ap.ssid);          //名称
-    ui_ap->lab_mac->setText(ap.mac);            //mac地址
-    if(ap.has_key){                             //安全性
-        ui_ap->lab_safty->setText(ap.safty);
-    }
-    else{
-        ui_ap->lab_safty->setText(tr("无"));
-    }
-    ui_ap->lab_freq->setText(ap.freq);          //频率
-    ui_ap->lab_signallevel->setText(QString::number(ap.signal_level));    //强度
-    ui_ap->lab_bitrate->setText(ap.bitrate);    //比特率
+    int row = ui->tableWidget->currentRow();
+    if(row>-1 && row< wifi->ap_list.count()){
+        AP_INFO ap = wifi->ap_list.at(row);
+        ui_ap->lab_SSID->setText(ap.ssid);          //名称
+        ui_ap->lab_mac->setText(ap.mac);            //mac地址
+        if(ap.has_key){                             //安全性
+            ui_ap->lab_safty->setText(ap.safty);
+        }
+        else{
+            ui_ap->lab_safty->setText(tr("无"));
+        }
+        ui_ap->lab_freq->setText(ap.freq);          //频率
+        ui_ap->lab_signallevel->setText(QString::number(ap.signal_level));    //强度
+        ui_ap->lab_bitrate->setText(ap.bitrate);    //比特率
 
-    if(ap.is_connected){                        //是否连接
-        ui_ap->lab_connect_status->setText(tr("已连接"));
-    }
-    else{
-        ui_ap->lab_connect_status->setText(tr("未连接"));
-    }
+        if(ap.is_connected){                        //是否连接
+            ui_ap->lab_connect_status->setText(tr("已连接"));
+        }
+        else{
+            ui_ap->lab_connect_status->setText(tr("未连接"));
+        }
 
-    ui_ap->lab_pd_mac->setText(ap.pd_mac);      //仪器mac地址
-    ui_ap->lab_IP->setText(ap.ip);              //ip地址
-    ui_ap->lab_mask->setText(ap.mask);          //子网掩码
-    ui_ap->lab_saveconnect->setText(tr("未保存"));     //未保存
+        ui_ap->lab_pd_mac->setText(ap.pd_mac);      //仪器mac地址
+        ui_ap->lab_IP->setText(ap.ip);              //ip地址
+        ui_ap->lab_mask->setText(ap.mask);          //子网掩码
+        ui_ap->lab_saveconnect->setText(tr("未保存"));     //未保存
+    }
 }
 
 

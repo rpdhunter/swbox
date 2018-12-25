@@ -54,7 +54,11 @@ void AEWidget::fresh_100ms()
         }
     }
 
-    QVector<QPoint> pulse_100ms = Common::calc_pulse_list(ae_datalist,aeultra_sql->fpga_threshold);
+    pulse_100ms = Common::calc_pulse_list(ae_datalist,aeultra_sql->fpga_threshold);
+
+//    qDebug()<<"pulse_100ms"<<pulse_100ms;
+//    qDebug()<<"ae_datalist"<<ae_datalist;
+//    qDebug()<<"ae_timelist"<<ae_timelist;
 
     //特征指数图
     int space;      //相邻两次脉冲的间隔时间
@@ -84,16 +88,22 @@ void AEWidget::fresh_100ms()
 
     plot_Histogram->replot();
 
+
+
+
     //频谱图
     do_Spectra_compute();
 
 
+    //PRPD
     int x,y, time;
     double _y;
+
     for(int i=0; i<pulse_100ms.count(); i++){
         //        x = Common::time_to_phase(pulse_100ms.at(i).x() );              //时标
         time = pulse_100ms.at(i).x() * 320000 / 128 + ae_timelist.first();  //时标
         x = Common::time_to_phase(time );              //时标(待定)
+        x = (x/2)*2;            //去掉奇数项
         _y = Common::physical_value(pulse_100ms.at(i).y(),mode);         //强度
         y = (int)20*log(qAbs(_y) );
 
@@ -246,7 +256,7 @@ void AEWidget::chart_ini()
     plot_PRPD = new QwtPlot(ui->widget);
     plot_PRPD->resize(200, 140);
     d_PRPD = new QwtPlotSpectroCurve;
-    Common::set_PRPD_style(plot_PRPD,d_PRPD,VALUE_MAX);
+    Common::set_PRPD_style(plot_PRPD,d_PRPD,VALUE_MAX,PRPD_single);
     PRPDReset();
 
     //飞行图
@@ -256,13 +266,13 @@ void AEWidget::chart_ini()
     Common::set_fly_style(plot_fly,d_fly,VALUE_MAX);
     fly_Reset();
 
-    //histogram
+    //特征指数
     plot_Histogram = new QwtPlot(ui->widget);
     plot_Histogram->resize(200, 140);
     d_histogram = new QwtPlotHistogram;
     Common::set_histogram_style(plot_Histogram,d_histogram,0,6,0,100,"");
 
-    //Spectra
+    //频谱图
     plot_Spectra = new QwtPlot(ui->widget);
     plot_Spectra->resize(200, 140);
     d_Spectra = new QwtPlotHistogram;
@@ -323,7 +333,7 @@ void AEWidget::fresh(bool f)
     int offset;
     double val,val_db;
 
-    Common::calc_aa_value(data,mode,aeultra_sql,&val, &val_db, &offset);
+    Compute::calc_aa_value(data,mode,aeultra_sql,&val, &val_db, &offset);
 
     if(db < int(val_db)){
         db = int(val_db);      //每秒的最大值
@@ -375,7 +385,7 @@ void AEWidget::fresh(bool f)
 //            Common::rdb_set_yc_value(AE2_biased,aeultra_sql->offset,is_current);
             Common::rdb_set_yc_value(AE2_noise_biased_adv_yc,offset,is_current);
         }
-        emit send_log_data(val_db,0,0,is_current);
+        emit send_log_data(val_db,0,0,is_current,"NOISE");
     }
     else{   //条件显示
         if(qAbs(val_db-temp_db ) >= aeultra_sql->step){
@@ -445,7 +455,7 @@ void AEWidget::fresh_setting()
 
     ui->comboBox->setCurrentIndex(key_val->grade.val2-1);
 
-    if (key_val->grade.val2 && key_val->grade.val0 == menu_index && key_val->grade.val5 == 0) {
+    if (key_val->grade.val2 && key_val->grade.val0 == menu_index && key_val->grade.val5 == 0 && isBusy != true) {
         ui->comboBox->showPopup();
     }
     else{

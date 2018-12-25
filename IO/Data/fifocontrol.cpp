@@ -6,6 +6,7 @@
 #include "IO/SqlCfg/sqlcfg.h"
 #include "Gui/Common/common.h"
 #include <sys/time.h>    // for gettimeofday()
+#include <QTime>
 
 FifoControl::FifoControl(G_PARA *g_data, QObject *parent) : QObject(parent)
 {
@@ -199,6 +200,14 @@ void FifoControl::send_sync(qint64 s, qint64 u)
     send_data (vbase_normal_send, &temp, 1);
     qDebug("WRITE_REG_SYNC = 0x%08x", temp);
     qDebug()<<"sync completed!!! \t sync offset = "<< offset;
+}
+
+void FifoControl::do_sync_immediately()
+{
+    uint temp = (DO_SYNC << 16) | 0x00;
+    send_data (vbase_normal_send, &temp, 1);
+    qDebug("WRITE_REG_SYNC = 0x%08x", temp);
+    qDebug()<<"done"<<QTime::currentTime();
 }
 
 /***************************************

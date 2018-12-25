@@ -53,7 +53,7 @@ private:
     G_PARA *data;
     SQL_PARA sql_para;
     QTimer *timer_rdb;
-    Battery *battery;
+//    Battery *battery;
 
     int chk_status_h1, chk_status_h2;       //表示复选框fir和wavelet的选择状态,00代表两复选框都不选择,10代表fir选择,01代表wavelet选择
 

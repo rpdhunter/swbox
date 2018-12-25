@@ -70,6 +70,11 @@ public:
     int y;
 };
 
+enum PRPD_MODE{
+    PRPD_single,
+    PRPD_double,
+};
+
 
 class Common : public QObject
 {
@@ -90,7 +95,7 @@ public:
     static void set_comboBox_style(QComboBox *comboBox);                  //完成QComboBox的样式设置
     static void set_contextMenu_style(QListWidget *w, QStringList list, QPoint pos);
     static void set_barchart_style(QwtPlot *plot, int v_max);                  //完成barchart的样式设置
-    static void set_PRPD_style(QwtPlot *plot, QwtPlotSpectroCurve *d_PRPD, int max_value);                      //完成PRPD的样式设置
+    static void set_PRPD_style(QwtPlot *plot, QwtPlotSpectroCurve *d_PRPD, int max_value, PRPD_MODE mode = PRPD_double);                      //完成PRPD的样式设置
     static void set_fly_style(QwtPlot *plot, QwtPlotSpectroCurve *d_fly, int max_value);                      //完成飞行图的样式设置
     static void set_TF_style(QwtPlot *plot, QwtPlotSpectroCurve *d_TF, int max_value);                      //完成TF的样式设置
     static void set_histogram_style(QwtPlot *plot, QwtPlotHistogram *d_histogram, int xBottom_min, int xBottom_max,
@@ -106,7 +111,7 @@ public:
     static qint32 offset_zero_code(MODE mode);                      //返回各模式下的零偏置（码值）
     static QString MODE_toString(MODE val);
     static void write_fpga_offset_debug(G_PARA *data);                    //根据当前通道设置fpga参数，debug界面中设置的fpga参数
-    static void calc_aa_value (G_PARA *data, MODE mode, L_CHANNEL_SQL *x_sql, double * aa_val, double * aa_db, int * offset);
+
     static QVector<QPoint> calc_pulse_list(QVector<int> datalist, QVector<int> timelist, int threshold);          //根据给出的序列和阈值计算脉冲序列
     static QVector<QPoint> calc_pulse_list(QVector<int> datalist, int threshold);          //根据给出的序列和阈值计算脉冲序列
     static int time_to_phase(int x);             //时标到相位转换
@@ -120,6 +125,7 @@ public:
     static QVector<int> kalman_filter (QVector<int> wave);
     static double avrage(QVector<double> list);
     static int avrage(QVector<int> list);
+    static float avrage(QList<float> list);
     static double tev_freq_compensation(int pulse_num);      //tev频率补偿
     static QString secton_three(int n);     //三位分节法显示数字
     static void create_hard_link(QString str_src, QString file_name);        //在资产空间创建硬连接，str_src是源文件完整路径，file_name是文件名
@@ -155,6 +161,7 @@ public:
 //    static QString
 
     static void change_rbt_status(bool flag, QRadioButton *b0, QRadioButton *b1);       //改变一对QRadioButton的选择状态样式
+    static void check_restart_file();           //检查restart标志文件
 };
 
 #endif // COMMON_H

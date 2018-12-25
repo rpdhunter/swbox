@@ -46,6 +46,7 @@ MainWindow::MainWindow(QSplashScreen *sp, QWidget *parent ) :
     fifodata = new FifoData(data);
 
     sp->showMessage(tr("正在初始化通信..."),Qt::AlignBottom|Qt::AlignLeft);
+    modbus = new Modbus;
 
     //注册两个自定义类型
     qRegisterMetaType<VectorList>("VectorList");
@@ -56,7 +57,6 @@ MainWindow::MainWindow(QSplashScreen *sp, QWidget *parent ) :
 
     menu_init();
     qml_init();
-
     statusbar_init();
     function_init(sp);
     sp->showMessage(tr("正在初始化系统设置..."),Qt::AlignBottom|Qt::AlignLeft);
@@ -81,10 +81,12 @@ MainWindow::MainWindow(QSplashScreen *sp, QWidget *parent ) :
 
     fifodata->start();                                      //开启数据线程
     keydetect->start();
+//    modbus->start();
 //    syncThread->start();
 //    SpaceControl::removeOldFile_smart();
 
     Common::rdb_dz_init();
+    Common::check_restart_file();                       //检查程序是否完成正常启动
 }
 
 MainWindow::~MainWindow()
@@ -145,7 +147,8 @@ void MainWindow::statusbar_init()
     set_reboot_time();
 
     connect(timer_time, SIGNAL(timeout()), this, SLOT(fresh_status()) );
-    connect(timer_batt, SIGNAL(timeout()), this, SLOT(fresh_batt()) );
+//    connect(timer_batt, SIGNAL(timeout()), this, SLOT(fresh_batt()) );
+    connect(timer_time, SIGNAL(timeout()), this, SLOT(fresh_batt()) );
     connect(timer_reboot, SIGNAL(timeout()), this, SLOT(system_reboot()) );
     connect(timer_sleep, SIGNAL(timeout()), this, SLOT(system_sleep()) );
     connect(timer_dark, SIGNAL(timeout()), this, SLOT(screen_dark()) );
@@ -155,7 +158,7 @@ void MainWindow::statusbar_init()
         ui->lab_asset->hide();
     }
 
-    fresh_batt();       //立刻显示一次电量
+    freq = 0;
 }
 
 void MainWindow::function_init(QSplashScreen *sp)
@@ -318,7 +321,7 @@ void MainWindow::function_init(QSplashScreen *sp)
         //蜂鸣器
         connect(aa2_widget,SIGNAL(beep(int,int)),this,SLOT(do_beep(int,int)));
         //包络线
-        connect(fifodata,SIGNAL(ae2_update()), aa1_widget,SLOT(add_ae_data()));
+        connect(fifodata,SIGNAL(ae2_update()), aa2_widget,SLOT(add_ae_data()));
         //状态信息传递
         connect(aa2_widget,SIGNAL(update_statusBar(QString)),this,SLOT(show_message(QString)));
     }
@@ -499,8 +502,11 @@ void MainWindow::options_init()
     //状态栏
     connect(options,SIGNAL(show_wifi_icon(int)), this, SLOT(set_wifi_icon(int)) );
     //同步
-    connect(syncThread, SIGNAL(send_sync(qint64,qint64)), fifodata, SIGNAL(send_sync(qint64,qint64)) );
+    connect(syncThread, SIGNAL(send_sync(qint64,qint64)), fifodata, SIGNAL(send_sync(qint64,qint64)), Qt::DirectConnection);
     connect(options,SIGNAL(change_sync_status()), syncThread, SLOT(change_thread_status()));
+    connect(modbus,SIGNAL(do_sync_immediately()),fifodata, SIGNAL(do_sync_immediately()), Qt::DirectConnection);        //外同步
+    connect(modbus, SIGNAL(do_sync_freq(short)), this, SLOT(fresh_freq(short)));
+    connect(modbus, SIGNAL(send_sync(qint64,qint64)), fifodata, SIGNAL(send_sync(qint64,qint64)), Qt::DirectConnection);
 }
 
 void MainWindow::qml_init()
@@ -532,7 +538,6 @@ void MainWindow::trans_key(quint8 key_code)
             return;
         }
         else if(key_val.grade.val0 == TAB_NUM - 1 && key_val.grade.val2 == 0){
-//            qDebug()<<key_val.grade.val0<<"\t"<<key_val.grade.val1<<"\t"<<key_val.grade.val2;
             switch (key_val.grade.val1) {
             case 1:
                 key_val.grade.val2 = 1;
@@ -653,15 +658,12 @@ void MainWindow::fresh_menu_icon()
         switch (mode_list.at(0)) {
         case TEV1:
             menu_icon0->setPixmap(QPixmap(":/widgetphoto/menu/TEV1_1.png"));
-//            ui->lab_imformation->setText(tr("地电波检测(高频通道1)"));
             break;
         case HFCT1:
             menu_icon0->setPixmap(QPixmap(":/widgetphoto/menu/HFCT1_1.png"));
-//            ui->lab_imformation->setText(tr("电缆局放检测(高频通道1)"));
             break;
         case UHF1:
             menu_icon0->setPixmap(QPixmap(":/widgetphoto/menu/UHF1_1.png"));
-//            ui->lab_imformation->setText(tr("特高频检测(高频通道1)"));
             break;
         default:
             break;
@@ -671,15 +673,12 @@ void MainWindow::fresh_menu_icon()
         switch (mode_list.at(1)) {
         case TEV2:
             menu_icon1->setPixmap(QPixmap(":/widgetphoto/menu/TEV2_1.png"));
-//            ui->lab_imformation->setText(tr("地电波检测(高频通道2)"));
             break;
         case HFCT2:
             menu_icon1->setPixmap(QPixmap(":/widgetphoto/menu/HFCT2_1.png"));
-//            ui->lab_imformation->setText(tr("电缆局放检测(高频通道2)"));
             break;
         case UHF2:
             menu_icon1->setPixmap(QPixmap(":/widgetphoto/menu/UHF2_1.png"));
-//            ui->lab_imformation->setText(tr("特高频检测(高频通道2)"));
             break;
         default:
             break;
@@ -687,17 +686,14 @@ void MainWindow::fresh_menu_icon()
         break;
     case 2:
         menu_icon2->setPixmap(QPixmap(":/widgetphoto/menu/Double_1.png"));
-//        ui->lab_imformation->setText(tr("双通道检测"));
         break;
     case 3:
         switch (mode_list.at(3)) {
         case AA1:
             menu_icon3->setPixmap(QPixmap(":/widgetphoto/menu/AA_1.png"));
-//            ui->lab_imformation->setText(tr("AA超声波检测(低频通道1)"));
             break;
         case AE1:
             menu_icon3->setPixmap(QPixmap(":/widgetphoto/menu/AE_1.png"));
-//            ui->lab_imformation->setText(tr("AE超声波检测(低频通道1)"));
             break;
         default:
             break;
@@ -707,11 +703,9 @@ void MainWindow::fresh_menu_icon()
         switch (mode_list.at(4)) {
         case AA2:
             menu_icon4->setPixmap(QPixmap(":/widgetphoto/menu/AA_1.png"));
-//            ui->lab_imformation->setText(tr("AA超声波检测(低频通道2)"));
             break;
         case AE2:
             menu_icon4->setPixmap(QPixmap(":/widgetphoto/menu/AE_1.png"));
-//            ui->lab_imformation->setText(tr("AE超声波检测(低频通道2)"));
             break;
         default:
             break;
@@ -719,24 +713,9 @@ void MainWindow::fresh_menu_icon()
         break;
     case 5:
         menu_icon5->setPixmap(QPixmap(":/widgetphoto/menu/ASSET_1.png"));
-//        ui->lab_imformation->setText(tr("资产管理"));
         break;
     case 6:
         menu_icon6->setPixmap(QPixmap(":/widgetphoto/menu/Option_1.png"));
-//        ui->lab_imformation->setText(tr("系统设置"));
-//        if (!key_val.grade.val1) {
-//            ui->lab_imformation->setText(tr("系统设置"));
-//        } else if (key_val.grade.val1 == 1){
-//            ui->lab_imformation->setText(tr("系统设置-参数设置"));
-//        } else if (key_val.grade.val1 == 2) {
-//            ui->lab_imformation->setText(tr("系统设置-调试模式"));
-//        } else if (key_val.grade.val1 == 3){
-//            ui->lab_imformation->setText(tr("系统设置-录波管理"));
-//        } else if (key_val.grade.val1 == 4) {
-//            ui->lab_imformation->setText(tr("系统设置-系统信息"));
-//        } else if (key_val.grade.val1 == 5) {
-//            ui->lab_imformation->setText(tr("系统设置-恢复出厂"));
-//        }
         break;
     default:
         break;
@@ -1084,7 +1063,6 @@ void MainWindow::set_reboot_time()
     int m = sqlcfg->get_para()->close_time;
     if(m != 0){
         timer_reboot->start(m*60 *1000);
-//        qDebug()<<"reboot timer started!  interval is :"<<m*60<<"sec";
     }
     else if(timer_reboot->isActive()){
         timer_reboot->stop();
@@ -1125,7 +1103,16 @@ void MainWindow::fresh_status()
     if(timer_reboot->isActive() && s < 60){
         ui->lab_imformation->setText(tr("再过%1秒将自动关机，按任意键取消").arg(s));
     }
-    ui->lab_freq->setText(QString("%1Hz").arg(sqlcfg->get_para()->freq_val));
+    if(freq == 0){
+        ui->lab_freq->setStyleSheet("QLabel {color:white;}");
+        ui->lab_freq->setText(QString("%1Hz").arg(sqlcfg->get_para()->freq_val));
+    }
+    else{
+        ui->lab_freq->setStyleSheet("QLabel {color:green;}");
+        ui->lab_freq->setText(QString("%1Hz").arg(QString("%1Hz").arg(QString::number(freq, 'f', 2))) );
+    }
+    ui->lab_temp->setText("25°C  40%");
+
     if(Common::rdb_check_test_start()){         //检测测试项目
         //保存通道信息
     }
@@ -1146,24 +1133,7 @@ void MainWindow::fresh_batt()
     }
 
     //电量显示
-    int batt_val = battery->battValue();
-    power_list.append(batt_val);
-    while (power_list.length() > 3 ){       //保持power_list长度不大于4
-        power_list.removeFirst();
-    }
-
-
-    if(power_list.length() == 3){
-        if( power_list.last() - power_list.at(power_list.length()-2) >= 20                          //电量增长迅速,判断为充电,予以显示
-           || (power_list.at(0) == power_list.at(1) && power_list.at(0) == power_list.at(2))){      //电量稳定,予以显示
-//            qDebug()<<"batt li ke xian shi"<<power_list;
-        }
-        else {
-//            qDebug()<<"batt zhen dong,"<<power_list;
-            return;
-        }
-    }
-
+    int batt_val = battery->battPercentValue();
 
 
     //UI
@@ -1174,6 +1144,11 @@ void MainWindow::fresh_batt()
     else{
         ui->lab_pwr_num->setStyleSheet("QLabel {color:red;}");
     }
+
+//    if(battery->is_charging()){
+//        ui->lab_pwr->setStyleSheet("QLabel {border-image: url(:/widgetphoto/pwr/pwr100.png);}");        //充电图标
+//        return;
+//    }
 
     switch (batt_val / 10) {
     case 0:
@@ -1304,12 +1279,20 @@ void MainWindow::set_current_equ(QString new_equ, QString new_path)
 
 }
 
+void MainWindow::fresh_freq(short f)
+{
+    freq = f/100.0;
+}
+
 void MainWindow::printSc()
 {
     //    QPixmap fullScreenPixmap = this->grab(this->rect());                      //老的截屏方式，只能截取指定Wdiget及其子类
     Common::mk_dir(DIR_SCREENSHOTS);
     QPixmap fullScreenPixmap = QGuiApplication::primaryScreen()->grabWindow(0);     //新截屏方式更加完美
-    bool flag = fullScreenPixmap.save(QString(DIR_SCREENSHOTS"/ScreenShots-%1.png").arg(QTime::currentTime().toString("hh-mm-ss")),"PNG");
+    QString name = QString("ScreenShots-%1.png").arg(QDateTime::currentDateTime().toString("yyyy-MM-dd-HH-mm-ss-zzz"));
+    QString path = QString(DIR_SCREENSHOTS) + "/" + name;
+    bool flag = fullScreenPixmap.save(path,"PNG");
+    Common::create_hard_link(path, name);       //硬链接到资产
     if(flag)
         qDebug()<<"fullScreen saved!";
     else

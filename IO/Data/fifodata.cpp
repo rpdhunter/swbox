@@ -36,12 +36,27 @@ FifoData::FifoData(G_PARA *g_data)
     connect(fifocontrol, SIGNAL(playVoiceProgress(int,int,bool)), this, SIGNAL(playVoiceProgress(int,int,bool)) );
 
     //同步信号
-    connect(this,SIGNAL(send_sync(qint64,qint64)),fifocontrol,SLOT(send_sync(qint64,qint64)) );
+    connect(this,SIGNAL(send_sync(qint64,qint64)),fifocontrol,SLOT(send_sync(qint64,qint64)), Qt::DirectConnection);
+    connect(this, SIGNAL(do_sync_immediately()), fifocontrol, SLOT(do_sync_immediately()), Qt::DirectConnection);
 
     /* Start qthread */
 //    this->start();
-//    this->setPriority(QThread::TimeCriticalPriority);
+    //    this->setPriority(QThread::TimeCriticalPriority);
 }
+
+void FifoData::set_evelope_readComplete(qint32 c, MODE m)
+{
+    QMutex mutex;
+    mutex.lock();
+    if(m == AA1 || m == AE1){
+        data->recv_para_envelope1.readComplete = c;
+    }
+    else if(m == AA2 || m == AE2){
+        data->recv_para_envelope2.readComplete = c;
+    }
+    mutex.unlock();
+}
+
 
 void FifoData::do_slow()
 {

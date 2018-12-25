@@ -39,7 +39,7 @@ ChannelWidget::ChannelWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, in
     connect(recWaveForm, SIGNAL(fresh_parent()), timer_freeze, SLOT(start()) );
 
     logtools = new LogTools(mode);      //日志保存模块
-    connect(this,SIGNAL(send_log_data(double,int,double,int)),logtools,SLOT(dealLog(double,int,double,int)));
+    connect(this,SIGNAL(send_log_data(double,int,double,int,QString)),logtools,SLOT(dealLog(double,int,double,int,QString)));
     connect(this,SIGNAL(send_PRPD_data(QVector<QwtPoint3D>)),logtools,SLOT(dealRPRDLog(QVector<QwtPoint3D>)));
 
     fft = new FFT;
