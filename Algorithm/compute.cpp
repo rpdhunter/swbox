@@ -6,33 +6,63 @@ Compute::Compute(QObject *parent) : QObject(parent)
 
 }
 
-QPoint Compute::trans_data(int x, int y, MODE mode)
-{
-    if(mode != TEV1 && mode != TEV2)
-        return QPoint();
+//QPoint Compute::trans_data(int x, int y, MODE mode)
+//{
+//    if(mode != TEV1 && mode != TEV2)
+//        return QPoint();
 
+//    switch (mode) {
+//    case TEV1:
+//        y = sqlcfg->get_para()->tev1_sql.gain * H_C_FACTOR * (y - sqlcfg->get_para()->tev1_sql.fpga_zero) ; //注意，脉冲计算里，忽略了噪声偏置的影响
+//        break;
+//    case TEV2:
+//        y = sqlcfg->get_para()->tev2_sql.gain * H_C_FACTOR * (y - sqlcfg->get_para()->tev2_sql.fpga_zero) ; //注意，脉冲计算里，忽略了噪声偏置的影响
+//        break;
+//    default:
+//        break;
+//    }
+//    //取DB值
+//    if(y>=1){
+//        y = ((double)20) * log10(y);
+//    }
+//    else if(y<=-1){
+//        y = -((double)20) * log10(-y);
+//    }
+//    else{
+//        y = 0;
+//    }
+//    x = Common::time_to_phase(x);
+//    return QPoint(x,y);
+//}
+
+double Compute::compute_amp(qint32 code_val, MODE mode)
+{
+    double real_val;
+    SQL_PARA *sql = sqlcfg->get_para();
     switch (mode) {
     case TEV1:
-        y = sqlcfg->get_para()->tev1_sql.gain * H_C_FACTOR * (y - sqlcfg->get_para()->tev1_sql.fpga_zero) ; //注意，脉冲计算里，忽略了噪声偏置的影响
+        real_val = sql->tev1_sql.gain * H_C_FACTOR * (code_val - sql->tev1_sql.fpga_zero) ; //注意，脉冲计算里，忽略了噪声偏置的影响
         break;
     case TEV2:
-        y = sqlcfg->get_para()->tev2_sql.gain * H_C_FACTOR * (y - sqlcfg->get_para()->tev2_sql.fpga_zero) ; //注意，脉冲计算里，忽略了噪声偏置的影响
+        real_val = sql->tev2_sql.gain * H_C_FACTOR * (code_val - sql->tev2_sql.fpga_zero) ;
         break;
+    case HFCT1:
+        real_val = sql->hfct1_sql.gain * H_C_FACTOR * (code_val - sql->hfct1_sql.fpga_zero) ;
+        break;
+    case HFCT2:
+        real_val = sql->hfct2_sql.gain * H_C_FACTOR * (code_val - sql->hfct2_sql.fpga_zero) ;
+        break;
+    case UHF1:
+        real_val = sql->uhf1_sql.gain * H_C_FACTOR * (code_val - sql->uhf1_sql.fpga_zero) ;
+        break;
+    case UHF2:
+        real_val = sql->uhf2_sql.gain * H_C_FACTOR * (code_val - sql->uhf2_sql.fpga_zero) ;
+        break;
+
     default:
         break;
     }
-    //取DB值
-    if(y>=1){
-        y = ((double)20) * log10(y);
-    }
-    else if(y<=-1){
-        y = -((double)20) * log10(-y);
-    }
-    else{
-        y = 0;
-    }
-    x = Common::time_to_phase(x);
-    return QPoint(x,y);
+
 }
 
 QVector<PC_DATA> Compute::compute_pc_1ms(QVector<int> list, int x_origin, double gain, int threshold)
@@ -69,6 +99,55 @@ QVector<PC_DATA> Compute::compute_pc_1ms(QVector<int> list, int x_origin, double
     //    }
 
     return pclist_1ms;
+}
+
+QPoint Compute::find_max_point(QVector<int> list)
+{
+    QPoint p(0,0);
+    for (int i = 0; i < list.count(); ++i) {
+        if( qAbs(p.y()) < qAbs(list.at(i))  ){
+            p.setY(list.at(i));
+            p.setX(i);
+        }
+    }
+    return p;
+}
+
+QVector<int> Compute::find_max_peak(QVector<int> list)
+{
+    QPoint P = find_max_point(list);
+    int start = P.x(), end = P.x();
+    while ( start > 0) {
+        start--;
+        if(list.at(start) * P.y() < 0){
+            break;
+        }
+    }
+    while ( end < list.count() - 1 ) {
+        end++;
+        if(list.at(end) * P.y() < 0 ){
+            break;
+        }
+    }
+    return list.mid(start, end-start+1);
+}
+
+QVector<int> Compute::find_max_peak(QVector<int> list, QPoint max_Point)
+{
+    int start = max_Point.x(), end = max_Point.x();
+    while ( start > 0) {
+        start--;
+        if(list.at(start) * max_Point.y() < 0){
+            break;
+        }
+    }
+    while ( end < list.count() - 1 ) {
+        end++;
+        if(list.at(end) * max_Point.y() < 0 ){
+            break;
+        }
+    }
+    return list.mid(start, end-start+1);
 }
 
 PC_DATA Compute::compute_pc_1node(QVector<int> list, int x_origin, double gain)
@@ -147,16 +226,22 @@ double Compute::triangle(double d1, double d2)
 }
 
 //求一组测量值的50Hz频率分量和100Hz频率分量
-void Compute::compute_f_value(QVector<int> list, FFT *fft, int &v_50Hz, int &v_100Hz)
+void Compute::compute_f_value(QVector<int> list, FFT *fft, int &v_50Hz, int &v_100Hz, MODE mod)
 {
     QVector<double> fft_50Hz, fft_100Hz;
+    QVector<int> tmp_list;
     for (int i = 0; i < list.count() / 32; ++i) {
-        list = fft->fft32(list.mid(i*32,32));
-        fft_50Hz.append(list.at(1));
-        fft_100Hz.append(list.at(2));
+        tmp_list = fft->fft32(list.mid(i*32,32));
+//        qDebug()<<tmp_list;
+        fft_50Hz.append(tmp_list.at(1));
+        fft_100Hz.append(tmp_list.at(2));
+//        qDebug()<<tmp_list;
     }
     v_50Hz = Common::avrage(fft_50Hz);
+    v_50Hz = Common::physical_value(v_50Hz,mod);
+
     v_100Hz = Common::avrage(fft_100Hz);
+    v_100Hz = Common::physical_value(v_100Hz,mod);
 }
 
 //寻找一个数组的最大值点
@@ -242,59 +327,59 @@ QVector<int> Compute::sim_pulse(int amp, int n)
 
 double Compute::l_channel_modify(double val)
 {
-    if(val > 609.5368972){
+    if(qAbs(val) > 609.5368972){
         return val * 5.446758047;
     }
-    else if(val > 568.8529308){
-        return val * interpolation(val, 568.8529308, 609.5368972, 5.273770842, 5.446758047);
+    else if(qAbs(val) > 568.8529308){
+        return val * interpolation(qAbs(val), 568.8529308, 609.5368972, 5.273770842, 5.446758047);
     }
-    else if(val > 489.7788194){
-        return val * interpolation(val, 489.7788194, 568.8529308, 5.104344862, 5.273770842);
+    else if(qAbs(val) > 489.7788194){
+        return val * interpolation(qAbs(val), 489.7788194, 568.8529308, 5.104344862, 5.273770842);
     }
-    else if(val > 402.7170343){
-        return val * interpolation(val, 402.7170343, 489.7788194, 4.966266211, 5.104344862);
+    else if(qAbs(val) > 402.7170343){
+        return val * interpolation(qAbs(val), 402.7170343, 489.7788194, 4.966266211, 5.104344862);
     }
-    else if(val > 312.6079367){
-        return val * interpolation(val, 312.6079367, 402.7170343, 4.798342665, 4.966266211);
+    else if(qAbs(val) > 312.6079367){
+        return val * interpolation(qAbs(val), 312.6079367, 402.7170343, 4.798342665, 4.966266211);
     }
-    else if(val > 216.2718524){
-        return val * interpolation(val, 216.2718524, 312.6079367, 4.623810214, 4.798342665);
+    else if(qAbs(val) > 216.2718524){
+        return val * interpolation(qAbs(val), 216.2718524, 312.6079367, 4.623810214, 4.798342665);
     }
-    else if(val > 114.8153621){
-        return val * interpolation(val, 114.8153621, 216.2718524, 4.35481795, 4.623810214);
+    else if(qAbs(val) > 114.8153621){
+        return val * interpolation(qAbs(val), 114.8153621, 216.2718524, 4.35481795, 4.623810214);
     }
-    else if(val > 93.32543008){
-        return val * interpolation(val, 93.32543008, 114.8153621, 4.286077221, 4.35481795);
+    else if(qAbs(val) > 93.32543008){
+        return val * interpolation(qAbs(val), 93.32543008, 114.8153621, 4.286077221, 4.35481795);
     }
-    else if(val > 71.61434102){
-        return val * interpolation(val, 71.61434102, 93.32543008, 4.189105083, 4.286077221);
+    else if(qAbs(val) > 71.61434102){
+        return val * interpolation(qAbs(val), 71.61434102, 93.32543008, 4.189105083, 4.286077221);
     }
-    else if(val > 48.97788194){
-        return val * interpolation(val, 48.97788194, 71.61434102, 4.083475889, 4.189105083);
+    else if(qAbs(val) > 48.97788194){
+        return val * interpolation(qAbs(val), 48.97788194, 71.61434102, 4.083475889, 4.189105083);
     }
-    else if(val > 25.11886432){
-        return val * interpolation(val, 25.11886432, 48.97788194, 3.981071706, 4.083475889);
+    else if(qAbs(val) > 25.11886432){
+        return val * interpolation(qAbs(val), 25.11886432, 48.97788194, 3.981071706, 4.083475889);
     }
-    else if(val > 13.03166778){
-        return val * interpolation(val, 13.03166778, 25.11886432, 3.836807447, 3.981071706);
+    else if(qAbs(val) > 13.03166778){
+        return val * interpolation(qAbs(val), 13.03166778, 25.11886432, 3.836807447, 3.981071706);
     }
-    else if(val > 10.59253725){
-        return val * interpolation(val, 10.59253725, 13.03166778, 3.776243505, 3.836807447);
+    else if(qAbs(val) > 10.59253725){
+        return val * interpolation(qAbs(val), 10.59253725, 13.03166778, 3.776243505, 3.836807447);
     }
-    else if(val > 8.413951416){
-        return val * interpolation(val, 8.413951416, 10.59253725, 3.565506682, 3.776243505);
+    else if(qAbs(val) > 8.413951416){
+        return val * interpolation(qAbs(val), 8.413951416, 10.59253725, 3.565506682, 3.776243505);
     }
-    else if(val > 3.090295433){
-        return val * interpolation(val, 3.090295433, 8.413951416, 3.235936569, 3.565506682);
+    else if(qAbs(val) > 3.090295433){
+        return val * interpolation(qAbs(val), 3.090295433, 8.413951416, 3.235936569, 3.565506682);
     }
-    else if(val > 1.9498446){
-        return val * interpolation(val, 1.9498446, 3.090295433, 2.56430692, 3.235936569);
+    else if(qAbs(val) > 1.9498446){
+        return val * interpolation(qAbs(val), 1.9498446, 3.090295433, 2.56430692, 3.235936569);
     }
-    else if(val > 1.548816619){
-        return val * interpolation(val, 1.548816619, 1.9498446, 1.936962687, 2.56430692);
+    else if(qAbs(val) > 1.548816619){
+        return val * interpolation(qAbs(val), 1.548816619, 1.9498446, 1.936962687, 2.56430692);
     }
-    else if(val > 1.096478196){
-        return val * interpolation(val, 1.096478196, 1.548816619, 1.266681721, 1.936962687);
+    else if(qAbs(val) > 1.096478196){
+        return val * interpolation(qAbs(val), 1.096478196, 1.548816619, 1.266681721, 1.936962687);
     }
     else{
         return val;
@@ -306,35 +391,19 @@ double Compute::interpolation(double x, double x1, double x2, double f1, double 
     return (f1 + (f2 - f1) * (x - x1) / (x2 - x1));
 }
 
-void Compute::calc_aa_value(G_PARA *data, MODE mode, L_CHANNEL_SQL *x_sql, double *aa_val, double *aa_db, int *offset)
+//需要保证 phase >= 0, list >= 0
+float Compute::phase_error(float phase, QList<float> list)
 {
-    int d;
+    float T = 1000 / sqlcfg->get_para()->freq_val;      //周期(ms)
 
-    if(mode == AA1 || mode == AE1){
-        d = ((int)data->recv_para_normal.ldata0_max - (int)data->recv_para_normal.ldata0_min) / 2 ;      //最大值-最小值=幅值
+    float error = 0, e0;
+    foreach (float l, list) {
+        e0 = phase - l  + (qAbs(int((phase - l) / T)) + 1) * T;       //保证自变量为正
+        e0 = fmod(e0 + 0.5 * T, T) - 0.5 * T;
+        error += e0;
     }
-    else {
-        d = ((int)data->recv_para_normal.ldata1_max - (int)data->recv_para_normal.ldata1_min) / 2 ;      //最大值-最小值=幅值
-    }
-
-    double factor = AA_FACTOR;
-    if(mode == AE1){
-        factor = sqlcfg->ae1_factor();
-    }
-    else if(mode == AE2){
-        factor = sqlcfg->ae2_factor();
-    }
-
-    * offset = ( d - 1 / x_sql->gain / factor ) / 100;
-    * aa_val = l_channel_modify( (d - x_sql->offset * 100) * x_sql->gain * factor );
-    if(* aa_val < 0.1){         //保证结果有值，最小是-20dB
-        * aa_val = 0.1;
-    }
-    * aa_db = 20 * log10 (* aa_val);
-
+    return error / list.count();
 }
-
-
 
 
 

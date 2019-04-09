@@ -1,4 +1,4 @@
-#ifndef RECWAVE_H
+﻿#ifndef RECWAVE_H
 #define RECWAVE_H
 
 #include <QObject>
@@ -20,7 +20,7 @@ public:
 
     explicit RecWave(G_PARA *gdata, CHANNEL channel, QObject *parent = 0);
 
-    void recStart(MODE, int time = 10);   //time为录波时长
+    void recStart(int time = 10);   //time为录波时长
 
     void startWork();   //开始接收数据
     void work();        //接收数据

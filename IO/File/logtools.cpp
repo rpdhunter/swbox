@@ -12,8 +12,8 @@ LogTools::LogTools(MODE mode, QObject *parent) : QObject(parent)
     this->mode = mode;
 
     log_timer = 0;
-    path_normal = DIR_DATALOG"/" + Common::MODE_toString(mode) + "_NORMAL" + ".log";
-    path_asset = DIR_ASSET_NORMAL"/" + Common::MODE_toString(mode) + "_NORMAL" + ".log";
+    path_normal = DIR_DATALOG"/" + Common::mode_to_string(mode) + "_NORMAL" + ".log";
+    path_asset = DIR_ASSET_NORMAL"/" + Common::mode_to_string(mode) + "_NORMAL" + ".log";
 
     //读取文件,资产文件不需要在初始化时读取
     read_normal_log(path_normal,data_normal);
@@ -81,7 +81,7 @@ void LogTools::save_PRPD_zdit(QVector<QwtPoint3D> points)
     QFile file;
     bool flag;
 
-    QString file_name = QString(Common::MODE_toString(mode) + "_PRPD_" + QDateTime::currentDateTime().toString("yyyy-MM-dd-HH-mm-ss-zzz") + ".log");
+    QString file_name = QString(Common::mode_to_string(mode) + "_PRPD_" + QDateTime::currentDateTime().toString("yyyy-MM-dd-HH-mm-ss-zzz") + ".log");
     file.setFileName(DIR_PRPDLOG"/" + file_name);
 
     QString str_src = file.fileName();
@@ -96,7 +96,7 @@ void LogTools::save_PRPD_zdit(QVector<QwtPoint3D> points)
                 << p.z() << "\n";
         }
 
-        qDebug()<<"ZDIT PRPD file saved! \tnum="<< points.length() << "\tmode = "<<Common::MODE_toString(mode);
+        qDebug()<<"ZDIT PRPD file saved! \tnum="<< points.length() << "\tmode = "<<Common::mode_to_string(mode);
 
         file.close();
         Common::create_hard_link(str_src, file_name);           //建立硬连接
@@ -162,7 +162,7 @@ void LogTools::save_PRPD_State_Grid(QVector<QwtPoint3D> points)
             else{
                 y = p.y();
             }
-            y = 20*log(y/6.0 );      //取DB
+            y = 20*log10(y/6.0 );      //取DB
             map[x][y] += 1;
         }
 
@@ -171,7 +171,7 @@ void LogTools::save_PRPD_State_Grid(QVector<QwtPoint3D> points)
                 out << map[i][j];
             }
         }
-        qDebug()<<"State_Grid PRPD file saved! \tnum="<< points.length() << "\tmode = "<<Common::MODE_toString(mode);
+        qDebug()<<"State_Grid PRPD file saved! \tnum="<< points.length() << "\tmode = "<<Common::mode_to_string(mode);
 
         file.close();
         Common::create_hard_link(str_src, file_name);           //建立硬连接
@@ -180,7 +180,7 @@ void LogTools::save_PRPD_State_Grid(QVector<QwtPoint3D> points)
 
 void LogTools::change_current_asset_dir()
 {
-    path_asset = QString::fromLocal8Bit(sqlcfg->get_para()->current_dir) + "/" + Common::MODE_toString(mode) + "_NORMAL" + ".log";
+    path_asset = QString::fromLocal8Bit(sqlcfg->get_para()->current_dir) + "/" + Common::mode_to_string(mode) + "_NORMAL" + ".log";
 //    printf("current dir:%s\n", path_asset.toLocal8Bit().data());
     read_normal_log(path_normal,data_normal);
 }

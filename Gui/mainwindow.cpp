@@ -8,7 +8,7 @@
 #include <QScreen>
 #include "IO/File/spacecontrol.h"
 
-#define LOW_POWER_TIMES     3
+#define LOW_POWER_TIMES     20
 #define TAB_NUM     7       //通道数量
 #define SETTING_NUM 5       //设置条目数
 
@@ -46,10 +46,11 @@ MainWindow::MainWindow(QSplashScreen *sp, QWidget *parent ) :
     fifodata = new FifoData(data);
 
     sp->showMessage(tr("正在初始化通信..."),Qt::AlignBottom|Qt::AlignLeft);
-    modbus = new Modbus;
+    modbus = new ModbusSync;
 
     //注册两个自定义类型
     qRegisterMetaType<VectorList>("VectorList");
+    qRegisterMetaType<VectorUList>("VectorUList");
     qRegisterMetaType<MODE>("MODE");
 
     Common::check_base_dir();       //初始化系统文件夹
@@ -196,9 +197,11 @@ void MainWindow::function_init(QSplashScreen *sp)
         connect(tev1_widget,SIGNAL(startRecWave(MODE,int)),fifodata,SIGNAL(startRecWave(MODE,int)) );
         connect(fifodata,SIGNAL(waveData(VectorList,MODE)),tev1_widget,SLOT(showWaveData(VectorList,MODE)) );
         //重载数据
-        connect(ui->tabWidget,SIGNAL(currentChanged(int)), tev1_widget, SLOT(reload(int)) );
+        connect(ui->tabWidget,SIGNAL(currentChanged(int)), tev1_widget, SLOT(set_current(int)) );
+        //菊花
+        connect(tev1_widget,SIGNAL(show_indicator(bool)), this, SLOT(show_busy(bool)) );
         //短录波
-        connect(fifodata,SIGNAL(short1_update()), tev1_widget,SLOT(fresh_1ms()));
+        connect(fifodata,SIGNAL(short1_update()), tev1_widget,SLOT(read_short_data()));
         //蜂鸣器
         connect(tev1_widget,SIGNAL(beep(int,int)),this,SLOT(do_beep(int,int)));
         //状态信息传递
@@ -211,9 +214,11 @@ void MainWindow::function_init(QSplashScreen *sp)
         connect(tev2_widget,SIGNAL(startRecWave(MODE,int)),fifodata,SIGNAL(startRecWave(MODE,int)) );
         connect(fifodata,SIGNAL(waveData(VectorList,MODE)),tev2_widget,SLOT(showWaveData(VectorList,MODE)) );
         //重载数据
-        connect(ui->tabWidget,SIGNAL(currentChanged(int)), tev2_widget, SLOT(reload(int)) );
+        connect(ui->tabWidget,SIGNAL(currentChanged(int)), tev2_widget, SLOT(set_current(int)) );
+        //菊花
+        connect(tev2_widget,SIGNAL(show_indicator(bool)), this, SLOT(show_busy(bool)) );
         //短录波
-        connect(fifodata,SIGNAL(short2_update()), tev2_widget,SLOT(fresh_1ms()));
+        connect(fifodata,SIGNAL(short2_update()), tev2_widget,SLOT(read_short_data()));
         //蜂鸣器
         connect(tev2_widget,SIGNAL(beep(int,int)),this,SLOT(do_beep(int,int)));
         //状态信息传递
@@ -226,11 +231,11 @@ void MainWindow::function_init(QSplashScreen *sp)
         connect(hfct1_widget,SIGNAL(startRecWave(MODE,int)),fifodata,SIGNAL(startRecWave(MODE,int)) );
         connect(fifodata,SIGNAL(waveData(VectorList,MODE)),hfct1_widget,SLOT(showWaveData(VectorList,MODE)) );
         //重载数据
-        connect(ui->tabWidget,SIGNAL(currentChanged(int)), hfct1_widget, SLOT(reload(int)) );
+        connect(ui->tabWidget,SIGNAL(currentChanged(int)), hfct1_widget, SLOT(set_current(int)) );
         //菊花
         connect(hfct1_widget,SIGNAL(show_indicator(bool)), this, SLOT(show_busy(bool)) );
         //短录波
-        connect(fifodata,SIGNAL(short1_update()), hfct1_widget,SLOT(fresh_1ms()));
+        connect(fifodata,SIGNAL(short1_update()), hfct1_widget,SLOT(read_short_data()));
         //蜂鸣器
         connect(hfct1_widget,SIGNAL(beep(int,int)),this,SLOT(do_beep(int,int)));
         //状态信息传递
@@ -243,11 +248,11 @@ void MainWindow::function_init(QSplashScreen *sp)
         connect(hfct2_widget,SIGNAL(startRecWave(MODE,int)),fifodata,SIGNAL(startRecWave(MODE,int)) );
         connect(fifodata,SIGNAL(waveData(VectorList,MODE)),hfct2_widget,SLOT(showWaveData(VectorList,MODE)) );
         //重载数据
-        connect(ui->tabWidget,SIGNAL(currentChanged(int)), hfct2_widget, SLOT(reload(int)) );
+        connect(ui->tabWidget,SIGNAL(currentChanged(int)), hfct2_widget, SLOT(set_current(int)) );
         //菊花
         connect(hfct2_widget,SIGNAL(show_indicator(bool)), this, SLOT(show_busy(bool)) );
         //短录波
-        connect(fifodata,SIGNAL(short2_update()), hfct2_widget,SLOT(fresh_1ms()));
+        connect(fifodata,SIGNAL(short2_update()), hfct2_widget,SLOT(read_short_data()));
         //蜂鸣器
         connect(hfct2_widget,SIGNAL(beep(int,int)),this,SLOT(do_beep(int,int)));
         //状态信息传递
@@ -260,9 +265,11 @@ void MainWindow::function_init(QSplashScreen *sp)
         connect(uhf1_widget,SIGNAL(startRecWave(MODE,int)),fifodata,SIGNAL(startRecWave(MODE,int)) );
         connect(fifodata,SIGNAL(waveData(VectorList,MODE)),uhf1_widget,SLOT(showWaveData(VectorList,MODE)) );
         //重载数据
-        connect(ui->tabWidget,SIGNAL(currentChanged(int)), uhf1_widget, SLOT(reload(int)) );
+        connect(ui->tabWidget,SIGNAL(currentChanged(int)), uhf1_widget, SLOT(set_current(int)) );
+        //菊花
+        connect(uhf1_widget,SIGNAL(show_indicator(bool)), this, SLOT(show_busy(bool)) );
         //短录波
-        connect(fifodata,SIGNAL(short1_update()), uhf1_widget,SLOT(fresh_1ms()));
+        connect(fifodata,SIGNAL(short1_update()), uhf1_widget,SLOT(read_short_data()));
         //蜂鸣器
         connect(uhf1_widget,SIGNAL(beep(int,int)),this,SLOT(do_beep(int,int)));
         //状态信息传递
@@ -275,9 +282,11 @@ void MainWindow::function_init(QSplashScreen *sp)
         connect(uhf2_widget,SIGNAL(startRecWave(MODE,int)),fifodata,SIGNAL(startRecWave(MODE,int)) );
         connect(fifodata,SIGNAL(waveData(VectorList,MODE)),uhf2_widget,SLOT(showWaveData(VectorList,MODE)) );
         //重载数据
-        connect(ui->tabWidget,SIGNAL(currentChanged(int)), uhf2_widget, SLOT(reload(int)) );
+        connect(ui->tabWidget,SIGNAL(currentChanged(int)), uhf2_widget, SLOT(set_current(int)) );
+        //菊花
+        connect(uhf2_widget,SIGNAL(show_indicator(bool)), this, SLOT(show_busy(bool)) );
         //短录波
-        connect(fifodata,SIGNAL(short2_update()), uhf2_widget,SLOT(fresh_1ms()));
+        connect(fifodata,SIGNAL(short2_update()), uhf2_widget,SLOT(read_short_data()));
         //蜂鸣器
         connect(uhf2_widget,SIGNAL(beep(int,int)),this,SLOT(do_beep(int,int)));
         //状态信息传递
@@ -298,13 +307,13 @@ void MainWindow::function_init(QSplashScreen *sp)
         connect(aa1_widget,SIGNAL(startRecWave(MODE,int)),fifodata,SIGNAL(startRecWave(MODE,int)) );
         connect(fifodata,SIGNAL(waveData(VectorList,MODE)),aa1_widget,SLOT(showWaveData(VectorList,MODE)) );
         //重载数据
-        connect(ui->tabWidget,SIGNAL(currentChanged(int)), aa1_widget, SLOT(reload(int)) );
+        connect(ui->tabWidget,SIGNAL(currentChanged(int)), aa1_widget, SLOT(set_current(int)) );
         //菊花
         connect(aa1_widget,SIGNAL(show_indicator(bool)), this, SLOT(show_busy(bool)) );
         //蜂鸣器
         connect(aa1_widget,SIGNAL(beep(int,int)),this,SLOT(do_beep(int,int)));
         //包络线
-        connect(fifodata,SIGNAL(ae1_update()), aa1_widget,SLOT(add_ae_data()));
+        connect(fifodata,SIGNAL(envelope1_update(VectorList)), aa1_widget,SLOT(read_envelope_data(VectorList)));
         //状态信息传递
         connect(aa1_widget,SIGNAL(update_statusBar(QString)),this,SLOT(show_message(QString)));
     }
@@ -315,13 +324,14 @@ void MainWindow::function_init(QSplashScreen *sp)
         connect(aa2_widget,SIGNAL(startRecWave(MODE,int)),fifodata,SIGNAL(startRecWave(MODE,int)) );
         connect(fifodata,SIGNAL(waveData(VectorList,MODE)),aa2_widget,SLOT(showWaveData(VectorList,MODE)) );
         //重载数据
-        connect(ui->tabWidget,SIGNAL(currentChanged(int)), aa2_widget, SLOT(reload(int)) );
+        connect(ui->tabWidget,SIGNAL(currentChanged(int)), aa2_widget, SLOT(set_current(int)) );
         //菊花
         connect(aa2_widget,SIGNAL(show_indicator(bool)), this, SLOT(show_busy(bool)) );
         //蜂鸣器
         connect(aa2_widget,SIGNAL(beep(int,int)),this,SLOT(do_beep(int,int)));
         //包络线
-        connect(fifodata,SIGNAL(ae2_update()), aa2_widget,SLOT(add_ae_data()));
+//        connect(fifodata,SIGNAL(envelope2_update()), aa2_widget,SLOT(read_short_data()));
+        connect(fifodata,SIGNAL(envelope2_update(VectorList)), aa2_widget,SLOT(read_envelope_data(VectorList)));
         //状态信息传递
         connect(aa2_widget,SIGNAL(update_statusBar(QString)),this,SLOT(show_message(QString)));
     }
@@ -332,16 +342,17 @@ void MainWindow::function_init(QSplashScreen *sp)
         connect(ae1_widget,SIGNAL(startRecWave(MODE,int)),fifodata,SIGNAL(startRecWave(MODE,int)) );
         connect(fifodata,SIGNAL(waveData(VectorList,MODE)),ae1_widget,SLOT(showWaveData(VectorList,MODE)) );
         //重载数据
-        connect(ui->tabWidget,SIGNAL(currentChanged(int)), ae1_widget, SLOT(reload(int)) );
+        connect(ui->tabWidget,SIGNAL(currentChanged(int)), ae1_widget, SLOT(set_current(int)) );
         //菊花
         connect(ae1_widget,SIGNAL(show_indicator(bool)), this, SLOT(show_busy(bool)) );
         //蜂鸣器
         connect(ae1_widget,SIGNAL(beep(int,int)),this,SLOT(do_beep(int,int)));
         //包络线
-        connect(fifodata,SIGNAL(ae1_update()), ae1_widget,SLOT(add_ae_data()));
+//        connect(fifodata,SIGNAL(envelope1_update()), ae1_widget,SLOT(read_short_data()));
+        connect(fifodata,SIGNAL(envelope1_update(VectorList)), ae1_widget,SLOT(read_envelope_data(VectorList)));
         //状态信息传递
         connect(ae1_widget,SIGNAL(update_statusBar(QString)),this,SLOT(show_message(QString)));
-        ae1_widget->reload(3);
+//        ae1_widget->reload(3);
     }
     if(ae2_widget != NULL){
         connect(this, SIGNAL(send_key(quint8)), ae2_widget, SLOT(trans_key(quint8)) );
@@ -350,16 +361,16 @@ void MainWindow::function_init(QSplashScreen *sp)
         connect(ae2_widget,SIGNAL(startRecWave(MODE,int)),fifodata,SIGNAL(startRecWave(MODE,int)) );
         connect(fifodata,SIGNAL(waveData(VectorList,MODE)),ae2_widget,SLOT(showWaveData(VectorList,MODE)) );
         //重载数据
-        connect(ui->tabWidget,SIGNAL(currentChanged(int)), ae2_widget, SLOT(reload(int)) );
+        connect(ui->tabWidget,SIGNAL(currentChanged(int)), ae2_widget, SLOT(set_current(int)) );
         //菊花
         connect(ae2_widget,SIGNAL(show_indicator(bool)), this, SLOT(show_busy(bool)) );
         //蜂鸣器
         connect(ae2_widget,SIGNAL(beep(int,int)),this,SLOT(do_beep(int,int)));
         //包络线
-        connect(fifodata,SIGNAL(ae2_update()), ae2_widget,SLOT(add_ae_data()));
+        connect(fifodata,SIGNAL(envelope2_update(VectorList)), ae2_widget,SLOT(read_envelope_data(VectorList)));
         //状态信息传递
         connect(ae2_widget,SIGNAL(update_statusBar(QString)),this,SLOT(show_message(QString)));
-        ae2_widget->reload(4);
+//        ae2_widget->reload(4);
     }
     if(asset_widget != NULL){
         connect(this, SIGNAL(send_key(quint8)), asset_widget, SLOT(trans_key(quint8)) );
@@ -385,8 +396,7 @@ void MainWindow::channel_init(MODE mode, int index)
             hfct1_widget = new HFCTWidget(data,&key_val,mode,0,ui->H_Channel1);
             break;
         case UHF1:
-//            uhf1_widget = new UHFWidget(data,&key_val,mode,0,ui->H_Channel1);
-            uhf1_widget = new TEVWidget(data,&key_val,mode,0,ui->H_Channel1);       //UHF代码没完善前,用TEV通道代替
+            uhf1_widget = new UHFWidget(data,&key_val,mode,0,ui->H_Channel1);
             break;
         default:
             mode = Disable;
@@ -403,8 +413,7 @@ void MainWindow::channel_init(MODE mode, int index)
             hfct2_widget = new HFCTWidget(data,&key_val,mode,1,ui->H_Channel2);
             break;
         case UHF2:
-//            uhf2_widget = new UHFWidget(data,&key_val,mode,1,ui->H_Channel2);
-            uhf2_widget = new TEVWidget(data,&key_val,mode,1,ui->H_Channel2);
+            uhf2_widget = new UHFWidget(data,&key_val,mode,1,ui->H_Channel2);
             break;
         default:
             mode = Disable;
@@ -467,17 +476,20 @@ void MainWindow::channel_init(MODE mode, int index)
 void MainWindow::options_init()
 {
     options = new Options(ui->Options,data);
+    option_wdiget = new OptionWidget(data,ui->Options);
     debugset = new DebugSet(data,ui->Options);
     systeminfo = new SystemInfo(ui->Options);
     factoryreset = new FactoryReset(ui->Options);
     recwavemanage = new RecWaveManage(ui->Options);
 
-    connect(this, SIGNAL(send_key(quint8)), options, SLOT(trans_key(quint8)) );
+//    connect(this, SIGNAL(send_key(quint8)), options, SLOT(trans_key(quint8)) );
+    connect(this, SIGNAL(send_key(quint8)), option_wdiget, SLOT(trans_key(quint8)) );
     connect(this, SIGNAL(send_key(quint8)), debugset, SLOT(trans_key(quint8)) );
     connect(this, SIGNAL(send_key(quint8)), systeminfo, SLOT(trans_key(quint8)) );
     connect(this, SIGNAL(send_key(quint8)), factoryreset, SLOT(trans_key(quint8)) );
     connect(this, SIGNAL(send_key(quint8)), recwavemanage, SLOT(trans_key(quint8)) );
-    connect(options,SIGNAL(fresh_parent()), this, SLOT(fresh_menu_icon()) );
+//    connect(options,SIGNAL(fresh_parent()), this, SLOT(fresh_menu_icon()) );
+    connect(option_wdiget,SIGNAL(fresh_parent()), this, SLOT(fresh_menu_icon()) );
     connect(debugset,SIGNAL(fresh_parent()), this, SLOT(fresh_menu_icon()) );
     connect(systeminfo,SIGNAL(fresh_parent()), this, SLOT(fresh_menu_icon()) );
     connect(factoryreset,SIGNAL(fresh_parent()), this, SLOT(fresh_menu_icon()) );
@@ -541,7 +553,8 @@ void MainWindow::trans_key(quint8 key_code)
             switch (key_val.grade.val1) {
             case 1:
                 key_val.grade.val2 = 1;
-                options->working(&key_val);
+//                options->working(&key_val);
+                option_wdiget->working(&key_val);
                 return;
             case 2:
                 key_val.grade.val2 = 1;
@@ -1074,10 +1087,10 @@ void MainWindow::set_reboot_time()
         data->set_send_para(sp_backlight_reg,sqlcfg->get_para()->backlight);            //恢复屏幕亮度
         data->set_send_para(sp_keyboard_backlight,sqlcfg->get_para()->key_backlight);   //恢复键盘背光
         data->set_send_para(sp_sleeping,1);                                             //开启复杂功能
-        if(sqlcfg->get_para()->tev1_sql.auto_rec == 1 || sqlcfg->get_para()->tev2_sql.auto_rec == 1
-               || sqlcfg->get_para()->hfct1_sql.auto_rec == 1 || sqlcfg->get_para()->hfct2_sql.auto_rec == 1){
-             data->set_send_para(sp_rec_on,1);
-        }
+//        if(sqlcfg->get_para()->tev1_sql.auto_rec == 1 || sqlcfg->get_para()->tev2_sql.auto_rec == 1
+//               || sqlcfg->get_para()->hfct1_sql.auto_rec == 1 || sqlcfg->get_para()->hfct2_sql.auto_rec == 1){
+//             data->set_send_para(sp_rec_on,1);
+//        }
     }
     timer_sleep->start(sqlcfg->get_para()->screen_close_time * 1000);
     //重启亮屏计时器
@@ -1085,10 +1098,10 @@ void MainWindow::set_reboot_time()
         qDebug()<<"screen_dark_time"<<sqlcfg->get_para()->screen_dark_time;
         data->set_send_para(sp_backlight_reg,sqlcfg->get_para()->backlight);            //恢复屏幕亮度
         data->set_send_para(sp_keyboard_backlight,sqlcfg->get_para()->key_backlight);   //恢复键盘背光
-        if(sqlcfg->get_para()->tev1_sql.auto_rec == 1 || sqlcfg->get_para()->tev2_sql.auto_rec == 1
-               || sqlcfg->get_para()->hfct1_sql.auto_rec == 1 || sqlcfg->get_para()->hfct2_sql.auto_rec == 1){
-             data->set_send_para(sp_rec_on,1);
-        }
+//        if(sqlcfg->get_para()->tev1_sql.auto_rec == 1 || sqlcfg->get_para()->tev2_sql.auto_rec == 1
+//               || sqlcfg->get_para()->hfct1_sql.auto_rec == 1 || sqlcfg->get_para()->hfct2_sql.auto_rec == 1){
+//             data->set_send_para(sp_rec_on,1);
+//        }
     }
     timer_dark->start(sqlcfg->get_para()->screen_dark_time * 1000);
 }
@@ -1112,6 +1125,7 @@ void MainWindow::fresh_status()
         ui->lab_freq->setText(QString("%1Hz").arg(QString("%1Hz").arg(QString::number(freq, 'f', 2))) );
     }
     ui->lab_temp->setText("25°C  40%");
+    ui->lab_temp->hide();
 
     if(Common::rdb_check_test_start()){         //检测测试项目
         //保存通道信息
@@ -1204,7 +1218,7 @@ void MainWindow::system_sleep()
     qDebug()<<"system will sleep immediately!";
     data->set_send_para(sp_backlight_reg,8);
     data->set_send_para(sp_keyboard_backlight,0);   //关闭键盘背光
-    data->set_send_para(sp_rec_on,0);               //关闭录波
+//    data->set_send_para(sp_rec_on,0);               //关闭录波
     data->set_send_para(sp_sleeping,0);             //关闭复杂功能
 }
 
@@ -1212,7 +1226,7 @@ void MainWindow::screen_dark()
 {
     qDebug()<<"screen will darken immediately!";
     data->set_send_para(sp_backlight_reg,0);
-    data->set_send_para(sp_rec_on,0);               //关闭录波
+//    data->set_send_para(sp_rec_on,0);               //关闭录波
     data->set_send_para(sp_keyboard_backlight,0);   //关闭键盘背光
 }
 

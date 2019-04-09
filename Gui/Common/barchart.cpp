@@ -1,4 +1,4 @@
-#include "barchart.h"
+﻿#include "barchart.h"
 #include <qwt_plot_renderer.h>
 #include <qwt_plot_canvas.h>
 #include <qwt_plot_barchart.h>
@@ -68,7 +68,7 @@ void BarChart::fresh(void)
     setSamples(samples);                                                        //update
 }
 
-QwtColumnSymbol *BarChart::specialSymbol(int sampleIndex, const QPointF& ) const
+QwtColumnSymbol *BarChart::specialSymbol(int sampleIndex, const QPointF &s ) const
 {
     QwtColumnSymbol *symbol = new QwtColumnSymbol(QwtColumnSymbol::Box);
     symbol->setLineWidth(1);

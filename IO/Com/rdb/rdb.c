@@ -26,6 +26,7 @@
 //#include "monitor_status.h"
 //#include "record_log.h"
 
+
 #define RDB_APP_ID			5
 //#define ENABLE_PRINT      /*允许打印输出*/
 
@@ -158,10 +159,10 @@ int init_rdb ()
 
     /* 用于rdb通信的结构体空间分配 */
     rdb_udp = (rdb_udp_t *)malloc(sizeof (rdb_udp_t));
-    rdb_udp->yc_param.val = (yc_data_type *)malloc(sizeof(yc_data_type));
-    rdb_udp->yc_param.ts = (time_type *)malloc(sizeof(time_type));
-    rdb_udp->yx_param.val = (unsigned int  *)malloc(sizeof(unsigned int));
-    rdb_udp->yx_param.ts = (time_type *)malloc(sizeof(time_type));
+//	rdb_udp->yc_param.val = (yc_data_type *)malloc(sizeof(yc_data_type));
+//	rdb_udp->yc_param.ts = (time_type *)malloc(sizeof(time_type));
+//	rdb_udp->yx_param.val = (unsigned int  *)malloc(sizeof(unsigned int));
+//	rdb_udp->yx_param.ts = (time_type *)malloc(sizeof(time_type));
 
     if (init_rdb_table () < 0){                                 //点表初始化
         return -1;
@@ -614,6 +615,7 @@ int reg_rdb_data (
                 phook->next = dz_entry [rdb_no].p_hook;
                 dz_entry [rdb_no].p_hook = phook;
             }
+			dz_entry [rdb_no].dz_no = rdb_no;
         }
     }
     else {
@@ -1157,9 +1159,10 @@ int dz_set_value (
     unsigned char sbuf [MAX_MSG_LEN];
     rdb_dz_param_t * dz_temp;
     data_hook_t * dhook;
-    int i;
-    int j;
-    if (dz->dz_no >= DZ_NUMBER) {
+    int i,j;
+	
+	
+	    if (dz->dz_no >= DZ_NUMBER) {
         return -1;
     }
     if (dz->data_buf == NULL && dz->data_len == 0) {
@@ -1178,16 +1181,15 @@ int dz_set_value (
         rdb_udp->dz_param.data_len = dz->data_len;
         memcpy(rdb_udp->dz_param.data_buf,dz->data_buf,8);
         memcpy (dz_temp,&rdb_udp->dz_param,sizeof(rdb_dz_param_t));
-//        printf("dz->dz_no:%d\n",dz->dz_no);
-//        for(j=0;j<8;j++)
-//            printf("%d\n",dz->data_buf[j]);
         p_i_msg->content_len = sizeof(rdb_dz_param_t);
         sendto(rdb_udp->rdb_client_id,sbuf, p_i_msg->content_len + INTERNAL_MSG_HEAD_LEN, 0, (struct sockaddr *)&(rdb_udp->client_addr), sizeof(rdb_udp->client_addr));
-//        printf("Send rdb msg:");
-//        for(i=0;i<p_i_msg->content_len+INTERNAL_MSG_HEAD_LEN;i++){
-//            printf("0x%02x ",sbuf[i]);
-//        }
-//        printf("\n");
+#ifdef ENABLE_PRINT
+        printf("Send rdb msg:");
+        for(i=0;i<p_i_msg->content_len+INTERNAL_MSG_HEAD_LEN;i++){
+            printf("0x%02x ",sbuf[i]);
+        }
+        printf("\n");
+#endif
     }
 
     dz_entry = dz_lst + dz->dz_no;					/* 复制值 */
@@ -1206,17 +1208,16 @@ int dz_get_value (
     rdb_dz_param_t * dz
     )
 {
-    unsigned int i, j, proto_no;
 
-    dz_t * dz_entry;
-    if ((dz->dz_no > DZ_NUMBER) || (dz->dz_no < 1)) {
-        return -1;
-    }
-
+	unsigned int i, j;
+	dz_t * dz_entry;
+	if ((dz->dz_no > DZ_NUMBER) || (dz->dz_no < 1)) {
+		return -1;
+	}
+	dz_entry = dz_lst + dz->dz_no;
     /* 获取互斥信号量 */
     sem_timewait (&dz_entry->mutex, NULL);
-    proto_no = dz->dz_no;
-    dz_entry = dz_lst + proto_no;
+	
     dz->tag = dz_entry->tag;
     dz->data_len = dz_entry->data_len;
     memcpy(dz->data_buf,dz_entry->data_buf,dz->data_len);
@@ -1227,38 +1228,61 @@ int dz_get_value (
     return 0;
 }
 int dz_get_value_proto (
-    int app_id,
-    rdb_dz_param_t * dz
-    )
+	int app_id,					/* ID */
+	int begin_no,				/* 起始点号 */
+	int num,					/* 连续读的个数 */
+	rdb_dz_param_t data[]		/* 存储读取的数据 */
+
+	)
 {
-    unsigned int i,proto_no;
-    dz_t * dz_entry = dz_lst;
-    data_hook_t * dhook;
-
-    i = proto_no = dz->dz_no;
-    if ((proto_no > DZ_NUMBER) || (proto_no < 1)) {
-        return -1;
-    }
-
-    dhook = dz_entry [i].p_hook;
-    while (dhook != NULL) {
-        if (dhook->app_id == app_id) {
-            if (dhook->proto_data_no == proto_no) {
-                /* 获取互斥信号量 */
-                sem_timewait (&dz_entry->mutex, NULL);
-                dz->tag = dz_entry [i].tag;
-                dz->data_len = dz_entry [i].data_len;
-                memcpy(dz->data_buf,dz_entry [i].data_buf,dz->data_len);
-
-                /* 释放互斥信号量 */
-                sem_post (&dz_entry->mutex);
-            }
-            break;
-        }
-        dhook = dhook->next;
-        i++;
-    }
-    return 0;
+	unsigned int i,j,k,proto_no;		/* j:遍历rdb的索引;proto_no:rdb中的点号;i:获取到的个数 */
+	dz_t * dz_entry = dz_lst;
+	data_hook_t * dhook;
+	
+	if ((begin_no + num > DZ_NUMBER) || (num < 1)) {
+		return -1;
+	}
+	if (data == NULL) {
+		return -2;
+	}
+	i = 0;
+	j = begin_no;
+	proto_no = begin_no;
+	printf("Test3:proto_no:0x%02x\n:",proto_no);
+	while ((i < num) && (j < DZ_NUMBER)) {
+		dhook = dz_entry [j].p_hook;
+		while (dhook != NULL) {
+			if (dhook->app_id == app_id) {
+				if (dhook->proto_data_no == proto_no) 
+				{
+					/* 获取互斥信号量 */
+					sem_timewait (&dz_entry->mutex, NULL);
+					data[i].dz_no =  dz_entry [j].dz_no;
+					data[i].tag = dz_entry [j].tag;
+					data[i].data_len = dz_entry [j].data_len;
+					memcpy(data[i].data_buf,dz_entry [j].data_buf,data[i].data_len);
+		
+					/* 释放互斥信号量 */
+					sem_post (&dz_entry->mutex);
+					#if 1
+					printf("Test3:proto_no:0x%02x,j:0x%02x,0x%04x,tag:%d,len:%d,data:",proto_no,j,data[i].dz_no,data[i].tag,data[i].data_len);
+					if(data[i].data_len > 0)
+					{
+						for(k=0;k<data[i].data_len ;k++)
+							printf("0x%02x ",data[i].data_buf[k]);
+						printf("\n");
+					}
+					#endif
+					proto_no++;
+					i++;					
+				}
+				break;
+			}
+			dhook = dhook->next;			
+		}
+		j++;
+	}
+	return i;
 }
 
 int dz_get_total_num (
@@ -1663,16 +1687,16 @@ int yk_operate_proto (
     }
     yk_entry = &yk_entry [proto_no];
     /* 获取互斥信号量 */
-    sem_timewait (&yk_entry->mutex, NULL);
-    if (yk_entry->ctl_step == YK_SEL &&
-            yk_entry->app_id == app_id &&
+    sem_timewait (&yk_entry->mutex, NULL);  
+    if ((yk_entry->ctl_step == YK_SEL ||yk_entry->ctl_step == YK_VAL) &&
+            //yk_entry->app_id == app_id &&
             yk_entry->sel_val == ctl_val) {
         yk_entry->ctl_val = ctl_val;
 
         yk_entry->ctl_step = YK_OPER;
         yk_entry->sel_timer = 0;
         yk_entry->oper_timer = YK_OPER_TO * 1000000;
-//       _DPRINTF ("yk(%d) operate(%s) by app(%d)\n", yk_no, ctl_val == DP_OPEN ? "OPEN" : "CLOSE", app_id);
+       _DPRINTF ("yk(%d) operate(%s) by app(%d)\n", yk_no, ctl_val == DP_OPEN ? "OPEN" : "CLOSE", app_id);
         /* 开出接点动作 */
 
         /* 保存事件 */
@@ -1682,7 +1706,7 @@ int yk_operate_proto (
         ret = 0;
     }
     else {
-//       _DPRINTF ("yk(%d) operate(%s) by app(%d) check failed\n", yk_no, ctl_val == DP_OPEN ? "OPEN" : "CLOSE", app_id);
+       _DPRINTF ("yk(%d) operate(%s) by app(%d) check failed\n", yk_no, ctl_val == DP_OPEN ? "OPEN" : "CLOSE", app_id);
         rdb_udp->yk_operate.yk_result = 0x55;
         printf("rdb:yk_result%d\n",rdb_udp->yk_operate.yk_result);
     }

@@ -426,7 +426,7 @@ void Options::do_key_up_down(int d)
             Common::change_index(key_val->grade.val3, d, GRADE_2_ADVANCED , 1);
             switch (key_val->grade.val3) {
             case 4:
-                sql_para.sync_mode = SYNC_NONE;
+                sql_para.sync_mode = sync_none;
                 break;
             case 5:
                 sql_para.sync_mode = SYNC_INTERNAL;
@@ -636,7 +636,7 @@ void Options::refresh()
 
     //同步模式
     switch (sql_para.sync_mode) {
-    case SYNC_NONE:
+    case sync_none:
         ui->rbt_sync_none->setChecked(true);
         break;
     case SYNC_INTERNAL:

@@ -75,5 +75,6 @@
         <file>MyKeyboard.qml</file>
         <file>widgetphoto/wifi/key.png</file>
         <file>widgetphoto/wifi/lock.png</file>
+        <file>widgetphoto/other/down.png</file>
     </qresource>
 </RCC>

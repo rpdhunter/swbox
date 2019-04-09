@@ -14,7 +14,7 @@ LineItem::LineItem(QColor color, QLineF line, QGraphicsItem *parent) : QGraphics
     myNum = 0;
 }
 
-PRPSScene::PRPSScene(MODE mode, int hfct_max, QObject *parent) : QGraphicsScene(parent)
+PRPSScene::PRPSScene(MODE mode, int data_max, QObject *parent) : QGraphicsScene(parent)
 {
     this->mode = mode;
 
@@ -23,25 +23,21 @@ PRPSScene::PRPSScene(MODE mode, int hfct_max, QObject *parent) : QGraphicsScene(
     pen_yellow.setColor(Qt::yellow);
     pen_green.setColor(Qt::green);
 
-    axisInit(hfct_max);
+    this->data_max = data_max;
 
-    for (int i = 0; i < 36; ++i) {
-        QPointF P;
-        P.setX(i*10);
-        P.setY(60*qSin(i*3.1416/36) );
-        test_list.append(P);
-    }
+    axisInit();
 
-    timer = new QTimer;
-    timer->setInterval(200);
-    connect(timer,SIGNAL(timeout()),this,SLOT(test()) );
-//    timer->start();
-
+//    for (int i = 0; i < 36; ++i) {
+//        QPointF P;
+//        P.setX(i*10);
+//        P.setY(60*qSin(i*3.1416/36) );
+//        test_list.append(P);
+//    }
     data_group_num = 10 * 5;     //场景容量
 }
 
 //绘制坐标轴
-void PRPSScene::axisInit(int hfct_max)
+void PRPSScene::axisInit()
 {
     P_shadow = QPointF(-70,35);      //定义投影
     P0 = QPointF(20,-20);        //定义原点
@@ -64,12 +60,12 @@ void PRPSScene::axisInit(int hfct_max)
     addLine(QLineF(P0+P_shadow/2, Py_max+P_shadow/2),pen_gray);
 
     QPointF P_adjust(-25,-10);
-    if(mode == TEV1 || mode == TEV2 || mode == UHF1 || mode == UHF2){
-        data_max = 60;
-    }
-    else if(mode == HFCT1 || mode == HFCT2){
-        data_max = hfct_max;
-    }
+//    if(mode == TEV1 || mode == TEV2 || mode == UHF1 || mode == UHF2){
+//        data_max = 60;
+//    }
+//    else if(mode == HFCT1 || mode == HFCT2){
+//        data_max = hfct_max;
+//    }
 
     if(data_max > 1000){
         setText(QString("%1k").arg(data_max/1000), Py_max+P_shadow + P_adjust);
@@ -88,11 +84,6 @@ void PRPSScene::axisInit(int hfct_max)
 //    setText(QString("%1").arg(data_max/2), (Py_max + P0)/2 + P_shadow + P_adjust);
 }
 
-void PRPSScene::test()
-{
-    addPRPD(test_list);
-}
-
 /*****************************************
  * 输入数据要求:
  * 1.同周期(20ms)的一组脉冲数据
@@ -100,12 +91,14 @@ void PRPSScene::test()
  * 3.x保存时间分量,范围0-360
  * 4.y保存幅值分量,范围可变,TEV模式下,范围是-60-60
  * **************************************/
-void PRPSScene::addPRPD(QVector<QPointF> list)
+void PRPSScene::addPRPD(QVector<QPoint> list)
 {
-//    qDebug()<<"new";
+
 
     //移动
     QList<QGraphicsItem *> itemList = items();
+
+//    qDebug()<<"PRPS itemList:"<<itemList.count();
     qreal dx = -(Px_max-P0).x() / data_group_num;
     qreal dy = -(Px_max-P0).y() / data_group_num;
 //    qDebug()<<dx<<"\t"<<dy;
@@ -122,43 +115,50 @@ void PRPSScene::addPRPD(QVector<QPointF> list)
     }
 
     //新建
-    foreach (QPointF P, list) {
-        if(P.x()>360 || P.x()<0 || qAbs(P.y()) > data_max){
-//            qDebug()<<"PRPS input data error! P.y="<<qAbs(P.y());
-            return;
-        }
+
+//    int high = data_max/3, low = data_max*2/3;
+//    switch (mode) {
+//    case TEV1:
+//        high = sqlcfg->get_para()->tev1_sql.high;
+//        low = sqlcfg->get_para()->tev1_sql.low;
+//        break;
+//    case TEV2:
+//        high = sqlcfg->get_para()->tev2_sql.high;
+//        low = sqlcfg->get_para()->tev2_sql.low;
+//        break;
+//    case HFCT1:
+//        high = sqlcfg->get_para()->hfct1_sql.high;
+//        low = sqlcfg->get_para()->hfct1_sql.low;
+//        break;
+//    case HFCT2:
+//        high = sqlcfg->get_para()->hfct2_sql.high;
+//        low = sqlcfg->get_para()->hfct2_sql.low;
+//        break;
+//    case UHF1:
+//        high = sqlcfg->get_para()->uhf1_sql.high;
+//        low = sqlcfg->get_para()->uhf1_sql.low;
+//        break;
+//    case UHF2:
+//        high = sqlcfg->get_para()->uhf2_sql.high;
+//        low = sqlcfg->get_para()->uhf2_sql.low;
+//        break;
+//    default:
+//        break;
+//    }
+    foreach (QPoint P, list) {
+
+        P.setX(P.x() % 360 );
         P.setY(qAbs(P.y()) );
+
+//        qDebug()<<"P"<<P;
+
+        if(P.x()>360 || P.x()<0 || qAbs(P.y()) > data_max){
+            qDebug()<<"PRPS input data error! P.y="<<qAbs(P.y());
+            continue;
+        }
         QPointF P_t = transData(P);
 
-        int high = data_max/3, low = data_max*2/3;
-        switch (mode) {
-        case TEV1:
-            high = sqlcfg->get_para()->tev1_sql.high;
-            low = sqlcfg->get_para()->tev1_sql.low;
-            break;
-        case TEV2:
-            high = sqlcfg->get_para()->tev2_sql.high;
-            low = sqlcfg->get_para()->tev2_sql.low;
-            break;
-        case HFCT1:
-            high = sqlcfg->get_para()->hfct1_sql.high;
-            low = sqlcfg->get_para()->hfct1_sql.low;
-            break;
-        case HFCT2:
-            high = sqlcfg->get_para()->hfct2_sql.high;
-            low = sqlcfg->get_para()->hfct2_sql.low;
-            break;
-        case UHF1:
-            high = sqlcfg->get_para()->uhf1_sql.high;
-            low = sqlcfg->get_para()->uhf1_sql.low;
-            break;
-        case UHF2:
-            high = sqlcfg->get_para()->uhf2_sql.high;
-            low = sqlcfg->get_para()->uhf2_sql.low;
-            break;
-        default:
-            break;
-        }
+//         qDebug()<<"P_t"<<P_t;
 
         QColor c;
         if( P.y() < low ){
@@ -170,7 +170,7 @@ void PRPSScene::addPRPD(QVector<QPointF> list)
         else{
             c = Qt::red;
         }
-        LineItem *item = new LineItem(c, QLineF(P_t + Px_max-P0, P_t + Px_max-P0 + (Py_max-P0) * ( P.y()/data_max ) ) );
+        LineItem *item = new LineItem(c, QLineF(P_t + Px_max-P0, P_t + Px_max-P0 + (Py_max-P0) * ( 1.0* P.y()/data_max ) ) );
         addItem(item);
     }
 }
@@ -183,9 +183,9 @@ void PRPSScene::setText(QString str, QPointF P)
 }
 
 //将逻辑脉冲点转换成物理坐标点
-QPointF PRPSScene::transData(QPointF P)
+QPointF PRPSScene::transData(QPoint P)
 {
-    return ( P0 + P_shadow * (360 - P.x()) / 360 );
+    return ( P0 + P_shadow * (360.0 - P.x()) / 360.0 );
 }
 
 

@@ -93,6 +93,11 @@ RecWaveForm::~RecWaveForm()
 {
 }
 
+/****************************************************************
+ * 实现了从录波文件中读取并显示数据
+ * 1.为了保证完全复原录波时的状态,展示数据时使用录波时的阈值,增益等参数
+ * 2.从文件读取数据调用的是FileTools类提供的接口,实现了异步操作,不影响性能
+ * **************************************************************/
 void RecWaveForm::working(CURRENT_KEY_VALUE *val, QString str)
 {
     if (val == NULL) {
@@ -106,15 +111,12 @@ void RecWaveForm::working(CURRENT_KEY_VALUE *val, QString str)
     }
 
     emit show_indicator(true);
-    plot->setTitle(str + tr("\n按OK键寻找峰值"));
 
     FileTools *filetools = new FileTools(str,FileTools::Read);      //开一个线程，为了不影响数据接口性能
-    if(str.contains("HFCT")){           //读取滤波器信息
-        QString filter_info = filetools->get_filter_info();
-        if(!filter_info.isEmpty()){
-             plot->setTitle(str + tr("\n%1, 按OK键寻找峰值").arg(filter_info));
-        }
-    }
+    filetools->get_file_info(recState.mod, recState.dateTime, recState.gain, recState.threshold,
+                             recState.wavelet, recState.PB);
+    plot->setTitle(str + tr("\n增益%1  阈值%2  小波滤波%3  Fir滤波%4  按OK键寻找峰值")
+                   .arg(recState.gain).arg(recState.threshold).arg(recState.wavelet).arg(recState.PB));
 
     connect(filetools,SIGNAL(readFinished(VectorList,MODE)),this,SLOT(start_work(VectorList,MODE)) );
     QThreadPool::globalInstance()->start(filetools);
@@ -133,6 +135,10 @@ void RecWaveForm::working(CURRENT_KEY_VALUE *val,VectorList buf, MODE mod)
     }
     mode = mod;
     plot->setTitle(tr("按OK键寻找峰值"));
+    recState.mod = mod;
+    recState.gain = Common::channel_sql(mode)->gain;
+    recState.threshold = Common::channel_sql(mode)->fpga_threshold;
+
     start_work(buf,mod);
 }
 
@@ -222,12 +228,13 @@ void RecWaveForm::trans_key(quint8 key_code)
 
 void RecWaveForm::setData(VectorList buf, MODE mod)
 {
+//    qDebug()<<"RecWaveForm setData mode"<<Common::mode_to_string(mod);
     mode = mod;
     QPointF p;
     curve2->detach();
     wave1.clear();
     wave2.clear();
-    max = Common::physical_value(buf.at(0), mode);
+    max = Common::physical_value(buf.at(0), recState.gain, mode);
     min = max;
     max_i = 0;
     min_i = 0;
@@ -241,18 +248,18 @@ void RecWaveForm::setData(VectorList buf, MODE mod)
     for (int i = 0; i < length; ++i) {
         switch (mode) {
         case TEV1:
-        case TEV1_CONTINUOUS:
+        case TEV_CONTINUOUS1:
         case TEV2:
-        case TEV2_CONTINUOUS:
+        case TEV_CONTINUOUS2:
         case HFCT1:
-        case HFCT1_CONTINUOUS:
+        case HFCT_CONTINUOUS1:
         case HFCT2:
-        case HFCT2_CONTINUOUS:
+        case HFCT_CONTINUOUS2:
         case UHF1:
-        case UHF1_CONTINUOUS:
+        case UHF_CONTINUOUS1:
         case UHF2:
-        case UHF2_CONTINUOUS:
-            v_real = Common::physical_value(buf.at(i), mode);
+        case UHF_CONTINUOUS2:
+            v_real = Common::physical_value(buf.at(i), recState.gain, mode);
             p = QPointF(i*0.01, v_real);
             wave1.append(p);
             break;
@@ -260,15 +267,15 @@ void RecWaveForm::setData(VectorList buf, MODE mod)
         case AA2:
         case AE1:
         case AE2:
-            v_real = Common::physical_value(buf.at(i), mode);
+            v_real = Common::physical_value(buf.at(i), recState.gain, mode);
             p = QPointF(i/400.0, v_real);
             wave1.append(p);
             break;
-        case AA1_ENVELOPE:
-        case AA2_ENVELOPE:
-        case AE1_ENVELOPE:
-        case AE2_ENVELOPE:
-            v_real = Common::physical_value(buf.at(i), mode);
+        case AA_ENVELOPE1:
+        case AA_ENVELOPE2:
+        case AE_ENVELOPE1:
+        case AE_ENVELOPE2:
+            v_real = Common::physical_value(buf.at(i), recState.gain, mode);
             p = QPointF(i/40.0, v_real);
             wave1.append(p);
             break;
@@ -330,16 +337,20 @@ void RecWaveForm::set_canvas()
     plot->axisWidget(QwtPlot::yLeft)->setMargin(0);
     plot->axisWidget(QwtPlot::yLeft)->setSpacing(10);
     if(mode == AA1 || mode == AA2 || mode == AE1 || mode == AE2
-            || mode == AA1_ENVELOPE || mode == AA2_ENVELOPE || mode == AE1_ENVELOPE || mode == AE2_ENVELOPE){
+            || mode == AA_ENVELOPE1 || mode == AA_ENVELOPE2 || mode == AE_ENVELOPE1 || mode == AE_ENVELOPE2){
         plot->axisWidget(QwtPlot::xBottom)->setTitle("ms");
         plot->axisWidget(QwtPlot::yLeft)->setTitle("V u");
     }
     else{
         plot->axisWidget(QwtPlot::xBottom)->setTitle("us");
         plot->axisWidget(QwtPlot::yLeft)->setTitle("V m");
-        d_marker_threshold1->setValue(0.0, Common::physical_threshold(mode));
-        d_marker_threshold2->setValue(0.0, -Common::physical_threshold(mode));
+
     }
+
+    d_marker_threshold1->setValue(0.0, recState.threshold );
+    d_marker_threshold2->setValue(0.0, -recState.threshold );
+
+//    qDebug()<<"physical_threshold"<<recState.threshold;
 
     d_marker_peak->hide();    
     d_marker_threshold1->hide();    
@@ -538,13 +549,13 @@ QString RecWaveForm::get_peak_freq(int current)
             }
         }
     }
-    qreal T = t2 - t1;     //周期(近似值)
-    qDebug()<<"T="<<T << "\tT1="<<t1<<"\tT2="<<t2;
+    qreal T = 2 * (t2 - t1);     //周期(近似值)
+//    qDebug()<<"T="<<T << "\tT1="<<t1<<"\tT2="<<t2;
     qreal F = 1 / T;        //频率(近似值)
     QString str;
     str.sprintf( "freq %.3g", F );
     if(mode == AA1 || mode == AA2 || mode == AE1 || mode == AE2
-            || mode == AA1_ENVELOPE || mode == AA2_ENVELOPE || mode == AE1_ENVELOPE || mode == AE2_ENVELOPE){
+            || mode == AA_ENVELOPE1 || mode == AA_ENVELOPE2 || mode == AE_ENVELOPE1 || mode == AE_ENVELOPE2){
         str.append("KHz");
     }
     else{

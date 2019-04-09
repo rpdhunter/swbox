@@ -46,39 +46,68 @@ void RecControl::startRecWave(MODE mode, int time)
     data->set_send_para(sp_rec_on,1);           //开启录波
 
     this->_mode = mode;
-    switch (mode) {
+
+    switch (this->_mode) {
     case TEV1:
+        channel_h1->recStart();
+        if(time > 0){
+            this->_mode = TEV_CONTINUOUS1;
+            timer_long->start(time * 1000);
+            rec_continuous.clear();
+        }
+        break;
     case HFCT1:
+        channel_h1->recStart();
+        if(time > 0){
+            this->_mode = HFCT_CONTINUOUS1;
+            timer_long->start(time * 1000);
+            rec_continuous.clear();
+        }
+        break;
     case UHF1:
-        channel_h1->recStart(mode);
+        channel_h1->recStart();
+        if(time > 0){
+            this->_mode = UHF_CONTINUOUS1;
+            timer_long->start(time * 1000);
+            rec_continuous.clear();
+        }
         break;
     case TEV2:
+        channel_h2->recStart();
+        if(time > 0){
+            this->_mode = TEV_CONTINUOUS2;
+            timer_long->start(time * 1000);
+            rec_continuous.clear();
+        }
+        break;
     case HFCT2:
+        channel_h2->recStart();
+        if(time > 0){
+            this->_mode = HFCT_CONTINUOUS2;
+            timer_long->start(time * 1000);
+            rec_continuous.clear();
+        }
+        break;
     case UHF2:
-        channel_h2->recStart(mode);
-        break;
-    case HFCT1_CONTINUOUS:
-        channel_h1->recStart(HFCT1);
-        timer_long->start(time * 1000);
-        rec_continuous.clear();
-        break;
-    case HFCT2_CONTINUOUS:
-        channel_h2->recStart(HFCT2);
-        timer_long->start(time * 1000);
-        rec_continuous.clear();
+        channel_h2->recStart();
+        if(time > 0){
+            this->_mode = UHF_CONTINUOUS2;
+            timer_long->start(time * 1000);
+            rec_continuous.clear();
+        }
         break;
     case AA1:
     case AE1:
-        channel_l1->recStart(mode,time);
+        channel_l1->recStart(time);
         break;
     case AA2:
     case AE2:
-        channel_l2->recStart(mode,time);
+        channel_l2->recStart(time);
         break;
     default:
         break;
     }
-    qDebug()<<"receive startRecWave signal! ... "<<mode;
+    qDebug()<<"receive startRecWave signal! ... "<< Common::mode_to_string(this->_mode);
 }
 
 /*****************************************************************
@@ -98,7 +127,7 @@ void RecControl::recv_rec_data()
 
     if (x == 3 || x == 65 || x == 66  || x == 129 || x == 130 || x == 192) {
         rec_double_flag = 2;  //同步录波模式
-        qDebug()<<"rece rec_double_signal";
+        qDebug()<<"rece rec_double_signal, x = " << x;
         this->_mode = Double_Channel;
     }
 
@@ -126,8 +155,11 @@ void RecControl::recv_rec_data()
     //如果是自动录波,需要改变模式
     if(this->_mode == Disable && mode != Disable){          //判自动录波
         //自动录波且非连续录波,且录波通道没被占用(这里困扰了很长时间,不加这个判断会出现波形不完整的bug,解决时间:2018-9-17)
-        if(this->_mode != HFCT1_CONTINUOUS && this->_mode != HFCT2_CONTINUOUS && this->_mode != Double_Channel
-                && channel_h1->status == RecWave::Free && channel_h2->status == RecWave::Free ){
+        if(channel_h1->status == RecWave::Free && channel_h2->status == RecWave::Free
+                && this->_mode != TEV_CONTINUOUS1 && this->_mode != TEV_CONTINUOUS2
+                && this->_mode != HFCT_CONTINUOUS1 && this->_mode != HFCT_CONTINUOUS2
+                && this->_mode != UHF_CONTINUOUS1 && this->_mode != UHF_CONTINUOUS2
+                && this->_mode != Double_Channel){
             if(timer_interval == NULL){         //首次运行,初始化
                 timer_interval = new QTimer;
                 timer_interval->setSingleShot(true);
@@ -207,12 +239,35 @@ void RecControl::re_send_rec_continuous()
 {
     rec_continuous_free_time = QTime::currentTime();
     hfct_rec_times = 0;
-    if(_mode == HFCT1_CONTINUOUS){
+
+    switch (_mode) {
+    case TEV_CONTINUOUS1:
+        channel_h1->recStart(TEV1);
+        break;
+    case HFCT_CONTINUOUS1:
         channel_h1->recStart(HFCT1);
-    }
-    else if(_mode == HFCT2_CONTINUOUS){
+        break;
+    case UHF_CONTINUOUS1:
+        channel_h1->recStart(UHF1);
+        break;
+    case TEV_CONTINUOUS2:
+        channel_h2->recStart(TEV2);
+        break;
+    case HFCT_CONTINUOUS2:
         channel_h2->recStart(HFCT2);
+        break;
+    case UHF_CONTINUOUS2:
+        channel_h2->recStart(UHF2);
+        break;
+    default:
+        break;
     }
+//    if(_mode == HFCT_CONTINUOUS1){
+//        channel_h1->recStart(HFCT1);
+//    }
+//    else if(_mode == HFCT_CONTINUOUS2){
+//        channel_h2->recStart(HFCT2);
+//    }
 }
 
 int RecControl::free_time()
@@ -228,41 +283,29 @@ void RecControl::rec_wave_complete(VectorList wave, MODE mode)
 {
 //    qDebug()<<"rec_double_flag= "<<rec_double_flag;
 
-    if(rec_double_flag == 2){
+    if(rec_double_flag == 2){                       //双通道波形第一部分
         rec_double = wave;
         rec_double_flag -- ;
     }
-    else if(rec_double_flag == 1){
+    else if(rec_double_flag == 1){                  //双通道波形第二部分
         rec_double.append(wave);
         rec_double_flag -- ;
         emit waveData(rec_double,Double_Channel);   //发送拼接好的双通道数据(保存操作在界面完成)
         this->_mode = Disable;
     }
-    else if(timer_long->isActive()){
+    else if(timer_long->isActive()){                //连续录波途中,拼接
         re_send_rec_continuous();
         rec_continuous.append(wave);
     }
     else if(this->_mode == Disable){
-//        this->_mode = mode;
+
     }
-    else if(this->_mode != Disable){            //这里开启波形保存
-        //高频录波加入滤波器
-        Fir fir;
-        if(mode == HFCT1 || mode == HFCT1_CONTINUOUS){
-            wave = fir.set_filter(wave, (FILTER)sqlcfg->get_para()->hfct1_sql.filter_hp);
-            wave = fir.set_filter(wave, (FILTER)sqlcfg->get_para()->hfct1_sql.filter_lp);
-//            wave = Wavelet::set_filter(wave,1);     //小波滤波
-        }
-        else if(mode == HFCT2 || mode == HFCT2_CONTINUOUS){
-            wave = fir.set_filter(wave, (FILTER)sqlcfg->get_para()->hfct2_sql.filter_hp);
-            wave = fir.set_filter(wave, (FILTER)sqlcfg->get_para()->hfct2_sql.filter_lp);
-//            wave = Wavelet::set_filter(wave,1);     //小波滤波
-        }
-
-
+    else if(this->_mode != Disable){                //普通录波,连续录波完成,开启波形保存
+        wave = Common::set_filter(wave, mode);      //高频录波加入滤波器
+        mode_envelope_modify(mode);
         emit waveData(wave,mode);
         this->_mode = Disable;
-        qDebug()<<"save wave file, mode = "<<Common::MODE_toString(mode);
+        qDebug()<<"save wave file, mode = "<<Common::mode_to_string(mode);
 
         FileTools *filetools = new FileTools(wave,mode,FileTools::Write);      //开一个线程，为了不影响数据接口性能
         QThreadPool::globalInstance()->start(filetools);
@@ -274,48 +317,25 @@ void RecControl::rec_continuous_complete()
     emit waveData(rec_continuous, _mode);
     qDebug()<<"rec continuous complete, times ============================================================== "<< rec_continuous.length()/4000;
 
-    //这里插入FFT测试程序
-//    fft_test(rec_continuous);
-
-    FileTools *filetools = new FileTools(rec_continuous,_mode,FileTools::Write);      //开一个线程，为了不影响数据接口性能
+    FileTools *filetools = new FileTools(rec_continuous,_mode,FileTools::Write);      //保存录波,单开一个临时线程，为了不影响数据接口性能
     _mode = Disable;         //Disable为去掉最后一次连续录波数据
     QThreadPool::globalInstance()->start(filetools);
 }
 
-void RecControl::fft_test(VectorList inputlist)
+void RecControl::mode_envelope_modify(MODE &mod)
 {
-    VectorList tmplist = inputlist.mid(250,32);
-
-
-    for (int i = 0; i < 4000 / 32 - 1 ; ++i) {
-        for (int j = 0; j < 32; ++j) {
-            inputlist[i*32 + j] = tmplist.at(j);
-        }
+    if(mod == AA1 && sqlcfg->get_para()->aa1_sql.envelope == true){
+        mod = AA_ENVELOPE1;
     }
-
-    qDebug()<<inputlist;
-
-
-    FFT fft;
-    int fft_in[2048];
-    VectorList list;
-
-    QTime t;            //计时器
-    t.start();
-
-    for (int i = 0; i < inputlist.count()/4000; ++i) {
-        for (int j = 0; j < 2048; ++j) {
-            fft_in[j] = inputlist.at(i*4000 + j);
-        }
-        list.append( fft.fft2048(fft_in) );
-
+    else if(mod == AA2 && sqlcfg->get_para()->aa2_sql.envelope == true){
+        mod = AA_ENVELOPE2;
     }
-
-    qDebug("Time elapsed: %d ms", t.elapsed());
-
-    qDebug()<<"fft complete! length = "<<list.length();
-    qDebug()<<list;
-
+    else if(mod == AE1 && sqlcfg->get_para()->ae1_sql.envelope == true){
+        mod = AE_ENVELOPE1;
+    }
+    else if(mod == AE2 && sqlcfg->get_para()->ae2_sql.envelope == true){
+        mod = AE_ENVELOPE2;
+    }
 
 }
 

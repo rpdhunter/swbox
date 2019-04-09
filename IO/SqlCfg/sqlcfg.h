@@ -106,12 +106,38 @@ enum LOCATION_CHART_MODE {
 };
 
 enum SYNC_MODE {
-    SYNC_NONE = 0,
-    SYNC_INTERNAL = 1,
-    SYNC_EXTERNAL = 2,
+    sync_none = 0,
+    sync_vac220_110 = 1,
+    sync_light = 2,
+    sync_clamp = 3,
+    sync_clamp_internal = 4,
+
+    SYNC_INTERNAL,
+    SYNC_EXTERNAL,
 };
 
-typedef struct H_CHANNEL_SQL {
+enum SENSOR_FREQ{
+    ae_factor_30k,
+    ae_factor_40k,
+    ae_factor_50k,
+    ae_factor_60k,
+    ae_factor_70k,
+    ae_factor_80k,
+    ae_factor_90k,
+    ae_factor_30k_v2,
+    ae_factor_40k_v2,
+};
+
+//计量单位
+enum UNITS {
+    Units_db = 0,
+    Units_pC = 1,
+    Units_mV = 2,
+    Units_uV = 3,
+};
+
+typedef struct CHANNEL_SQL {
+    //通用
     bool mode;                      //检测模式
     int chart;                      //图形显示模式
     int high;                       //红色报警阈值
@@ -120,16 +146,25 @@ typedef struct H_CHANNEL_SQL {
     int pulse_time;                 //脉冲计数时长
     int rec_time;                   //录波时长
     int offset_noise;               //噪声偏置
-    int offset_linearity;           //线性度补偿偏置
-    int fpga_zero;                  //零点（需要FPGA同步）
-    int fpga_threshold;             //阈值（需要FPGA同步）
+    int fpga_threshold;             //阈值（高频需要FPGA同步）
+    bool mode_recognition;          //模式识别
+    int units;                      //计量单位
+    bool buzzer;                    //蜂鸣器
+    //高频
+    int fpga_zero;                  //零点（高频需要FPGA同步）
     int filter_hp;                  //高通滤波器
     int filter_lp;                  //低通滤波器
     bool auto_rec;                  //自动录波（需要FPGA同步）
     bool filter_fir_fpga;           //开启500K-30M的带通滤波（需要FPGA同步）
     bool filter_wavelet;            //录波开启小波变换
-    bool mode_recognition;          //模式识别
-} H_CHANNEL_SQL;
+    //低频
+    int vol;                        //音量（0-15）（需要FPGA同步）
+    double step;                    //显示幅值变化门槛
+    bool envelope;                  //包络线模式（需要FPGA同步）
+    int sensor_freq;                //传感器中心频率
+    bool camera;                    //摄像头开关
+
+} CHANNEL_SQL;
 
 typedef struct LOCATION_SQL {
     bool mode;                      //检测模式
@@ -143,43 +178,51 @@ typedef struct LOCATION_SQL {
 #define VOL_MAX                 15
 #define VOL_MIN                 0
 
-/* aaultrasonic mode */
-typedef struct L_CHANNEL_SQL {
-    bool mode;                      //检测模式
-    int chart;                      //图形显示模式
-    int high;                       //红色报警阈值
-    int low;                        //黄色报警阈值
-    double gain;                    //增益
-    int vol;                        //音量（0-15）（需要FPGA同步）
-    int time;                       //录波时长（1-60）
-    double step;                    //显示幅值变化门槛
-    int offset;                     //偏置值
-    bool envelope;                  //包络线模式（需要FPGA同步）
-    uint fpga_threshold;            //脉冲阈值
-    int sensor_freq;                //传感器中心频率
-    bool camera;                    //摄像头开关
-} L_CHANNEL_SQL;
-
-//typedef struct SYNCMODE_SQL {
+///* aaultrasonic mode */
+//typedef struct H_CHANNEL_SQL {
 //    bool mode;                      //检测模式
-//    int time;                       //触发时长
-//    int channel;   //触发通道
-//    int chart_mode;      //图形显示模式
-//} SYNCMODE_SQL;
+//    int chart;                      //图形显示模式
+//    int high;                       //红色报警阈值
+//    int low;                        //黄色报警阈值
+//    double gain;                    //增益
+//    int vol;                        //音量（0-15）（需要FPGA同步）
+//    int rec_time;                       //录波时长（1-60）
+//    double step;                    //显示幅值变化门槛
+//    int offset_noise;                     //偏置值
+//    bool envelope;                  //包络线模式（需要FPGA同步）
+//    uint fpga_threshold;            //脉冲阈值
+//    int sensor_freq;                //传感器中心频率
+//    bool camera;                    //摄像头开关
+//} H_CHANNEL_SQL;
+
 enum WIFI_TRANS_MODE{
     wifi_ftp,
     wifi_telnet,
     wifi_104,
 };
 
+//文件保存模式
+enum FILE_SAVE_MODE{
+    file_save_zdit,             //自定义标准
+    file_save_stategrid,        //国网标准
+    file_save_both,             //我全部都要
+};
+
+//测试状态
+enum TEST_MODE{
+    test_on,
+    test_off,
+};
+
+
 /* Sql para */
 typedef struct SQL_PARA {
-    H_CHANNEL_SQL tev1_sql, tev2_sql;       //地电波设置
-    H_CHANNEL_SQL hfct1_sql, hfct2_sql;     //高频CT设置
-    H_CHANNEL_SQL uhf1_sql, uhf2_sql;       //特高频设置
+    CHANNEL_SQL tev1_sql, tev2_sql;       //地电波设置
+    CHANNEL_SQL hfct1_sql, hfct2_sql;     //高频CT设置
+    CHANNEL_SQL uhf1_sql, uhf2_sql;       //特高频设置
     LOCATION_SQL location_sql;              //定位模式设置
-    L_CHANNEL_SQL aa1_sql, aa2_sql;         //AA超声设置
-    L_CHANNEL_SQL ae1_sql, ae2_sql;         //AE超声设置
+    CHANNEL_SQL aa1_sql, aa2_sql;         //AA超声设置
+    CHANNEL_SQL ae1_sql, ae2_sql;         //AE超声设置
 
     bool language;                          //语言设置
     int freq_val;                           //频率（需要FPGA同步,FPGA 0为50, 1为60）
@@ -195,9 +238,12 @@ typedef struct SQL_PARA {
     int menu_l1, menu_l2;                   //低速通道模式
     int menu_double, menu_asset;            //其他菜单模式
     int sync_mode;                          //同步模式
+    int sync_val;                           //同步补偿值(角度)
     int sync_internal_val;                  //内同步补偿值(角度)
     int sync_external_val;                  //外同步补偿值(角度)
-    char current_dir[500];                   //当前工作目录
+    char current_dir[500];                  //当前工作目录
+    int file_save_standard;                 //文件保存标准
+    bool test_mode;                         //测试状态
 
 } SQL_PARA;
 
@@ -216,11 +262,12 @@ private:
     pthread_mutex_t sql_mutex;
     sqlite3 *pDB = NULL;
 
-    void tev_default(H_CHANNEL_SQL &sql);
-    void hfct_default(H_CHANNEL_SQL &sql);
-    void uhf_default(H_CHANNEL_SQL &sql);
-    void aa_default(L_CHANNEL_SQL &sql);
-    void ae_default(L_CHANNEL_SQL &sql);
+    void channel_default(CHANNEL_SQL &sql);
+    void tev_default(CHANNEL_SQL &sql);
+    void hfct_default(CHANNEL_SQL &sql);
+    void uhf_default(CHANNEL_SQL &sql);
+    void aa_default(CHANNEL_SQL &sql);
+    void ae_default(CHANNEL_SQL &sql);
 
     void sql_init();                        //每次开机都需要重置的选项（这些选项实际是全局变量的作用）
 };

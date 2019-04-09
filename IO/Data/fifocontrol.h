@@ -23,7 +23,9 @@ public:
     int read_short1_data();
     int read_short2_data();
     int read_ae1_data();
+    int read_ae1_data(qint32 *data);
     int read_ae2_data();
+    int read_ae2_data(qint32 *data);
     int read_rec_data();
     void play_voice_data();   //向FPGA发送声音数据
 
@@ -75,10 +77,10 @@ private:
         //要通道数据信号
         READ_FPGA_NOMAL,
         READ_FPGA_REC,
-        READ_FPGA_HFCT1,
-        READ_FPGA_HFCT2,
-        READ_FPGA_AE1,
-        READ_FPGA_AE2,
+        READ_FPGA_SHORT1,
+        READ_FPGA_SHORT2,
+        READ_FPGA_ENVELOPE1,
+        READ_FPGA_ENVELOPE2,
 
     };
 
@@ -96,7 +98,6 @@ private:
 
     //接收数据
     unsigned int recv_data(volatile unsigned int * vbase, unsigned int * buff);    //从FPGA读取数据
-
 
     //声音播放
     void send_a_package(VectorList wave);

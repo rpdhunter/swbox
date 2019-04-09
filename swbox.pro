@@ -22,9 +22,17 @@ DEFINES += AMG             #OEM
 #DEFINES += ZDIT            #OEM
 #DEFINES += NO_OEM           #OEM
 
-DEFINES += TEST_LAB
+DEFINES += MULTI_CHANNEL        #多通道
 
 TRANSLATIONS += trans/en.ts
+
+#编译优化选项
+#QMAKE_CXXFLAGS += -g
+#QMAKE_CXXFLAGS_RELEASE += -O        # Release -O
+#QMAKE_CXXFLAGS_RELEASE += -O1       # Release -O1
+#QMAKE_CXXFLAGS_RELEASE -= -O2       # Release -O2
+#QMAKE_CXXFLAGS_RELEASE += -O3       # Release -O3
+
 
 SOURCES += \
     IO/Data/fifodata.cpp \
@@ -80,10 +88,38 @@ SOURCES += \
     Algorithm/fir.cpp \
     IO/Sync/syncthread.cpp \
     IO/File/spacecontrol.cpp \
-    IO/TempThread/cameradecode.cpp \
     Gui/Common/wifi.cpp \
+    IO/Com/tcpsocket.cpp \
+    Gui/Charts/prpdchart.cpp \
+    Gui/Charts/historicchart.cpp \
+    Gui/Charts/basechart.cpp \
+    Gui/Charts/prpschart.cpp \
+    Gui/Charts/histogramchart.cpp \
+    Gui/Charts/spectrachart.cpp \
+    Gui/Charts/tfchart.cpp \
+    Gui/Charts/flychart.cpp \
+    Gui/Functions/hchannelfunction.cpp \
+    Gui/Functions/basechannlfunction.cpp \
+    Gui/Functions/lchannelfunction.cpp \
+    Gui/Common/contextmenu.cpp \
+    Gui/Function/settingmunu.cpp \
+    Gui/Charts/camerachart.cpp \
+    Gui/Options/optionwidget.cpp \
+    Gui/Options/Option/optionbasic.cpp \
+    Gui/Options/Option/optionexpert.cpp \
+    Gui/Options/Option/optionstorage.cpp \
+    Gui/Options/Option/optionwifi.cpp \
+    IO/File/testtools.cpp \
+    IO/Com/modbussync.cpp \
     IO/Com/modbus.cpp \
-    IO/Com/tcpsocket.cpp
+    Gui/mainfunction.cpp \
+    Thread/Camera/cameradata.cpp \
+    Thread/Camera/cameradecode.cpp \
+    Thread/Camera/camerasocket1.cpp \
+    Thread/Camera/camerasocket.cpp \
+    Thread/Sync/synccompute.cpp \
+    Thread/Sync/syncsocket.cpp \
+    Thread/Sync/gpsinfo.cpp
 
 
 HEADERS  += \
@@ -149,10 +185,38 @@ HEADERS  += \
     Algorithm/fir.h \
     IO/Sync/syncthread.h \
     IO/File/spacecontrol.h \
-    IO/TempThread/cameradecode.h \
     Gui/Common/wifi.h \
+    IO/Com/tcpsocket.h \
+    Gui/Charts/prpdchart.h \
+    Gui/Charts/historicchart.h \
+    Gui/Charts/basechart.h \
+    Gui/Charts/prpschart.h \
+    Gui/Charts/histogramchart.h \
+    Gui/Charts/spectrachart.h \
+    Gui/Charts/tfchart.h \
+    Gui/Charts/flychart.h \
+    Gui/Functions/hchannelfunction.h \
+    Gui/Functions/basechannlfunction.h \
+    Gui/Functions/lchannelfunction.h \
+    Gui/Common/contextmenu.h \
+    Gui/Function/settingmunu.h \
+    Gui/Charts/camerachart.h \
+    Gui/Options/optionwidget.h \
+    Gui/Options/Option/optionbasic.h \
+    Gui/Options/Option/optionexpert.h \
+    Gui/Options/Option/optionstorage.h \
+    Gui/Options/Option/optionwifi.h \
+    IO/File/testtools.h \
+    IO/Com/modbussync.h \
     IO/Com/modbus.h \
-    IO/Com/tcpsocket.h
+    Gui/mainfunction.h \
+    Thread/Camera/cameradata.h \
+    Thread/Camera/cameradecode.h \
+    Thread/Camera/camerasocket1.h \
+    Thread/Camera/camerasocket.h \
+    Thread/Sync/synccompute.h \
+    Thread/Sync/syncsocket.h \
+    Thread/Sync/gpsinfo.h
 
 FORMS += \
     Gui/Function/tevwidget.ui \
@@ -167,7 +231,12 @@ FORMS += \
     Gui/mainwindow.ui \
     Gui/Function/uhfwidget.ui \
     Gui/Function/Asset/assetwidget.ui \
-    Gui/Options/apinfo.ui
+    Gui/Options/apinfo.ui \
+    Gui/Options/Option/optionbasic.ui \
+    Gui/Options/Option/optionexpert.ui \
+    Gui/Options/Option/optionstorage.ui \
+    Gui/Options/Option/optionwifi.ui \
+    Gui/Options/optionwidget.ui
 
 
 RESOURCES += \

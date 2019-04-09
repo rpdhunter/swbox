@@ -4,7 +4,7 @@
 #include <QWidget>
 #include "IO/Key/key.h"
 #include "IO/Data/data.h"
-
+#include <QDateTime>
 
 class QwtPlot;
 class QwtPlotCurve;
@@ -29,8 +29,18 @@ public slots:
     void start_work(VectorList buf, MODE mode);
 
 private:
+    struct RecState
+    {
+        MODE mod;
+        QDateTime dateTime;
+        QString PB;
+        bool wavelet;
+        double gain;
+        double threshold;
+    };
     CURRENT_KEY_VALUE *key_val;
     int menu_index;
+    RecState recState;
 
     QwtPlot *plot;
     QVector<QPointF> wave1, wave2;

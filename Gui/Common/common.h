@@ -15,8 +15,10 @@
 #include <QAbstractItemModel>
 #include <QMessageBox>
 #include <QRadioButton>
+#include "IO/Com/rdb/rdb.h"
+#include "Algorithm/compute.h"
 
-#define FREEZE_TIME     5000            //秒界面锁定时间
+#define FREEZE_TIME     1200            //秒界面锁定时间
 
 class MyKey{
 public:
@@ -106,15 +108,16 @@ public:
     static void setTab(QLabel *label);              //设置tabwidget的标签格式
 
     static double physical_value(int code_value, MODE mode);        //根据码值返回物理值
+    static double physical_value(int code_value, double gain, MODE mode);        //根据码值返回物理值
     static int code_value(double physical_value, MODE mode);        //根据物理值返回码值
     static double physical_threshold(MODE mode);                    //返回各模式下的物理阈值
     static qint32 offset_zero_code(MODE mode);                      //返回各模式下的零偏置（码值）
-    static QString MODE_toString(MODE val);
+    static QString mode_to_string(MODE val);
+    static MODE string_to_mode(QString str);
     static void write_fpga_offset_debug(G_PARA *data);                    //根据当前通道设置fpga参数，debug界面中设置的fpga参数
 
-    static QVector<QPoint> calc_pulse_list(QVector<int> datalist, QVector<int> timelist, int threshold);          //根据给出的序列和阈值计算脉冲序列
-    static QVector<QPoint> calc_pulse_list(QVector<int> datalist, int threshold);          //根据给出的序列和阈值计算脉冲序列
-    static int time_to_phase(int x);             //时标到相位转换
+    static QVector<QPoint> calc_pulse_list(QVector<int> datalist, QVector<int> timelist, int threshold, MODE mode, int max_num = 0);          //根据给出的序列和阈值计算脉冲序列
+    static int time_to_phase(quint32 x);             //时标到相位转换(相位没有转化到0-360°)
     static QVector<int> smooth(QVector<int> datalist, int n);             //平滑滤波
     static QVector<int> smooth_2(QVector<int> datalist, int n);             //2阶平滑滤波
 
@@ -126,6 +129,9 @@ public:
     static double avrage(QVector<double> list);
     static int avrage(QVector<int> list);
     static float avrage(QList<float> list);
+    static double sum(QVector<double> list);
+    static int sum(QVector<int> list);
+
     static double tev_freq_compensation(int pulse_num);      //tev频率补偿
     static QString secton_three(int n);     //三位分节法显示数字
     static void create_hard_link(QString str_src, QString file_name);        //在资产空间创建硬连接，str_src是源文件完整路径，file_name是文件名
@@ -137,9 +143,12 @@ public:
     static bool rename_dir(QString old_path, QString new_path);                  //重命名文件夹
     static int max_at(QVector<double> list);            //找到最大值的位置，返回序号
     static int max_at(QVector<int> list);            //找到最大值的位置，返回序号
+    static int max(QVector<int> list);          //返回最大值
+    static double max(QVector<double> list);          //返回最大值
+
     static void rdb_set_yc_value(uint yc_no,double val,uint qc = 0);
     static double rdb_get_yc_value(uint yc_no);
-    static void rdb_set_yk_value(uint yc_no,double val,uint qc = 0);
+    static void rdb_set_yx_value(uint yc_no, uint val);
     static bool rdb_check_test_start();
     static void rdb_set_dz_value(uint dz_no, char val);        //修改rdb设定值
     static void rdb_dz_init();          //初始化rdb定值表
@@ -155,6 +164,8 @@ public:
     static QString filter_to_string(int f);
     static double filter_to_number(int f);
     static void adjust_filter_list(QList<int> &list, double cut_off_low, double cut_off_high);      //修正滤波器的可选范围
+    static QVector<int> set_filter(QVector<int> wave, MODE mode);            //加装滤波器
+
     static int time_interval(struct timeval start_time, struct timeval stop_time);      //返回两时间间隔(us)
     static void time_addusec(struct timeval &time, int usec);                //添加微秒数,可为负值
 //    static quint64 dirFileSize(const QString &path);                //返回路径文件夹大小
@@ -162,6 +173,11 @@ public:
 
     static void change_rbt_status(bool flag, QRadioButton *b0, QRadioButton *b1);       //改变一对QRadioButton的选择状态样式
     static void check_restart_file();           //检查restart标志文件
+
+    static CHANNEL_SQL *channel_sql(MODE mode);     //返回通道的sql指针
+    static int mode_to_channel(MODE mode);          //通过模式返回主界面通道
+//    static double channel_factor(MODE mode);        //通道放大因数
+    static QString sensor_freq_to_string(int s);
 };
 
 #endif // COMMON_H

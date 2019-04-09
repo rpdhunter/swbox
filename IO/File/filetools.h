@@ -21,7 +21,7 @@ public:
     FileTools(VectorList data, MODE mode, FileMode filemode);
     FileTools(QString str, FileMode filemode);
 
-    QString get_filter_info();
+    void get_file_info(MODE &mod, QDateTime &d_t, double &gain, double &threshold, bool &wavelet, QString &filter_info);
 
     ~FileTools();
 

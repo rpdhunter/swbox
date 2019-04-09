@@ -30,7 +30,7 @@ extern "C" {
 
 #define RDB_SEND_PORT		8111
 #define RDB_RECV_PORT		8222
-
+//#define ENABLE_PRINT
 #define RDB_CHECK_TIME	50000	/* 100000us, 100ms */
 
 #define YC_INT			1		/* 遥测整型 */
@@ -160,6 +160,7 @@ do { \
 #define _DPRINTF(fmt, args...)
 
 #endif /* __DBUG__ */
+#pragma pack(1)
 
 typedef union {
     Int32		i_val;
@@ -168,24 +169,24 @@ typedef union {
 
 typedef struct rdb_yc_param_s{
     unsigned int yc_no;		/* 从0到YC_NUMBER-1 */
-    yc_data_type * val;		/* 遥测值 */
+    yc_data_type val[1];		/* 遥测值 */
     unsigned char qds;		/* 品质 */
-    time_type * ts;			/* 时标，可以为NULL */
+    time_type ts[1];			/* 时标，可以为NULL */
     int	b_event;			/* 是否触发事件 */
 }rdb_yc_param_t;
 
 typedef struct rdb_yx_param_s{
     unsigned int yx_no;		/* 从0到YX_NUMBER-1 */
-    unsigned int * val;		/* 双点入库，DP_OPEN or DP_CLOSE */
-    time_type * ts;			/* 时标 */
+    unsigned int val[1];		/* 双点入库，DP_OPEN or DP_CLOSE */
+    time_type ts[1];			/* 时标 */
     unsigned char cos_soe_flag;
 }rdb_yx_param_t;
 
 
 typedef struct rdb_dz_param_s{
-	unsigned int dz_no; 		/* 从0到DZ_NUMBER-1 */
-	unsigned char tag;			/* 数据类型 */
-	unsigned char data_len;		/* 数据长度 */
+    unsigned int dz_no; 		/* 从0到DZ_NUMBER-1 */
+    unsigned char tag;			/* 数据类型 */
+    unsigned char data_len;		/* 数据长度 */
     char data_buf[8];	/* 数据值 */
 }rdb_dz_param_t;
 
@@ -231,7 +232,7 @@ typedef struct rdb_udp_s{
     rdb_yk_operate_t yk_operate;
     rdb_yk_done_t yk_done;
 }rdb_udp_t;
-
+#pragma pack(0)
 
 /* 二进制计数器读数 */
 typedef struct bcr_s {
@@ -309,10 +310,12 @@ typedef struct yk_s {
 } yk_t;
 
 typedef struct dz_s {
+    unsigned int dz_no;
     unsigned char tag;			/* Tag类型 */
     unsigned char data_len;		/* 数据长度 */
     unsigned char data_buf[256];/* 值 */
-    int 		  app_id;		/* 控制应用的ID */
+
+//	int 		  app_id;		/* 控制应用的ID */
     data_hook_t * p_hook;		/* hook链 */
 //	int sn;						/* 当前区号 */
 //	int sn_min;					/* 终端支持的最小区号 */
@@ -434,8 +437,12 @@ int dz_get_value (
     );
 int dz_get_value_proto (
     int app_id,
-    rdb_dz_param_t * dz
+    int begin_no,
+    int num,
+    rdb_dz_param_t data[]
+
     );
+
 
 int dz_get_total_num (
     int app_id,

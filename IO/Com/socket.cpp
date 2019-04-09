@@ -2,8 +2,8 @@
 
 Socket::Socket(QObject *parent) : QObject(parent)
 {
-    mSocket = new QUdpSocket();
-    connect(mSocket,SIGNAL(readyRead()),this,SLOT(read_data()));
+    udp_socket = new QUdpSocket();
+    connect(udp_socket,SIGNAL(readyRead()),this,SLOT(read_data()));
 
     mSocket_data = new QUdpSocket();
     mSocket_data->bind(6205);
@@ -38,11 +38,11 @@ void Socket::wifi_create_ap(QString name, QString key, QString gateway, QString 
 void Socket::open_camera()
 {
     qDebug()<<"open_camera";
-    char buf1[5] ={0xeb,0x90,0xeb,0x90,0x55};
-    QByteArray str(buf1);
-    qint64 len = mSocket->writeDatagram(str,QHostAddress::LocalHost,6200);
+    char open_code[5] ={0xeb,0x90,0xeb,0x90,0x55};       //向camera程序发送通知信号,
+    QByteArray str(open_code);
+    qint64 len = udp_socket->writeDatagram(str,QHostAddress::LocalHost,6200);
     if(len<0){
-        qDebug()<<"Socket error : "<<mSocket->errorString();
+        qDebug()<<"Socket error : "<<udp_socket->errorString();
     }
 }
 
@@ -54,22 +54,10 @@ void Socket::close_camera()
 
 void Socket::send_data(QString str, int port)
 {
-    //单播
-//     qint64 len = mSocket->writeDatagram(ui->textEdit->toPlainText().toUtf8(),QHostAddress("192.168.20.17"),6666);
-
-//    qint64 len = mSocket->writeDatagram(ui->textEdit->toPlainText().toUtf8(),QHostAddress::LocalHost,6666);
-
-    //组播ip地址范围：224.0.0.0-239.255.255.255
-    //qint64 len = mSocket->writeDatagram(ui->textEdit->toPlainText().toUtf8(),QHostAddress("224.0.0.100"),6666);
-    //广播
-//    qint64 len = mSocket->writeDatagram(ui->textEdit->toPlainText().toUtf8(),QHostAddress::Broadcast,6666);
-
-//    qint64 len = mSocket->writeDatagram("222",QHostAddress::Broadcast,6666);
-
-    qint64 len = mSocket->writeDatagram(str.toUtf8(),QHostAddress::LocalHost,port);
+    qint64 len = udp_socket->writeDatagram(str.toUtf8(),QHostAddress::LocalHost,port);
     qDebug()<<"Socket writeDatagram : "<<str.toUtf8();
     if(len<0){
-        qDebug()<<"Socket error : "<<mSocket->errorString();
+        qDebug()<<"Socket error : "<<udp_socket->errorString();
     }
 }
 
@@ -79,8 +67,8 @@ void Socket::read_data()
     QByteArray array;
     QHostAddress address;
     quint16 port;
-    array.resize(mSocket->bytesAvailable());//根据可读数据来设置空间大小
-    int len = mSocket->readDatagram(array.data(),array.size(),&address,&port); //读取数据
+    array.resize(udp_socket->bytesAvailable());//根据可读数据来设置空间大小
+    int len = udp_socket->readDatagram(array.data(),array.size(),&address,&port); //读取数据
     qDebug()<<"recv len = "<<len  << "\taddress: "<< address << "\tport: "<< port << "\ndata: "<<array.data();
 }
 #include <QTime>

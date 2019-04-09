@@ -19,8 +19,6 @@ class FifoData : public QThread
 public:
     explicit FifoData(G_PARA *g_data);
 
-    void set_evelope_readComplete(qint32 c, MODE m);
-
 public slots:
 
 
@@ -37,10 +35,10 @@ signals:
 
     void short1_update();       //高频1通道数据更新
     void short2_update();       //高频1通道数据更新
-//    void ae1_update(VectorList);       //包络线数据更新（低频1）
-//    void ae2_update(VectorList);       //包络线数据更新（低频2）
-    void ae1_update();       //包络线数据更新（低频1）
-    void ae2_update();       //包络线数据更新（低频2）
+//    void envelope1_update();       //包络线数据更新（低频1）
+    void envelope1_update(VectorList);  //包络线数据更新（低频1）
+    void envelope2_update(VectorList);  //包络线数据更新（低频2）
+//    void envelope2_update();       //包络线数据更新（低频2）
 
 private slots:
     void do_slow();

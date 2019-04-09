@@ -1,4 +1,4 @@
-#ifndef RECCONTROL_H
+﻿#ifndef RECCONTROL_H
 #define RECCONTROL_H
 
 #include <QObject>
@@ -47,8 +47,7 @@ private:
 //    QTime base_time;
     QTime rec_continuous_free_time;       //记录连续录波中的空闲时间
 
-
-    void fft_test(VectorList inputlist);        //fft测试程序
+    void mode_envelope_modify(MODE &mod);        //根据实际情况修正mode
 
 };
 

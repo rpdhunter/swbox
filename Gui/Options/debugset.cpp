@@ -102,22 +102,22 @@ void DebugSet::iniUi()
     QString style = "QLabel {font-family:WenQuanYi Micro Hei;font: bold; font-size:16px;color:green}";
     if(sqlcfg->get_para()->menu_h1 == TEV1 || sqlcfg->get_para()->menu_h1 == HFCT1 || sqlcfg->get_para()->menu_h1 == UHF1){
         ui->label_H1->setStyleSheet(style);
-        ui->label_H1->setText(Common::MODE_toString((MODE)sqlcfg->get_para()->menu_h1));
+        ui->label_H1->setText(Common::mode_to_string((MODE)sqlcfg->get_para()->menu_h1));
     }
     if(sqlcfg->get_para()->menu_h2 == TEV2 || sqlcfg->get_para()->menu_h2 == HFCT2 || sqlcfg->get_para()->menu_h2 == UHF2){
         ui->label_H2->setStyleSheet(style);
-        ui->label_H2->setText(Common::MODE_toString((MODE)sqlcfg->get_para()->menu_h2));
+        ui->label_H2->setText(Common::mode_to_string((MODE)sqlcfg->get_para()->menu_h2));
 
     }
 
     if(sqlcfg->get_para()->menu_l1 == AA1 || sqlcfg->get_para()->menu_l1 == AE1){
         ui->label_L1->setStyleSheet(style);
-        ui->label_L1->setText(Common::MODE_toString((MODE)sqlcfg->get_para()->menu_l1));
+        ui->label_L1->setText(Common::mode_to_string((MODE)sqlcfg->get_para()->menu_l1));
 
     }
     if(sqlcfg->get_para()->menu_l2 == AA2 || sqlcfg->get_para()->menu_l2 == AE2){
         ui->label_L2->setStyleSheet(style);
-        ui->label_L2->setText(Common::MODE_toString((MODE)sqlcfg->get_para()->menu_l2));
+        ui->label_L2->setText(Common::mode_to_string((MODE)sqlcfg->get_para()->menu_l2));
     }
 
     ui->lineEdit_CompileTime->setText(QString("%1 %2").arg(__TIME__).arg(__DATE__));
@@ -271,13 +271,13 @@ void DebugSet::reload()
     case AA1:
         ui->rbt_L1_camera_on->setChecked(sql_para.aa1_sql.camera);
         ui->rbt_L1_camera_off->setChecked(!sql_para.aa1_sql.camera);
-        ui->lineEdit_L1_offset->setText(QString("%1").arg(sql_para.aa1_sql.offset ) );
+        ui->lineEdit_L1_offset->setText(QString("%1").arg(sql_para.aa1_sql.offset_noise ) );
         ui->rbt_L1_envelope->setChecked(sql_para.aa1_sql.envelope);
         ui->rbt_L1_original->setChecked(!sql_para.aa1_sql.envelope);
         break;
     case AE1:
-        ui->lineEdit_L1_Freq->setText(QString("%1").arg(sql_para.ae1_sql.sensor_freq ) );
-        ui->lineEdit_L1_offset->setText(QString("%1").arg(sql_para.ae1_sql.offset ) );
+        ui->lineEdit_L1_Freq->setText(Common::sensor_freq_to_string(sql_para.ae1_sql.sensor_freq ) );
+        ui->lineEdit_L1_offset->setText(QString("%1").arg(sql_para.ae1_sql.offset_noise ) );
         ui->rbt_L1_envelope->setChecked(sql_para.ae1_sql.envelope);
         ui->rbt_L1_original->setChecked(!sql_para.ae1_sql.envelope);
         break;
@@ -288,13 +288,13 @@ void DebugSet::reload()
     case AA2:
         ui->rbt_L2_camera_on->setChecked(sql_para.aa2_sql.camera);
         ui->rbt_L2_camera_off->setChecked(!sql_para.aa2_sql.camera);
-        ui->lineEdit_L2_offset->setText(QString("%1").arg(sql_para.aa2_sql.offset ) );
+        ui->lineEdit_L2_offset->setText(QString("%1").arg(sql_para.aa2_sql.offset_noise ) );
         ui->rbt_L2_envelope->setChecked(sql_para.aa2_sql.envelope);
         ui->rbt_L2_original->setChecked(!sql_para.aa2_sql.envelope);
         break;
     case AE2:
-        ui->lineEdit_L2_Freq->setText(QString("%1").arg(sql_para.ae2_sql.sensor_freq ) );
-        ui->lineEdit_L2_offset->setText(QString("%1").arg(sql_para.ae2_sql.offset ) );
+        ui->lineEdit_L2_Freq->setText(Common::sensor_freq_to_string(sql_para.ae2_sql.sensor_freq ) );
+        ui->lineEdit_L2_offset->setText(QString("%1").arg(sql_para.ae2_sql.offset_noise ) );
         ui->rbt_L2_envelope->setChecked(sql_para.ae2_sql.envelope);
         ui->rbt_L2_original->setChecked(!sql_para.ae2_sql.envelope);
         break;
@@ -667,10 +667,10 @@ void DebugSet::do_key_left_right(int d)
             switch (key_val->grade.val4) {            
             case 1:     //L1噪声
                 if(sqlcfg->get_para()->menu_l1 == AA1){
-                    sql_para.aa1_sql.offset += d;
+                    sql_para.aa1_sql.offset_noise += d;
                 }
                 else if(sqlcfg->get_para()->menu_l1 == AE1){
-                    sql_para.ae1_sql.offset += d;
+                    sql_para.ae1_sql.offset_noise += d;
                 }
                 break;
             case 2:     //L1摄像头/传感器中心频率
@@ -681,7 +681,10 @@ void DebugSet::do_key_left_right(int d)
                     }
                 }
                 else if(sqlcfg->get_para()->menu_l1 == AE1){
-                    Common::change_index(sql_para.ae1_sql.sensor_freq, 10 * d, 90, 30);
+                    list.clear();
+                    list << ae_factor_30k << ae_factor_40k << ae_factor_50k << ae_factor_60k
+                         << ae_factor_70k << ae_factor_80k << ae_factor_90k << ae_factor_30k_v2 << ae_factor_40k_v2;
+                    Common::change_index(sql_para.ae1_sql.sensor_freq, d, list);
                 }
                 break;
             case 3:     //L1包络线
@@ -694,10 +697,10 @@ void DebugSet::do_key_left_right(int d)
                 break;            
             case 4:     //L2噪声
                 if(sqlcfg->get_para()->menu_l2 == AA2){
-                    sql_para.aa2_sql.offset += d;
+                    sql_para.aa2_sql.offset_noise += d;
                 }
                 else if(sqlcfg->get_para()->menu_l2 == AE2){
-                    sql_para.ae2_sql.offset += d;
+                    sql_para.ae2_sql.offset_noise += d;
                 }
                 break;
             case 5:     //L2摄像头/传感器中心频率
@@ -708,7 +711,10 @@ void DebugSet::do_key_left_right(int d)
                     }
                 }
                 else if(sqlcfg->get_para()->menu_l2 == AE2){
-                    Common::change_index(sql_para.ae2_sql.sensor_freq, 10 * d, 90, 30);
+                    list.clear();
+                    list << ae_factor_30k << ae_factor_40k << ae_factor_50k << ae_factor_60k
+                         << ae_factor_70k << ae_factor_80k << ae_factor_90k << ae_factor_30k_v2 << ae_factor_40k_v2;
+                    Common::change_index(sql_para.ae2_sql.sensor_freq, d, list);
                 }
                 break;
             case 6:     //L2包络线

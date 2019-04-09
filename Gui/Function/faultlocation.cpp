@@ -35,8 +35,8 @@ FaultLocation::FaultLocation(G_PARA *data, CURRENT_KEY_VALUE *val, QList<MODE> m
 
     compass_init();
 
-    ui->label_channel1->setText( Common::MODE_toString(mode_list.at(0)));
-    ui->label_channel2->setText( Common::MODE_toString(mode_list.at(1)));
+    ui->label_channel1->setText( Common::mode_to_string(mode_list.at(0)));
+    ui->label_channel2->setText( Common::mode_to_string(mode_list.at(1)));
 
     //脉冲触发计时器
     timer = new QTimer;
@@ -508,10 +508,10 @@ void FaultLocation::fresh_setting()
     }
 
     if(sql_para.location_sql.channel == Left){
-        ui->comboBox->setItemText(2,tr("触发通道\t[%1]").arg(Common::MODE_toString(mode_list.at(0)) ));
+        ui->comboBox->setItemText(2,tr("触发通道\t[%1]").arg(Common::mode_to_string(mode_list.at(0)) ));
     }
     else if(sql_para.location_sql.channel == Right){
-        ui->comboBox->setItemText(2,tr("触发通道\t[%1]").arg(Common::MODE_toString(mode_list.at(1)) ));
+        ui->comboBox->setItemText(2,tr("触发通道\t[%1]").arg(Common::mode_to_string(mode_list.at(1)) ));
     }
     else {
         ui->comboBox->setItemText(2,tr("触发通道\t[双]"));

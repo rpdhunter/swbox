@@ -41,9 +41,8 @@ RecWave::RecWave(G_PARA *gdata, CHANNEL channel, QObject *parent) : QObject(pare
 }
 
 //从GUI发起录波指令
-void RecWave::recStart (MODE , int time)
+void RecWave::recStart (int time)
 {
-//    mode = m;
     switch (channel) {
     case CHANNEL_H1:
         data->set_send_para (sp_rec_start_h1, 1);
@@ -127,6 +126,7 @@ void RecWave::h_channel_rec_core()
         for (int i = 0; i < REC_NUM; i++) {
             _data.append((qint32)data->recv_para_rec.data[ i + 2 ] - 0x8000 - Common::offset_zero_code(mode));      //录波时就减掉了偏置
         }
+//        qDebug()<<"get new hc rec time:"<<Common::time_to_phase((qint32)data->recv_para_rec.data[ REC_NUM + 2 ] );
 //        qDebug()<<"h_channel receive data succeed! send groupNum = "<<data->send_para.send_params [sp_group_num].rval;
         groupNum++;
         data->set_send_para (sp_group_num, groupNum + groupNum_Offset);
@@ -165,6 +165,7 @@ void RecWave::l_channel_rec_core()
 //            _data.append((qint32)data->recv_para_rec.data[ i + 2 ] - 0x8000);
 
         }
+//        qDebug()<<"get new lc rec time:"<<Common::time_to_phase((qint32)data->recv_para_rec.data[ 256 + 2 ]);
 //        printf("receive recWaveData! send_groupNum=%d\n",data->recv_para_rec.groupNum );
 
         groupNum++;

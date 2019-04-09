@@ -7,6 +7,7 @@
 
 #include "IO/SqlCfg/sqlcfg.h"
 #include "Gui/Common/common.h"
+#include "Algorithm/fir.h"
 
 
 //还没有开启冲突控制
@@ -25,7 +26,7 @@ FileTools::FileTools(QString str,FileTools::FileMode filemode)
     _fileMode = filemode;
 }
 
-QString FileTools::get_filter_info()
+void FileTools::get_file_info(MODE &mod, QDateTime &d_t, double &gain, double &threshold, bool &wavelet, QString &filter_info)
 {
     if(!cfgfilepath.isEmpty()){
         QFile file;
@@ -33,7 +34,7 @@ QString FileTools::get_filter_info()
 
         if (!file.open(QIODevice::ReadOnly)){
             qDebug()<<"file open failed!";
-            return QString();
+            return ;
         }
 
         QTextStream in(&file);
@@ -42,13 +43,32 @@ QString FileTools::get_filter_info()
         //这里有个隐患，如果录波文件损坏，程序将卡死
         while (!in.atEnd()) {
             tmpstr = in.readLine();
-            if( tmpstr.contains("PB,")){
-                tmpstr.replace("PB,",tr("通带宽度"));
-                return tmpstr;
+            if( tmpstr.contains("Mode,")){          //模式
+                tmpstr.remove("Mode,");
+                mod = Common::string_to_mode(tmpstr);
+            }
+            if( tmpstr.contains("DateTime,")){      //时间日期
+                tmpstr.remove("DateTime,");
+                d_t = QDateTime::fromString(tmpstr);
+            }
+            if( tmpstr.contains("Wavelet,")){       //小波
+                tmpstr.remove("Wavelet,");
+                wavelet = tmpstr.toInt();
+            }
+            if( tmpstr.contains("Gain,")){          //增益
+                tmpstr.remove("Gain,");
+                gain = tmpstr.toDouble();
+            }
+            if( tmpstr.contains("Threshold,")){     //阈值
+                tmpstr.remove("Threshold,");
+                threshold = tmpstr.toDouble();
+            }
+            if( tmpstr.contains("PB,")){            //通带宽度
+                tmpstr.remove("PB,");
+                filter_info =  tmpstr;
             }
         }
     }
-    return QString();
 }
 
 FileTools::~FileTools()
@@ -67,7 +87,7 @@ void FileTools::run()
 //        qDebug()<<"filepath:"<<filepath<<"\filename:"<<filename;
 
         if(_mode == AA1 || _mode == AA2 || _mode == AE1 || _mode == AE2
-                || _mode == AA1_ENVELOPE || _mode == AA2_ENVELOPE || _mode == AE1_ENVELOPE || _mode == AE2_ENVELOPE){
+                || _mode == AA_ENVELOPE1 || _mode == AA_ENVELOPE2 || _mode == AE_ENVELOPE1 || _mode == AE_ENVELOPE2){
             saveWavFile();      //生成声音文件
             wavToMp3();         //mp3转换
 
@@ -108,36 +128,48 @@ void FileTools::run()
 
         emit readFinished(_data, _mode);
 
+        //以下为测试代码
+#if 0
         if(_mode == AA1 || _mode == AA2 || _mode == AE1 || _mode == AE2         //TEST
                 || _mode == AA1_ENVELOPE || _mode == AA2_ENVELOPE || _mode == AE1_ENVELOPE || _mode == AE2_ENVELOPE){
             if(filepath.contains("_env")){
                 saveWavFile();      //生成声音文件
                 wavToMp3();         //mp3转换
             }
-
         }
 
+        qDebug()<<"trans hfct:"<<filepath << Common::MODE_toString(_mode);
+        if(_mode == HFCT1 || _mode == HFCT2){
+            filepath.remove(".DAT");
+            filepath.append("_trans");
+            Fir fir;
+            qDebug()<<_data.mid(0,10);
+            _data = fir.set_filter(_data,hp_2M);
+            qDebug()<<_data.mid(0,10);
+            saveDataFile();         //保存数据文件
+            saveCfgFile();          //生成对应的配置文件
+        }
+#endif
     }
-
-
 }
 
+//待完成
 void FileTools::deal_myProcess(QProcess::ProcessState state)
 {
-    switch (state) {
-    case QProcess::NotRunning:
-        qDebug()<<"QProcess::NotRunning";
-        break;
-    case QProcess::Starting:
-        qDebug()<<"QProcess::Starting";
-        break;
-    case QProcess::Running:
-        qDebug()<<"QProcess::Running";
-        break;
-    default:
-        break;
-    }
-    qDebug()<<"mp3 link created!";
+//    switch (state) {
+//    case QProcess::NotRunning:
+//        qDebug()<<"QProcess::NotRunning";
+//        break;
+//    case QProcess::Starting:
+//        qDebug()<<"QProcess::Starting";
+//        break;
+//    case QProcess::Running:
+//        qDebug()<<"QProcess::Running";
+//        break;
+//    default:
+//        break;
+//    }
+//    qDebug()<<"mp3 link created!";
 //    Common::create_hard_link(filepath+".mp3",filename+".mp3");
 }
 
@@ -145,16 +177,16 @@ void FileTools::deal_myProcess(QProcess::ProcessState state)
 void FileTools::mode_envelope_modify()
 {
     if(_mode == AA1 && sqlcfg->get_para()->aa1_sql.envelope == true){
-        _mode = AA1_ENVELOPE;
+        _mode = AA_ENVELOPE1;
     }
     else if(_mode == AA2 && sqlcfg->get_para()->aa2_sql.envelope == true){
-        _mode = AA2_ENVELOPE;
+        _mode = AA_ENVELOPE2;
     }
     else if(_mode == AE1 && sqlcfg->get_para()->ae1_sql.envelope == true){
-        _mode = AE1_ENVELOPE;
+        _mode = AE_ENVELOPE1;
     }
     else if(_mode == AE2 && sqlcfg->get_para()->ae2_sql.envelope == true){
-        _mode = AE2_ENVELOPE;
+        _mode = AE_ENVELOPE2;
     }
 }
 
@@ -180,7 +212,7 @@ void FileTools::getReadFilePath(QString str)
     }
     else if(str.contains("AA1_")){        
         if(str.contains("ENVELOPE")){
-            _mode = AA1_ENVELOPE;
+            _mode = AA_ENVELOPE1;
         }
         else{
             _mode = AA1;
@@ -188,7 +220,7 @@ void FileTools::getReadFilePath(QString str)
     }
     else if(str.contains("AA2_")){
         if(str.contains("ENVELOPE")){
-            _mode = AA2_ENVELOPE;
+            _mode = AA_ENVELOPE2;
         }
         else{
             _mode = AA2;
@@ -196,7 +228,7 @@ void FileTools::getReadFilePath(QString str)
     }
     else if(str.contains("AE1_")){
         if(str.contains("ENVELOPE")){
-            _mode = AE1_ENVELOPE;
+            _mode = AE_ENVELOPE1;
         }
         else{
             _mode = AE1;
@@ -204,7 +236,7 @@ void FileTools::getReadFilePath(QString str)
     }
     else if(str.contains("AE2_")){
         if(str.contains("ENVELOPE")){
-            _mode = AE2_ENVELOPE;
+            _mode = AE_ENVELOPE2;
         }
         else{
             _mode = AE2;
@@ -230,7 +262,7 @@ void FileTools::getReadFilePath(QString str)
 void FileTools::getWriteFilePath()
 {
     filename = QString("%1").arg(QDateTime::currentDateTime().toString("yyyy-MM-dd-HH-mm-ss-zzz"));
-    filename.prepend(Common::MODE_toString(_mode).append("_") );
+    filename.prepend(Common::mode_to_string(_mode).append("_") );
 
     //文件夹操作
     Common::mk_dir(DIR_USB);
@@ -321,30 +353,31 @@ void FileTools::saveCfgFile()
         out << sqlcfg->get_para()->freq_val << ".000000" << "\n";
         out << "1" << "\n";
         if(_mode == AA1 || _mode == AA2 || _mode == AE1 || _mode == AE2){
-//            out << "400000," << _data.length()/2 << "\n";     //点数可变
             out << "4000," << _data.length() << "\n";     //点数可变
         }
         else{
-//            out << "1000000000," << _data.length()/2 << "\n";     //点数可变
             out << "4000," << _data.length() << "\n";     //点数可变
         }
     }
 
 
-    out << QDateTime::currentDateTime().toString() << "\n";
-    out << QDateTime::currentDateTime().toString() << "\n";
-    out << "BINARY" << "\n";
-    //保存滤波器信息
-    if(_mode == HFCT1 || _mode == HFCT1_CONTINUOUS){
-        out << "PB,";
-        out << Common::filter_to_string(sqlcfg->get_para()->hfct1_sql.filter_hp) << "-"
-            << Common::filter_to_string(sqlcfg->get_para()->hfct1_sql.filter_lp) << "\n";
-    }
-    else if(_mode == HFCT2 || _mode == HFCT2_CONTINUOUS){
-        out << "PB,";
-        out << Common::filter_to_string(sqlcfg->get_para()->hfct2_sql.filter_hp) << "-"
-            << Common::filter_to_string(sqlcfg->get_para()->hfct2_sql.filter_lp) << "\n";
-    }
+    out << QDateTime::currentDateTime().toString() << "\n";     //时间日期
+    out << QDateTime::currentDateTime().toString() << "\n";     //时间日期(必须存两次,才能用南瑞软件打开,这之前的不要动)
+    out << "BINARY" << "\n";                            //二进制
+    //保存模式信息
+    out << "Mode,"<< Common::mode_to_string(_mode)<< "\n";
+    //保存时间日期
+    out << "DateTime,"<< QDateTime::currentDateTime().toString()<< "\n";
+    //保存FIR滤波器信息
+    out << "PB,";
+    out << Common::filter_to_string(Common::channel_sql(_mode)->filter_hp) << "-"
+        << Common::filter_to_string(Common::channel_sql(_mode)->filter_lp) << "\n";
+    //小波滤波
+    out << "Wavelet,"<< Common::channel_sql(_mode)->filter_wavelet << "\n";
+    //保存通道增益
+    out << "Gain,"<< Common::channel_sql(_mode)->gain << "\n";
+    //保存通道阈值
+    out << "Threshold,"<< Common::channel_sql(_mode)->fpga_threshold << "\n";
 
     file.close();
 }
@@ -373,7 +406,7 @@ void FileTools::saveWavFile()
 //        wfh1->SampleFreq = 400000;
         wfh1->SampleFreq = 40000;   //临时测试时使用
     }
-    else if( _mode == AA1_ENVELOPE || _mode == AA2_ENVELOPE || _mode == AE1_ENVELOPE || _mode == AE2_ENVELOPE){
+    else if( _mode == AA_ENVELOPE1 || _mode == AA_ENVELOPE2 || _mode == AE_ENVELOPE1 || _mode == AE_ENVELOPE2){
         wfh1->SampleFreq = 40000;
     }
 

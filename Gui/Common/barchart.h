@@ -1,4 +1,4 @@
-#ifndef BARCHART_H
+﻿#ifndef BARCHART_H
 #define BARCHART_H
 
 #include "IO/SqlCfg/sqlcfg.h"
@@ -37,7 +37,7 @@ private:
     int *high,*low;
 
 protected:
-    virtual QwtColumnSymbol *specialSymbol(int sampleIndex, const QPointF& ) const;
+    virtual QwtColumnSymbol *specialSymbol(int sampleIndex, const QPointF& s) const;
 };
 
 #endif // BARCHART_H

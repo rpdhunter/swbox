@@ -81,12 +81,12 @@
 #define AUTO_REC                0x002b          //自动录波标志位（0为关闭所有自动录波，1为1通道自动，2为2通道自动，3为双通道自动，12为1通道触发同步，20为2通道触发同步，28为双通道触发同步）
 
 //要通道数据信号
-#define READ_FPGA_NOMAL         0x0030          //普通
-#define READ_FPGA_REC           0x0031          //录波
-#define READ_FPGA_HFCT1         0x0034          //HFCT1模式
-#define READ_FPGA_HFCT2         0x0035          //HFCT2模式
-#define READ_FPGA_AE1           0x0036          //AE模式中包络线数据1
-#define READ_FPGA_AE2           0x0037          //AE模式中包络线数据2
+#define READ_FPGA_NOMAL         0x0030          //普通数据
+#define READ_FPGA_REC           0x0031          //录波数据
+#define READ_FPGA_SHORT1        0x0034          //高频短录波数据1
+#define READ_FPGA_SHORT2        0x0035          //高频短录波数据2
+#define READ_FPGA_ENVELOPE1     0x0036          //低频包络线数据1
+#define READ_FPGA_ENVELOPE2     0x0037          //低频包络线数据2
 
 //同步
 #define DO_SYNC                 0x0038          //同步,
@@ -128,10 +128,10 @@ enum send_params {
     //要通道数据信号
     sp_read_fpga_normal,
     sp_read_fpga_rec,
-    sp_read_fpga_hfct1,
-    sp_read_fpga_hfct2,
-    sp_read_fpga_ae1,
-    sp_read_fpga_ae2,
+    sp_read_fpga_short1,
+    sp_read_fpga_short2,
+    sp_read_fpga_envelope1,
+    sp_read_fpga_envelope2,
 
     sp_num
 };

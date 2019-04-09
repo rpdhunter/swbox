@@ -24,14 +24,11 @@ public:
     ~CameraDecode();
 
 public slots:
-    void getOnePacket(QByteArray buf, int f);  //接收到原始数据帧
+    void getOnePacket(QByteArray buf);  //接收到原始数据帧
     void camera_init();
-
-    void save_test_video_file();        //保存测试视频文件，用于测试ARM的解码能力
 
 signals:
     void sigGetOneFrame(QImage);        //转码后的一帧
-    void read_done(int);
 
 protected:
     void run();

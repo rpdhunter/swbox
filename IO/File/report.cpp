@@ -61,8 +61,8 @@ void Report::create_XML(QString path)
 
     //测量内容
     foreach (ReportRecord r, record) {
-        QDomElement modeNode = creat_dom_child_1(doc, "detection", "mode", Common::MODE_toString(r.mode), rootNode);
-        creat_dom_child_2(doc, "attrib", "param", QString::fromUtf8("测量模式"), Common::MODE_toString(r.mode), modeNode);
+        QDomElement modeNode = creat_dom_child_1(doc, "detection", "mode", Common::mode_to_string(r.mode), rootNode);
+        creat_dom_child_2(doc, "attrib", "param", QString::fromUtf8("测量模式"), Common::mode_to_string(r.mode), modeNode);
         creat_dom_child_2(doc, "attrib", "param", QString::fromUtf8("开始测量时间"), r.begin, modeNode);
         creat_dom_child_2(doc, "attrib", "param", QString::fromUtf8("结束测量时间"), r.end, modeNode);
         creat_dom_child_2(doc, "attrib", "param", QString::fromUtf8("最大测量值"), QString::number(r.max_val), modeNode);

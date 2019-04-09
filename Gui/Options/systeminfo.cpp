@@ -45,16 +45,17 @@ SystemInfo::SystemInfo(QWidget *parent) : BaseWidget(NULL, parent),ui(new Ui::Sy
         else{
 #ifdef OHV
             line = "PDTEV";
+            //line = "UltraDetector"
 #elif AMG
-            line = "PDcable";
+//            line = "PDsmart";
+//            line = "PDcable";
 //            line = "PDswitch";
-//            line = "TAH-300";
+            line = "TAH-300";
 #elif ZDIT
             line = "PD3000";
 #elif XDP_II
             line = "XDP-II";
 //            line = tr("局部放电测试仪系统软件V1.0");
-
 #else
             line = " ";
 #endif

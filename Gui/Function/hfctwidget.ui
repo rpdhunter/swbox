@@ -19,26 +19,16 @@
   <property name="frameShadow">
    <enum>QFrame::Raised</enum>
   </property>
-  <widget class="QWidget" name="widget" native="true">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>35</y>
-     <width>221</width>
-     <height>151</height>
-    </rect>
-   </property>
-  </widget>
   <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
-     <x>240</x>
+     <x>200</x>
      <y>30</y>
-     <width>171</width>
-     <height>85</height>
+     <width>228</width>
+     <height>105</height>
     </rect>
    </property>
-   <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,0">
+   <layout class="QHBoxLayout" name="layout_val" stretch="1,0">
     <item>
      <widget class="QLabel" name="label_val">
       <property name="minimumSize">
@@ -104,93 +94,16 @@
     </item>
    </layout>
   </widget>
-  <widget class="QComboBox" name="comboBox">
+  <widget class="QWidget" name="layoutWidget1">
    <property name="geometry">
     <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>131</width>
-     <height>25</height>
+     <x>260</x>
+     <y>130</y>
+     <width>161</width>
+     <height>61</height>
     </rect>
    </property>
-   <property name="styleSheet">
-    <string notr="true"/>
-   </property>
-   <property name="editable">
-    <bool>true</bool>
-   </property>
-   <property name="currentIndex">
-    <number>0</number>
-   </property>
-   <property name="maxVisibleItems">
-    <number>15</number>
-   </property>
-   <item>
-    <property name="text">
-     <string>检测模式      [单次]</string>
-    </property>
-   </item>
-   <item>
-    <property name="text">
-     <string>图形显示  [柱状图]</string>
-    </property>
-   </item>
-   <item>
-    <property name="text">
-     <string>增益系数     [×1.0]</string>
-    </property>
-   </item>
-   <item>
-    <property name="text">
-     <string>硬件滤波          [无]</string>
-    </property>
-   </item>
-   <item>
-    <property name="text">
-     <string>软件滤波          [无]</string>
-    </property>
-   </item>
-   <item>
-    <property name="text">
-     <string>脉冲触发     [15]mV</string>
-    </property>
-   </item>
-   <item>
-    <property name="text">
-     <string>脉冲计数时长[1]s</string>
-    </property>
-   </item>
-   <item>
-    <property name="text">
-     <string>连续录波     [5]s</string>
-    </property>
-   </item>
-   <item>
-    <property name="text">
-     <string>自动录波     [关闭]</string>
-    </property>
-   </item>
-   <item>
-    <property name="text">
-     <string>单次录波</string>
-    </property>
-   </item>
-   <item>
-    <property name="text">
-     <string>测量值重置</string>
-    </property>
-   </item>
-  </widget>
-  <widget class="QWidget" name="">
-   <property name="geometry">
-    <rect>
-     <x>240</x>
-     <y>110</y>
-     <width>201</width>
-     <height>71</height>
-    </rect>
-   </property>
-   <layout class="QVBoxLayout" name="verticalLayout_2">
+   <layout class="QVBoxLayout" name="layout_max">
     <property name="spacing">
      <number>3</number>
     </property>
@@ -242,10 +155,6 @@
     </item>
    </layout>
   </widget>
-  <zorder>layoutWidget</zorder>
-  <zorder>layoutWidget</zorder>
-  <zorder>comboBox</zorder>
-  <zorder>widget</zorder>
  </widget>
  <resources/>
  <connections/>

@@ -2,11 +2,10 @@
 #define MAINWINDOW_H
 
 #include <QFrame>
-#include <QLabel>
 #include <QTimer>
 #include <QSplashScreen>
 #include <QQuickWidget>
-#include <QVector>
+//#include <QVector>
 #include <QMessageBox>
 
 #include "IO/Data/fifodata.h"
@@ -29,14 +28,13 @@
 #include "Options/options.h"
 #include "Options/recwavemanage.h"
 #include "Options/systeminfo.h"
+#include "Options/optionwidget.h"
 
 #include "Common/common.h"
 #include "IO/Com/rdb/rdb.h"
 #include "IO/Other/CPU/cpustatus.h"
-#include "IO/Com/modbus.h"
-//#include <dwt.h>
-
-//using namespace splab;
+#include "IO/Com/modbussync.h"
+#include "mainfunction.h"
 
 namespace Ui {
 class MainWindow;
@@ -92,8 +90,7 @@ private:
     //12个逻辑通道
     TEVWidget *tev1_widget, *tev2_widget;
     HFCTWidget *hfct1_widget, *hfct2_widget;
-//    UHFWidget *uhf1_widget, *uhf2_widget;
-    TEVWidget *uhf1_widget, *uhf2_widget;
+    UHFWidget *uhf1_widget, *uhf2_widget;
     FaultLocation *double_widget;
     AAWidget *aa1_widget, *aa2_widget;
     AEWidget *ae1_widget, *ae2_widget;
@@ -101,6 +98,7 @@ private:
 
     //5个设置界面
     Options *options;
+    OptionWidget *option_wdiget;
     SystemInfo *systeminfo;
     DebugSet *debugset;
     FactoryReset *factoryreset;
@@ -125,8 +123,10 @@ private:
     Buzzer *buzzer;
     QMessageBox *box;       //关机确认框
     int power_num;          //电源键记数
-    Modbus *modbus;
+    ModbusSync *modbus;
     float freq;             //实时频率值
+
+    MainFunction *main_function;        //从主界面分离出的功能类,完成大部分功能处理
 
     void menu_init();
     void statusbar_init();

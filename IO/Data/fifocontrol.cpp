@@ -50,9 +50,19 @@ int FifoControl::read_ae1_data()
     return recv_data (vbase_ae1, (unsigned int *)&(tdata->recv_para_envelope1));
 }
 
+int FifoControl::read_ae1_data(qint32 *data)
+{
+    return recv_data (vbase_ae1, (quint32 *)data);
+}
+
 int FifoControl::read_ae2_data()
 {
     return recv_data (vbase_ae2, (unsigned int *)&(tdata->recv_para_envelope2));
+}
+
+int FifoControl::read_ae2_data(qint32 *data)
+{
+    return recv_data (vbase_ae2, (quint32 *)data);
 }
 
 int FifoControl::read_rec_data()
@@ -225,8 +235,8 @@ void FifoControl::check_send_param(RPARA pp[], int index, unsigned int data_mask
         send_data (vbase_normal_send, &temp, 1);
         if(index != sp_read_fpga_normal && index != sp_read_fpga_rec && index != sp_group_num
                 && index != sp_rec_start_h1 && index != sp_rec_start_h2
-                && index != sp_read_fpga_hfct1 && index != sp_read_fpga_ae1
-                && index != sp_read_fpga_hfct2 && index != sp_read_fpga_ae2
+                && index != sp_read_fpga_short1 && index != sp_read_fpga_envelope1
+                && index != sp_read_fpga_short2 && index != sp_read_fpga_envelope2
                 ){
 //            qDebug("WRITE_REG = 0x%08x", temp);
             qDebug().noquote() << QString("%1 = 0x%2").arg(send_para_to_string(index)).arg(temp,8,16, QLatin1Char('0'));
@@ -277,10 +287,8 @@ unsigned int FifoControl::recv_data(volatile unsigned int *vbase, unsigned int *
 void FifoControl::read_fpga(send_params sp_n)
 {
     tdata->set_send_para(sp_n, 1);
-//    send_para();
     check_send_param (tdata->send_para.send_params,sp_n, spr_maps [sp_n]);
     tdata->set_send_para(sp_n, 0);
-//    send_para();
     check_send_param (tdata->send_para.send_params,sp_n, spr_maps [sp_n]);
 }
 
@@ -442,16 +450,16 @@ QString FifoControl::send_para_to_string(int val)
 //    case sp_read_fpga_prpd2:
 //        tmp = "read_fpga_prpd2";
         break;
-    case sp_read_fpga_hfct1:
+    case sp_read_fpga_short1:
         tmp = "read_fpga_hfct1";
         break;
-    case sp_read_fpga_hfct2:
+    case sp_read_fpga_short2:
         tmp = "read_fpga_hfct2";
         break;
-    case sp_read_fpga_ae1:
+    case sp_read_fpga_envelope1:
         tmp = "read_fpga_ae1";
         break;
-    case sp_read_fpga_ae2:
+    case sp_read_fpga_envelope2:
         tmp = "read_fpga_ae2";
         break;
     default:

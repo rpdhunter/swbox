@@ -330,7 +330,7 @@ void RecWaveManage::do_key_left_right(int d)
 void RecWaveManage::start_play(VectorList list,MODE mode)
 {
     //包络线需要做数据扩展，匹配播放频率
-    if(mode == AA1_ENVELOPE || mode == AA2_ENVELOPE || mode == AE1_ENVELOPE || mode == AE2_ENVELOPE ){
+    if(mode == AA_ENVELOPE1 || mode == AA_ENVELOPE2 || mode == AE_ENVELOPE1 || mode == AE_ENVELOPE2 ){
         VectorList l;
         l.resize(list.count()*10);
         for (int i = 0; i < list.count(); ++i) {

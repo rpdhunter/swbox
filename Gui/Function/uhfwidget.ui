@@ -22,7 +22,7 @@
      <height>72</height>
     </rect>
    </property>
-   <layout class="QHBoxLayout" name="horizontalLayout">
+   <layout class="QHBoxLayout" name="layout_val">
     <item>
      <widget class="QLabel" name="label_val">
       <property name="minimumSize">
@@ -106,7 +106,7 @@
      <height>83</height>
     </rect>
    </property>
-   <layout class="QVBoxLayout" name="verticalLayout_2">
+   <layout class="QVBoxLayout" name="layout_max">
     <item>
      <widget class="QLabel" name="label_max">
       <property name="minimumSize">
@@ -144,78 +144,6 @@
      </widget>
     </item>
    </layout>
-  </widget>
-  <widget class="QComboBox" name="comboBox">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>131</width>
-     <height>25</height>
-    </rect>
-   </property>
-   <property name="styleSheet">
-    <string notr="true"/>
-   </property>
-   <property name="editable">
-    <bool>true</bool>
-   </property>
-   <property name="currentIndex">
-    <number>0</number>
-   </property>
-   <property name="maxVisibleItems">
-    <number>15</number>
-   </property>
-   <item>
-    <property name="text">
-     <string>检测模式          [单次]</string>
-    </property>
-   </item>
-   <item>
-    <property name="text">
-     <string>图形显示  [柱状图]</string>
-    </property>
-   </item>
-   <item>
-    <property name="text">
-     <string>增益系数     [×1.0]</string>
-    </property>
-   </item>
-   <item>
-    <property name="text">
-     <string>黄色报警阈值[20]dB</string>
-    </property>
-   </item>
-   <item>
-    <property name="text">
-     <string>红色报警阈值[40]dB</string>
-    </property>
-   </item>
-   <item>
-    <property name="text">
-     <string>阈值触发     [15]mV</string>
-    </property>
-   </item>
-   <item>
-    <property name="text">
-     <string>脉冲计数时长[1]s</string>
-    </property>
-   </item>
-   <item>
-    <property name="text">
-     <string>自动录波     [开启]</string>
-    </property>
-   </item>
-   <item>
-    <property name="text">
-     <string>单次录波</string>
-    </property>
-   </item>
-   <item>
-    <property name="text">
-     <string>测量值重置</string>
-    </property>
-   </item>
   </widget>
  </widget>
  <resources/>

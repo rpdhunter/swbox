@@ -127,13 +127,16 @@ SQL_PARA *SqlCfg::default_config(void)
 
     sql_para.max_rec_num = MAX_REC_NUM;
     sql_para.buzzer_on = false;
-    sql_para.auto_rec_interval = 1;
+    sql_para.auto_rec_interval = 2;         //默认2秒一次录波(防止卡顿)
 
 
-    sql_para.sync_mode = SYNC_NONE;
+    sql_para.sync_mode = sync_none;
+    sql_para.sync_val = 0;
     sql_para.sync_internal_val = 0;
     sql_para.sync_external_val = 0;
     strcpy(sql_para.current_dir, DIR_DATA);
+    sql_para.file_save_standard = file_save_zdit;       //采用自定义标准保存文件
+    sql_para.test_mode = test_off;              //默认关闭测试
 
     return &sql_para;
 }
@@ -141,20 +144,24 @@ SQL_PARA *SqlCfg::default_config(void)
 double SqlCfg::ae1_factor()
 {
     switch (sql_para.ae1_sql.sensor_freq) {
-    case 30:
+    case ae_factor_30k:
         return AE_FACTOR_30K;
-    case 40:
+    case ae_factor_40k:
         return AE_FACTOR_40K;
-    case 50:
+    case ae_factor_50k:
         return AE_FACTOR_50K;
-    case 60:
+    case ae_factor_60k:
         return AE_FACTOR_60K;
-    case 70:
+    case ae_factor_70k:
         return AE_FACTOR_70K;
-    case 80:
+    case ae_factor_80k:
         return AE_FACTOR_80K;
-    case 90:
+    case ae_factor_90k:
         return AE_FACTOR_90K;
+    case ae_factor_30k_v2:
+        return AE_FACTOR_30K_V2;
+    case ae_factor_40k_v2:
+        return AE_FACTOR_40K_V2;
     default:
         return AE_FACTOR_30K;
     }
@@ -163,20 +170,24 @@ double SqlCfg::ae1_factor()
 double SqlCfg::ae2_factor()
 {
     switch (sql_para.ae2_sql.sensor_freq) {
-    case 30:
+    case ae_factor_30k:
         return AE_FACTOR_30K;
-    case 40:
+    case ae_factor_40k:
         return AE_FACTOR_40K;
-    case 50:
+    case ae_factor_50k:
         return AE_FACTOR_50K;
-    case 60:
+    case ae_factor_60k:
         return AE_FACTOR_60K;
-    case 70:
+    case ae_factor_70k:
         return AE_FACTOR_70K;
-    case 80:
+    case ae_factor_80k:
         return AE_FACTOR_80K;
-    case 90:
+    case ae_factor_90k:
         return AE_FACTOR_90K;
+    case ae_factor_30k_v2:
+        return AE_FACTOR_30K_V2;
+    case ae_factor_40k_v2:
+        return AE_FACTOR_40K_V2;
     default:
         return AE_FACTOR_30K;
     }
@@ -193,100 +204,78 @@ void SqlCfg::sql_init()
     strcpy(sql_para.current_dir, DIR_DATA);      //开机时需要重置当前目录
 }
 
-void SqlCfg::tev_default(H_CHANNEL_SQL &sql)
+void SqlCfg::tev_default(CHANNEL_SQL &sql)
 {
-    sql.mode = continuous;
-    sql.chart = BASIC;
+    channel_default(sql);
     sql.high = TEV_HIGH;
     sql.low = TEV_LOW;
-    sql.gain = 1.0;
-    sql.fpga_zero = 0;
-    sql.fpga_threshold = FPGA_THRESHOLD;
-    sql.auto_rec = false;
-    sql.pulse_time = 1;
-    sql.rec_time = 5;
-    sql.offset_noise = 0;
-    sql.offset_linearity = 0;
-    sql.filter_hp = NONE;
-    sql.filter_lp = NONE;
-    sql.filter_fir_fpga = true;
-    sql.filter_wavelet = false;
-    sql.mode_recognition = false;
+    sql.fpga_threshold = 8;       //8mv对应18db
+    sql.units = Units_db;
 }
 
-void SqlCfg::hfct_default(H_CHANNEL_SQL &sql)
+void SqlCfg::hfct_default(CHANNEL_SQL &sql)
 {
-    sql.mode = continuous;
-    sql.chart = BASIC;
+    channel_default(sql);
     sql.high = HFCT_HIGH;
     sql.low = HFCT_LOW;
-    sql.gain = 1.0;
-    sql.fpga_zero = 0;
-    sql.fpga_threshold = FPGA_THRESHOLD;
-    sql.auto_rec = false;
-    sql.pulse_time = 1;
-    sql.rec_time = 5;
-    sql.offset_noise = 0;
-    sql.offset_linearity = 0;
-    sql.filter_hp = NONE;
-    sql.filter_lp = NONE;
-    sql.filter_fir_fpga = false;
-    sql.filter_wavelet = false;
-    sql.mode_recognition = false;
+    sql.fpga_threshold = 8;       //8mv对应18db
+    sql.units = Units_pC;
 }
 
-void SqlCfg::uhf_default(H_CHANNEL_SQL &sql)
+void SqlCfg::uhf_default(CHANNEL_SQL &sql)
 {
-    sql.mode = continuous;
-    sql.chart = BASIC;
+    channel_default(sql);
     sql.high = TEV_HIGH;
     sql.low = TEV_LOW;
+    sql.fpga_threshold = 8;       //8mv对应18db
+    sql.units = Units_db;
+}
+
+void SqlCfg::aa_default(CHANNEL_SQL &sql)
+{
+    channel_default(sql);
+    sql.high = AA_HIGH;
+    sql.low = AA_LOW;
+    sql.fpga_threshold = 2;        //2uV对应6db
+    sql.units = Units_db;
+}
+
+void SqlCfg::ae_default(CHANNEL_SQL &sql)
+{
+    channel_default(sql);
+    sql.high = AA_HIGH;
+    sql.low = AA_LOW;
+    sql.fpga_threshold = 2;        //2uV对应6db
+    sql.units = Units_db;
+}
+
+void SqlCfg::channel_default(CHANNEL_SQL &sql)
+{
+    //通用
+    sql.mode = continuous;
+    sql.chart = BASIC;
+//    sql.high = TEV_HIGH;
+//    sql.low = TEV_LOW;
     sql.gain = 1.0;
-    sql.fpga_zero = 0;
-    sql.fpga_threshold = FPGA_THRESHOLD;
-    sql.auto_rec = false;
-    sql.pulse_time = 1;
-    sql.rec_time = 5;
+    sql.pulse_time = 2;
+    sql.rec_time = 3;
     sql.offset_noise = 0;
-    sql.offset_linearity = 0;
+//    sql.fpga_threshold = FPGA_THRESHOLD;
+    sql.mode_recognition = false;
+//    sql.units = Units_db;
+    sql.buzzer = false;
+    //高频
+    sql.fpga_zero = 0;
     sql.filter_hp = NONE;
     sql.filter_lp = NONE;
-    sql.filter_fir_fpga = false;
+    sql.auto_rec = false;
+    sql.filter_fir_fpga = true;
     sql.filter_wavelet = false;
-    sql.mode_recognition = false;
-}
-
-void SqlCfg::aa_default(L_CHANNEL_SQL &sql)
-{
-    sql.mode = continuous;
-    sql.chart = BASIC;
+    //低频
     sql.vol = AA_VOL_DEFAULT;
-    sql.gain = 1.0;
-    sql.high = AA_HIGH;					//default high
-    sql.low = AA_LOW;						//default low
-    sql.time = TIME_MIN;					//default time length
     sql.step = 2;
-    sql.offset = 0;
     sql.envelope = 1;                      //默认使用包络线
-    sql.fpga_threshold = FPGA_THRESHOLD / 2;
-    sql.sensor_freq = 40;
-    sql.camera = false;
-}
-
-void SqlCfg::ae_default(L_CHANNEL_SQL &sql)
-{
-    sql.mode = continuous;
-    sql.chart = BASIC;
-    sql.vol = AA_VOL_DEFAULT;
-    sql.gain = 1.0;
-    sql.high = AA_HIGH;					//default high
-    sql.low = AA_LOW;						//default low
-    sql.time = TIME_MIN;					//default time length
-    sql.step = 2;
-    sql.offset = 0;
-    sql.envelope = 1;                      //默认使用包络线
-    sql.fpga_threshold = FPGA_THRESHOLD / 2;
-    sql.sensor_freq = 30;                   //默认传感器中心频率
+    sql.sensor_freq = ae_factor_40k;
     sql.camera = false;
 }
 

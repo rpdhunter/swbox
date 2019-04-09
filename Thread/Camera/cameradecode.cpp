@@ -1,7 +1,7 @@
 ﻿#include "cameradecode.h"
 #include <QtDebug>
 #include <QFile>
-//#define REC_ON
+#include "IO/Other/cpu.h"
 
 CameraDecode::CameraDecode(QObject *parent) : QThread(parent)
 {
@@ -18,13 +18,6 @@ CameraDecode::CameraDecode(QObject *parent) : QThread(parent)
     init_ffmpeg_stream();
 
     camera_init_flag = false;
-
-#ifdef REC_ON
-    timer = new QTimer;
-    timer->setSingleShot(true);
-    timer->setInterval(10 * 1000);
-    connect(timer, SIGNAL(timeout()), this, SLOT(save_test_video_file()));
-#endif
 }
 
 CameraDecode::~CameraDecode()
@@ -63,27 +56,15 @@ void CameraDecode::init_ffmpeg_stream()
 }
 
 
-void CameraDecode::getOnePacket(QByteArray buf, int f)
+void CameraDecode::getOnePacket(QByteArray buf)
 {
+//    qDebug()<< "CameraDecode Class get one packet : length = "<<buf.length();
+//    qDebug()<< "current frame buf num:" << frame_list.count();
+
+    if(frame_list.count() > 3)      //缓冲超过3帧,清除缓冲区
+        frame_list.clear();
+
     frame_list.append(buf);
-
-
-    qDebug()<< "CameraDecode Class get one packet : length = "<<buf.length() << "\t" << f;
-    qDebug()<< "current frame buf num:" << frame_list.count();
-
-#ifdef REC_ON
-    if(timer->isActive()){
-        for(int i=0; i<10; i++){
-            printf("%02x ", *(buf.data()+i) );
-        }
-        printf("\n");
-        video_rec.append(buf);
-    }
-    else{
-        timer->start();
-    }
-#endif
-    emit read_done(f);
 }
 
 void CameraDecode::camera_init()
@@ -92,38 +73,18 @@ void CameraDecode::camera_init()
     camera_init_flag = true;
 }
 
-void CameraDecode::save_test_video_file()
-{
-#ifdef REC_ON
-    QFile file;
-    bool flag;
-    //保存二进制文件（小端）
-    file.setFileName("test.h264");
-    flag = file.open(QIODevice::WriteOnly);
-    if(flag){
-        QDataStream out(&file);
-        out.setByteOrder(QDataStream::LittleEndian);
-        out.writeBytes(video_rec.data(), video_rec.length());
-
-        file.close();
-        qDebug()<<"test video file saved!";
-
-        video_rec.clear();
-    }
-    else{
-        qDebug()<<"file open failed!";
-    }
-#endif
-}
 #include <QTime>
 void CameraDecode::run()
 {
+    pthread_t tid = pthread_self();
+    set_thread_cpu(tid,CPU_1);
     while (1) {
         if(camera_init_flag == true){
             camera_init_flag = false;
 
             qDebug()<<"open AP";
-            system("/root/wifi/ap.sh    ZZDDIITT  zdit.com.cn    192.168.150.1    255.255.255.0");      //开启AP
+            system("/root/wifi/ap.sh    window100000  zdit.com.cn    192.168.150.1    255.255.255.0");      //开启AP
+//            system("/root/wifi/ap.sh    ZZDDIITT  zdit.com.cn    192.168.150.1    255.255.255.0");
         }
         else if(!frame_list.isEmpty()){
 //            qDebug()<<"decode prepare:"<<QTime::currentTime().toString("HH-mm-ss-zzz");

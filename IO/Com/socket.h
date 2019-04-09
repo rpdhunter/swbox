@@ -33,7 +33,7 @@ public slots:
     void read_done(int f);
 
 private:
-    QUdpSocket *mSocket, *mSocket_data;
+    QUdpSocket *udp_socket, *mSocket_data;
     QStringList aplist;
 
     void send_data(QString str, int port);
