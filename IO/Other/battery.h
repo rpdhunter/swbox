@@ -75,6 +75,10 @@ public:
 
     float battVcc();        //返回电池电压
     float battCur();        //返回电池电流
+
+public slots:
+    void get_screen_state(bool);
+
 protected:
     void timerEvent(QTimerEvent *);
 
@@ -83,13 +87,15 @@ private:
         unsigned char adm1191_addr;		/* 电源监视芯片地址 */
         float vol;						/* 电池电压 */
         float cur;						/* 电池输出电流 */
-        unsigned int percent_power;				/* 电量百分比0-100 */
+        int percent_power;				/* 电量百分比0-100 */
 		bool _isCharging;				//充电标志
 		bool lo_pwr_alarm;				/* 低电量告警 */
         bool pwr_loss_alarm;			/* 失电告警 */
         unsigned int force_pwr_off;		/* 强制关机信号 */
 
 		bool bat_value_list_init;
+        bool screen_light;
+        int last_percent;
 		
 		QList<float> vcc_list;      //电压序列
 	    QList<float> vcc_delta;     //电压变化序列

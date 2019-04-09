@@ -970,7 +970,7 @@ QString Common::secton_three(int n)
 
 //使用硬连接，可以做到直接拷贝
 void Common::create_hard_link(QString str_src, QString file_name){
-    QString str_dst = QString(sqlcfg->get_para()->current_dir);
+    QString str_dst = QString(sqlcfg->get_global()->current_dir);
     if(str_dst.contains("asset")){
         QString cmd = QString("ln \"%1\" \"%2\"").arg(str_src).arg(str_dst + "/" + file_name);      //文件名加入双引号，为了应对带空格的文件名
         //        printf("create_hard_link %s \n", cmd.toLocal8Bit().data());

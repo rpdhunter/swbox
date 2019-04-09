@@ -178,23 +178,6 @@ typedef struct LOCATION_SQL {
 #define VOL_MAX                 15
 #define VOL_MIN                 0
 
-///* aaultrasonic mode */
-//typedef struct H_CHANNEL_SQL {
-//    bool mode;                      //检测模式
-//    int chart;                      //图形显示模式
-//    int high;                       //红色报警阈值
-//    int low;                        //黄色报警阈值
-//    double gain;                    //增益
-//    int vol;                        //音量（0-15）（需要FPGA同步）
-//    int rec_time;                       //录波时长（1-60）
-//    double step;                    //显示幅值变化门槛
-//    int offset_noise;                     //偏置值
-//    bool envelope;                  //包络线模式（需要FPGA同步）
-//    uint fpga_threshold;            //脉冲阈值
-//    int sensor_freq;                //传感器中心频率
-//    bool camera;                    //摄像头开关
-//} H_CHANNEL_SQL;
-
 enum WIFI_TRANS_MODE{
     wifi_ftp,
     wifi_telnet,
@@ -210,8 +193,8 @@ enum FILE_SAVE_MODE{
 
 //测试状态
 enum TEST_MODE{
-    test_on,
-    test_off,
+    test_on = 0,
+    test_off = 1,
 };
 
 
@@ -241,24 +224,36 @@ typedef struct SQL_PARA {
     int sync_val;                           //同步补偿值(角度)
     int sync_internal_val;                  //内同步补偿值(角度)
     int sync_external_val;                  //外同步补偿值(角度)
-    char current_dir[500];                  //当前工作目录
     int file_save_standard;                 //文件保存标准
-    bool test_mode;                         //测试状态
 
 } SQL_PARA;
+
+//运行后的全局变量
+typedef struct SQL_GLOBAL {
+    bool test_mode;                         //测试状态
+    char current_dir[500];                  //当前工作目录
+
+} SQL_GLOBAL;
 
 class SqlCfg
 {
 public:
     SqlCfg();
+
+    //sql存储设置
     SQL_PARA *get_para();
     void sql_save(SQL_PARA *sql_para);
     SQL_PARA *default_config(void);         //初始设置
+
+    //全局变量操作
+    SQL_GLOBAL *get_global();       //获取全局变量
     double ae1_factor();             //快捷返回AE_FACTOR
     double ae2_factor();             //快捷返回AE_FACTOR
 
 private:
     SQL_PARA sql_para;
+    SQL_GLOBAL sql_global;
+
     pthread_mutex_t sql_mutex;
     sqlite3 *pDB = NULL;
 

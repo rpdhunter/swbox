@@ -76,11 +76,11 @@ static float bat_charge_delt_vol [BAT_PWR_PER_NUM + 1] = {
 
 static float bat_charge_delt_vol_1 [BAT_PWR_PER_NUM + 1] = {
 #if  mA5000
-    0.10,						/* 90% */
-    0.10,						/* 80% */
-    0.15,						/* 70% */
-    0.15,						/* 60% */
-    0.16,						/* 50% */
+    0.15,						/* 90% */
+    0.15,						/* 80% */
+    0.18,						/* 70% */
+    0.18,						/* 60% */
+    0.18,						/* 50% */
     0.18,						/* 40% */
     0.18,						/* 30% */
     0.18,						/* 20% */
@@ -133,7 +133,7 @@ Battery::Battery(QObject *parent) : QObject(parent)
 
     check_battery_power (&battery_power);
     _powerPercent = battery_power.percent_power;
-    startTimer(1000);           //内部计时器，用于监控电量趋势，以获得充放电、稳定的百分比电量等高阶数据
+    startTimer(5000);           //内部计时器，用于监控电量趋势，以获得充放电、稳定的百分比电量等高阶数据
 }
 
 //电量百分比
@@ -153,30 +153,11 @@ Battery::Battery(QObject *parent) : QObject(parent)
  * ********************************/
 int Battery::battPercentValue()
 {
-/*    if(battery_power.vcc_list.count() == 10){
-        float v = Common::avrage(battery_power.vcc_list);
-        int p_v = vcc_to_percent(v);
-
-        if(p_v - _powerPercent > 10 && _powerPercent < 100){
-            _powerPercent += 10;
-        }
-        else if(p_v - _powerPercent < -10 && _powerPercent > 0){
-            _powerPercent -= 10;
-        }
-//        if(qAbs(Common::avrage(vcc_delta) ) > 0.05){
-//            qDebug()<<"v:"<<v<<"\tp_v:"<<p_v << "\t_powerPercent:"<<_powerPercent<<"\tcharge:"<<_isCharging<<"\tdelta:"<<Common::avrage(vcc_delta);
-//        }
-//        else{
-//            qDebug()<<"v:"<<v<<"\tp_v:"<<p_v << "\t_powerPercent:"<<_powerPercent<<"\tcharge:"<<_isCharging;
-//        }
-
-    }
-    else{
-        _powerPercent = battery_power.percent_power;
-    }
-    return _powerPercent;
-*/
     int k;
+
+    if(battery_power.percent_power < 0){
+        return -1;
+    }
 
     battery_power.percent.append(battery_power.percent_power);
     if(battery_power.percent.count() >= 20){
@@ -185,9 +166,14 @@ int Battery::battPercentValue()
     _powerPercent = Common::avrage(battery_power.percent);
 
     k = _powerPercent/10;
-    if(_powerPercent%10 > 5){
+    if(_powerPercent%10 > 7){
         k = k+1;
+    }else if(_powerPercent%10 < 3){
+        k = k;
+    }else{
+        k = battery_power.last_percent;
     }
+    battery_power.last_percent = k;
 
     return k*10;
 }
@@ -215,6 +201,12 @@ float Battery::battCur()
 void Battery::timerEvent(QTimerEvent *)
 {
     check_battery_power (&battery_power);
+}
+
+void Battery::get_screen_state(bool sta)
+{
+    battery_power.screen_light = sta;
+    qDebug()<<"screen : " << sta;
 }
 
 int Battery::adm1191_conv_init()
@@ -387,7 +379,7 @@ int Battery::check_battery_power(Battery::battery_power_t *bp)
 
 
             bat_tim_init++;
-            if(bat_tim_init > 5){
+            if(bat_tim_init > 1){                           //前5次数据采样不正确
                 for (i = 0; i < VCC_LIST_NUM; i++) {
                     bp->vcc_list.append(bp->vol);
                 }
@@ -396,11 +388,11 @@ int Battery::check_battery_power(Battery::battery_power_t *bp)
                 }
 
                 new_val = Common::avrage(bp->vcc_list);
-//                qDebug()<<"new_val  "<< new_val;
+                qDebug()<<"new_val  "<< new_val;
 
                 bp->bat_value_list_init = true;
             }else{
-                bp->percent_power = 50;
+                bp->percent_power = -1;
                 return 0;
             }
 		}
@@ -419,6 +411,9 @@ int Battery::check_battery_power(Battery::battery_power_t *bp)
            	bp->vcc_delta.removeFirst();
        	}
 
+//        qDebug()<< "backlight" << sqlcfg->get_para()->backlight;
+
+
 	    for (i = 0; i < BAT_PWR_PER_NUM; i++) {
 			if (bp->_isCharging) {       
                 del_val = bat_charge_delt_vol_1 [i];
@@ -427,6 +422,10 @@ int Battery::check_battery_power(Battery::battery_power_t *bp)
 				del_val = 0.0f;
             }
 
+
+            if(battery_power.screen_light == false){
+                del_val = del_val + sqlcfg->get_para()->backlight * i * 0.0010;
+            }
 //            qDebug()<<"del_val"<<del_val;
 
 	        if (new_val > (bat_pwr_percent [i] + del_val)) {

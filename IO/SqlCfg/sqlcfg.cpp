@@ -134,11 +134,14 @@ SQL_PARA *SqlCfg::default_config(void)
     sql_para.sync_val = 0;
     sql_para.sync_internal_val = 0;
     sql_para.sync_external_val = 0;
-    strcpy(sql_para.current_dir, DIR_DATA);
     sql_para.file_save_standard = file_save_zdit;       //采用自定义标准保存文件
-    sql_para.test_mode = test_off;              //默认关闭测试
 
     return &sql_para;
+}
+
+SQL_GLOBAL *SqlCfg::get_global()
+{
+    return &sql_global;
 }
 
 double SqlCfg::ae1_factor()
@@ -201,7 +204,9 @@ void SqlCfg::sql_init()
     sql_para.hfct2_sql.auto_rec = false;
     sql_para.uhf1_sql.auto_rec = false;
     sql_para.uhf2_sql.auto_rec = false;
-    strcpy(sql_para.current_dir, DIR_DATA);      //开机时需要重置当前目录
+
+    sql_global.test_mode = false;       //开机关闭测试模式
+    strcpy(sql_global.current_dir, DIR_DATA);      //开机时需要重置当前目录
 }
 
 void SqlCfg::tev_default(CHANNEL_SQL &sql)

@@ -94,7 +94,8 @@ void SettingMunu::fresh(CHANNEL_SQL *sql, int grade)
     }
 
     //主菜单
-    if (sqlcfg->get_para()->test_mode == test_on) {
+    qDebug()<<"sqlcfg->get_para()->test_mode"<<sqlcfg->get_global()->test_mode;
+    if (sqlcfg->get_global()->test_mode == true) {
         main_menu->item(0)->setText(tr("结束测试"));
     }
     else {

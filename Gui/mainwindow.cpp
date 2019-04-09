@@ -1033,7 +1033,7 @@ void MainWindow::save_channel()
 void MainWindow::set_asset_dir(QString new_path)
 {
     //修改当前ASSET目录
-    strcpy(sqlcfg->get_para()->current_dir, new_path.toLocal8Bit().data());
+    strcpy(sqlcfg->get_global()->current_dir, new_path.toLocal8Bit().data());
 
 //    printf("current dir (2): %s\n", sqlcfg->get_para()->current_dir);
 
@@ -1104,6 +1104,7 @@ void MainWindow::set_reboot_time()
 //        }
     }
     timer_dark->start(sqlcfg->get_para()->screen_dark_time * 1000);
+    battery->get_screen_state(true);
 }
 
 void MainWindow::fresh_status()
@@ -1128,6 +1129,7 @@ void MainWindow::fresh_status()
     ui->lab_temp->hide();
 
     if(Common::rdb_check_test_start()){         //检测测试项目
+//        sqlcfg->get_para()
         //保存通道信息
     }
 }
@@ -1228,6 +1230,7 @@ void MainWindow::screen_dark()
     data->set_send_para(sp_backlight_reg,0);
 //    data->set_send_para(sp_rec_on,0);               //关闭录波
     data->set_send_para(sp_keyboard_backlight,0);   //关闭键盘背光
+    battery->get_screen_state(false);
 }
 
 void MainWindow::show_message(QString str)

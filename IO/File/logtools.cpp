@@ -180,7 +180,7 @@ void LogTools::save_PRPD_State_Grid(QVector<QwtPoint3D> points)
 
 void LogTools::change_current_asset_dir()
 {
-    path_asset = QString::fromLocal8Bit(sqlcfg->get_para()->current_dir) + "/" + Common::mode_to_string(mode) + "_NORMAL" + ".log";
+    path_asset = QString::fromLocal8Bit(sqlcfg->get_global()->current_dir) + "/" + Common::mode_to_string(mode) + "_NORMAL" + ".log";
 //    printf("current dir:%s\n", path_asset.toLocal8Bit().data());
     read_normal_log(path_normal,data_normal);
 }

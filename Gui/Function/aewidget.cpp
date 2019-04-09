@@ -93,6 +93,7 @@ void AEWidget::do_key_ok()
 
     switch (key_val->grade.val2) {
     case 1:         //启动/停止测试
+        fun->toggle_test_status();
         break;
     case 2:         //测量值重置
         data_reset();

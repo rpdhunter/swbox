@@ -93,7 +93,7 @@ void BaseChannlFunction::channel_start()
 
 void BaseChannlFunction::toggle_test_status()
 {
-//    sql_para.test_mode = !sql_para.test_mode;
+    sqlcfg->get_global()->test_mode = !sqlcfg->get_global()->test_mode;
 }
 
 void BaseChannlFunction::change_chart(int d)
