@@ -21,8 +21,8 @@ int main(int argc, char *argv[])
 
     qputenv("QT_IM_MODULE", QByteArray("qtvirtualkeyboard"));
     QApplication a(argc, argv);
-//    QCoreApplication::setOrganizationName("ZDIT");
-//    QCoreApplication::setApplicationName("swbox");
+    QCoreApplication::setOrganizationName("ZDIT");
+    QCoreApplication::setApplicationName("swbox");
 
 #ifdef OHV
     QPixmap pixmap(":/widgetphoto/bk/ohv.png");
@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
     print_centor();
     sqlcfg = new SqlCfg();
 
-    splash->showMessage(QObject::tr("正在载入语言模块..."),Qt::AlignBottom|Qt::AlignLeft);
+    splash->showMessage(QObject::tr("正在载入语言模块..."),Qt::AlignBottom|Qt::AlignLeft, sqlcfg->get_global()->color);
     qDebug("language = %s", sqlcfg->get_para()->language == EN ? "EN" : "CN");
     if(sqlcfg->get_para()->language == LANGUAGE::EN){
         QTranslator *translator = new QTranslator(qApp);
@@ -57,17 +57,17 @@ int main(int argc, char *argv[])
         qApp->installTranslator(translator);
     }
 
-    splash->showMessage(QObject::tr("正在初始化字体"),Qt::AlignBottom|Qt::AlignLeft);
+    splash->showMessage(QObject::tr("正在初始化字体"),Qt::AlignBottom|Qt::AlignLeft, sqlcfg->get_global()->color);
     int fontid = QFontDatabase::addApplicationFont("/usr/local/QtEmbedded-5.9.1/lib/fonts/wenquanyi_10pt.bdf");
     QString myfont = QFontDatabase::applicationFontFamilies(fontid).at(0);
     QFont font(myfont,10);
     QApplication::setFont(font);
 
-    splash->showMessage(QObject::tr("正在初始化主窗体..."),Qt::AlignBottom|Qt::AlignLeft);
+    splash->showMessage(QObject::tr("正在初始化主窗体..."),Qt::AlignBottom|Qt::AlignLeft, sqlcfg->get_global()->color);
     MainWindow w(splash);
     w.show();
 
-    splash->showMessage(QObject::tr("正在初始化QML..."),Qt::AlignBottom|Qt::AlignLeft);
+    splash->showMessage(QObject::tr("正在初始化QML..."),Qt::AlignBottom|Qt::AlignLeft, sqlcfg->get_global()->color);
     QuickView view;
     view.rootContext()->setContextProperty("dt",&view);
     view.setSource(QString("qrc:/Input.qml"));

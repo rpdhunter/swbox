@@ -31,7 +31,7 @@ private:
 //    QwtPlot *plot;                 //PRPD图
     QwtPlotSpectroCurve *d_PRPD;        //PRPD曲线
     QVector<QwtPoint3D> prpd_samples;   //PRPD数据
-    quint32 map[PHASE_NUM][AMP_NUM];    //PRPD存储中介(数据点图)
+    quint32 map[PHASE_NUM+1][AMP_NUM+1];    //PRPD存储中介(数据点图)
 
     void save_PRPD_zdit();                  //自定义PRPD标准
     void save_PRPD_State_Grid();            //国网公司PRPD标准

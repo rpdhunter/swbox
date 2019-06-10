@@ -1,8 +1,6 @@
 ﻿#include "aawidget.h"
 #include "ui_aawidget.h"
 
-#define SETTING_NUM 6           //设置菜单条目数
-
 AAWidget::AAWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu_index, QWidget *parent) :
     ChannelWidget(data, val, mode, menu_index, parent),
     ui(new Ui::AAWidget)
@@ -11,7 +9,7 @@ AAWidget::AAWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu_ind
     this->resize(CHANNEL_X, CHANNEL_Y);
     this->move(3, 3);
     this->setStyleSheet("AAWidget {border-image: url(:/widgetphoto/bk/bk2.png);}");
-    ui->layout_main->parentWidget()->setGeometry(230, 40, 196, 141);
+    ui->layout_main->parentWidget()->setGeometry(230, 40, 200, 141);
 
     historic_chart->chart_init(this, mode);
     prpd_chart->chart_init(this, mode);
@@ -26,6 +24,15 @@ AAWidget::AAWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu_ind
     connect(l_fun, SIGNAL(fresh_1000ms()), this, SLOT(fresh_1000ms()));
     l_fun->channel_start();
 
+    ui->progressBar_50Hz->setMaximum(FREQ50_MAX);
+    ui->progressBar_100Hz->setMaximum(FREQ100_MAX);
+    ui->progressBar_effective->setMaximum(EFFECTIVE_MAX);
+    ui->progressBar_peak->setMaximum(PEAK_MAX);
+
+    if(fun->sql()->camera){
+        sqlcfg->get_global()->wifi_working = true;
+    }
+
     settingMenu = new SettingMunu(mode,this);
     recWaveForm->raise();
     fresh_setting();
@@ -38,10 +45,20 @@ AAWidget::~AAWidget()
 
 void AAWidget::do_key_ok()
 {
+    if(key_val->grade.val2 == settingMenu->main_menu_num()){        //展开次级设置菜单
+        key_val->grade.val2 = SUB_MENU_NUM_BASE;
+        return;
+    }
+
     l_fun->save_sql();
-    l_fun->channel_start();
 
     switch (key_val->grade.val2) {
+    case 0:
+        if(fun->sql()->mode == single){         //在单次测量模式下,开启测量窗口
+            fun->start_single_test();
+            qDebug()<<"single !";
+        }
+        break;
     case 1:         //启动/停止测试
         fun->toggle_test_status();
         break;
@@ -53,9 +70,6 @@ void AAWidget::do_key_ok()
         emit startRecWave(mode, l_fun->sql()->rec_time);        //发送录波信号
         manual = true;
         emit show_indicator(true);
-        return;
-    case 6:         //展开次级设置菜单
-        key_val->grade.val2 = SUB_MENU_NUM_BASE;
         return;
     default:
         break;
@@ -79,9 +93,6 @@ void AAWidget::do_key_cancel()
         settingMenu->show();
         key_val->grade.val1 = 0;
     }
-    else if(key_val->grade.val2 >= SUB_MENU_NUM_BASE){
-        key_val->grade.val2 = SETTING_NUM;
-    }
     else{
         ChannelWidget::do_key_cancel();
     }
@@ -94,19 +105,18 @@ void AAWidget::do_key_up_down(int d)
         return;
     }
 
-    key_val->grade.val1 = 1;
-    if(key_val->grade.val2 >= SUB_MENU_NUM_BASE){
-        Common::change_index(key_val->grade.val2,d,SUB_MENU_NUM_BASE + 6, SUB_MENU_NUM_BASE);       //控制次级菜单
-    }
-    else{
-        Common::change_index(key_val->grade.val2,d,SETTING_NUM,1);          //控制主菜单
-    }
+    ChannelWidget::do_key_up_down(d);
 }
 
 void AAWidget::do_key_left_right(int d)
 {
     if(camera_chart->isFullScreen()){
         //左右移动焦点框
+        return;
+    }
+
+    if(key_val->grade.val2 == settingMenu->main_menu_num()){        //展开次级设置菜单
+        key_val->grade.val2 = SUB_MENU_NUM_BASE;
         return;
     }
 
@@ -120,9 +130,6 @@ void AAWidget::do_key_left_right(int d)
     case 5:         //连续录波时长
         l_fun->change_rec_cons_time(d);
         break;
-    case SETTING_NUM:                   //展开次级设置菜单
-        key_val->grade.val2 = SUB_MENU_NUM_BASE;
-        return;
     default:
         break;
     }
@@ -133,75 +140,84 @@ void AAWidget::data_reset()
 {
     prpd_chart->reset_data();
     l_fun->click_reset();
+
+    ui->label_50Hz->setText(QString("%1/%2μV").arg(QString::number(0, 'f', 2)).arg(FREQ50_MAX));
+    ui->label_100Hz->setText(QString("%1/%2μV").arg(QString::number(0, 'f', 2)).arg(FREQ100_MAX));
+    ui->label_effective->setText(QString("%1/%2μV").arg(QString::number(0, 'f', 2)).arg(EFFECTIVE_MAX));
+    ui->label_peak->setText(QString("%1/%2μV").arg(QString::number(0, 'f', 2)).arg(PEAK_MAX));
+    ui->progressBar_50Hz->setValue(0);
+    ui->progressBar_100Hz->setValue(0);
+    ui->progressBar_effective->setValue(0);
+    ui->progressBar_peak->setValue(0);
+    ui->label_val->setText("-20" );
+    ui->label_val->setStyleSheet("QLabel {font-family:WenQuanYi Micro Hei;font-size:60px;color:green}");
+    ui->label_max->setText(tr("最大值: ") + "-20dB");
+
     qDebug()<<"AA data reset!";
 }
 
 void AAWidget::fresh_1000ms()
 {
-    historic_chart->add_data(l_fun->val());
-    ui->label_50Hz->setText(QString("%1μV").arg(l_fun->v_50Hz()));
-    ui->label_100Hz->setText(QString("%1μV").arg(l_fun->v_100Hz()));
-    ui->progressBar_50Hz->setValue(l_fun->v_50Hz());
-    if(l_fun->v_50Hz() > ui->progressBar_50Hz->maximum() ){
-        ui->progressBar_50Hz->setValue(ui->progressBar_50Hz->maximum());
-    }
-    ui->progressBar_100Hz->setValue(l_fun->v_100Hz());
-    if(l_fun->v_100Hz() > ui->progressBar_100Hz->maximum() ){
-        ui->progressBar_100Hz->setValue(ui->progressBar_100Hz->maximum());
-    }
+    if(fun->is_in_test_window()){
+        historic_chart->add_data(l_fun->val());
+        ui->label_50Hz->setText(QString("%1/%2μV").arg(QString::number(l_fun->v_50Hz(), 'f', 2)).arg(FREQ50_MAX));
+        ui->label_100Hz->setText(QString("%1/%2μV").arg(QString::number(l_fun->v_100Hz(), 'f', 2)).arg(FREQ100_MAX));
+        ui->label_effective->setText(QString("%1/%2μV").arg(QString::number(l_fun->v_effective(), 'f', 2)).arg(EFFECTIVE_MAX));
+        ui->label_peak->setText(QString("%1/%2μV").arg(QString::number(l_fun->v_peak(), 'f', 2)).arg(PEAK_MAX));
+        ui->progressBar_50Hz->setValue(l_fun->v_50Hz());
+        if(l_fun->v_50Hz() > ui->progressBar_50Hz->maximum() ){
+            ui->progressBar_50Hz->setValue(ui->progressBar_50Hz->maximum());
+        }
+        ui->progressBar_100Hz->setValue(l_fun->v_100Hz());
+        if(l_fun->v_100Hz() > ui->progressBar_100Hz->maximum() ){
+            ui->progressBar_100Hz->setValue(ui->progressBar_100Hz->maximum());
+        }
+        ui->progressBar_effective->setValue(l_fun->v_effective());
+        if(l_fun->v_effective() > ui->progressBar_effective->maximum() ){
+            ui->progressBar_effective->setValue(ui->progressBar_effective->maximum());
+        }
+        ui->progressBar_peak->setValue(l_fun->v_peak());
+        if(l_fun->v_peak() > ui->progressBar_peak->maximum() ){
+            ui->progressBar_peak->setValue(ui->progressBar_peak->maximum());
+        }
 
-//    qDebug()<<l_fun->spectra_100ms().count()/128;
-//    l_fun->clear_100ms();
-
-//    qDebug()<<"---------------------------------";
-    fresh_gusty();
+        fresh_gusty();
+    }
+    l_fun->clear_1000ms();
 }
 
 void AAWidget::fresh_gusty()
 {
-    ui->label_val->setText(QString::number(l_fun->val()) );
-    if ( l_fun->val() >= l_fun->sql()->high) {
-        ui->label_val->setStyleSheet("QLabel {font-family:WenQuanYi Micro Hei;font-size:60px;color:red}");
-        emit beep(menu_index,2);        //蜂鸣器报警
-    } else if (l_fun->val() >= l_fun->sql()->low) {
-        ui->label_val->setStyleSheet("QLabel {font-family:WenQuanYi Micro Hei;font-size:60px;color:yellow}");
-        emit beep(menu_index,1);
-    } else {
-        ui->label_val->setStyleSheet("QLabel {font-family:WenQuanYi Micro Hei;font-size:60px;color:green}");
+    if(fun->is_in_test_window()){
+        ui->label_val->setText(QString::number(l_fun->val()) );
+        if ( l_fun->val() >= l_fun->sql()->high) {
+            ui->label_val->setStyleSheet("QLabel {font-family:WenQuanYi Micro Hei;font-size:60px;color:red}");
+            if(fun->is_current()){
+                emit beep(menu_index,2);        //蜂鸣器报警
+            }
+        } else if (l_fun->val() >= l_fun->sql()->low) {
+            ui->label_val->setStyleSheet("QLabel {font-family:WenQuanYi Micro Hei;font-size:60px;color:yellow}");
+            if(fun->is_current()){
+                emit beep(menu_index,1);
+            }
+        } else {
+            ui->label_val->setStyleSheet("QLabel {font-family:WenQuanYi Micro Hei;font-size:60px;color:green}");
+        }
+
+        ui->label_max->setText(tr("最大值: ") + QString::number(l_fun->max_val()) + "dB");
+
+        emit send_log_data(l_fun->val(),l_fun->pulse_cnt(),l_fun->degree(),l_fun->is_current(),"NOISE");
+        l_fun->save_rdb_data();
     }
-
-    ui->label_max->setText(tr("最大值: ") + QString::number(l_fun->max_val()) + "dB");
-//    ui->label_pluse->setText(tr("脉冲数: ") + Common::secton_three(l_fun->pulse_cnt()) );//按三位分节法显示脉冲计数
-//    ui->label_degree->setText(tr("严重度: ") + QString::number(l_fun->degree(), 'f', 2));
-
-    emit send_log_data(l_fun->val(),l_fun->pulse_cnt(),l_fun->degree(),l_fun->is_current(),"NOISE");
-    l_fun->save_rdb_data();
 }
 
 void AAWidget::fresh_100ms()
 {
-//    double max_val_range;
-//    if (l_fun->val() < 1) {
-//        max_val_range = 1;
-//        ui->label_range->setText("μV");                                                //range fresh
-//    } else if (l_fun->val() < 10) {
-//        max_val_range = 10;
-//        ui->label_range->setText("10μV");                                              //range fresh
-//    } else if (l_fun->val() < 100) {
-//        max_val_range = 100;
-//        ui->label_range->setText("100μV");                                              //range fresh
-//    } else if (l_fun->val() < 1000) {
-//        max_val_range = 1000;
-//        ui->label_range->setText("mV");                                                 //range fresh
-//    } else {
-//        max_val_range = 10000;
-//        ui->label_range->setText("10mV");                                               //range fresh
-//    }
-//    ui->progressBar->setValue(l_fun->val() * 100 / max_val_range);
-
-    prpd_chart->add_data(l_fun->pulse_100ms());
-    prps_chart->add_data(l_fun->pulse_100ms());
-    spectra_chart->add_data(l_fun->spectra_100ms());
+    if(fun->is_in_test_window()){
+        prpd_chart->add_data(l_fun->pulse_100ms());
+        spectra_chart->add_data(l_fun->spectra_100ms());
+    }
+    prps_chart->add_data(l_fun->pulse_100ms());    
 
     l_fun->clear_100ms();
 }

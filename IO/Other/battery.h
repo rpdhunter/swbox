@@ -75,8 +75,6 @@ public:
 
     float battVcc();        //返回电池电压
     float battCur();        //返回电池电流
-
-public slots:
     void get_screen_state(bool);
 
 protected:
@@ -97,9 +95,9 @@ private:
         bool screen_light;
         int last_percent;
 		
-		QList<float> vcc_list;      //电压序列
-	    QList<float> vcc_delta;     //电压变化序列
-        QList<float> percent;
+        QVector<float> vcc_list;      //电压序列
+        QVector<float> vcc_delta;     //电压变化序列
+        QVector<float> percent;
     } battery_power_t;
 
     battery_power_t battery_power;

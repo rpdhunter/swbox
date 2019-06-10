@@ -18,22 +18,24 @@ static float bat_pwr_percent [BAT_PWR_PER_NUM] = {
     3.64f * 2 - DELT_VOL,		/* 30% */
     3.58f * 2 - DELT_VOL,		/* 20% */
     3.52f * 2 - DELT_VOL,		/* 10% */
+//    6.7,
     3.46f * 2 - DELT_VOL,		/* 1% */
+//    6.6,
 };
 
 static float bat_charge_delt_vol [BAT_PWR_PER_NUM + 1] = {
 #if mA5000
     0.05,						/* 90% */
     0.05,						/* 80% */
-    0.06,						/* 70% */
-    0.06,						/* 60% */
-    0.06,						/* 50% */
-    0.07,						/* 40% */
-    0.07,						/* 30% */
-    0.07,						/* 20% */
-    0.07,						/* 10% */
-    0.07,						/* 1% */
-    0.07
+    0.08,						/* 70% */
+    0.08,						/* 60% */
+    0.08,						/* 50% */
+    0.10,						/* 40% */
+    0.10,						/* 30% */
+    0.10,						/* 20% */
+    0.12,						/* 10% */
+    0.12,						/* 1% */
+    0.12
 #elif mA4000
     0.10,						/* 90% */
     0.10,						/* 80% */
@@ -133,7 +135,7 @@ Battery::Battery(QObject *parent) : QObject(parent)
 
     check_battery_power (&battery_power);
     _powerPercent = battery_power.percent_power;
-    startTimer(5000);           //内部计时器，用于监控电量趋势，以获得充放电、稳定的百分比电量等高阶数据
+    startTimer(1000);           //内部计时器，用于监控电量趋势，以获得充放电、稳定的百分比电量等高阶数据
 }
 
 //电量百分比
@@ -163,7 +165,7 @@ int Battery::battPercentValue()
     if(battery_power.percent.count() >= 20){
         battery_power.percent.removeFirst();
     }
-    _powerPercent = Common::avrage(battery_power.percent);
+    _powerPercent = Compute::avrage(battery_power.percent);
 
     k = _powerPercent/10;
     if(_powerPercent%10 > 7){
@@ -206,7 +208,7 @@ void Battery::timerEvent(QTimerEvent *)
 void Battery::get_screen_state(bool sta)
 {
     battery_power.screen_light = sta;
-    qDebug()<<"screen : " << sta;
+//    qDebug()<<"screen : " << sta;
 }
 
 int Battery::adm1191_conv_init()
@@ -387,8 +389,8 @@ int Battery::check_battery_power(Battery::battery_power_t *bp)
                     bp->vcc_delta.append(0);
                 }
 
-                new_val = Common::avrage(bp->vcc_list);
-                qDebug()<<"new_val  "<< new_val;
+                new_val = Compute::avrage(bp->vcc_list);
+//                qDebug()<<"new_val  "<< new_val;
 
                 bp->bat_value_list_init = true;
             }else{
@@ -403,8 +405,8 @@ int Battery::check_battery_power(Battery::battery_power_t *bp)
         	bp->vcc_list.removeFirst();
     	}
 
-		old_val = Common::avrage(bp->vcc_list.mid(0,VCC_LIST_OLD_VALUE_NUM) );
-        new_val = Common::avrage(bp->vcc_list.mid(VCC_LIST_OLD_VALUE_NUM,VCC_LIST_NEW_VALUE_NUM) );
+        old_val = Compute::avrage(bp->vcc_list.mid(0,VCC_LIST_OLD_VALUE_NUM) );
+        new_val = Compute::avrage(bp->vcc_list.mid(VCC_LIST_OLD_VALUE_NUM,VCC_LIST_NEW_VALUE_NUM) );
         del_val = new_val - old_val;
 		bp->vcc_delta.append(del_val);
        	if(bp->vcc_delta.count() > VCC_DELTA_LIST_NUM){
@@ -438,7 +440,7 @@ int Battery::check_battery_power(Battery::battery_power_t *bp)
 		bp->percent_power = 100 - i * 10;
 //        qDebug()<<"percent_power"<<bp->percent_power;
 
-        del_val = Common::avrage(bp->vcc_delta);
+        del_val = Compute::avrage(bp->vcc_delta);
 
 
 

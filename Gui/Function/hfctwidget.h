@@ -2,7 +2,9 @@
 #define HFCTWIDGET_H
 
 #include "channelwidget.h"
-#include "Algorithm/Bp/bpcable.h"
+#include "Algorithm/Bp/bpjudge.h"
+#include "Thread/Multimachine/multimachineclient.h"
+#include "Thread/Multimachine/multimachineserver.h"
 
 namespace Ui {
 class HFCTWidget;
@@ -21,14 +23,19 @@ private slots:
 
 private:
     Ui::HFCTWidget *ui;
-    BpCable *bpcable;
+    BpJudge *bpjudge;
 
     void do_key_ok();
-    void do_key_cancel();
-    void do_key_up_down(int d);
+//    void do_key_cancel();
+//    void do_key_up_down(int d);
     void do_key_left_right(int d);
     void data_reset();
-//    void fresh_setting(void);
+
+    void judge_multimachine();      //判断多机互联的主从模式
+    MultiMachineServer *server;
+    MultiMachineClient *client;
+    void do_multimachine();         //发送数据给主机(客户端模式)
+
 };
 
 #endif // HFCTWIDGET_H

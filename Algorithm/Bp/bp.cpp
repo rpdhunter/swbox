@@ -1,296 +1,337 @@
-﻿#include "bp.h"
+﻿#include <stdio.h>
+#include <stdlib.h>
+#include <malloc.h>
+#include <math.h>
+#include <string.h>
+#include <time.h>
 
-Bp::Bp(QObject *parent) : QObject(parent)
+#include "bp.h"
+
+static c_bp_neural_param loc_bp_param = {
+	MAX_NODE, MAX_NODE, MAX_LAYER - 2, 0.05, 0.02, 0.001, 1000000, 0.5
+};
+
+// -0.1~0.1的随机函数
+float c_bp_neural_network::randnumber ()
+{
+	return (sin (rand ()) / 10);
+}
+
+float c_bp_neural_network::sigmoid_unipolar (float x)
+{
+	return (1.0 / (1 + exp (-x)));
+}
+
+float c_bp_neural_network::sigmoid_bipolar (float x)
+{
+	return (1 - exp (-x)) / (1 + exp (-x));
+}
+
+// 求某个节点的输出值
+float c_bp_neural_network::bp_output (int layer, int node)
+{
+	float sum = 0.0;
+	int node2;
+	
+	for (node2 = 0; node2 < nodes_per_layer [layer - 1]; node2++) {
+		sum = sum + w [layer][node][node2] * o [layer - 1][node2];
+		//printf ("w[%d][%d][%d]=%f, o[%d][%d]=%f\n", 
+		//	layer, node, node2, w [layer][node][node2],
+		//	layer - 1, node2, o [layer - 1][node2]);
+	}
+	//printf ("sum %f\n", sum);
+
+	return sigmoid_unipolar (sum);
+}
+
+// 求误差函数对o的导数
+float c_bp_neural_network::bp_gf (int layer, int node)
+{
+	float sum = 0.0;
+	int m;
+	
+	for (m = 1; m < nodes_per_layer [layer + 1]; m++) {
+		sum = sum + e [layer + 1][m] * w [layer + 1][m][node] * o [layer + 1][m] * (1 - o [layer + 1][m]);
+	}
+
+	return sum;
+}
+
+void c_bp_neural_network::bp_inout_init (c_bp_neural_data * bp_data)
+{
+	int i;
+
+	/* 设置输入x1, x2... */
+	//printf ("o[0]:");
+	for (i = 0; i < in_dim; i++) {
+		o [0][i + 1] = bp_data->x.vect [i];
+	//	printf ("%f,", o[0][i + 1]);
+	}
+	//printf ("\n");
+	/* 设置期望输出d1, d2... */
+	for (i = 0; i < out_dim; i++) {
+		d [i + 1] = bp_data->o.vect [i];
+	}
+}
+
+// 前馈输出值
+void c_bp_neural_network::bp_feed_forward ()
+{
+	int layer, node;
+	
+	for (layer = 1; layer < MAX_LAYER; layer++) {
+		for (node = 1; node < nodes_per_layer [layer]; node++) {
+			o [layer][node] = bp_output (layer, node);
+			//printf ("o[%d][%d]=%f\n", layer, node, o [layer][node]);
+		}
+	}
+}
+
+// 求梯度
+void c_bp_neural_network::bp_calc_gradient ()
+{
+	int layer, node, j;
+	
+	for (layer = (MAX_LAYER - 1); layer > 0; layer--) {
+		for (node = 1; node < nodes_per_layer [layer]; node++) {
+			if (layer == (MAX_LAYER - 1)) {
+				/* 输出层 */
+				e [layer][node] = o [layer][node] - d [node];
+			}
+			else {
+				/* 隐层 */
+				e [layer][node] = bp_gf (layer, node);
+			}
+
+			for (j = 0; j < nodes_per_layer [layer - 1]; j++) {
+				g [layer][node][j] = e [layer][node] * o [layer][node] * (1.0 - o [layer][node]) * o [layer - 1][j];
+			}
+		}
+	}
+}
+
+// 修改权值
+void c_bp_neural_network::bp_update_weights ()
+{
+	int layer, i, j;
+	float w_k_1;	// w(k-1)
+	float w_k;		// w(k)
+
+	for (layer = 1; layer < MAX_LAYER; layer++) {
+		for (i = 0; i < nodes_per_layer [layer]; i++) {
+			for (j = 0; j < nodes_per_layer [layer - 1]; j++) {
+				w_k_1 = w [layer][i][j];
+				w [layer][i][j] = w [layer][i][j] - study_spd * g [layer][i][j] + alpha * delta_w [layer][i][j];
+				w_k = w [layer][i][j];
+				delta_w [layer][i][j] = w_k - w_k_1;
+			}
+		}
+	}
+}
+
+// 误差
+float c_bp_neural_network::bp_error ()
+{
+	float sum = 0.0;
+	int i;
+
+	for (i = 1; i < out_dim; i++) {
+		sum += pow (fabs (o [MAX_LAYER - 1][i] - d [i]), 2);
+	}
+
+	error = sqrt (sum);
+
+	return sum;
+}
+
+void c_bp_neural_network::bp_get_result (c_bp_neural_data * pdata)
+{
+	int i;
+
+	for (i = 0; i < out_dim - 1; i++) {
+		pdata->o.vect [i] = (int)floor (o [MAX_LAYER - 1][i + 1] + o_compensation);
+        //printf ("o[%d][%d]=%f\n", MAX_LAYER - 1, i, o [MAX_LAYER - 1][i + 1]);
+	}
+}
+
+int c_bp_neural_network::bp_init (c_bp_neural_param * param)
+{
+	int layer, i, j;
+
+	in_dim = param->in_dim + 1;		// 输入维数 + 1
+	out_dim = param->out_dim + 1;		// 输出维数 + 1
+	hid_dim = param->hid_dim + 1;		// 隐藏层维数 + 1
+	study_spd = param->study_spd;
+	alpha = param->alpha;
+	ep = param->ep;
+	max_study_time = param->max_study_time;
+	o_compensation = param->out_compensation;
+	
+	nodes_per_layer [0] = in_dim;
+	nodes_per_layer [MAX_LAYER - 1] = out_dim;
+	for (layer = 1; layer < MAX_LAYER - 1; layer++) {
+		nodes_per_layer [layer] = hid_dim;
+	}
+
+	// 设置随机数种子
+	srand ((unsigned int)time (NULL));
+	// 对权值初始化为-0.1~0.1之间的随机数
+	for (layer = 0; layer < MAX_LAYER; layer++) {
+		for (i = 0; i < MAX_NODE; i++) {
+			for (j = 0; j < MAX_NODE; j++) {
+				w [layer][i][j] = randnumber ();
+			}
+		}
+	}
+
+	/* 输入层和隐层的第0个元素(x0, y00, y10...)都设成-1 */
+	for (layer = 0; layer < MAX_LAYER; layer++) {
+		o [layer][0] = -1.0;
+	}
+
+	return 0;
+}
+
+c_bp_neural_network::c_bp_neural_network (c_bp_neural_param * param = NULL)
+{
+	if (param != NULL) {
+		bp_init (param);
+	}
+	else {
+		bp_init (&loc_bp_param);
+	}
+}
+
+c_bp_neural_network::~c_bp_neural_network ()
 {
 }
 
-int Bp::bp_init(bp_neural_network_t *bpnn, bp_neural_param_t *param)
+int c_bp_neural_network::bp_w_load (const char * wfile)
 {
-    int layer, i, j;
+	int layer, i, j, ret;
+	FILE * wfp;
 
-    memset (bpnn, 0, sizeof (* bpnn));
+	wfp = fopen (wfile, "r");
+	if (wfp == NULL) {
+		printf ("fail to open %s for read\n", wfile);
+		return -1;
+	}
 
-    bpnn->in_dim = param->in_dim + 1;		// 输入维数 + 1
-    bpnn->out_dim = param->out_dim + 1;		// 输出维数 + 1
-    bpnn->hid_dim = param->hid_dim + 1;		// 隐藏层维数 + 1
-    bpnn->study_spd = param->study_spd;
-    bpnn->alpha = param->alpha;
-    bpnn->ep = param->ep;
-    bpnn->max_study_time = param->max_study_time;
+	for (layer = 0; layer < MAX_LAYER; layer++) {
+		for (i = 0; i < MAX_NODE; i++) {
+			for (j = 0; j < MAX_NODE; j++) {
+				ret = fscanf (wfp, "%f", &w [layer][i][j]);
+				if (ret < 1) {
+					break;
+				}
+			}
+		}
+	}
 
-    bpnn->nodes_per_layer [0] = bpnn->in_dim;
-    bpnn->nodes_per_layer [MAX_LAYER - 1] = bpnn->out_dim;
-    for (layer = 1; layer < MAX_LAYER - 1; layer++) {
-        bpnn->nodes_per_layer [layer] = bpnn->hid_dim;
-    }
+	fclose (wfp);
 
-    // 设置随机数种子
-    srand ((unsigned int)time (NULL));
-    // 对权值初始化为-0.1~0.1之间的随机数
-    for (layer = 0; layer < MAX_LAYER; layer++) {
-        for (i = 0; i < MAX_NODE; i++) {
-            for (j = 0; j < MAX_NODE; j++) {
-                bpnn->w [layer][i][j] = randnumber ();
-            }
-        }
-    }
-
-    /* 输入层和隐层的第0个元素(x0, y00, y10...)都设成-1 */
-    for (layer = 0; layer < MAX_LAYER; layer++) {
-        bpnn->o [layer][0] = -1.0;
-    }
-
-    return 0;
+	if (ret < 1) {
+		return -1;
+	}
+	else {
+		return 0;
+	}
 }
 
-int Bp::bp_study(bp_neural_network_t *bpnn, bp_neural_data_t bp_data[], int x_num)
+int c_bp_neural_network::bp_w_save (const char * wfile)
 {
-    int p = 0, complete = 0;
+	int layer, i, j;
+	FILE * wfp;
 
-    if (x_num <= 0) {
-        return -1;
-    }
+	wfp = fopen (wfile, "w");
+	if (wfp == NULL) {
+		printf ("fail to open %s for write\n", wfile);
+		return -1;
+	}
 
-    bpnn->bp_study_time = 0;
+	for (layer = 0; layer < MAX_LAYER; layer++) {
+		for (i = 0; i < MAX_NODE; i++) {
+			for (j = 0; j < MAX_NODE; j++) {
+				fprintf (wfp, "%f\n", w [layer][i][j]);
+			}
+		}
+	}
 
-    do {
-        bp_inout_init (bpnn, &bp_data [p]);
-        bp_feed_forward (bpnn);
-        bp_calc_gradient (bpnn);
-        bp_update_weights (bpnn);
-        bp_error (bpnn);
+	fclose (wfp);
 
-        if (++p >= x_num) {
-            p = 0;
-            complete = 1;
-        }
-        //printf ("i %d, error %lf\n", i, bpnn->error);
-    } while ((!complete) || ((bpnn->error > bpnn->ep) && (++bpnn->bp_study_time < bpnn->max_study_time)));
-
-    if (bpnn->bp_study_time >= bpnn->max_study_time) {
-        return -1;
-    }
-    else {
-        return 0;
-    }
+	return 0;
 }
 
-void Bp::bp_judge(bp_neural_network_t *bpnn, bp_neural_data_t *pdata)
+int c_bp_neural_network::bp_study (c_bp_neural_data bp_data [], int x_num)
 {
-    bp_inout_init (bpnn, pdata);
-    bp_feed_forward (bpnn);
-    bp_get_result (bpnn, pdata);
+	int p = 0, complete = 0;
+	float min_err = 1.0;
+
+	if (x_num <= 0) {
+		return -1;
+	}
+
+	bp_study_time = 0;
+
+	do {
+		bp_inout_init (&bp_data [p]);
+		bp_feed_forward ();
+		bp_calc_gradient ();
+		bp_update_weights ();
+		bp_error ();
+
+		if (++p >= x_num) {
+			p = 0;
+			complete = 1;
+		}
+		bp_study_time++;
+		if (error < min_err) {
+			min_err = error;
+		}
+		if (!(bp_study_time & 0x1ff)) {
+			printf ("bp_study_time %d, error %f, min_err %f\n", bp_study_time, error, min_err);
+		}
+	} while ((!complete) || ((error > ep) && (bp_study_time < max_study_time)));
+
+	if (bp_study_time >= max_study_time) {
+		return -1;
+	}
+	else {
+		return 0;
+	}
 }
 
-int Bp::bp_w_save(bp_neural_network_t *bpnn, char *wfile)
+void c_bp_neural_network::bp_judge (c_bp_neural_data * pdata)
 {
-    int layer, i, j;
-    FILE * wfp;
-
-    wfp = fopen (wfile, "w");
-    if (wfp == NULL) {
-        printf ("fail to open %s for write\n", wfile);
-        return -1;
-    }
-
-    for (layer = 0; layer < MAX_LAYER; layer++) {
-        for (i = 0; i < MAX_NODE; i++) {
-            for (j = 0; j < MAX_NODE; j++) {
-                fprintf (wfp, "%f\n", bpnn->w [layer][i][j]);
-            }
-        }
-    }
-
-    fclose (wfp);
-
-    return 0;
+	bp_inout_init (pdata);
+	bp_feed_forward ();
+	bp_get_result (pdata);
 }
 
-int Bp::bp_w_load(bp_neural_network_t *bpnn, char *wfile)
+void c_bp_neural_network::bp_show (int level)
 {
-    int layer, i, j, ret;
-    FILE * wfp;
+	int i, j, layer;
 
-    wfp = fopen (wfile, "r");
-    if (wfp == NULL) {
-        printf ("fail to open %s for read\n", wfile);
-        return -1;
-    }
+	printf ("BP Params:\n");
+	
+	for (i = 0; i < MAX_LAYER; i++) {
+		printf ("  layer %d node num: %d\n", i, nodes_per_layer [i]);
+	}
+	printf ("  study_spd       : %f\n", study_spd);
+	printf ("  alpha           : %f\n", alpha);
+	printf ("  ep              : %f\n", ep);
+	printf ("  last e          : %f\n", error);
+	printf ("  max study times : %d\n", max_study_time);
+	printf ("  act study times : %d\n", bp_study_time);
 
-    for (layer = 0; layer < MAX_LAYER; layer++) {
-        for (i = 0; i < MAX_NODE; i++) {
-            for (j = 0; j < MAX_NODE; j++) {
-                ret = fscanf (wfp, "%f", &bpnn->w [layer][i][j]);
-                if (ret < 1) {
-                    break;
-                }
-            }
-        }
-    }
-
-    fclose (wfp);
-
-    if (ret < 1) {
-        return -1;
-    }
-    else {
-        return 0;
-    }
-}
-
-void Bp::bp_show(bp_neural_network_t *bpnn, int level)
-{
-    int i, j, layer;
-
-    printf ("BP Params:\n");
-
-    for (i = 0; i < MAX_LAYER; i++) {
-        printf ("  layer %d node num: %d\n", i, bpnn->nodes_per_layer [i]);
-    }
-    printf ("  study_spd       : %f\n", bpnn->study_spd);
-    printf ("  alpha           : %f\n", bpnn->alpha);
-    printf ("  ep              : %f\n", bpnn->ep);
-    printf ("  last e          : %f\n", bpnn->error);
-    printf ("  max study times : %d\n", bpnn->max_study_time);
-    printf ("  act study times : %d\n", bpnn->bp_study_time);
-
-    if (level >= 1) {
-        for (layer = 1; layer < MAX_LAYER; layer++) {
-            printf ("layer %d\n", layer);
-            for (i = 0; i < bpnn->nodes_per_layer [layer - 1]; i++) {
-                for (j = 0; j < bpnn->nodes_per_layer [layer]; j++) {
-                    printf ("w [%d][%d] = %f\n", i, j, bpnn->w [layer][i][j]);
-                }
-            }
-        }
-    }
-}
-
-float Bp::randnumber()
-{
-    return (sin (rand ()) / 10);
-}
-
-float Bp::sigmoid_unipolar(float x)
-{
-    return (1.0 / (1 + exp (-x)));
-}
-
-float Bp::sigmoid_bipolar(float x)
-{
-    return (1 - exp (-x)) / (1 + exp (-x));
-}
-
-float Bp::bp_output(bp_neural_network_t *bpnn, int layer, int node)
-{
-    float sum = 0.0;
-    int node2;
-
-    for (node2 = 0; node2 < bpnn->nodes_per_layer [layer - 1]; node2++) {
-        sum = sum + bpnn->w [layer][node][node2] * bpnn->o [layer - 1][node2];
-    }
-
-//    return (trans_fx [trans_fx_sigmoid_unipolar]) (sum);
-    return sigmoid_unipolar(sum);
-}
-
-float Bp::bp_gf(bp_neural_network_t *bpnn, int layer, int node)
-{
-    float sum = 0.0;
-    int m;
-
-    for (m = 1; m < bpnn->nodes_per_layer [layer + 1]; m++) {
-        sum = sum + bpnn->e [layer + 1][m] * bpnn->w [layer + 1][m][node] * bpnn->o [layer + 1][m] * (1 - bpnn->o [layer + 1][m]);
-    }
-
-    return sum;
-}
-
-void Bp::bp_inout_init(bp_neural_network_t *bpnn, bp_neural_data_t *bp_data)
-{
-    int i;
-
-    /* 设置输入x1, x2... */
-    for (i = 0; i < bpnn->in_dim; i++) {
-        bpnn->o [0][i + 1] = bp_data->x.vect [i];
-    }
-    /* 设置期望输出d1, d2... */
-    for (i = 0; i < bpnn->out_dim; i++) {
-        bpnn->d [i + 1] = bp_data->o.vect [i];
-    }
-}
-
-void Bp::bp_feed_forward(bp_neural_network_t *bpnn)
-{
-    int layer, node;
-
-    for (layer = 1; layer < MAX_LAYER; layer++) {
-        for (node = 1; node < bpnn->nodes_per_layer [layer]; node++) {
-            bpnn->o [layer][node] = bp_output (bpnn, layer, node);
-        }
-    }
-}
-
-void Bp::bp_calc_gradient(bp_neural_network_t *bpnn)
-{
-    int layer, node, j;
-
-    for (layer = (MAX_LAYER - 1); layer > 0; layer--) {
-        for (node = 1; node < bpnn->nodes_per_layer [layer]; node++) {
-            if (layer == (MAX_LAYER - 1)) {
-                /* 输出层 */
-                bpnn->e [layer][node] = bpnn->o [layer][node] - bpnn->d [node];
-            }
-            else {
-                /* 隐层 */
-                bpnn->e [layer][node] = bp_gf (bpnn, layer, node);
-            }
-
-            for (j = 0; j < bpnn->nodes_per_layer [layer - 1]; j++) {
-                bpnn->g [layer][node][j] = bpnn->e [layer][node] * bpnn->o [layer][node] * (1.0 - bpnn->o [layer][node]) * bpnn->o [layer - 1][j];
-            }
-        }
-    }
-}
-
-void Bp::bp_update_weights(bp_neural_network_t *bpnn)
-{
-    int layer, i, j;
-    float w_k_1;	// w(k-1)
-    float w_k;		// w(k)
-
-    for (layer = 1; layer < MAX_LAYER; layer++) {
-        for (i = 0; i < bpnn->nodes_per_layer [layer]; i++) {
-            for (j = 0; j < bpnn->nodes_per_layer [layer - 1]; j++) {
-                w_k_1 = bpnn->w [layer][i][j];
-                bpnn->w [layer][i][j] = bpnn->w [layer][i][j] - bpnn->study_spd * bpnn->g [layer][i][j] + bpnn->alpha * bpnn->delta_w [layer][i][j];
-                w_k = bpnn->w [layer][i][j];
-                bpnn->delta_w [layer][i][j] = w_k - w_k_1;
-            }
-        }
-    }
-}
-
-float Bp::bp_error(bp_neural_network_t *bpnn)
-{
-    float sum = 0.0;
-    int i;
-
-    for (i = 1; i < bpnn->out_dim; i++) {
-        sum += pow (fabs (bpnn->o [MAX_LAYER - 1][i] - bpnn->d [i]), 2);
-    }
-
-    bpnn->error = sqrt (sum);
-
-    return sum;
-}
-
-void Bp::bp_get_result(bp_neural_network_t *bpnn, bp_neural_data_t *pdata)
-{
-    int i;
-
-    for (i = 0; i < bpnn->out_dim - 1; i++) {
-        pdata->o.vect [i] = (int)floor (bpnn->o [MAX_LAYER - 1][i + 1] + 0.5);
-        printf ("o[%d][%d]=%f\n", MAX_LAYER - 1, i, bpnn->o [MAX_LAYER - 1][i + 1]);
-    }
+	if (level >= 1) {
+		for (layer = 1; layer < MAX_LAYER; layer++) {
+			printf ("layer %d\n", layer);
+			for (i = 0; i < nodes_per_layer [layer - 1]; i++) {
+				for (j = 0; j < nodes_per_layer [layer]; j++) {
+					printf ("w [%d][%d] = %f\n", i, j, w [layer][i][j]);
+				}
+			}
+		}
+	}
 }

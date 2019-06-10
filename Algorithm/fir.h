@@ -23,7 +23,6 @@ private:
     QVector<float> set_filter_origin(QVector<float> wave, FILTER l);
     QVector<int> set_filter_origin(QVector<int> wave, FILTER l);
 
-
     float DigFil_hp_500k(float invar, float initval, int setic);
     float DigFil_hp_1M(float invar, float initval, int setic);
     float DigFil_hp_1M5(float invar, float initval, int setic);

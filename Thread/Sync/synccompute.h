@@ -4,6 +4,7 @@
 #include <QObject>
 #include "Gui/Common/common.h"
 #include "gpsinfo.h"
+#include <sys/time.h>    // for gettimeofday()
 
 #define BUFF_SIZE                   300
 #define MODBUS_BC_ADDR              0xff
@@ -44,17 +45,23 @@ public:
     int read_modbus_packet(char *buf, int len);        //读取一包modbus报文
     static unsigned short modbus_crc (unsigned char * buf, unsigned char length);
 
+    void show_time(QString str);           //显示时间
+
 signals:
     void send_msg(char *buf, int len);      //向外发送数据
-    void get_reply();                   //是否收到应答报文
-    void get_gps_info(GPSInfo *);         //收到GPS报文
-    void get_sync(float);               //收到同步报文
+    void get_reply();                       //是否收到应答报文
+    void get_sync();                        //收到同步报文
+    void send_sync(qint64,qint64);          //发送同步时间（秒，微秒）
+    void send_freq(float);                  //发送频率
+    void send_gps_info(GPSInfo *);          //发送GPS报文
 
 public slots:
 
 private:
-    QList<float> sync_time_list;
     struct timeval last_time;
+
+    QMap<float, timeval> sync_map;      //<标准化后过零时间，原始过零时间>
+//    QList<float> temp_list;             //记录收到的温度
 
     int modbus_deal_msg (modbus_dev_t * ndp);
     int modbus_deal_write_a_reg(modbus_dev_t *ndp);
@@ -63,7 +70,13 @@ private:
     int modbus_deal_sync_msg(modbus_dev_t *ndp);
     int modbus_deal_sensor_msg(modbus_dev_t *ndp);
 
-    float trans_time(timeval recv_time, float delay_time);     //根据接收时间和延迟时间,算出过零点时间,并标准化
+    float trans_time(timeval recv_time, float delay_time);      //根据接收时间和延迟时间,算出过零点时间,并标准化
+    float compute_sync_time(QVector<float> list);                //计算平均同步时间
+    float compute_delay_time(QVector<float> list);                //计算平均同步时间
+    timeval compute_zero_time();            //计算过零时间
+    timeval compute_zero_time(QMap<float, timeval> map);    //计算过零时间(核函数)
+
+    GPSInfo *gps_info;
 };
 
 #endif // SYNCCOMPUTE_H

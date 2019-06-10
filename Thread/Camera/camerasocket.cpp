@@ -1,64 +1,21 @@
 ﻿#include "camerasocket.h"
+#define  PRINTABLE
 
-CameraSocket::CameraSocket(QObject *parent) : QThread(parent)
+CameraSocket::CameraSocket(QObject *parent) : QObject(parent)
 {
-    timer_alive = new QTimer();
-    timer_alive->setInterval(5000);   //10秒1跳
-    timer_alive->start();
-    connect(timer_alive, SIGNAL(timeout()), this, SLOT(keep_alive()) );
+    thread = new QThread;
+    this->moveToThread(thread);
+    thread->start();
 
-    this->start(QThread::TimeCriticalPriority);
+    QTimer::singleShot(0, this, SLOT(socket_init()));
 }
 
-void CameraSocket::connect_camera()
-{
-    if(order_socket->state() == QAbstractSocket::ConnectedState){
-        char *data = new char[200];
-        int len;
-        Login_Req("admin", "tlJwpbo6", data, len);
-        qDebug()<<"test len =" << len;
-
-        for(uint i=0;i<len;i++)
-        {
-            printf("%c", data[i]);
-        }
-        printf("\n");
-        order_socket->write(data, len);
-    }
-}
-
-void CameraSocket::run()
-{
-    thread_init();
-    while (1) {
-        //(重新)建立连接
-        order_socket->connectToHost(CAMERA_IP, 34567);
-        if (!order_socket->waitForConnected(3 * 1000)){
-            qDebug()<<"order_socket failed!";
-        }
-//        data_socket->connectToHost(CAMERA_IP, 34567);       //不同socket连接同端口服务器
-//        if (!order_socket->waitForConnected(3 * 1000)){
-//            qDebug()<<"data_socket failed!";
-//        }
-
-        //处于连接状态,收发数据
-        while (order_socket->state() == QAbstractSocket::ConnectedState ){
-//                QByteArray array = order_socket->readAll();
-//                if(array.isEmpty()){
-//                    msleep(1);
-//                }
-//                else{
-//                    qDebug()<<"get order data:"<<array;
-//                }
-
-
-            order_socket->waitForReadyRead(500);
-
-        }
-    }
-}
-
-void CameraSocket::thread_init()
+/********************************************************
+ * 线程的初始化
+ * 1.建立指令套接字和数据套接字
+ * 2.启动一个计时器,用于socket重连
+ * *****************************************************/
+void CameraSocket::socket_init()
 {
     order_socket = new QTcpSocket;
     connect(order_socket, SIGNAL(readyRead()), this, SLOT(deal_order()));
@@ -66,8 +23,75 @@ void CameraSocket::thread_init()
     data_socket = new QTcpSocket;
     connect(data_socket, SIGNAL(readyRead()), this, SLOT(deal_data()));
 
-    recv_buf = new char[3000];
+    control = new control_flow;
+    control->Session_Id = 0;
 
+    media = new media_flow;
+    media->Data_Length = 0;
+
+    socket_connect();         //连接socket
+
+    timer = new QTimer;
+    timer->setInterval(5000);
+    timer->start();
+    connect(timer, SIGNAL(timeout()), this, SLOT(socket_connect()));          //socket重连
+}
+
+/********************************************************
+ * 与摄像头连接
+ * 1.尝试登陆
+ * 2.发送认领和监视请求
+ * *****************************************************/
+void CameraSocket::connect_camera()
+{
+    if(order_socket->state() == QAbstractSocket::ConnectedState){
+        QByteArray order;
+        order = Login_Req("admin", "tlJwpbo6");
+        order_socket->write(order.data(), order.length());             //发送登录信息
+        print_info(order.data(), order.length(), "Login_Req");
+        order_socket->waitForReadyRead();
+
+        order = Monitor_Claim(control->Session_Id, "Claim", MONITORCLAIM_REQ);
+        data_socket->write(order.data(), order.length());             //发送data认领请求
+        print_info(order.data(), order.length(), "Monitor_Claim");
+        data_socket->waitForReadyRead();
+
+        order = Monitor_Claim(control->Session_Id, "Start", REALMONITOR_REQ);
+        order_socket->write(order.data(), order.length());             //发送control监视请求
+        print_info(order.data(), order.length(), "Monitor_Claim");
+        order_socket->waitForReadyRead();
+    }
+}
+
+void CameraSocket::socket_connect()
+{
+    //指令套接字
+    if(order_socket->state() == QAbstractSocket::UnconnectedState){     //未连接,建立连接
+        order_socket->connectToHost(CAMERA_IP, 34567);
+        if (!order_socket->waitForConnected(3 * 1000)){
+//            qDebug()<<"camera order_socket failed!";
+        }
+        else{
+//            qDebug()<<"camera order_socket succeeded!";
+        }
+    }
+    else if(order_socket->state() == QAbstractSocket::ConnectedState && control->Session_Id > 0){  //已连接,保活
+        QByteArray order;
+        order = KeepAlive(control->Session_Id);
+        print_info(order.data(), order.length(), "KeepAlive");
+        order_socket->write(order.data(), order.length());             //发送登录信息
+    }
+
+    //数据套接字
+    if(data_socket->state() == QAbstractSocket::UnconnectedState){      //未连接,建立连接
+        data_socket->connectToHost(CAMERA_IP, 34567);
+        if (!data_socket->waitForConnected(3 * 1000)){
+//            qDebug()<<"camera data_socket failed!";
+        }
+        else{
+//            qDebug()<<"camera data_socket succeeded!";
+        }
+    }
 }
 
 void CameraSocket::deal_order()
@@ -76,290 +100,179 @@ void CameraSocket::deal_order()
 
     qDebug()<<"get order data: len = " << array.count() << array;
 
-    int index = array.indexOf("SessionID");
-    qDebug()<<"SessionID = "<< array.mid(index+14, 10);
-
-    SessionID = array.mid(index+14, 10);
+    control = (struct _control_flow *)array.data();
+    printf("Order_Message_Id : %d,      Session_id : %d,     Order_Data_Len : %d \n\n",
+           control->Message_Id,control->Session_Id,control->Data_Length);
 
 }
 
 void CameraSocket::deal_data()
 {
+    QByteArray array = data_socket->readAll();
+//    qDebug()<<"get data data: len = " << array.count()/* << array*/;
 
-}
+    int to_read = 0;
+    while (!array.isEmpty()) {
+        if(media->Data_Length < packet.length()){       //应读<已读,此种情况说明发生错误(保证to_read为正)
+            media->Data_Length = 0;
+            packet.clear();
+            qDebug()<<"CameraSocket deal_data error!";
+        }
+        if(media->Data_Length == 0){
+            find_media_flow(array);
+        }
+        to_read = media->Data_Length - packet.length();     //还需要填充的字节数
+        if(array.length() >= to_read) {             //待读≥应读
+            packet.append(array.mid(0,to_read));    //一部分数据将当前包填满
 
-void CameraSocket::keep_alive()
-{
-    int fd = 0;
-    int id = 0;
-    char buf[200];
-    char name[100];
-    char sess_id[50];
-
-    char se_id[10];
-    sprintf(se_id,"0x000000%02x",id);
-
-    strcpy(name,"Name");
-    strcpy(sess_id,"SessionID");
-
-    link_two(name, "KeepAlive");
-    link_two(sess_id, se_id);
-
-    link_three(name, sess_id);
-
-    link_four(name);
-
-    get_control_flow(buf, id, 0x00, 0x00,  0x00, KEEPALIVE_REQ, strlen(name));
-    strcpy(buf+sizeof(struct _control_flow),name);
-#ifdef PRINTABLE
-    printf("name buf \n");
-
-    for(uint i=0;i<(sizeof(struct _control_flow) + strlen(name));i++)
-    {
-        printf("%c", buf[i]);
+//            qDebug()<<"packet complete! >>>>>>>>>>>>>>>>>>>> len="<<packet.length() << endl;
+            frame.append(packet);
+            if(packet.length() != 8192){
+                emit sendOneFrame(frame);
+                qDebug()<<"frame complete! len:"<<frame.count();
+                frame.clear();
+            }
+            packet.clear();
+            media->Data_Length = 0;
+            array.remove(0,to_read);                //将已读删除
+        }
+        else{
+            packet.append(array);                   //读到的数据全部填充包
+            array.clear();
+        }
     }
-    printf("\n");
-#endif
-    socket_write (fd, buf, sizeof(struct _control_flow) + strlen(name));
 }
 
-
-
-void CameraSocket::Login_Req(char *user, char *password, char *data, int &len)
+/********************************************************
+ * 寻找报文头
+ * 1.找到,去掉头部及之前的数据,返回true
+ * 2.未找到,清空list,返回false
+ * *****************************************************/
+bool CameraSocket::find_media_flow(QByteArray &list)
 {
-    char buf[200];
+    _media_flow *temp_media;
+    for (uint i = 0; i < list.count()-sizeof(struct _media_flow); ++i) {
+        temp_media = (struct _media_flow *)(list.data()+i);
+        if((temp_media->Head_Flag == 0xFF) && (temp_media->Version == 0x01)              //校验头部4数据
+                && (temp_media->Reserve1 == 0x00) && (temp_media->Reserve2 == 0x00) && temp_media->Data_Length <= 8192){
+            memcpy(media, temp_media, sizeof(struct _media_flow));              //保存头部
+            list.remove(0, i+sizeof(struct _media_flow));    //去掉头部及之前的数据
+//            qDebug()<<"find media_flow! <<<<<<<<<<<<<<<<<<<<< len ="<<media->Data_Length << "\t i =" <<i;
+//            qDebug()<<"Session_Id:"<<media->Session_Id << "\t Sequence_Number:" <<media->Sequence_Number
+//                   <<"Channel:"<<(int)media->Channel << "\t End_Flag:" <<(int)media->End_Flag
+//                     <<"Message_Id:"<<media->Message_Id;
+//            switch(media->Message_Id)
+//            {
+//            case  MONITORCLAIM_REQ  :  break;                       //监控认领
+//            case  MONITORDATA       :
+//                printf("Data_Message_Id : %d,    Data_Data_Len : %d \n",media->Message_Id,media->Data_Length);
 
-    char encry[200];
-    char login[50];
-    char pass[50];
-    char username[50];
-
-    strcpy(encry,"EncryptType");
-    strcpy(login,"LoginType");
-    strcpy(pass,"PassWord");
-    strcpy(username,"UserName");
-
-    link_two(encry, "MD5");
-    link_two(login, "DVRIP-Web");
-    link_two(pass, password);
-    link_two(username, user);
-
-    link_three(encry, login);
-    link_three(encry, pass);
-    link_three(encry, username);
-
-    link_four(encry);
-
-    get_control_flow(buf, 0x00, 0x00, 0x00,  0x00, LOGIN_REQ, strlen(encry));
-    strcpy(buf+sizeof(struct _control_flow),encry);
-
-#ifdef PRINTABLE
-    printf("encry buf \n");
-
-    for(uint i=0;i<(sizeof(struct _control_flow) + strlen(encry));i++)
-    {
-        printf("%c", buf[i]);
+//                //        send_data(buf+sizeof(struct _media_flow), camera.Data_Data_Len);
+//                break;
+//            }
+            return true;
+        }
     }
-    printf("\n");
-#endif
-
-//    socket_write (fd, buf, sizeof(struct _control_flow) + strlen(encry));
-    len = sizeof(struct _control_flow) + strlen(encry);
-    memcpy(data, buf, len);
-
-
+    list.clear();
+    return false;
 }
 
-void CameraSocket::link_one(char *src)
+QByteArray CameraSocket::Login_Req(QString user, QString password)
 {
-    char *p;
-    char a[200]="\"";
-    p = strcat(strcat(a,src),"\"");
-    strcpy(src,p);
+    QStringList list;
+    list << phrase("EncryptType", "MD5");
+    list << phrase("LoginType", "DVRIP-Web");
+    list << phrase("PassWord", password);
+    list << phrase("UserName", user);
+
+    QByteArray data =  statement(list).toLocal8Bit();
+    return add_control_flow(data, 0, LOGIN_REQ);
 }
 
-void CameraSocket::link_two(char *src1, char *src2)
+QByteArray CameraSocket::KeepAlive(int id)
 {
-    char *p;
-    char src1_buf[200];
-    char src2_buf[200];
-    strcpy(src1_buf,src1);
-    link_one(src1_buf);
-    strcpy(src2_buf,src2);
-    link_one(src2_buf);
+    QStringList list;
+    list << phrase("Name", "KeepAlive");
+    list << phrase("SessionID", QString("0x%1").arg(id,8,16,QChar('0')));
 
-    p = strcat(strcat(src1_buf," : "),src2_buf);
-    strcpy(src1,p);
+    QByteArray data = statement(list).toLocal8Bit();
+    return add_control_flow(data, id, KEEPALIVE_REQ);
 }
 
-void CameraSocket::link_two_1(char *src1, char *src2)
+QByteArray CameraSocket::Monitor_Claim(int id, QString act, unsigned short mes_id)
 {
-    char *p;
-    char src1_buf[200];
-    char src2_buf[200];
-    strcpy(src1_buf,src1);
-    link_one(src1_buf);
-    strcpy(src2_buf,src2);
+    QStringList list1;
+    list1 << phrase("Channel", 0);
+    list1 << phrase("CombinMode", "NONE");
+    list1 << phrase("StreamType", "Main");
+    list1 << phrase("TransMode", "TCP");
+    QString statement1 = statement(list1);
 
-    p = strcat(strcat(src1_buf," : "),src2_buf);
-    strcpy(src1,p);
+    QStringList list2;
+    list2 << phrase("Action", act);
+    list2 << phrase("Parameter", statement1);
+    QString statement2 = statement(list2);
+
+    QStringList list3;
+    list3 << phrase("Name", "OPMonitor");
+    list3 << phrase("OPMonitor", statement2);
+    list3 << phrase("SessionID", QString("0x%1").arg(id,8,16,QChar('0')));
+
+    QByteArray data = statement(list3).toLocal8Bit();
+    return add_control_flow(data, id, mes_id);
 }
 
-void CameraSocket::link_three(char *src1, char *src2)
+QString CameraSocket::phrase(QString s1, QString s2)
 {
-    char *p;
-    p = strcat(strcat(src1,", "),src2);
-    strcpy(src1,p);
+    if(s2.at(0) == "{")
+        return QString("\"%1\" : %2").arg(s1).arg(s2);
+    else
+        return QString("\"%1\" : \"%2\"").arg(s1).arg(s2);
 }
 
-void CameraSocket::link_four(char *src)
+QString CameraSocket::phrase(QString s1, int s2)
 {
-    char p[200];
-    strcpy(p,"{ ");
-    strcat(p,src);
-    strcat(p," }\n");
-    strcpy(src,p);
+    return QString("\"%1\" : %2").arg(s1).arg(s2);
 }
 
-void CameraSocket::link_four_1(char *src)
+QString CameraSocket::statement(QStringList list)
 {
-    char p[200];
-    strcpy(p,"{ ");
-    strcat(p,src);
-    strcat(p," }");
-    strcpy(src,p);
+    QString s = list.join(", ");
+    return "{ " + s + " }";
 }
 
-void CameraSocket::get_control_flow(char *buf, int id, int seq_num, char tol_pck, char cur_pck, unsigned short mes_id, int data_len)
+QByteArray CameraSocket::add_control_flow(QByteArray data, int id, unsigned short mes_id)
 {
     control_flow  control;
-
     control.Head_Flag = 0xFF;
     control.Version = 0x00;
     control.Reserve1 = 0x00;
     control.Reserve2 = 0x00;
-
     control.Session_Id = id;
-    control.Sequence_Number = seq_num;
-    control.Total_Packet = tol_pck;
-    control.Cur_Packet = cur_pck;
+    control.Sequence_Number = 0x00;
+    control.Total_Packet = 0x00;
+    control.Cur_Packet = 0x00;
     control.Message_Id = mes_id;
-    control.Data_Length = data_len;
+    control.Data_Length = data.length();
 
-    memcpy(buf,(char *)&control,sizeof(struct _control_flow));
+    QByteArray head;
+    head.resize(sizeof(struct _control_flow));
+    memcpy(head.data(), &control, sizeof(struct _control_flow));
+    head.append(data);
+    return head;
 }
 
-int CameraSocket::socket_write(int fd, char *buf, int len)
+void CameraSocket::print_info(char *buf, int len, QString name)
 {
-
-}
-
-void CameraSocket::KeepAlive(int fd, int id)
-{
-    char buf[200];
-    char name[100];
-    char sess_id[50];
-
-    char se_id[10];
-    sprintf(se_id,"0x000000%02x",id);
-
-    strcpy(name,"Name");
-    strcpy(sess_id,"SessionID");
-
-    link_two(name, "KeepAlive");
-    link_two(sess_id, se_id);
-
-    link_three(name, sess_id);
-
-    link_four(name);
-
-    get_control_flow(buf, id, 0x00, 0x00,  0x00, KEEPALIVE_REQ, strlen(name));
-    strcpy(buf+sizeof(struct _control_flow),name);
 #ifdef PRINTABLE
-    printf("name buf \n");
-
-    for(uint i=0;i<(sizeof(struct _control_flow) + strlen(name));i++)
+    qDebug()<<name;
+    for(int i=0;i<len;i++)
     {
         printf("%c", buf[i]);
     }
     printf("\n");
 #endif
-    socket_write (fd, buf, sizeof(struct _control_flow) + strlen(name));
-
 }
 
-void CameraSocket::Monitor_Claim(int fd, int id, char *act, unsigned short mes_id)
-{
-    char buf[250];
 
-    char name[250];
-    char opmonitor[200];
-    char action[200];
 
-    char para[200];
-    char channel[200];
-    char combin[30];
-    char stream[30];
-    char tran[30];
-
-    char session[30];
-
-    char se_id[6];
-    sprintf(se_id,"0x%d",id);
-
-    strcpy(name,"Name");
-
-    strcpy(opmonitor,"OPMonitor");
-    strcpy(action,"Action");
-
-    strcpy(para,"Parameter");
-    strcpy(channel,"Channel");
-    strcpy(combin,"CombinMode");
-    strcpy(stream,"StreamType");
-    strcpy(tran,"TransMode");
-
-    strcpy(session,"SessionID");
-
-    link_two_1(channel, "0");
-    link_two(combin, "NONE");
-    link_two(stream, "Main");
-    link_two(tran, "TCP");
-
-    link_three(channel, combin);
-    link_three(channel, stream);
-    link_three(channel, tran);
-
-    link_four_1(channel);
-
-    link_two_1(para, channel);
-    link_two(action,act);
-
-    link_three(action, para);
-
-    link_four_1(action);
-
-    link_two_1(opmonitor, action);
-    link_two(name,"OPMonitor");
-    link_two(session,se_id);
-
-    link_three(name, opmonitor);
-    link_three(name, session);
-
-    link_four(name);
-
-    get_control_flow(buf, id, 0x00, 0x00,  0x00, mes_id, strlen(name));
-    strcpy(buf+sizeof(struct _control_flow),name);
-
-#ifdef PRINTABLE
-    printf("name buf \n");
-
-    for(uint i=0;i<(sizeof(struct _control_flow) + strlen(name));i++)
-    {
-        printf("%c", buf[i]);
-    }
-    printf("\n");
-#endif
-
-    socket_write (fd, buf, sizeof(struct _control_flow) + strlen(name));
-
-}

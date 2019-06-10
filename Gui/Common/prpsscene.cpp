@@ -26,13 +26,6 @@ PRPSScene::PRPSScene(MODE mode, int data_max, QObject *parent) : QGraphicsScene(
     this->data_max = data_max;
 
     axisInit();
-
-//    for (int i = 0; i < 36; ++i) {
-//        QPointF P;
-//        P.setX(i*10);
-//        P.setY(60*qSin(i*3.1416/36) );
-//        test_list.append(P);
-//    }
     data_group_num = 10 * 5;     //场景容量
 }
 
@@ -93,8 +86,6 @@ void PRPSScene::axisInit()
  * **************************************/
 void PRPSScene::addPRPD(QVector<QPoint> list)
 {
-
-
     //移动
     QList<QGraphicsItem *> itemList = items();
 
@@ -115,50 +106,17 @@ void PRPSScene::addPRPD(QVector<QPoint> list)
     }
 
     //新建
-
-//    int high = data_max/3, low = data_max*2/3;
-//    switch (mode) {
-//    case TEV1:
-//        high = sqlcfg->get_para()->tev1_sql.high;
-//        low = sqlcfg->get_para()->tev1_sql.low;
-//        break;
-//    case TEV2:
-//        high = sqlcfg->get_para()->tev2_sql.high;
-//        low = sqlcfg->get_para()->tev2_sql.low;
-//        break;
-//    case HFCT1:
-//        high = sqlcfg->get_para()->hfct1_sql.high;
-//        low = sqlcfg->get_para()->hfct1_sql.low;
-//        break;
-//    case HFCT2:
-//        high = sqlcfg->get_para()->hfct2_sql.high;
-//        low = sqlcfg->get_para()->hfct2_sql.low;
-//        break;
-//    case UHF1:
-//        high = sqlcfg->get_para()->uhf1_sql.high;
-//        low = sqlcfg->get_para()->uhf1_sql.low;
-//        break;
-//    case UHF2:
-//        high = sqlcfg->get_para()->uhf2_sql.high;
-//        low = sqlcfg->get_para()->uhf2_sql.low;
-//        break;
-//    default:
-//        break;
-//    }
     foreach (QPoint P, list) {
 
         P.setX(P.x() % 360 );
         P.setY(qAbs(P.y()) );
 
-//        qDebug()<<"P"<<P;
-
-        if(P.x()>360 || P.x()<0 || qAbs(P.y()) > data_max){
-            qDebug()<<"PRPS input data error! P.y="<<qAbs(P.y());
-            continue;
+        if(qAbs(P.y()) > data_max){
+//            qDebug()<<"PRPS input data error! P.y="<<qAbs(P.y());
+            P.setY(data_max);
         }
-        QPointF P_t = transData(P);
 
-//         qDebug()<<"P_t"<<P_t;
+        QPointF P_t = transData(P);
 
         QColor c;
         if( P.y() < low ){

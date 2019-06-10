@@ -59,7 +59,7 @@ void SpectraChart::add_data(QVector<int> datalist)
                 fft_result_p.append(Common::physical_value(c, mode));
             }
             for (int i = 0; i <41 ; ++i) {
-                Spectra_map[i] = Common::sum(fft_result_p.mid(i*5 + 1, 5) );
+                Spectra_map[i] = Compute::sum(fft_result_p.mid(i*5 + 1, 5) );
             }
 
             Spectra_data.clear();

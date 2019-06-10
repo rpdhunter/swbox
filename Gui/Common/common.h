@@ -18,8 +18,6 @@
 #include "IO/Com/rdb/rdb.h"
 #include "Algorithm/compute.h"
 
-#define FREEZE_TIME     1200            //秒界面锁定时间
-
 class MyKey{
 public:
     MyKey(int X=0,int Y=0){
@@ -115,8 +113,6 @@ public:
     static QString mode_to_string(MODE val);
     static MODE string_to_mode(QString str);
     static void write_fpga_offset_debug(G_PARA *data);                    //根据当前通道设置fpga参数，debug界面中设置的fpga参数
-
-    static QVector<QPoint> calc_pulse_list(QVector<int> datalist, QVector<int> timelist, int threshold, MODE mode, int max_num = 0);          //根据给出的序列和阈值计算脉冲序列
     static int time_to_phase(quint32 x);             //时标到相位转换(相位没有转化到0-360°)
     static QVector<int> smooth(QVector<int> datalist, int n);             //平滑滤波
     static QVector<int> smooth_2(QVector<int> datalist, int n);             //2阶平滑滤波
@@ -126,11 +122,6 @@ public:
     /* 卡尔曼滤波处理 */
     static float kalman_filter_core (float ResrcData, float ProcessNiose_Q, float MeasureNoise_R, float &x_last, float &p_last);
     static QVector<int> kalman_filter (QVector<int> wave);
-    static double avrage(QVector<double> list);
-    static int avrage(QVector<int> list);
-    static float avrage(QList<float> list);
-    static double sum(QVector<double> list);
-    static int sum(QVector<int> list);
 
     static double tev_freq_compensation(int pulse_num);      //tev频率补偿
     static QString secton_three(int n);     //三位分节法显示数字
@@ -141,15 +132,15 @@ public:
     static bool mk_dir(QString path);
     static bool del_dir(QString path);
     static bool rename_dir(QString old_path, QString new_path);                  //重命名文件夹
-    static int max_at(QVector<double> list);            //找到最大值的位置，返回序号
-    static int max_at(QVector<int> list);            //找到最大值的位置，返回序号
-    static int max(QVector<int> list);          //返回最大值
-    static double max(QVector<double> list);          //返回最大值
 
     static void rdb_set_yc_value(uint yc_no,double val,uint qc = 0);
-    static double rdb_get_yc_value(uint yc_no);
+    static void rdb_set_yc_prpd(int first_point, QVector<QPoint> list);     //保存PRPD
+    //    static void rdb_set_yc_value(uint yc_no,int val,uint qc = 0);
+    static qint32 merge_int32(qint16 a, qint16 b);      //合并2个16位成为一个32位
+    static double rdb_get_yc_value(uint yc_no);     //查得yc值
+    static int rdb_get_yc_qc(uint yc_no);         //查得品质值(0或1)
     static void rdb_set_yx_value(uint yc_no, uint val);
-    static bool rdb_check_test_start();
+    static int rdb_check_test_start();
     static void rdb_set_dz_value(uint dz_no, char val);        //修改rdb设定值
     static void rdb_dz_init();          //初始化rdb定值表
 
@@ -178,6 +169,7 @@ public:
     static int mode_to_channel(MODE mode);          //通过模式返回主界面通道
 //    static double channel_factor(MODE mode);        //通道放大因数
     static QString sensor_freq_to_string(int s);
+    static void save_date_time(QDateTime dt);       //保存时间日期
 };
 
 #endif // COMMON_H

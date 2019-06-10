@@ -62,6 +62,10 @@
 #define CHANNEL_X   458
 #define CHANNEL_Y   192
 
+//设置子界面分辨率
+#define TABWIDGET_X   380
+#define TABWIDGET_Y   192
+
 #pragma pack(1)     //以1字节为单位，设置内存对齐
 typedef union HDATA {
     quint32 ad_data;
@@ -201,12 +205,13 @@ enum CHANNEL{
     CHANNEL_L2,     //低频通道2
 };
 
-enum WIFI_MODE {
-    WIFI_NONE,
-    WIFI_STA,
-    WIFI_AP,
-    WIFI_APSTA,
-    WIFI_SYNC,
+//wifi工作模式
+enum WIFI_MODE{
+    wifi_notwork,       //wifi未启动状态
+    wifi_ap_camera,     //为摄像头工作而起的AP,使用固定的ssid和ip地址
+    wifi_ap_custom,     //用户自定的AP
+    wifi_sta_custom,    //用户自定sta
+    wifi_connecting,    //状态切换中
 };
 
 struct PC_DATA {

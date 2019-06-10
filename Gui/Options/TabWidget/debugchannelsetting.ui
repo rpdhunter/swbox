@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>DebugChannelSetting</class>
+ <widget class="QWidget" name="DebugChannelSetting">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>442</width>
+    <height>206</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QHBoxLayout" name="horizontalLayout">
+   <property name="leftMargin">
+    <number>20</number>
+   </property>
+   <item>
+    <layout class="QGridLayout" name="gridLayout_6">
+     <property name="spacing">
+      <number>0</number>
+     </property>
+     <item row="3" column="2">
+      <widget class="TTKRadioButtonWidget" name="rb_LC2_AA">
+       <property name="text">
+        <string>AA</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="3">
+      <widget class="TTKRadioButtonWidget" name="rb_HC1_HFCT">
+       <property name="text">
+        <string notr="true">HFCT</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="3">
+      <widget class="TTKRadioButtonWidget" name="rb_HC2_HFCT">
+       <property name="text">
+        <string notr="true">HFCT</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="4">
+      <widget class="TTKRadioButtonWidget" name="rb_HC1_UHF">
+       <property name="text">
+        <string>UHF</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="4">
+      <widget class="TTKRadioButtonWidget" name="rb_HC2_UHF">
+       <property name="text">
+        <string>UHF</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="2">
+      <widget class="TTKRadioButtonWidget" name="rb_Double_Enable">
+       <property name="text">
+        <string>启用</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="2">
+      <widget class="TTKRadioButtonWidget" name="rb_HC1_TEV">
+       <property name="text">
+        <string notr="true">TEV</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="3">
+      <widget class="TTKRadioButtonWidget" name="rb_Double_Disable">
+       <property name="text">
+        <string>禁用</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="2">
+      <widget class="TTKRadioButtonWidget" name="rb_LC1_AA">
+       <property name="text">
+        <string notr="true">AA</string>
+       </property>
+       <property name="checked">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="8">
+      <widget class="TTKRadioButtonWidget" name="rb_HC1_Disable">
+       <property name="text">
+        <string>禁用</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="8">
+      <widget class="TTKRadioButtonWidget" name="rb_HC2_Disable">
+       <property name="text">
+        <string>禁用</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeType">
+        <enum>QSizePolicy::Fixed</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>25</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item row="1" column="2">
+      <widget class="TTKRadioButtonWidget" name="rb_HC2_TEV">
+       <property name="text">
+        <string notr="true">TEV</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="4">
+      <widget class="TTKRadioButtonWidget" name="rb_LC1_Disable">
+       <property name="text">
+        <string>禁用</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="4">
+      <widget class="TTKRadioButtonWidget" name="rb_LC2_Disable">
+       <property name="text">
+        <string>禁用</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="3">
+      <widget class="TTKRadioButtonWidget" name="rb_LC1_AE">
+       <property name="text">
+        <string>AE</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="3">
+      <widget class="TTKRadioButtonWidget" name="rb_LC2_AE">
+       <property name="text">
+        <string notr="true">AE</string>
+       </property>
+       <property name="checked">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="2">
+      <widget class="TTKRadioButtonWidget" name="rb_Asset_Enable">
+       <property name="text">
+        <string>启用</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="3">
+      <widget class="TTKRadioButtonWidget" name="rb_Asset_Disable">
+       <property name="text">
+        <string>禁用</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="lab_HC1">
+       <property name="text">
+        <string>高频通道1</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="lab_HC2">
+       <property name="text">
+        <string>高频通道2</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="lab_LC1">
+       <property name="text">
+        <string>低频通道1</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="lab_LC2">
+       <property name="text">
+        <string>低频通道2</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="lab_Double">
+       <property name="text">
+        <string>双通道模式</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="0">
+      <widget class="QLabel" name="lab_Asset">
+       <property name="text">
+        <string>资产配置</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <spacer name="horizontalSpacer_4">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>77</width>
+       <height>20</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>TTKRadioButtonWidget</class>
+   <extends>QRadioButton</extends>
+   <header location="global">Gui/TTK/ttkradiobuttonwidget.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

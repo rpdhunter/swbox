@@ -4,6 +4,8 @@
 
 #define ITEM_HIGH   18      //行高
 #define MODIFY      -2      //行高修正
+#define BP_JUDGE    0        //模式识别
+#define Units       0        //单位切换
 
 SettingMunu::SettingMunu(MODE mode, QWidget *parent) : QObject(parent)
 {
@@ -12,7 +14,7 @@ SettingMunu::SettingMunu(MODE mode, QWidget *parent) : QObject(parent)
         wide = 150;
     }
     else{
-        wide = 240;
+        wide = 230;
     }
 
     lineEdit = new QLineEdit(parent);
@@ -36,8 +38,13 @@ SettingMunu::SettingMunu(MODE mode, QWidget *parent) : QObject(parent)
         break;
     case HFCT1:
     case HFCT2:
+#if Units
         list << tr("启动测试") << tr("测量值重置") << tr("图形显示") << tr("单次录波") << tr("连续录波") << tr("自动录波")
              << tr("通带下限") << tr("通带上限") << tr("单位切换") << tr("通道设置...");
+#else
+        list << tr("启动测试") << tr("测量值重置") << tr("图形显示") << tr("单次录波") << tr("连续录波") << tr("自动录波")
+             << tr("通带下限") << tr("通带上限")/* << tr("单位切换") */<< tr("通道设置...");
+#endif
         break;
     case UHF1:
     case UHF2:
@@ -64,10 +71,19 @@ SettingMunu::SettingMunu(MODE mode, QWidget *parent) : QObject(parent)
     sub_menu = new QListWidget(parent);
     sub_menu->setStyleSheet("QListWidget {border-image: url(:/widgetphoto/bk/para_child.png);color:gray;outline: none;}");
     list.clear();
-    list << tr("检测模式") << tr("增益调节") << tr("脉冲触发") << tr("黄色报警") << tr("红色报警") << tr("脉冲计数") << tr("模式识别");
+    list << tr("检测模式") << tr("增益调节") << tr("脉冲触发") << tr("黄色报警") << tr("红色报警");
+    if(mode == TEV1 || mode == TEV2 || mode == HFCT1 || mode == HFCT2 || mode == UHF1 || mode == UHF2){
+        list << tr("脉冲计数");
+    }
+#if BP_JUDGE
+    if(mode == HFCT1 || mode == HFCT2){
+        list << tr("模式识别");
+    }
+#endif
+
     sub_menu->addItems(list);
-    sub_menu->resize(150,list.count() * ITEM_HIGH + MODIFY);
-    sub_menu->move(wide - 5,50);
+    sub_menu->resize(wide,list.count() * ITEM_HIGH + MODIFY);
+    sub_menu->move(wide - 5,60);
     sub_menu->setSpacing(1);
 
     lineEdit->show();
@@ -94,7 +110,6 @@ void SettingMunu::fresh(CHANNEL_SQL *sql, int grade)
     }
 
     //主菜单
-    qDebug()<<"sqlcfg->get_para()->test_mode"<<sqlcfg->get_global()->test_mode;
     if (sqlcfg->get_global()->test_mode == true) {
         main_menu->item(0)->setText(tr("结束测试"));
     }
@@ -152,6 +167,7 @@ void SettingMunu::fresh(CHANNEL_SQL *sql, int grade)
     if(mode == HFCT1 || mode == HFCT2){
         main_menu->item(6)->setText(tr("通带下限\t[%1]").arg(Common::filter_to_string(sql->filter_hp)));
         main_menu->item(7)->setText(tr("通带上限\t[%1]").arg(Common::filter_to_string(sql->filter_lp)));
+#if Units
         switch (sql->units) {
         case Units_db:
             main_menu->item(8)->setText(tr("单位切换\t[dB]"));
@@ -162,6 +178,7 @@ void SettingMunu::fresh(CHANNEL_SQL *sql, int grade)
         default:
             break;
         }
+#endif
     }
 
     //次级菜单
@@ -171,7 +188,12 @@ void SettingMunu::fresh(CHANNEL_SQL *sql, int grade)
         sub_menu->item(0)->setText(tr("检测模式\t[连续]"));
     }
     sub_menu->item(1)->setText(tr("增益调节\t[×%1]").arg(QString::number(sql->gain, 'f', 1)));
-    sub_menu->item(2)->setText(tr("脉冲触发\t[%1]mV").arg(QString::number(sql->fpga_threshold)));
+    if(mode == AA1 || mode == AA2 || mode == AE1 || mode == AE2){
+        sub_menu->item(2)->setText(tr("脉冲触发\t[%1]μV").arg(QString::number(sql->fpga_threshold)));
+    }
+    else{
+        sub_menu->item(2)->setText(tr("脉冲触发\t[%1]mV").arg(QString::number(sql->fpga_threshold)));
+    }
     if(sql->units == Units_pC ){
         sub_menu->item(3)->setText(tr("黄色报警阈值\t[%1]pC").arg(QString::number(sql->low)));
         sub_menu->item(4)->setText(tr("红色报警阈值\t[%1]pC").arg(QString::number(sql->high)));
@@ -180,15 +202,30 @@ void SettingMunu::fresh(CHANNEL_SQL *sql, int grade)
         sub_menu->item(3)->setText(tr("黄色报警阈值\t[%1]dB").arg(QString::number(sql->low)));
         sub_menu->item(4)->setText(tr("红色报警阈值\t[%1]dB").arg(QString::number(sql->high)));
     }
-    sub_menu->item(3)->setText(tr("黄色报警阈值\t[%1]dB").arg(QString::number(sql->low)));
-    sub_menu->item(4)->setText(tr("红色报警阈值\t[%1]dB").arg(QString::number(sql->high)));
-    sub_menu->item(5)->setText(tr("脉冲计数时长\t[%1]s").arg(QString::number(sql->pulse_time)));
-    if(sql->mode_recognition){
-        sub_menu->item(6)->setText(tr("模式识别\t[开启]"));
+    if(mode == TEV1 || mode == TEV2 || mode == HFCT1 || mode == HFCT2 || mode == UHF1 || mode == UHF2){
+        sub_menu->item(5)->setText(tr("脉冲计数时长\t[%1]s").arg(QString::number(sql->pulse_time)));
     }
-    else{
-        sub_menu->item(6)->setText(tr("模式识别\t[关闭]"));
+
+#if BP_JUDGE
+    if(mode == HFCT1 || mode == HFCT2){
+        if(sql->mode_recognition){
+            sub_menu->item(6)->setText(tr("模式识别\t[开启]"));
+        }
+        else{
+            sub_menu->item(6)->setText(tr("模式识别\t[关闭]"));
+        }
     }
+#endif
+}
+
+int SettingMunu::main_menu_num()
+{
+    return main_menu->count();
+}
+
+int SettingMunu::sub_menu_num()
+{
+    return sub_menu->count();
 }
 
 void SettingMunu::show()

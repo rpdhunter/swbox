@@ -18,6 +18,9 @@ public:
 
     void fresh(CHANNEL_SQL *sql, int grade);      //按照菜单编号刷新
 
+    int main_menu_num();            //返回主菜单数
+    int sub_menu_num();             //返回次菜单数
+
     void show();
     void hide();
 

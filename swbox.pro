@@ -22,7 +22,7 @@ DEFINES += AMG             #OEM
 #DEFINES += ZDIT            #OEM
 #DEFINES += NO_OEM           #OEM
 
-DEFINES += MULTI_CHANNEL        #多通道
+#DEFINES += NO_CHINESE       #无中文
 
 TRANSLATIONS += trans/en.ts
 
@@ -52,9 +52,7 @@ SOURCES += \
     IO/Other/battery.cpp \
     Gui/Options/systeminfo.cpp \
     Gui/Options/recwavemanage.cpp \
-    Gui/Options/options.cpp \
     Gui/Options/factoryreset.cpp \
-    Gui/Options/debugset.cpp \
     Gui/Common/recwaveform.cpp \
     Gui/Function/aewidget.cpp \
     Gui/mainwindow.cpp \
@@ -74,22 +72,15 @@ SOURCES += \
     IO/Other/cpu.c \
     Gui/Common/basewidget.cpp \
     Gui/Function/channelwidget.cpp \
-    IO/Com/socket.cpp \
     IO/Com/rdb/gpio_oper.c \
-    Gui/Common/wifipassword.cpp \
     IO/File/filetools.cpp \
     IO/File/logtools.cpp \
     IO/File/report.cpp \
-    Algorithm/Bp/bp.cpp \
-    Algorithm/Bp/bpcable.cpp \
     Algorithm/Wavelet/wavelet.cpp \
     Algorithm/compute.cpp \
     Algorithm/fft.cpp \
     Algorithm/fir.cpp \
-    IO/Sync/syncthread.cpp \
     IO/File/spacecontrol.cpp \
-    Gui/Common/wifi.cpp \
-    IO/Com/tcpsocket.cpp \
     Gui/Charts/prpdchart.cpp \
     Gui/Charts/historicchart.cpp \
     Gui/Charts/basechart.cpp \
@@ -101,25 +92,48 @@ SOURCES += \
     Gui/Functions/hchannelfunction.cpp \
     Gui/Functions/basechannlfunction.cpp \
     Gui/Functions/lchannelfunction.cpp \
-    Gui/Common/contextmenu.cpp \
     Gui/Function/settingmunu.cpp \
     Gui/Charts/camerachart.cpp \
     Gui/Options/optionwidget.cpp \
-    Gui/Options/Option/optionbasic.cpp \
-    Gui/Options/Option/optionexpert.cpp \
-    Gui/Options/Option/optionstorage.cpp \
-    Gui/Options/Option/optionwifi.cpp \
     IO/File/testtools.cpp \
-    IO/Com/modbussync.cpp \
-    IO/Com/modbus.cpp \
     Gui/mainfunction.cpp \
-    Thread/Camera/cameradata.cpp \
     Thread/Camera/cameradecode.cpp \
-    Thread/Camera/camerasocket1.cpp \
     Thread/Camera/camerasocket.cpp \
     Thread/Sync/synccompute.cpp \
     Thread/Sync/syncsocket.cpp \
-    Thread/Sync/gpsinfo.cpp
+    Thread/Sync/gpsinfo.cpp \
+    Thread/Wifi/wifimanagement.cpp \
+    Thread/Wifi/wificommand.cpp \
+    Gui/Options/TabWidget/debugchannelsetting.cpp \
+    Gui/Options/TabWidget/debughardware.cpp \
+    Gui/Options/TabWidget/optionbasic.cpp \
+    Gui/Options/TabWidget/optionexpert.cpp \
+    Gui/Options/TabWidget/optionstorage.cpp \
+    Gui/Options/TabWidget/optionwifi.cpp \
+    Gui/Options/TabWidget/tabwidget.cpp \
+    Gui/Options/TabWidget/debugchannelhigh.cpp \
+    Gui/Options/TabWidget/debugchannellow.cpp \
+    Gui/Options/debugwidget.cpp \
+    Gui/Options/TabWidget/debugexpert.cpp \
+    Thread/Multimachine/multimachineserver.cpp \
+    Thread/Multimachine/multimachinethread.cpp \
+    Thread/Multimachine/multimachineclient.cpp \
+    Thread/Sync/syncclamp.cpp \
+    Gui/statusbar.cpp \
+    Thread/Wifi/wifipassword.cpp \
+    IO/Com/modbus/uartmodbus.cpp \
+    IO/Com/modbus/uart_oper.c \
+    Gui/TTK/ttkcheckable.cpp \
+    Gui/TTK/ttkcheckbuttonwidget.cpp \
+    Gui/TTK/ttklineeditwidget.cpp \
+    Gui/TTK/ttkmarqueelabel.cpp \
+    Gui/TTK/ttkradiobuttonwidget.cpp \
+    Gui/TTK/ttktogglewidget.cpp \
+    Algorithm/Bp/bp.cpp \
+    Algorithm/Bp/cable_prpd_bp.cpp \
+    Algorithm/Bp/input.cpp \
+    Algorithm/Bp/prpd_bp.cpp \
+    Algorithm/Bp/bpjudge.cpp
 
 
 HEADERS  += \
@@ -145,9 +159,7 @@ HEADERS  += \
     IO/Other/battery.h \
     Gui/Options/systeminfo.h \
     Gui/Options/recwavemanage.h \
-    Gui/Options/options.h \
     Gui/Options/factoryreset.h \
-    Gui/Options/debugset.h \
     Gui/Common/recwaveform.h \
     Gui/Function/aewidget.h \
     Gui/mainwindow.h \
@@ -170,23 +182,16 @@ HEADERS  += \
     IO/Other/cpu.h \
     Gui/Common/basewidget.h \
     Gui/Function/channelwidget.h \
-    IO/Com/socket.h \
     IO/Com/rdb/global_define.h \
     IO/Com/rdb/gpio_oper.h \
-    Gui/Common/wifipassword.h \
     IO/File/filetools.h \
     IO/File/logtools.h \
     IO/File/report.h \
-    Algorithm/Bp/bp.h \
-    Algorithm/Bp/bpcable.h \
     Algorithm/Wavelet/wavelet.h \
     Algorithm/compute.h \
     Algorithm/fft.h \
     Algorithm/fir.h \
-    IO/Sync/syncthread.h \
     IO/File/spacecontrol.h \
-    Gui/Common/wifi.h \
-    IO/Com/tcpsocket.h \
     Gui/Charts/prpdchart.h \
     Gui/Charts/historicchart.h \
     Gui/Charts/basechart.h \
@@ -198,45 +203,75 @@ HEADERS  += \
     Gui/Functions/hchannelfunction.h \
     Gui/Functions/basechannlfunction.h \
     Gui/Functions/lchannelfunction.h \
-    Gui/Common/contextmenu.h \
     Gui/Function/settingmunu.h \
     Gui/Charts/camerachart.h \
     Gui/Options/optionwidget.h \
-    Gui/Options/Option/optionbasic.h \
-    Gui/Options/Option/optionexpert.h \
-    Gui/Options/Option/optionstorage.h \
-    Gui/Options/Option/optionwifi.h \
     IO/File/testtools.h \
-    IO/Com/modbussync.h \
-    IO/Com/modbus.h \
     Gui/mainfunction.h \
-    Thread/Camera/cameradata.h \
     Thread/Camera/cameradecode.h \
-    Thread/Camera/camerasocket1.h \
     Thread/Camera/camerasocket.h \
     Thread/Sync/synccompute.h \
     Thread/Sync/syncsocket.h \
-    Thread/Sync/gpsinfo.h
+    Thread/Sync/gpsinfo.h \
+    Thread/Wifi/wifimanagement.h \
+    Thread/Wifi/wificommand.h \
+    Gui/Options/TabWidget/debugchannelsetting.h \
+    Gui/Options/TabWidget/debughardware.h \
+    Gui/Options/TabWidget/optionbasic.h \
+    Gui/Options/TabWidget/optionexpert.h \
+    Gui/Options/TabWidget/optionstorage.h \
+    Gui/Options/TabWidget/optionwifi.h \
+    Gui/Options/TabWidget/tabwidget.h \
+    Gui/Options/TabWidget/debugchannelhigh.h \
+    Gui/Options/TabWidget/debugchannellow.h \
+    Gui/Options/debugwidget.h \
+    Gui/Options/TabWidget/debugexpert.h \
+    Thread/Multimachine/multimachineserver.h \
+    Thread/Multimachine/multimachinethread.h \
+    Thread/Multimachine/multimachineclient.h \
+    Thread/Sync/syncclamp.h \
+    Gui/statusbar.h \
+    Thread/Wifi/wifipassword.h \
+    IO/Com/modbus/uartmodbus.h \
+    IO/Com/modbus/uart_oper.h \
+    Gui/TTK/ttkcheckable.h \
+    Gui/TTK/ttkcheckbuttonwidget.h \
+    Gui/TTK/ttkglobal.h \
+    Gui/TTK/ttkglobaldefine.h \
+    Gui/TTK/ttklineeditwidget.h \
+    Gui/TTK/ttkmarqueelabel.h \
+    Gui/TTK/ttkradiobuttonwidget.h \
+    Gui/TTK/ttktogglewidget.h \
+    Algorithm/Bp/bp.h \
+    Algorithm/Bp/cable_prpd_bp.h \
+    Algorithm/Bp/input.h \
+    Algorithm/Bp/pd.h \
+    Algorithm/Bp/prpd.h \
+    Algorithm/Bp/prpd_bp.h \
+    Algorithm/Bp/bpjudge.h
 
 FORMS += \
     Gui/Function/tevwidget.ui \
     Gui/Function/hfctwidget.ui \
     Gui/Function/faultlocation.ui \
     Gui/Function/aawidget.ui \
-    Gui/Function/aewidget.ui \
     Gui/Options/voiceplayer.ui \
     Gui/Options/systeminfo.ui \
-    Gui/Options/optionui.ui \
-    Gui/Options/debugui.ui \
     Gui/mainwindow.ui \
     Gui/Function/uhfwidget.ui \
     Gui/Function/Asset/assetwidget.ui \
-    Gui/Options/apinfo.ui \
-    Gui/Options/Option/optionbasic.ui \
-    Gui/Options/Option/optionexpert.ui \
-    Gui/Options/Option/optionstorage.ui \
-    Gui/Options/Option/optionwifi.ui \
-    Gui/Options/optionwidget.ui
+    Gui/Options/optionwidget.ui \
+    Gui/Options/TabWidget/apinfo.ui \
+    Gui/Options/TabWidget/debugchannelsetting.ui \
+    Gui/Options/TabWidget/debughardware.ui \
+    Gui/Options/TabWidget/optionbasic.ui \
+    Gui/Options/TabWidget/optionexpert.ui \
+    Gui/Options/TabWidget/optionstorage.ui \
+    Gui/Options/TabWidget/optionwifi.ui \
+    Gui/Options/TabWidget/debugchannelhigh.ui \
+    Gui/Options/TabWidget/debugchannellow.ui \
+    Gui/Options/debugwidget.ui \
+    Gui/Options/TabWidget/debugexpert.ui
 
 
 RESOURCES += \

@@ -24,10 +24,16 @@ public:
 signals:
 
 public slots:
+    void set_data();
+
+protected:
+    void timerEvent(QTimerEvent *);
 
 private:
     QGraphicsView *chart;       //PRPS图
     PRPSScene *scene;
+    QTimer *timer;
+    bool hasData;
 };
 
 #endif // PRPSCHART_H

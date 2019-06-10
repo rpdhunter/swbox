@@ -33,7 +33,6 @@ FifoData::FifoData(G_PARA *g_data)
 
     //同步信号
     connect(this,SIGNAL(send_sync(qint64,qint64)),fifocontrol,SLOT(send_sync(qint64,qint64)), Qt::DirectConnection);
-    connect(this, SIGNAL(do_sync_immediately()), fifocontrol, SLOT(do_sync_immediately()), Qt::DirectConnection);
 
     /* Start qthread */
 //    this->start();
@@ -139,7 +138,7 @@ void FifoData::run(void)
 
         fifocontrol->read_fpga(sp_read_fpga_envelope2);
         VectorList envelope2_data(134);                 //实际使用134,如果异常状况数据变多,越界也不会造成崩溃
-        ret = fifocontrol->read_ae2_data(envelope1_data.data());
+        ret = fifocontrol->read_ae2_data(envelope2_data.data());
         if(ret == 134){
             emit envelope2_update(envelope2_data);      //发送数据
         }

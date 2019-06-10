@@ -76,5 +76,14 @@
         <file>widgetphoto/wifi/key.png</file>
         <file>widgetphoto/wifi/lock.png</file>
         <file>widgetphoto/other/down.png</file>
+        <file>res/check_box.svg</file>
+        <file>res/check_box_outline.svg</file>
+        <file>res/radio_button_checked.svg</file>
+        <file>res/radio_button_unchecked.svg</file>
+        <file>widgetphoto/wifi/wifi1_c.png</file>
+        <file>widgetphoto/wifi/wifi2_c.png</file>
+        <file>widgetphoto/wifi/wifi3_c.png</file>
+        <file>widgetphoto/wifi/dark.png</file>
+        <file>widgetphoto/wifi/light.png</file>
     </qresource>
 </RCC>

@@ -31,7 +31,6 @@ public:
 
 public slots:
     void dealLog(double val, int pulse, double degree, int is_current = 0, QString result = "NOISE");     //处理日志文件（管理，保存）
-    void dealRPRDLog(QVector<QwtPoint3D> points);
     void change_current_asset_dir();
 
 private:
@@ -47,8 +46,8 @@ private:
 
 
     void write_normal_log(QString path, QVector<LOG_DATA> log_data);
-    void save_PRPD_zdit(QVector<QwtPoint3D> points);                  //自定义PRPD标准
-    void save_PRPD_State_Grid(QVector<QwtPoint3D> points);            //国网公司PRPD标准
+
+
 };
 
 #endif // LOGTOOLS_H

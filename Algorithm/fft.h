@@ -14,16 +14,16 @@ public:
     FFT();
 
     QVector<qint32> fft2048(QVector<qint32> list);      //用于计算低频频谱
+    QVector<float> fft1024(QVector<float> list);      //用于计算低频频谱
     QVector<qint32> fft128(QVector<qint32> list);       //用于计算高频频谱
-    QVector<qint32> fft32(QVector<qint32> list);        //用于计算频率分量
 
 private:
-    ne10_fft_r2c_cfg_float32_t fft_cfg_32;
-    ne10_fft_cpx_float32_t * fft_out_32;
-    ne10_fft_r2c_cfg_float32_t fft_cfg_128;
-    ne10_fft_cpx_float32_t * fft_out_128;
     ne10_fft_r2c_cfg_float32_t fft_cfg_2048;
     ne10_fft_cpx_float32_t * fft_out_2048;
+    ne10_fft_r2c_cfg_float32_t fft_cfg_1024;
+    ne10_fft_cpx_float32_t * fft_out_1024;
+    ne10_fft_r2c_cfg_float32_t fft_cfg_128;
+    ne10_fft_cpx_float32_t * fft_out_128;
 
     int init_fft();
 

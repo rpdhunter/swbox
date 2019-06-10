@@ -59,9 +59,10 @@ void CameraDecode::init_ffmpeg_stream()
 void CameraDecode::getOnePacket(QByteArray buf)
 {
 //    qDebug()<< "CameraDecode Class get one packet : length = "<<buf.length();
-//    qDebug()<< "current frame buf num:" << frame_list.count();
+    if(frame_list.count() > 0)
+        qDebug()<< "current frame buf num:" << frame_list.count();
 
-    if(frame_list.count() > 3)      //缓冲超过3帧,清除缓冲区
+    if(frame_list.count() >= 2)      //缓冲超过3帧,清除缓冲区
         frame_list.clear();
 
     frame_list.append(buf);
@@ -82,8 +83,8 @@ void CameraDecode::run()
         if(camera_init_flag == true){
             camera_init_flag = false;
 
-            qDebug()<<"open AP";
-            system("/root/wifi/ap.sh    window100000  zdit.com.cn    192.168.150.1    255.255.255.0");      //开启AP
+            qDebug()<<"camera open AP";
+//            system("/root/wifi/ap.sh    window100000  zdit.com.cn    192.168.150.1    255.255.255.0");      //开启AP
 //            system("/root/wifi/ap.sh    ZZDDIITT  zdit.com.cn    192.168.150.1    255.255.255.0");
         }
         else if(!frame_list.isEmpty()){

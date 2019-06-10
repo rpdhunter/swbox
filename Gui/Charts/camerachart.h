@@ -2,9 +2,7 @@
 #define CAMERACHART_H
 
 #include "basechart.h"
-#include "IO/Com/socket.h"
 #include "Thread/Camera/cameradecode.h"
-#include "Thread/Camera/camerasocket1.h"
 #include "Thread/Camera/camerasocket.h"
 
 class CameraChart : public BaseChart
@@ -23,6 +21,7 @@ public:
 
 signals:
     void update_statusBar(QString);
+    void connect_camera();      //连接摄像头
 
 public slots:
     void slotGetOneFrame(QImage img);
@@ -33,11 +32,10 @@ public slots:
 
 private:
     QLabel *camera_label;
-    CameraSocket *socket;
-
 
     CameraDecode *decode;
-    CameraSocket1 *camera_socket;
+
+    CameraSocket *camera_socket;
 
     QImage mImage;
 //    bool ap_init_flag;          //网络连接标志位

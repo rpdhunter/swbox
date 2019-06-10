@@ -45,6 +45,9 @@ void HistoricChart::chart_init(QWidget *parent, MODE mode)
 
 void HistoricChart::add_data(int db)
 {
+    if(db == -100){         //默认-100为无效数据
+        return;
+    }
     samples.removeFirst();
     samples.append(db);
     chart->setSamples(samples);

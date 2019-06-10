@@ -4,7 +4,7 @@
 #include "channelwidget.h"
 
 namespace Ui {
-class AEWidget;
+class AAWidget;
 }
 
 class AEWidget : public ChannelWidget
@@ -21,12 +21,12 @@ private slots:
 
 private:
     void do_key_ok();
-    void do_key_cancel();
-    void do_key_up_down(int d);
+//    void do_key_cancel();
+//    void do_key_up_down(int d);
     void do_key_left_right(int d);
     void data_reset();
 
-    Ui::AEWidget *ui;
+    Ui::AAWidget *ui;
 };
 
 #endif // AEWIDGET_H

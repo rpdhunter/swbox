@@ -5,6 +5,7 @@
 #include <QMutex>
 #include "zynq.h"
 #include "data.h"
+#include <QThread>
 
 #define DEV_VMEM				"/dev/mem"
 //读写寄存器
@@ -36,7 +37,6 @@ public slots:
     void playVoiceData(VectorList wave);        //检查播放声音开关
     void stop_play_voice();
     void send_sync(qint64 s,qint64 u);       //发送同步信号
-    void do_sync_immediately();                         //立刻发送同步信号0
 
 signals:
     void playVoiceProgress(int cur, int all, bool);        //返回播放声音的实时进度，cur表示当前播放时间(s),all表示总长度(s)，后一个是是否播完，1未播完，0播完

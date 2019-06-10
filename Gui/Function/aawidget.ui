@@ -13,13 +13,13 @@
   <property name="windowTitle">
    <string notr="true">Form</string>
   </property>
-  <widget class="QWidget" name="">
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
      <x>230</x>
-     <y>40</y>
-     <width>196</width>
-     <height>141</height>
+     <y>20</y>
+     <width>198</width>
+     <height>187</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="layout_main">
@@ -36,11 +36,10 @@
            </sizepolicy>
           </property>
           <property name="styleSheet">
-           <string notr="true">QLabel {font-family:WenQuanYi Micro Hei;font-size:52px;color:white}
-background:transparent;color:gray;</string>
+           <string notr="true">font-family:WenQuanYi Micro Hei;font-size:60px;color:green</string>
           </property>
           <property name="text">
-           <string notr="true">Text</string>
+           <string notr="true">-20</string>
           </property>
           <property name="alignment">
            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -115,18 +114,21 @@ background:transparent;color:gray;</string>
     </item>
     <item>
      <layout class="QGridLayout" name="gridLayout">
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_range_2">
+      <property name="verticalSpacing">
+       <number>0</number>
+      </property>
+      <item row="2" column="2">
+       <widget class="QLabel" name="label_50Hz">
         <property name="styleSheet">
          <string notr="true">QLabel {color:white;}</string>
         </property>
         <property name="text">
-         <string notr="true">100Hz</string>
+         <string notr="true">20mV</string>
         </property>
        </widget>
       </item>
       <item row="1" column="1">
-       <widget class="QProgressBar" name="progressBar_100Hz">
+       <widget class="QProgressBar" name="progressBar_effective">
         <property name="maximumSize">
          <size>
           <width>16777215</width>
@@ -138,7 +140,7 @@ background:transparent;color:gray;</string>
 QProgressBar::chunk{&quot;background-color:skyblue;&quot;}</string>
         </property>
         <property name="maximum">
-         <number>50</number>
+         <number>20</number>
         </property>
         <property name="value">
          <number>0</number>
@@ -148,37 +150,7 @@ QProgressBar::chunk{&quot;background-color:skyblue;&quot;}</string>
         </property>
        </widget>
       </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_range">
-        <property name="styleSheet">
-         <string notr="true">QLabel {color:white;}</string>
-        </property>
-        <property name="text">
-         <string notr="true">50Hz</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="2">
-       <widget class="QLabel" name="label_50Hz">
-        <property name="styleSheet">
-         <string notr="true">QLabel {color:white;}</string>
-        </property>
-        <property name="text">
-         <string notr="true">20mV</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="2">
-       <widget class="QLabel" name="label_100Hz">
-        <property name="styleSheet">
-         <string notr="true">QLabel {color:white;}</string>
-        </property>
-        <property name="text">
-         <string notr="true">10mV</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
+      <item row="2" column="1">
        <widget class="QProgressBar" name="progressBar_50Hz">
         <property name="maximumSize">
          <size>
@@ -191,13 +163,129 @@ QProgressBar::chunk{&quot;background-color:skyblue;&quot;}</string>
 QProgressBar::chunk{&quot;background-color:skyblue;&quot;}</string>
         </property>
         <property name="maximum">
-         <number>50</number>
+         <number>20</number>
         </property>
         <property name="value">
          <number>0</number>
         </property>
         <property name="textVisible">
          <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QProgressBar" name="progressBar_100Hz">
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>15</height>
+         </size>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">QProgressBar{border:1px solid gray;background:transparent;}
+QProgressBar::chunk{&quot;background-color:skyblue;&quot;}</string>
+        </property>
+        <property name="maximum">
+         <number>20</number>
+        </property>
+        <property name="value">
+         <number>0</number>
+        </property>
+        <property name="textVisible">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="2">
+       <widget class="QLabel" name="label_100Hz">
+        <property name="styleSheet">
+         <string notr="true">QLabel {color:white;}</string>
+        </property>
+        <property name="text">
+         <string notr="true">10mV</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QLabel" name="label_peak">
+        <property name="styleSheet">
+         <string notr="true">QLabel {color:white;}</string>
+        </property>
+        <property name="text">
+         <string notr="true">20mV</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="label_range_2">
+        <property name="styleSheet">
+         <string notr="true">QLabel {color:white;}</string>
+        </property>
+        <property name="text">
+         <string notr="true">100Hz</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QProgressBar" name="progressBar_peak">
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>15</height>
+         </size>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">QProgressBar{border:1px solid gray;background:transparent;}
+QProgressBar::chunk{&quot;background-color:skyblue;&quot;}</string>
+        </property>
+        <property name="maximum">
+         <number>20</number>
+        </property>
+        <property name="value">
+         <number>0</number>
+        </property>
+        <property name="textVisible">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_range_4">
+        <property name="styleSheet">
+         <string notr="true">QLabel {color:white;}</string>
+        </property>
+        <property name="text">
+         <string>峰值</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QLabel" name="label_effective">
+        <property name="styleSheet">
+         <string notr="true">QLabel {color:white;}</string>
+        </property>
+        <property name="text">
+         <string notr="true">20mV</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_range">
+        <property name="styleSheet">
+         <string notr="true">QLabel {color:white;}</string>
+        </property>
+        <property name="text">
+         <string notr="true">50Hz</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_range_3">
+        <property name="styleSheet">
+         <string notr="true">QLabel {color:white;}</string>
+        </property>
+        <property name="text">
+         <string>有效值</string>
         </property>
        </widget>
       </item>

@@ -45,10 +45,6 @@ void LogTools::dealLog(double val, int pulse, double degree, int is_current, QSt
         while (data_asset.length() > MAX_LOG_NUM) {
             data_asset.removeFirst();
         }
-
-//        //保存文件
-////        write_normal_log(path_normal,data_normal);
-//        write_normal_log(path_asset,data_asset);
     }
 
     //60s保存文件
@@ -62,127 +58,13 @@ void LogTools::dealLog(double val, int pulse, double degree, int is_current, QSt
     }
 }
 
-//完成PRPD文件的保存
-//一般测量保存至标准目录
-//资产测量保存至资产目录（以硬链接的形式）
-void LogTools::dealRPRDLog(QVector<QwtPoint3D> points)
-{
-    if(points.isEmpty()){
-        return;
-    }
-    save_PRPD_zdit(points);
-    if(mode == HFCT1 || mode == HFCT2){
-        save_PRPD_State_Grid(points);           //高频模式保存国网格式
-    }
-}
-
-void LogTools::save_PRPD_zdit(QVector<QwtPoint3D> points)
-{
-    QFile file;
-    bool flag;
-
-    QString file_name = QString(Common::mode_to_string(mode) + "_PRPD_" + QDateTime::currentDateTime().toString("yyyy-MM-dd-HH-mm-ss-zzz") + ".log");
-    file.setFileName(DIR_PRPDLOG"/" + file_name);
-
-    QString str_src = file.fileName();
-    flag = file.open(QIODevice::WriteOnly);
-    if(flag){
-        QTextStream out(&file);
-
-        //保存纯数据格式
-        foreach (QwtPoint3D p, points) {
-            out << p.x() << "\t"
-                << p.y() << "\t"
-                << p.z() << "\n";
-        }
-
-        qDebug()<<"ZDIT PRPD file saved! \tnum="<< points.length() << "\tmode = "<<Common::mode_to_string(mode);
-
-        file.close();
-        Common::create_hard_link(str_src, file_name);           //建立硬连接
-    }
-
-    SpaceControl::file_bySize(DIR_PRPDLOG, 200e6);         //大于200M,开删
-}
-
-void LogTools::save_PRPD_State_Grid(QVector<QwtPoint3D> points)
-{
-    QFile file;
-    bool flag;
-
-    QString format_str;
-    if(mode == HFCT1 || mode == HFCT2){
-        format_str = ".HF";
-    }
-    else if(mode == TEV1 || mode == TEV2){
-        format_str = ".TEV";
-    }
-    else if(mode == UHF1 || mode == UHF2){
-        format_str = ".UHF";
-    }
-    else if(mode == AA1 || mode == AA2){
-        format_str = ".AA";
-    }
-    else if(mode == AE1 || mode == AE2){
-        format_str = ".AE";
-    }
-    QString file_name = QDateTime::currentDateTime().toString("yyyyMMdd_HHmm") + format_str;
-    file.setFileName(DIR_PRPDLOG"/" + file_name);
-
-    QString str_src = file.fileName();
-    flag = file.open(QIODevice::WriteOnly);
-    if(flag){
-        QDataStream out(&file);
-//        out.setByteOrder(QDataStream::LittleEndian);
-        out.setFloatingPointPrecision(QDataStream::SinglePrecision);            //设置浮点数流格式为单精度（float占4字节）
-
-        out << (float)1.0;          //版本号（4字节）
-        out << (quint8)0x00;        //谱图类型 0x00——PRPD，0x01——PRPS（1字节）
-        out << (int)360;            //工频相位窗数（4字节）
-        out << (qint32)121;         //幅值范围（4字节）
-        out << (quint8)0x01;        //幅值单位 0x01——db，0x02——mv，0x03——pC（4字节）
-        out << (float)-60;          //幅值上限（4字节）
-        out << (float)60;           //幅值下限（4字节）
-        out << (qint32)0;           //工频周期数（4字节）
-
-        char t[] = {100,0,0,0,0,0,0,0,0}; //放电概率，8字节对应8种放电类型（8字节）
-        out.writeRawData(t,8);
-        int map[360][121];
-        for (int i = 0; i < 360; ++i) {
-            for (int j = 0; j < 121; ++j) {
-                map[i][j] = 0;
-            }
-        }
-        int x,y;
-        foreach (QwtPoint3D p, points) {
-            x = p.x();
-            if(p.y()>6000){
-                y = 6000;
-            }
-            else{
-                y = p.y();
-            }
-            y = 20*log10(y/6.0 );      //取DB
-            map[x][y] += 1;
-        }
-
-        for (int i = 0; i < 360; ++i) {     //写入
-            for (int j = 0; j < 121; ++j) {
-                out << map[i][j];
-            }
-        }
-        qDebug()<<"State_Grid PRPD file saved! \tnum="<< points.length() << "\tmode = "<<Common::mode_to_string(mode);
-
-        file.close();
-        Common::create_hard_link(str_src, file_name);           //建立硬连接
-    }
-}
-
 void LogTools::change_current_asset_dir()
 {
+//    save_log();     //提前保存
     path_asset = QString::fromLocal8Bit(sqlcfg->get_global()->current_dir) + "/" + Common::mode_to_string(mode) + "_NORMAL" + ".log";
 //    printf("current dir:%s\n", path_asset.toLocal8Bit().data());
     read_normal_log(path_normal,data_normal);
+    data_asset.clear();
 }
 
 //读入历史数据，保存在链表中

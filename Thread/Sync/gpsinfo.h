@@ -8,7 +8,11 @@ class GPSInfo : public QObject
 {
     Q_OBJECT
 public:
-    explicit GPSInfo(float temp, float humi, QList<QByteArray> list, QObject *parent = nullptr);
+    explicit GPSInfo(QObject *parent = nullptr);
+
+    void init(float temp, float humi, QList<QByteArray> list);
+
+    QString gps_str();
 
 
     float temperature;      //温度
@@ -28,6 +32,10 @@ public:
 signals:
 
 public slots:
+
+private:
+    QList<float> temp_list;             //记录收到的温度
+    void add_temp(float wendu);         //温度补偿
 };
 
 #endif // GPSINFO_H

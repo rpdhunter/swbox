@@ -198,26 +198,21 @@ void FifoControl::send_para()
 
 void FifoControl::send_sync(qint64 s, qint64 u)
 {
+//    qDebug()<<"send_sync Thread ID:"<<QThread::currentThreadId();
     int stand_T = 1000000 / sqlcfg->get_para()->freq_val;       //工频周期(us),50Hz时是20000us,60Hz时是16667us
     struct timeval zero_time, current_time;
     zero_time.tv_sec = s;
     zero_time.tv_usec = u;
     gettimeofday(&current_time, NULL);
     int interval = Common::time_interval(zero_time, current_time);    //当前时间点和过零点之间的间隔(us)
-    int adjust = 45 + sqlcfg->get_para()->sync_external_val;          //修正角度
-    uint offset = ( ( interval + adjust * 500 / 9 )  % stand_T) * 100;        //20000us = 20ms 等于周期
+
+    qDebug()<<"interval:"<<interval;
+    int adjust = (sqlcfg->get_para()->sync_val + 40) * stand_T / 360;          //修正角度转换成us(40是固定补偿角度)
+    uint offset = ( ( interval + adjust )  % stand_T) * 100;        //20000us = 20ms 等于周期
     uint temp = (DO_SYNC << 16) | offset/32;
     send_data (vbase_normal_send, &temp, 1);
     qDebug("WRITE_REG_SYNC = 0x%08x", temp);
     qDebug()<<"sync completed!!! \t sync offset = "<< offset;
-}
-
-void FifoControl::do_sync_immediately()
-{
-    uint temp = (DO_SYNC << 16) | 0x00;
-    send_data (vbase_normal_send, &temp, 1);
-    qDebug("WRITE_REG_SYNC = 0x%08x", temp);
-    qDebug()<<"done"<<QTime::currentTime();
 }
 
 /***************************************

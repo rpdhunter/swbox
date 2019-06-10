@@ -28,22 +28,24 @@ void CameraChart::chart_init(QWidget *parent, MODE mode)
     fps_label->hide();
 
     tips_label = new QLabel(parent);
-    fps_label->setText("按OK键连接摄像头");
-    fps_label->resize(200,60);
-    fps_label->setStyleSheet("QLabel{color:white;}");
-    fps_label->move(15,80);
+    tips_label->setText("按OK键连接摄像头");
+    tips_label->resize(200,60);
+    tips_label->setStyleSheet("QLabel{color:yellow;}");
+    tips_label->move(15,80);
+//    tips_label->hide();
 
-    camera_socket = new CameraSocket1;
+//    camera_socket = new CameraSocket1;
 
-//    socket = new CameraSocket;
+    camera_socket = new CameraSocket;
+    connect(this, SIGNAL(connect_camera()), camera_socket, SLOT(connect_camera()));
 
     decode = new CameraDecode;
     timer_5000ms = new QTimer();
     timer_5000ms->setInterval(5000);
     timer_5000ms->setSingleShot(true);
     connect(timer_5000ms, SIGNAL(timeout()), this, SLOT(check_camera()));
-    connect(camera_socket, SIGNAL(sendOnePacket(QByteArray)), decode, SLOT(getOnePacket(QByteArray)));      //socket-->解码器
-    connect(camera_socket, SIGNAL(sendOnePacket(QByteArray)), this, SLOT(change_camera_status()));
+    connect(camera_socket, SIGNAL(sendOneFrame(QByteArray)), decode, SLOT(getOnePacket(QByteArray)));      //socket-->解码器
+    connect(camera_socket, SIGNAL(sendOneFrame(QByteArray)), this, SLOT(change_camera_status()));
     connect(decode,SIGNAL(sigGetOneFrame(QImage)),this,SLOT(slotGetOneFrame(QImage)),Qt::QueuedConnection);      //解码器-->主界面
 
     decode->camera_init();      //做一下连接初始化动作（打开AP，打开camera外部程序）
@@ -59,8 +61,8 @@ void CameraChart::chart_init(QWidget *parent, MODE mode)
 void CameraChart::do_key_ok()
 {
     if(camera_hasdata == false){        //如果摄像头卡顿,则尝试重连
-        camera_socket->connect_camera();
-//        socket->connect_camera();
+//        camera_socket->connect_camera();
+        emit connect_camera();
         return;
     }
 
@@ -71,7 +73,7 @@ void CameraChart::do_key_ok()
 
     if(camera_fullsize == true){            //如果全屏且有数据,则进行截屏
         //插入保存谱图代码
-        save_picture();
+//        save_picture();
         return;
     }
 }
@@ -106,6 +108,7 @@ void CameraChart::save_picture()
     Common::mk_dir(DIR_CAMERASHOTS);
     QString str = QString(DIR_CAMERASHOTS"/camerashot_%1.png").arg(QDateTime::currentDateTime().toString("yyyy-MM-dd-HH-mm-ss-zzz") );
     int f = mImage.save(str , "PNG");
+    qDebug()<<"mImage.byteCount()"<<mImage.byteCount();
     qDebug()<<">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>save pic :"<<f;
 
     qDebug()<<"save camera picture";
@@ -117,6 +120,7 @@ void CameraChart::hide()
     if(camera_label != NULL){
         camera_label->hide();
         fps_label->hide();
+        tips_label->hide();
     }
 }
 
@@ -124,6 +128,12 @@ void CameraChart::show()
 {
     if(camera_label != NULL){
         camera_label->show();
+        if(camera_hasdata){
+            tips_label->hide();
+        }
+        else{
+            tips_label->show();
+        }
         if(camera_fullsize)
             fps_label->show();
     }
@@ -132,6 +142,7 @@ void CameraChart::show()
 void CameraChart::slotGetOneFrame(QImage img)
 {
     frame_count++;
+    mImage = img.copy();
     if(camera_fullsize){
         camera_label->setPixmap(QPixmap::fromImage(img).scaledToWidth(camera_label->width()));
     }
@@ -144,11 +155,13 @@ void CameraChart::change_camera_status()
 {
     timer_5000ms->start();
     camera_hasdata = true;
+    tips_label->hide();
 }
 
 void CameraChart::check_camera()
 {
     camera_hasdata = false;
+    tips_label->show();
 }
 
 void CameraChart::show_frame_count()

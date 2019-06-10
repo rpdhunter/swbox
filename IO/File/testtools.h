@@ -12,6 +12,7 @@ public:
     explicit TestTools(QObject *parent = nullptr);
 
     static void save_test_file(QVector<int> list, QString path = DIR_TEST);
+    static void save_test_file(QVector<QPoint> list, QString path = DIR_TEST);
 
 signals:
 

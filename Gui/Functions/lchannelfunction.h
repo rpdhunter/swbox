@@ -2,6 +2,7 @@
 #define LCHANNELFUNCTION_H
 
 #include "basechannlfunction.h"
+//#include "IO/Com/modbus/uartmodbus.h"
 
 class LChannelFunction : public BaseChannlFunction
 {
@@ -9,20 +10,23 @@ class LChannelFunction : public BaseChannlFunction
 public:
     explicit LChannelFunction(G_PARA *data, MODE mode, QObject *parent = nullptr);
 
-    virtual void channel_start();               //通道开始工作接收数据
+    void channel_start();               //通道开始工作接收数据
 
     void change_vol(int d);             //改变音量
     void reset_vol();                   //重置音量
 
     void save_rdb_data();               //保存rdb数据
+    void save_modbus_data();            //发送modbus数据
 
     void clear_100ms();
+    void clear_1000ms();
 
     QVector<int> spectra_100ms();
 
-    int v_50Hz();
-    int v_100Hz();
-
+    float v_50Hz() const;
+    float v_100Hz() const;
+    float v_effective() const;
+    float v_peak() const;
 
 signals:
 
@@ -35,15 +39,18 @@ private:
     QVector<int> envelope_datalist;
     QVector<int> envelope_timelist;
 
-    float temp_db;          //db显示缓冲区
+    float temp_db;                  //db显示缓冲区
     float last_1000ms_max_val;      //前1秒内最大值
 
-    QVector<int> ae_fftlist;
+    QVector<float> ae_fftlist;
     FFT *fft;
-    int _v_50Hz,_v_100Hz;
+    QVector<float> _v_50Hz, _v_100Hz, _v_effective, _v_peak;
 
     void compute_db_100ms();
     void compute_pulse_100ms();
+
+//    UartModbus *uartmodbus;
+    char *buf;
 
 //    QVector<QPoint> calc_pulse_list();          //根据给出的序列和阈值计算脉冲序列
 

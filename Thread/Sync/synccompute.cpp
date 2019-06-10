@@ -1,5 +1,5 @@
 ﻿#include "synccompute.h"
-#include <sys/time.h>    // for gettimeofday()
+#include <QThread>
 
 /*********************************************************
  * modbus报文处理类,主要处理3类报文
@@ -9,6 +9,7 @@
  * ******************************************************/
 SyncCompute::SyncCompute(QObject *parent) : QObject(parent)
 {
+    gps_info = new GPSInfo(this);
 }
 
 /*********************************************************
@@ -153,6 +154,13 @@ unsigned short SyncCompute::modbus_crc(unsigned char *buf, unsigned char length)
     return val;
 }
 
+void SyncCompute::show_time(QString str)
+{
+    struct timeval current_time;
+    gettimeofday(&current_time, NULL);      //得到当次时间
+    qDebug()<<str + " time:"<<current_time.tv_usec;
+}
+
 /******************************************************
  * 同步处理函数
  * 1.能够从报文中提取出通信延迟,频率,同步模式,计算出同步时间
@@ -163,34 +171,38 @@ unsigned short SyncCompute::modbus_crc(unsigned char *buf, unsigned char length)
 int SyncCompute::modbus_deal_sync_msg(modbus_dev_t *ndp)
 {
     float group_num = ndp->recv_buf[9] * 0x1000000 + ndp->recv_buf[10] * 0x10000 + ndp->recv_buf[11] * 0x100  + ndp->recv_buf[12];          //组号
+    if(group_num < 10){              //不满10次,发送回复
+        emit get_sync();
+    }
+
+//    qDebug()<<"group num :"<<group_num;
+
     float tel_delay = 0.100 * (ndp->recv_buf[13] * 0x1000000 + ndp->recv_buf[14] * 0x10000 + ndp->recv_buf[15] * 0x100  + ndp->recv_buf[16]); //延迟(ms)
     float freq = (ndp->recv_buf[7] * 0x100 + ndp->recv_buf[8]) / 100.0;         //频率(Hz)
-    int sync_mode = ndp->recv_buf[17] * 0x100 + ndp->recv_buf[18];              //同步模式
+
     float sync_time = trans_time(last_time, tel_delay);                         //计算出同步时间
+    if(group_num > 0){                              //第0次由于延迟还没有计算，计算出的时间是无意义的
+        timeval zero_time;
+        zero_time.tv_sec = last_time.tv_sec;
+        zero_time.tv_usec = last_time.tv_usec - tel_delay * 1000;
+        sync_map.insert(sync_time, zero_time);
+    }
+    else if(group_num == 0){
+        sync_map.clear();
+        emit send_freq(freq);       //发送收到的第一个频率
+    }
 
-    qDebug()<<"sync mode:"<<sync_mode;
+//    int sync_mode = ndp->recv_buf[17] * 0x100 + ndp->recv_buf[18];              //同步模式
+//    qDebug()<<"sync mode:"<<sync_mode;
+    qDebug()<<"group_num:"<<group_num<<"\ttel_delay:"<<tel_delay << "\tfreq:"<<freq << "\tsync_time:"<< sync_time;
 
-//    if(tel_delay > 20 && tel_delay < 45)
-//        qDebug()<< QString::number(tel_delay,'f',1) << "\t" << QString::number(sync_time,'f',1);
-
-//        r = qAbs(Compute::phase_error(sync_time, sync_time_list));
-//        if(sync_time_list.count() == 8){
-//            if( r < 1 ){     //判断输入值有效，进行同步
-//                Common::time_addusec(last_time, -tel_delay * 1000);
-//                send_sync(last_time.tv_sec, last_time.tv_usec);
-
-//                qDebug()<<"success, error is:\t"<<r << "\tavrage is:\t" << Common::avrage(sync_time_list) << sync_time_list;
-//            }
-//            else{
-//                qDebug()<<"failed, error is:\t"<<r << "\tavrage is:\t" << Common::avrage(sync_time_list) << sync_time_list;
-//            }
-//            qDebug()<<"\n";
-//        }
-
-//        sync_time_list.append(sync_time);
-//        while(sync_time_list.count() > 8){
-//            sync_time_list.removeFirst();
-//        }
+    if(group_num >= 10 && sync_map.count() >= 10){                    //一秒内的第十次数据,就开始结算之前的数据
+        timeval zero_time = compute_zero_time();
+        emit send_sync(zero_time.tv_sec, zero_time.tv_usec);
+//        emit send_freq(freq);
+        sync_map.clear();
+        qDebug()<<"--------------------end-----------------";
+    }
 
     struct timeval current_time;
     gettimeofday(&current_time, NULL);      //得到当次时间
@@ -202,8 +214,7 @@ int SyncCompute::modbus_deal_sensor_msg(modbus_dev_t *ndp)
 {
     float wendu = (ndp->recv_buf[7] * 0x100 + ndp->recv_buf[8]) / 100.0;
     float shidu = (ndp->recv_buf[9] * 0x100 + ndp->recv_buf[10]) / 100.0;
-    qDebug()<<"wen du:"<<wendu <<"C";
-    qDebug()<<"shi du:"<<shidu << "%";
+    qDebug()<<"Temp:"<<wendu <<"C\tHumi:"<<shidu << "%";
 
     QByteArray a;
     QList<QByteArray> gps;
@@ -211,19 +222,53 @@ int SyncCompute::modbus_deal_sensor_msg(modbus_dev_t *ndp)
         a.append(QChar::fromLatin1(ndp->recv_buf[i]));
     }
     gps = a.split(',');
-    GPSInfo gps_info(wendu,shidu,gps);
-    emit get_gps_info(&gps_info);
+    gps_info->init(wendu,shidu,gps);
+    emit send_gps_info(gps_info);
+
+//    temp_list.append(wendu);
+//    if(temp_list.count() > 4){
+//        float del = temp_list.last() - temp_list.first();      //温度变化值
+//        QVector<float> temp_table;                          //定义温度表,通过查表确定温度修正值
+//        temp_table << 17 << 16 << 15 << 14 << 13            //0.1, 0.3, 0.5, 0.7, 0.9
+//                   << 12.5 << 12 << 11.5 << 11.25 << 11     //1.1, 1.3, 1.5, 1.7, 1.9
+//                   << 10.75 << 10.5;                        //2.1, 2.3
+//        int n = qRound( (del - 0.1) / 0.2 );        //四舍五入取整
+//        float modify;
+//        if(n < 0){
+//            modify = 18;
+//        }
+//        else if(n < temp_table.count()){
+//            modify = temp_table.at(n);
+//        }
+//        else{
+//            modify = 10;
+//        }
+
+//        wendu -= modify;                  //温度加入动态修正
+//        qDebug()<<"del:"<<del<<"\tTemp modify:"<<modify<<"\tTemp:"<<wendu;
+
+
+//        temp_list.removeFirst();
+
+//        QByteArray a;
+//        QList<QByteArray> gps;
+//        for (int i = 11; i < ndp->recv_buf[6] + 9; ++i) {
+//            a.append(QChar::fromLatin1(ndp->recv_buf[i]));
+//        }
+//        gps = a.split(',');
+//        gps_info->init(wendu,shidu,gps);
+//        emit send_gps_info(gps_info);
+//    }
+
     return 0;
 }
 
+/****************************************************************
+ * 根据接收时间和通信延迟计算出发送时间，并转化成【0-20）ms内的标准数据
+ * tobe:60Hz情况需重做
+ * *************************************************************/
 float SyncCompute::trans_time(timeval recv_time, float delay_time)
 {
-    //    ms = last_time.tv_usec / 1000.0;                //上一次时间,转化为ms
-    //    last_recv_time = ms - int(ms) + int(ms) % 20;   //保留小数点取余
-//    sync_time = 200 + last_recv_time - tel_delay;
-//    while (sync_time >= 20) {
-//        sync_time -= 20;
-//    }
     float ms = recv_time.tv_usec / 1000.0 - delay_time;
     if(ms < 0){
         ms += 1000;
@@ -231,3 +276,127 @@ float SyncCompute::trans_time(timeval recv_time, float delay_time)
     ms = ms - int(ms) + int(ms) % 20;
     return ms;
 }
+
+float SyncCompute::compute_sync_time(QVector<float> list)
+{
+    //输入数据量检查
+    if(list.count() < 5){
+        qDebug()<<"compute_sync_time input error";
+        return 0;
+    }
+
+    //判断序列是否处在临界位置
+    int n = 0;
+    foreach (float l, list) {
+        if(l < 3 || l > 17){
+            n++;
+        }
+    }
+    if(n > 5){      //处于临界位置，需要数据映射处理
+        float temp;
+        for (int i = 0; i < list.count(); ++i) {    //将数据做一个映射【0-20)=> 【5-25)，以保证序列均值不会出现在区间边界
+            temp = list.at(i) + 10;
+            if(temp > 25){
+                temp -= 20;
+            }
+            list[i] = temp;
+        }
+    }
+
+    //格拉布斯准则（先用简化版）
+    qSort(list.begin(), list.end());                //排序
+    list.removeFirst();
+    list.removeFirst();
+    list.removeLast();
+    list.removeLast();
+    float av = Compute::avrage(list);
+
+
+    if(n > 5){                              //映射回正常范围
+        av -= 10;
+        if(av < 0){
+            av += 20;
+        }
+    }
+
+
+//    qDebug()<<list;
+    qDebug()<<" [ "<<av<<" ] ";
+
+    return av;
+}
+
+float SyncCompute::compute_delay_time(QVector<float> list)
+{
+    //输入数据量检查
+    if(list.count() < 5){
+        qDebug()<<"compute_sync_time input error";
+        return 0;
+    }
+
+    //格拉布斯准则（先用简化版）
+    qSort(list.begin(), list.end());                //排序
+    list.removeFirst();
+    list.removeFirst();
+    list.removeLast();
+    list.removeLast();
+    float av = Compute::avrage(list);
+
+    qDebug()<<" [ "<<av<<" ] ";
+
+    return av;
+}
+
+timeval SyncCompute::compute_zero_time()
+{
+    QList<float> list = sync_map.keys();
+
+    //判断序列是否处在临界位置
+    int n = 0;
+    foreach (float l, list) {
+        if(l < 3 || l > 17){
+            n++;
+        }
+    }
+    if(n > 5){      //处于临界位置，需要数据映射处理
+        QMap<float, timeval> new_map;
+        QMapIterator<float, timeval> i(sync_map);
+        float temp_key;
+        while (i.hasNext()) {
+            i.next();
+            temp_key = i.key() + 10;
+            if(temp_key > 25){
+                temp_key -= 20;
+            }
+            new_map.insert(temp_key, i.value());
+        }
+        return compute_zero_time(new_map);
+    }
+    else{
+        return compute_zero_time(sync_map);
+    }
+}
+
+timeval SyncCompute::compute_zero_time(QMap<float, timeval> map)
+{
+    float key = map.keys().at(5);
+    qDebug()<<map.keys();
+    return map.value(key);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

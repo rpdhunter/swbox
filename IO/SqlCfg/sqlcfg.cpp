@@ -1,4 +1,5 @@
 ﻿#include "sqlcfg.h"
+#include <QNetworkInterface>
 
 SqlCfg *sqlcfg = NULL;
 
@@ -132,9 +133,11 @@ SQL_PARA *SqlCfg::default_config(void)
 
     sql_para.sync_mode = sync_none;
     sql_para.sync_val = 0;
-    sql_para.sync_internal_val = 0;
-    sql_para.sync_external_val = 0;
     sql_para.file_save_standard = file_save_zdit;       //采用自定义标准保存文件
+    sql_para.multimachine_mode = multimachine_close;    //默认关闭
+    sql_para.time_zone = 8;                 //默认为东8区
+    sql_para.ethernet = false;              //默认关闭以太网口
+    sql_para.temp_compensation = temp_auto;     //默认智能温度补偿
 
     return &sql_para;
 }
@@ -205,8 +208,26 @@ void SqlCfg::sql_init()
     sql_para.uhf1_sql.auto_rec = false;
     sql_para.uhf2_sql.auto_rec = false;
 
-    sql_global.test_mode = false;       //开机关闭测试模式
-    strcpy(sql_global.current_dir, DIR_DATA);      //开机时需要重置当前目录
+    sql_para.backlight = BACK_LIGTH;                //开机重置屏幕亮度
+    sql_global.test_mode = false;                   //开机关闭测试模式
+    strcpy(sql_global.current_dir, DIR_DATA);       //开机时需要重置当前目录
+    sql_global.mac_code = 1;                        //特征码默认为1
+    QList<QNetworkInterface> nets = QNetworkInterface::allInterfaces();// 获取所有网络接口列表
+    foreach (QNetworkInterface i, nets) {
+        if(i.name() == "eth0"){
+            sql_global.mac = i.hardwareAddress();
+            sql_global.mac_code = sql_global.mac.mid(sql_global.mac.count()-2,2).toInt(NULL,10);       //取mac后两位
+            break;
+        }
+    }
+    if(sql_global.mac.mid(sql_global.mac.count()-5,2) == "01"){
+        sql_global.wifi_enable = false;
+    }
+    else{
+        sql_global.wifi_enable = true;
+    }
+    sql_global.wifi_working = false;
+    sql_global.color = Qt::black;
 }
 
 void SqlCfg::tev_default(CHANNEL_SQL &sql)

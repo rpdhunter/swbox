@@ -1676,6 +1676,8 @@ int yk_operate_proto (
                     break;
                 }
             }
+            else{
+            }
             dhook = dhook->next;
         }
         if (proto_no != -1) {
@@ -1688,14 +1690,17 @@ int yk_operate_proto (
     yk_entry = &yk_entry [proto_no];
     /* 获取互斥信号量 */
     sem_timewait (&yk_entry->mutex, NULL);  
-    if ((yk_entry->ctl_step == YK_SEL ||yk_entry->ctl_step == YK_VAL) &&
+//    printf("yk_entry->ctl_step=%d,yk_entry->sel_val = %d,ctl_val = %d\n",yk_entry->ctl_step,yk_entry->sel_val,ctl_val);
+    if ((yk_entry->ctl_step == YK_SEL ||yk_entry->ctl_step == YK_VAL) //&&
             //yk_entry->app_id == app_id &&
-            yk_entry->sel_val == ctl_val) {
+            //yk_entry->sel_val == ctl_val
+            ) {
         yk_entry->ctl_val = ctl_val;
 
-        yk_entry->ctl_step = YK_OPER;
+        yk_entry->ctl_step = YK_VAL;
         yk_entry->sel_timer = 0;
         yk_entry->oper_timer = YK_OPER_TO * 1000000;
+
        _DPRINTF ("yk(%d) operate(%s) by app(%d)\n", yk_no, ctl_val == DP_OPEN ? "OPEN" : "CLOSE", app_id);
         /* 开出接点动作 */
 

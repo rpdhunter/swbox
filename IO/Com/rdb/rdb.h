@@ -77,6 +77,7 @@ extern "C" {
 #define QDS_EI			0x08	/* 品质，动作时间无效 */
 #define QDS_FO			0x04	/* 品质，前台 */
 #define QDS_BA			0x02	/* 品质，后台 */
+//#define QDS_EN          0x01    /* 品质，有效 */
 
 #define BCR_SEQ_NOT_SQ	0x1f	/* 顺序记法，顺序号 */
 #define BCR_SEQ_NOT_CY	0x20	/* 顺序记法，进位 */

@@ -1,5 +1,7 @@
 ﻿#include "channelwidget.h"
 
+#define FREEZE_TIME     1200            //秒界面锁定时间
+
 ChannelWidget::ChannelWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu_index, QWidget *parent) : BaseWidget(val,parent)
 {
     this->h_fun = NULL;
@@ -17,12 +19,9 @@ ChannelWidget::ChannelWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, in
     recWaveForm = new RecWaveForm(menu_index,this);
     connect(this, SIGNAL(send_key(quint8)), recWaveForm, SLOT(trans_key(quint8)));
     connect(recWaveForm,SIGNAL(fresh_parent()),this,SLOT(doHideWaveData()));
-//    connect(recWaveForm,SIGNAL(fresh_parent()),this,SIGNAL(fresh_parent()));
-//    connect(recWaveForm, SIGNAL(fresh_parent()), timer_freeze, SLOT(start()) );
 
     logtools = new LogTools(mode);      //日志保存模块
     connect(this,SIGNAL(send_log_data(double,int,double,int,QString)),logtools,SLOT(dealLog(double,int,double,int,QString)));
-    connect(this,SIGNAL(send_PRPD_data(QVector<QwtPoint3D>)),logtools,SLOT(dealRPRDLog(QVector<QwtPoint3D>)));
 
     historic_chart = new HistoricChart(this);
     prpd_chart = new PRPDChart(this);
@@ -45,7 +44,8 @@ void ChannelWidget::change_log_dir()
  * 1.只显示当前通道的录波结果,非当前通道不显示
  * 2.手动录波必须显示
  * 3.自动录波显示优先级低于设置菜单(使得更改设置可以从容不迫)
- *   摒弃了之前冻结5秒的傻逼设计
+ * 4.为防止按返回键后立刻出现录波界面，保留了冻结计时器
+ *   不过冻结时间设定为1.2秒，刚好够打开菜单操作
  * *************************************************/
 void ChannelWidget::showWaveData(VectorList buf, MODE mod)
 {
@@ -83,6 +83,7 @@ void ChannelWidget::save_channel()
     prpd_chart->save_data();
 }
 
+//设置当前通道是否前台,同时重置数据
 void ChannelWidget::set_current(int index)
 {
     int is_current = 0;
@@ -92,7 +93,7 @@ void ChannelWidget::set_current(int index)
 
     if(fun != NULL){
         fun->set_current(is_current);
-        fun->cancel_sql();
+        fun->reload_sql();
     }
 }
 
@@ -150,18 +151,35 @@ void ChannelWidget::do_key_ok()
 
 void ChannelWidget::do_key_cancel()
 {
-    key_val->grade.val1 = 0;
-    key_val->grade.val2 = 0;
-
-    if(fun != NULL){
-        fun->cancel_sql();
-        historic_chart->reset_colormap(fun->sql()->high, fun->sql()->low);
-        prps_chart->reset_colormap(fun->sql()->high,fun->sql()->low);
+    if(key_val->grade.val2 >= SUB_MENU_NUM_BASE){
+        key_val->grade.val2 = settingMenu->main_menu_num();
     }
+    else{
+        key_val->grade.val1 = 0;
+        key_val->grade.val2 = 0;
 
-    if(h_fun != NULL){        
-        h_fun->reset_auto_rec();
-        h_fun->reset_threshold();
+        if(fun != NULL){
+            fun->reload_sql();
+            historic_chart->reset_colormap(fun->sql()->high, fun->sql()->low);
+            prps_chart->reset_colormap(fun->sql()->high,fun->sql()->low);
+//            fun->channel_start();
+        }
+
+        if(h_fun != NULL){
+            h_fun->reset_auto_rec();
+            h_fun->reset_threshold();
+        }
+    }
+}
+
+void ChannelWidget::do_key_up_down(int d)
+{
+    key_val->grade.val1 = 1;
+    if(key_val->grade.val2 >= SUB_MENU_NUM_BASE){
+        Common::change_index(key_val->grade.val2,d,SUB_MENU_NUM_BASE + settingMenu->sub_menu_num() - 1, SUB_MENU_NUM_BASE);       //控制次级菜单
+    }
+    else{
+        Common::change_index(key_val->grade.val2,d,settingMenu->main_menu_num(),1);          //控制主菜单
     }
 }
 
@@ -191,7 +209,7 @@ void ChannelWidget::do_key_left_right(int d)
         case SUB_MENU_NUM_BASE + 5:         //修改脉冲计数时长
             fun->change_pulse_time(d);
             break;
-        case SUB_MENU_NUM_BASE + 6:         //修改脉冲计数时长
+        case SUB_MENU_NUM_BASE + 6:         //修改脉模式识别
             fun->toggle_mode_recognition();
             break;
         default:

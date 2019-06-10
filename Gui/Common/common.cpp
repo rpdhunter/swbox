@@ -474,15 +474,19 @@ int Common::code_value(double physical_value, MODE mode)
         break;
     case AA1:
         v_code = physical_value / 4 / sqlcfg->get_para()->aa1_sql.gain / AA_FACTOR;
+        v_code = Compute::l_channel_modify_inverse(v_code);
         break;
     case AA2:
         v_code = physical_value / 4 / sqlcfg->get_para()->aa2_sql.gain / AA_FACTOR;
+        v_code = Compute::l_channel_modify_inverse(v_code);
         break;
     case AE1:
         v_code = physical_value / 4 / sqlcfg->get_para()->ae1_sql.gain / sqlcfg->ae1_factor();
+        v_code = Compute::l_channel_modify_inverse(v_code);
         break;
     case AE2:
         v_code = physical_value / 4 / sqlcfg->get_para()->ae2_sql.gain / sqlcfg->ae2_factor();
+        v_code = Compute::l_channel_modify_inverse(v_code);
         break;
     default:
         break;
@@ -766,35 +770,6 @@ void Common::write_fpga_offset_debug(G_PARA *data)
     }
 }
 
-//在给定数组中，根据给定的阈值判定脉冲, 每个脉冲点x坐标为相位,y坐标为物理db值,max_num为脉冲计算最大数量
-QVector<QPoint> Common::calc_pulse_list(QVector<int> datalist, QVector<int> timelist, int threshold , MODE mode, int max_num)
-{
-    QVector<QPoint> pulse_list;
-    int code_v = code_value(threshold, mode);       //根据物理阈值计算出码值
-    int x, y;
-    if(datalist.count() < 5){
-        return pulse_list;
-    }
-    for (int i = 2; i < datalist.count()-4; ++i) {
-        //注意判定当前点为峰值点的条件为【大于阈值】【大于前点，大于等于后点】，这样避免了方波出现连续波峰的情况，又不会遗漏
-        if(datalist.at(i) > code_v
-                && datalist.at(i-1)-datalist.at(i-2) > 0
-                && datalist.at(i)-datalist.at(i-1) > 0
-                && datalist.at(i) - datalist.at(i+1) >= 0
-                && datalist.at(i+1) - datalist.at(i+2) >= 0){
-            x = time_to_phase(timelist.at(i/128) + (i%128)*(320000/128) );
-            y = physical_value(datalist.at(i),mode);        //转换成物理值
-            y = (int)20*log10(qAbs(y) );                    //转换成DB值
-            pulse_list.append(QPoint(x,y));
-            if(pulse_list.count() > max_num  && max_num != 0){
-                break;
-            }
-            i+=3;
-        }
-    }
-    return pulse_list;
-}
-
 int Common::time_to_phase(quint32 x)
 {
     double y = 0;
@@ -875,64 +850,12 @@ QVector<int> Common::kalman_filter(QVector<int> wave)
     return out;
 }
 
-double Common::avrage(QVector<double> list)
-{
-    if(list.isEmpty())
-        return 0;
-
-    double tmp=0;
-    foreach (double p, list) {
-        tmp += p;
-    }
-    return tmp / list.count();
-}
-
-int Common::avrage(QVector<int> list)
-{
-    if(list.isEmpty())
-        return 0;
-
-    int tmp=0;
-    foreach (int p, list) {
-        tmp += p;
-    }
-    return tmp / list.count();
-}
-
-float Common::avrage(QList<float> list)
-{
-    if(list.isEmpty())
-        return 0;
-
-    float tmp=0;
-    foreach (float p, list) {
-        tmp += p;
-    }
-    return tmp / list.count();
-}
-
-double Common::sum(QVector<double> list)
-{
-    double tmp=0;
-    foreach (double p, list) {
-        tmp += p;
-    }
-    return tmp;
-}
-
-int Common::sum(QVector<int> list)
-{
-    int tmp=0;
-    foreach (int p, list) {
-        tmp += p;
-    }
-    return tmp;
-}
-
 double Common::tev_freq_compensation(int pulse_num)
 {
     int f = pulse_num / 2000000;     //单位是M
     double k = 1;
+
+#if 0
     if(f>=3 && f<8){
         k = -0.04 * f + 1.12;
     }
@@ -948,6 +871,24 @@ double Common::tev_freq_compensation(int pulse_num)
     else if(f>=30){
         k = 0.2;
     }
+#else
+    static float k_internal [] = {
+        1,1,1.1,1.1,
+        1.6,1.6,1.4,1.3,
+        1.1,1.1,1.1,1.1,
+        1,1,1,0.8,
+        0.8,0.8,0.8,0.55,
+        0.5,0.35,0.3,0.3,
+        0.3,0.3,0.25,0.25,
+    };
+    static int k_internal_num = sizeof (k_internal) / sizeof (float);
+    if (f >= 1 && f <= k_internal_num) {
+        k = k_internal [f-1];
+    }
+    else if (f > k_internal_num) {
+        k = 0.2;
+    }
+#endif
     return k;
 }
 
@@ -1028,61 +969,10 @@ bool Common::rename_dir(QString old_path, QString new_path)
     return dir.rename(old_path,new_path);
 }
 
-int Common::max_at(QVector<double> list)
-{
-    int max_n = 0;
-    for (int i = 0; i < list.count(); ++i) {
-        if(list.at(max_n) < list.at(i)){
-            max_n = i;
-        }
-    }
-
-    return max_n;
-}
-
-int Common::max_at(QVector<int> list)
-{
-    int max_n = 0;
-    for (int i = 0; i < list.count(); ++i) {
-        if(list.at(max_n) < list.at(i)){
-            max_n = i;
-        }
-    }
-
-    return max_n;
-}
-
-int Common::max(QVector<int> list)
-{
-    if(list.isEmpty()){
-        return 0;
-    }
-    return list.at(max_at(list));
-}
-
-double Common::max(QVector<double> list)
-{
-    if(list.isEmpty()){
-        return 0;
-    }
-    return list.at(max_at(list));
-}
-
 void Common::rdb_set_yc_value(uint yc_no, double val, uint qc)
 {
     yc_data_type temp_data;
     temp_data.f_val = val;
-
-
-
-//    if(qc == 1){
-//        yc_set_value(yc_no, &temp_data, QDS_FO, NULL, 0, 1);
-//    }
-//    else{
-//        yc_set_value(yc_no, &temp_data, QDS_BA, NULL, 0, 1);
-//    }
-
-//    qDebug()<<"get_value"<<yc_no <<  ":"<< rdb_get_yc_value(yc_no);
 
     time_type ts;
     ts.seconds = QTime::currentTime().second();
@@ -1095,12 +985,57 @@ void Common::rdb_set_yc_value(uint yc_no, double val, uint qc)
     }
 }
 
+void Common::rdb_set_yc_prpd(int first_point, QVector<QPoint> list)
+{
+    bool qc=0;
+    int value;
+    for (int i = 0; i < list.count() && i < 40; ++i) {
+        qc = Common::rdb_get_yc_qc(first_point + i);                    //查询点号对应的qc值
+        value = Common::merge_int32(list.at(i).y(), list.at(i).x()%360);    //生成一个PRPD点,相位无符号,低16位,数值有符号,高16位
+        Common::rdb_set_yc_value(first_point + i, value, (int)!qc);
+    }
+}
+
+//void Common::rdb_set_yc_value(uint yc_no, int val, uint qc)
+//{
+//    yc_data_type temp_data;
+//    temp_data.i_val = val;
+
+//    if(qc == 1){
+//        yc_set_value(yc_no, &temp_data, QDS_FO, NULL, 0, 1);
+//    }
+//    else{
+//        yc_set_value(yc_no, &temp_data, QDS_BA, NULL, 0, 1);
+//    }
+//}
+
+qint32 Common::merge_int32(qint16 a, qint16 b)
+{
+    qint32 z = a;
+    z = z <<16;
+    z = z | b;
+    return z;
+}
+
 double Common::rdb_get_yc_value(uint yc_no)
 {
     yc_data_type temp_data;
     unsigned char a[1],b[1];
     yc_get_value(0,yc_no,1, &temp_data, b, a);
     return temp_data.f_val;
+}
+
+int Common::rdb_get_yc_qc(uint yc_no)
+{
+    yc_data_type temp_data;
+    unsigned char a[1],b[1];
+    yc_get_value(0,yc_no,1, &temp_data, b, a);
+    if(b[0] == QDS_FO){
+        return 1;
+    }
+    else {
+        return 0;
+    }
 }
 
 void Common::rdb_set_yx_value(uint yc_no, uint val)
@@ -1111,20 +1046,22 @@ void Common::rdb_set_yx_value(uint yc_no, uint val)
     yx_set_value(yc_no, &val, &ts, 1, 1);
 }
 
-bool Common::rdb_check_test_start()
+int Common::rdb_check_test_start()
 {
     if(rdb_udp != NULL){
         int r = rdb_udp->yk_operate.yk_result;      //初始化为0,成功FF,不成功0x55
         if(r == 0xFF){
-            qDebug()<<"get test start signal!";
+            if(rdb_udp->yk_operate.val == DP_OPEN){
+                qDebug()<<"get test start signal!";
+            }
+            else if(rdb_udp->yk_operate.val == DP_CLOSE){
+                qDebug()<<"get test end signal!";
+            }
             rdb_udp->yk_operate.yk_result = 0;
-//            send_path((unsigned char*)sqlcfg->get_para()->current_dir, strlen(sqlcfg->get_para()->current_dir));
-            char path[] = "/mmc/mmc2/data/asset/Normal/0219#2018-06-29-08-44-40-193/";
-            send_path((unsigned char*)path, strlen(path));
-            return true;
+            return rdb_udp->yk_operate.val;
         }
     }
-    return false;
+    return 0;
 }
 
 void Common::rdb_set_dz_value(uint dz_no, char val)
@@ -1717,7 +1654,7 @@ CHANNEL_SQL *Common::channel_sql(MODE mode)
         return &sqlcfg->get_para()->aa2_sql;
     case AE1:
     case AE_ENVELOPE1:
-        return &sqlcfg->get_para()->ae2_sql;
+        return &sqlcfg->get_para()->ae1_sql;
     case AE2:
     case AE_ENVELOPE2:
         return &sqlcfg->get_para()->ae2_sql;
@@ -1790,6 +1727,22 @@ QString Common::sensor_freq_to_string(int s)
     default:
         return "40KHz";
     }
+}
+
+void Common::save_date_time(QDateTime dt)
+{
+    struct tm settime;
+    settime.tm_sec = dt.time().second();
+    settime.tm_min = dt.time().minute();
+    settime.tm_hour = dt.time().hour();
+    settime.tm_mday = dt.date().day();
+    settime.tm_mon = dt.date().month() - 1;
+    settime.tm_year = dt.date().year() - 1900;
+
+    time_t t;
+    t = mktime(&settime);
+    stime(&t);
+    system("hwclock -w");       //将时间写入coms
 }
 
 

@@ -25,7 +25,7 @@ public:
     explicit BaseChannlFunction(G_PARA *data, MODE mode, QObject *parent = nullptr);
 
     void channel_init();                //通道数据初始化
-    virtual void channel_start();               //通道开始工作接收数据
+//    virtual void channel_start();               //通道开始工作接收数据
 
     virtual void toggle_test_status();          //启动-停止测试
     virtual void change_chart(int d);           //改变图形显示
@@ -48,7 +48,7 @@ public:
     virtual void toggle_mode_recognition();     //切换模式识别状态
 
 
-
+    virtual void reset_vol();
 
     void set_current(int is_current);   //设置前台
     int is_current(){
@@ -57,13 +57,22 @@ public:
 
 
     void save_sql();                    //保存sql
-    void cancel_sql();                  //放弃保存sql
+    void reload_sql();                  //重置sql
     int val();                          //返回显示值
     int max_val();                      //返回最大值
     int pulse_cnt();                    //返回脉冲数
     float degree();                     //返回严重度
     CHANNEL_SQL *sql();                 //返回通道SQL参数
     QVector<QPoint> pulse_100ms();      //返回100ms脉冲序列
+
+    void save_rdb_prpd(int first_point, QVector<QPoint> list);      //保存prpd数据至rdb
+
+    int channel_num() const;
+
+    QVector<QPoint> pulse_1000ms() const;   //1000ms的脉冲,最大为40个
+
+    void start_single_test();           //开启一次单次测量
+    bool is_in_test_window();           //是否在测量窗口
 
 signals:
     void fresh_100ms();
@@ -75,7 +84,7 @@ public slots:
 protected:
     G_PARA *data;
     MODE mode;
-    int channel_num;        //通道编号
+    int _channel_num;        //通道编号
 
     SQL_PARA sql_para;
     CHANNEL_SQL *channel_sql;
@@ -91,12 +100,14 @@ protected:
     int sug_zero_offset, sug_noise_offset;  //建议值
     QVector<int> pulse_cnt_list;
     QVector<QPoint> _pulse_100ms;        //100ms的脉冲数据,prpd,prps分析的基准
+    QVector<QPoint> _pulse_1000ms;      //1s的脉冲数据(目前仅用于rdb数据上送)
     int _pulse_cnt_show;          //脉冲数
     float _degree;                //严重度
     int _is_current;               //当前通道是否位于前台
 
 
     QTimer *timer_token, *timer_100ms, *timer_1000ms;
+    QTimer *timer_single;       //单词
 
 
 };

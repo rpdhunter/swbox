@@ -28,10 +28,9 @@ HChannelFunction::HChannelFunction(G_PARA *data, MODE mode, QObject *parent)
 
 void HChannelFunction::channel_start()
 {
-    BaseChannlFunction::channel_start();
-    if(!timer_token->isActive()){
-        timer_token->start();
-    }    
+    timer_1000ms->start();
+    timer_100ms->start();
+    timer_token->start();
 }
 
 void HChannelFunction::change_threshold(int d)
@@ -42,10 +41,10 @@ void HChannelFunction::change_threshold(int d)
 
 void HChannelFunction::reset_threshold()
 {
-    if( channel_num == 1){
+    if( _channel_num == 1){
         data->set_send_para(sp_h1_threshold, Common::code_value(channel_sql->fpga_threshold, mode));
     }
-    else if(channel_num == 2){
+    else if(_channel_num == 2){
         data->set_send_para(sp_h2_threshold, Common::code_value(channel_sql->fpga_threshold, mode));
     }
 }
@@ -60,7 +59,7 @@ void HChannelFunction::reset_auto_rec()
 {
     if(channel_sql->auto_rec == true){
         data->set_send_para (sp_rec_on, 1);
-        data->set_send_para(sp_auto_rec, channel_num);
+        data->set_send_para(sp_auto_rec, _channel_num);
     }
     else{
         data->set_send_para(sp_auto_rec, 0);
@@ -101,6 +100,8 @@ void HChannelFunction::save_rdb_data()
         Common::rdb_set_yc_value(TEV1_severity_yc,_degree,_is_current);
         Common::rdb_set_yc_value(TEV1_center_biased_adv_yc,sug_zero_offset,_is_current);
         Common::rdb_set_yc_value(TEV1_noise_biased_adv_yc,sug_noise_offset,_is_current);
+//        qDebug()<<"sug_zero_offset"<<sug_zero_offset << "\t"<< Common::rdb_get_yc_value(TEV1_center_biased_adv_yc);
+        save_rdb_prpd(TEV1_RPRD1_yc, _pulse_1000ms);
         break;
     case TEV2:
         Common::rdb_set_yc_value(TEV2_amplitude_yc,db_val,_is_current);
@@ -108,6 +109,7 @@ void HChannelFunction::save_rdb_data()
         Common::rdb_set_yc_value(TEV2_severity_yc,_degree,_is_current);
         Common::rdb_set_yc_value(TEV2_center_biased_adv_yc,sug_zero_offset,_is_current);
         Common::rdb_set_yc_value(TEV2_noise_biased_adv_yc,sug_noise_offset,_is_current);
+        save_rdb_prpd(TEV2_RPRD1_yc, _pulse_1000ms);
         break;
     case HFCT1:
         Common::rdb_set_yc_value(HFCT1_amplitude_yc,db_val,_is_current);
@@ -115,7 +117,7 @@ void HChannelFunction::save_rdb_data()
         Common::rdb_set_yc_value(HFCT1_severity_yc,_degree,_is_current);
         Common::rdb_set_yc_value(HFCT1_center_biased_adv_yc,sug_zero_offset, _is_current);;
         Common::rdb_set_yc_value(HFCT1_noise_biased_adv_yc,0,_is_current);
-
+        save_rdb_prpd(HFCT1_RPRD1_yc, _pulse_1000ms);
         break;
     case HFCT2:
         Common::rdb_set_yc_value(HFCT2_amplitude_yc,db_val,_is_current);
@@ -123,7 +125,7 @@ void HChannelFunction::save_rdb_data()
         Common::rdb_set_yc_value(HFCT2_severity_yc,_degree,_is_current);
         Common::rdb_set_yc_value(HFCT2_center_biased_adv_yc,sug_zero_offset, _is_current);
         Common::rdb_set_yc_value(HFCT2_noise_biased_adv_yc,0,_is_current);
-
+        save_rdb_prpd(HFCT2_RPRD1_yc, _pulse_1000ms);
         break;
     case UHF1:
         Common::rdb_set_yc_value(UHF1_amplitude_yc,db_val,_is_current);
@@ -131,6 +133,7 @@ void HChannelFunction::save_rdb_data()
         Common::rdb_set_yc_value(UHF1_severity_yc,_degree,_is_current);
         Common::rdb_set_yc_value(UHF1_center_biased_adv_yc,sug_zero_offset,_is_current);
         Common::rdb_set_yc_value(UHF1_noise_biased_adv_yc,sug_noise_offset,_is_current);
+        save_rdb_prpd(UHF1_RPRD1_yc, _pulse_1000ms);
         break;
     case UHF2:
         Common::rdb_set_yc_value(UHF2_amplitude_yc,db_val,_is_current);
@@ -138,11 +141,16 @@ void HChannelFunction::save_rdb_data()
         Common::rdb_set_yc_value(UHF2_severity_yc,_degree,_is_current);
         Common::rdb_set_yc_value(UHF2_center_biased_adv_yc,sug_zero_offset,_is_current);
         Common::rdb_set_yc_value(UHF2_noise_biased_adv_yc,sug_noise_offset,_is_current);
+        save_rdb_prpd(UHF2_RPRD1_yc, _pulse_1000ms);
         break;
     default:
         break;
     }
+
+
 }
+
+
 
 QVector<PC_DATA> HChannelFunction::pclist_100ms(){
     return _pclist_100ms;
@@ -157,6 +165,7 @@ void HChannelFunction::clear_100ms(){           //需要父函数调用
 
 void HChannelFunction::clear_1000ms(){
     amp_1000ms.clear();
+    _pulse_1000ms.clear();
 }
 
 QVector<int> HChannelFunction::spectra_100ms(){
@@ -170,10 +179,13 @@ QVector<int> HChannelFunction::spectra_100ms(){
  * **********************************************/
 void HChannelFunction::read_short_data()
 {
+    if(!timer_single->isActive() && channel_sql->mode == single)            //单次模式,且测量窗口未开启,则停止读入数据
+        return;
+
     if( short_time != short_data->time  && short_data->data_flag == 0 && short_data->time != 0x55aa){         //判断数据有效性
         short_time = short_data->time;
 
-//        if(this->channel_num == 2)
+//        if(this->channel_num() == 2)
 //            qDebug()<<"token:" << token;
 
         //令牌检测
@@ -194,6 +206,8 @@ void HChannelFunction::read_short_data()
                 list.append(((qint32)short_data->data[i] - 0x8000 - channel_sql->fpga_zero));
             }
         }
+
+//        qDebug()<<"read_short_data"<<list;
 
         //加入滤波器(目前仅hfct通道实装)
         list = Common::set_filter(list, mode);
@@ -236,7 +250,7 @@ void HChannelFunction::compute_100ms()
     foreach (QPoint p, _pulse_100ms) {
         amp_1000ms.append(qAbs(p.y()) );
     }
-
+    _pulse_1000ms.append(_pulse_100ms);
 //    qDebug()<<Common::mode_to_string(mode)
 //           <<"\tdb:"<< code_to_db(Common::max(_spectra_100ms)) <<"\t show_val:"<<show_val;
 
@@ -245,11 +259,23 @@ void HChannelFunction::compute_100ms()
 
 void HChannelFunction::compute_1000ms()
 {    
+//    if(sqlcfg->get_para()->key_backlight == 0){
+//        if(timer_token->interval() != 2){
+//            timer_token->setInterval(2);
+//            qDebug()<<"current num is: 500";
+//        }
+//    }
+//    else{
+//        if(timer_token->interval() != 5){
+//            timer_token->setInterval(5);
+//            qDebug()<<"current num is: 200";
+//        }
+//    }
     compute_pulse_1000ms();     //脉冲计数
 
     switch (channel_sql->units) {
     case Units_pC:
-        pc_val = Common::max(amp_1000ms);       //找出最大值
+        pc_val = Compute::max(amp_1000ms);       //找出最大值
         pc_val = MIN(pc_val, 9999);
 //        qDebug()<<"show_val :"<< show_val<< amp_1000ms;
         show_val = pc_val;
@@ -292,13 +318,16 @@ void HChannelFunction::add_token()
 void HChannelFunction::compute_db_1000ms()
 {
     int d_max, d_min, a, b;
-    if (channel_num == 1) {
+    if (_channel_num == 1) {
         d_max = data->recv_para_normal.hdata0.ad.ad_max;
         d_min = data->recv_para_normal.hdata0.ad.ad_min;
     }
     else{
         d_max = data->recv_para_normal.hdata1.ad.ad_max;
         d_min = data->recv_para_normal.hdata1.ad.ad_min;
+    }
+    if(d_max == 0 && d_min == 0){
+        return;
     }
 
 //    qDebug()<<Common::mode_to_string(mode)<<"d_max="<<d_max - 0x8000<<"\td_min="<<d_min - 0x8000 << "\ttev_sql->fpga_zero="<<channel_sql->fpga_zero;
@@ -315,7 +344,7 @@ void HChannelFunction::compute_db_1000ms()
 
     //脉冲数多时，进入测试模式^^
     if(pulse_cnt_list.last() > 500000 && !amp_1000ms.isEmpty()){
-        db_val = Common::avrage(amp_1000ms);
+        db_val = Compute::avrage(amp_1000ms);
         double k = Common::tev_freq_compensation(pulse_cnt_list.last());        //TEV补偿
         //        qDebug()<<"k="<<k;
         db_val += 20 * log10 (k);
@@ -325,7 +354,7 @@ void HChannelFunction::compute_db_1000ms()
 void HChannelFunction::compute_pulse_1000ms()
 {
     quint32 pulse_cnt;
-    if(channel_num == 1){
+    if(_channel_num == 1){
         pulse_cnt = data->recv_para_normal.hpulse0_totol;
     }
     else{

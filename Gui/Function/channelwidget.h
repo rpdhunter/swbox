@@ -26,7 +26,6 @@
 
 #include "../Functions/hchannelfunction.h"
 #include "../Functions/lchannelfunction.h"
-#include "../Common/contextmenu.h"
 #include "settingmunu.h"
 
 class QTimer;
@@ -35,17 +34,21 @@ class QwtPlotHistogram;
 class QwtPlotCurve;
 class QGraphicsView;
 
+#define PEAK_MAX 50
+#define EFFECTIVE_MAX 50
+#define FREQ50_MAX 5
+#define FREQ100_MAX 5
+
 class ChannelWidget : public BaseWidget
 {
     Q_OBJECT
 public:
-    explicit ChannelWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu_index, QWidget *parent = nullptr);
-
-    void change_log_dir();      //改变asset目录
-    virtual void save_channel();        //保存通道数据
+    explicit ChannelWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu_index, QWidget *parent = nullptr);    
 
 public slots:
-    void set_current(int index);   //设置当前通道是否前台
+    void save_channel();            //保存通道数据
+    void set_current(int index);    //设置当前通道是否前台
+    void change_log_dir();          //改变asset目录
 
 protected slots:
     virtual void showWaveData(VectorList buf, MODE mod);
@@ -60,12 +63,13 @@ protected slots:
 signals:
     void startRecWave(MODE, int);
     void send_log_data(double val, int pulse, double degree, int qc, QString r);    //发送日志数据
-    void send_PRPD_data(QVector<QwtPoint3D>);
+//    void send_PRPD_data(QVector<QwtPoint3D>);
     void beep(int index, int red_alert);        //蜂鸣器报警(参数：通道，严重程度(0,1,2))
 
 protected:
     void do_key_ok();
     void do_key_cancel();
+    void do_key_up_down(int d);
     void do_key_left_right(int d);
     virtual void fresh_setting();
     virtual void data_reset();

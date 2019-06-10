@@ -22,8 +22,8 @@ private:
     Ui::UHFWidget *ui;
 
     void do_key_ok();
-    void do_key_cancel();
-    void do_key_up_down(int d);
+//    void do_key_cancel();
+//    void do_key_up_down(int d);
     void do_key_left_right(int d);
     void data_reset();
 };

@@ -1,12 +1,10 @@
 ﻿#ifndef OPTIONWIDGET_H
 #define OPTIONWIDGET_H
 
-#include <QTabWidget>
-#include <QLabel>
-#include "Option/optionbasic.h"
-#include "Option/optionexpert.h"
-#include "Option/optionstorage.h"
-#include "Option/optionwifi.h"
+#include "TabWidget/optionbasic.h"
+#include "TabWidget/optionexpert.h"
+#include "TabWidget/optionstorage.h"
+#include "TabWidget/optionwifi.h"
 #include "../Common/basewidget.h"
 #include "IO/Data/data.h"
 
@@ -23,15 +21,26 @@ public:
 
     void working(CURRENT_KEY_VALUE *val);
 
-
 signals:
+    void fregChanged(float );
+    void gpsChanged(QString );
+    void show_indicator(bool);          //菊花
+    void show_input(QString,QString);   //唤起软键盘
+    void send_input_key(quint8);        //专门的虚拟键盘事件
+    void send_sync(qint64,qint64);          //发送同步时间（秒，微秒）
+    void show_wifi_icon(int);           //显示wifi
+    void update_statusBar(QString);
 
 public slots:
     void trans_key(quint8 key_code);
+    void input_finished(QString str);
 
 private slots:
     void do_tab_quit();     //处理子页面退出
     void save_options();                    //保存sql
+
+protected:
+    void timerEvent(QTimerEvent *e);
 
 private:
     Ui::OptionWidget *ui;
@@ -41,7 +50,6 @@ private:
     OptionStorage *option_storage;
     OptionWifi *option_wifi;
 
-//    QTabWidget *tab_wdiget;
     G_PARA *data;
     SQL_PARA sql_para;
 

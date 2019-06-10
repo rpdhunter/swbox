@@ -12,9 +12,9 @@ void PRPDChart::chart_init(QWidget *parent, MODE mode)
     phase_window = 360 / PHASE_NUM;         //目前固定为1
     amp_window = (max_value - min_value)*1.0 / AMP_NUM;
 
-    for(int i=0;i<PHASE_NUM;i++){           //二维数组清零
-        for(int j=0;j<AMP_NUM;j++){
-            map[i][j]=0;
+    for(int i=0;i<PHASE_NUM+1;i++){           //二维数组清零
+        for(int j=0;j<AMP_NUM+1;j++){
+            map[i][j]=0;                    //i为0-360,j为0-120
         }
     }
 
@@ -103,6 +103,7 @@ void PRPDChart::add_data(QVector<QPoint> point_list)
         int x = ( P.x() % 360 ) / phase_window, y = (P.y()-min_value) / amp_window;        //按量化窗口标准化,得到脉冲点的坐标
         int x_s = x * phase_window, y_s = y * amp_window + min_value;            //标准化后的脉冲值
 
+
         if(map[x][y] > 0){          //非初次出现，需要替换
             int n = prpd_samples.indexOf(QwtPoint3D(x_s, y_s, map[x][y]) );
             prpd_samples[n] = QwtPoint3D(x_s, y_s, (map[x][y]+1) );
@@ -112,7 +113,7 @@ void PRPDChart::add_data(QVector<QPoint> point_list)
         }
         map[x][y]++;                //将这次脉冲存储到二维数组中
     }
-//    qDebug()<<prpd_samples;
+//    qDebug()<<"prpd_samples"<<prpd_samples.count();
 
     d_PRPD->setSamples(prpd_samples);
     plot->replot();            //更新数据至图形
@@ -125,12 +126,11 @@ void PRPDChart::reset_data()
 
     save_data();        //保存文件
 
-    for(int i=0;i<PHASE_NUM;i++){           //二维数组清零
-        for(int j=0;j<AMP_NUM;j++){
+    for(int i=0;i<PHASE_NUM+1;i++){           //二维数组清零
+        for(int j=0;j<AMP_NUM+1;j++){
             map[i][j]=0;
         }
     }
-//    emit send_PRPD_data(prpd_samples);
 
     prpd_samples.clear();           //图形数据清零
     d_PRPD->setSamples(prpd_samples);

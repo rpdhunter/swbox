@@ -19,17 +19,21 @@ void PRPSChart::chart_init(QWidget *parent, MODE mode)
     chart->setStyleSheet("background:transparent;color:gray;");
     chart->setScene(scene);
     reset_colormap();
+
+    timer = new QTimer;
+    timer->setSingleShot(true);
+    connect(timer, SIGNAL(timeout()), this, SLOT(set_data()));
+
+    hasData = false;
+
+    startTimer(100);        //100ms检测一次数据
 }
 
 void PRPSChart::add_data(QVector<QPoint> point_list)
 {
-//    if(point_list.count() > 10){
-//        scene->addPRPD(point_list.mid(0,10));
-//    }
-//    else{
-        scene->addPRPD(point_list);
-//    }
-
+    scene->addPRPD(point_list.mid(0,20));
+    timer->start(200);
+    hasData = true;
 }
 
 void PRPSChart::save_data()
@@ -90,4 +94,17 @@ void PRPSChart::show()
 {
     if(chart != NULL)
         chart->show();
+}
+
+void PRPSChart::set_data()
+{
+    hasData = false;
+}
+
+void PRPSChart::timerEvent(QTimerEvent *)
+{
+    if(!hasData){         //最近没有数据输入，则输入一个空数据
+        QVector<QPoint> point_list;
+        scene->addPRPD(point_list);
+    }
 }

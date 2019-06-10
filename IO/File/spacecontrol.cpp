@@ -116,9 +116,11 @@ void SpaceControl::disk_info(qint64 &total, qint64 &used, qint64 &available, QSt
     QByteArray output = process.readAllStandardOutput();
     QString str_output = output.simplified();
     QStringList list = str_output.split(' ');
-    total = list.at(8).toLong();
+//    total = list.at(8).toLong();
     used = list.at(9).toLong();
     available = list.at(10).toLong();
+
+    total = used + available;
     persent = list.at(11);
 //    qDebug()<<list;
 }

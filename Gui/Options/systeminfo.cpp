@@ -49,8 +49,8 @@ SystemInfo::SystemInfo(QWidget *parent) : BaseWidget(NULL, parent),ui(new Ui::Sy
 #elif AMG
 //            line = "PDsmart";
 //            line = "PDcable";
-//            line = "PDswitch";
-            line = "TAH-300";
+            line = "PDSwitch";
+//            line = "TAH-300";
 #elif ZDIT
             line = "PD3000";
 #elif XDP_II

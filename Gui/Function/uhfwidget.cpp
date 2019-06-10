@@ -1,8 +1,6 @@
 ﻿#include "uhfwidget.h"
 #include "ui_uhfwidget.h"
 
-#define SETTING_NUM 7           //设置菜单条目数
-
 UHFWidget::UHFWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu_index, QWidget *parent) :
     ChannelWidget(data, val, mode, menu_index, parent),
     ui(new Ui::UHFWidget)
@@ -28,6 +26,8 @@ UHFWidget::UHFWidget(G_PARA *data, CURRENT_KEY_VALUE *val, MODE mode, int menu_i
     settingMenu = new SettingMunu(mode,this);
     recWaveForm->raise();
     fresh_setting();
+
+//    emit startRecWave(mode,0);      //开机录一次
 }
 
 UHFWidget::~UHFWidget()
@@ -37,42 +37,62 @@ UHFWidget::~UHFWidget()
 
 void UHFWidget::fresh_100ms()
 {
-    prpd_chart->add_data(h_fun->pulse_100ms());
+    if(fun->is_in_test_window()){
+        prpd_chart->add_data(h_fun->pulse_100ms());
+        histogram_chart->add_data(h_fun->pulse_100ms());
+    }
     prps_chart->add_data(h_fun->pulse_100ms());
-    histogram_chart->add_data(h_fun->pulse_100ms());
 
     h_fun->clear_100ms();
 }
 
 void UHFWidget::fresh_1000ms()
 {
-    historic_chart->add_data(h_fun->val());
+    if(fun->is_in_test_window()){
+        historic_chart->add_data(h_fun->val());
 
-    ui->label_val->setText(QString::number(h_fun->val()) );
-    if ( h_fun->val() >= h_fun->sql()->high) {
-        ui->label_val->setStyleSheet("QLabel {font-family:WenQuanYi Micro Hei;font-size:60px;color:red}");
-        emit beep(menu_index,2);        //蜂鸣器报警
-    } else if (h_fun->val() >= h_fun->sql()->low) {
-        ui->label_val->setStyleSheet("QLabel {font-family:WenQuanYi Micro Hei;font-size:60px;color:yellow}");
-        emit beep(menu_index,1);
-    } else {
-        ui->label_val->setStyleSheet("QLabel {font-family:WenQuanYi Micro Hei;font-size:60px;color:green}");
+        ui->label_val->setText(QString::number(h_fun->val()) );
+        if ( h_fun->val() >= h_fun->sql()->high) {
+            ui->label_val->setStyleSheet("QLabel {font-family:WenQuanYi Micro Hei;font-size:60px;color:red}");
+            if(fun->is_current()){
+                emit beep(menu_index,2);        //蜂鸣器报警
+            }
+        } else if (h_fun->val() >= h_fun->sql()->low) {
+            ui->label_val->setStyleSheet("QLabel {font-family:WenQuanYi Micro Hei;font-size:60px;color:yellow}");
+            if(fun->is_current()){
+                emit beep(menu_index,1);
+            }
+        } else {
+            ui->label_val->setStyleSheet("QLabel {font-family:WenQuanYi Micro Hei;font-size:60px;color:green}");
+        }
+
+        ui->label_max->setText(tr("最大值: ") + QString::number(h_fun->max_val()) + "dB");
+        ui->label_pluse->setText(tr("脉冲数: ") + Common::secton_three(h_fun->pulse_cnt()) );//按三位分节法显示脉冲计数
+        ui->label_degree->setText(tr("严重度: ") + QString::number(h_fun->degree(), 'f', 2));
+
+        emit send_log_data(h_fun->val(),h_fun->pulse_cnt(),h_fun->degree(),h_fun->is_current(),"NOISE");
+        h_fun->save_rdb_data();
     }
-
-    ui->label_max->setText(tr("最大值: ") + QString::number(h_fun->max_val()) + "dB");
-    ui->label_pluse->setText(tr("脉冲数: ") + Common::secton_three(h_fun->pulse_cnt()) );//按三位分节法显示脉冲计数
-    ui->label_degree->setText(tr("严重度: ") + QString::number(h_fun->degree(), 'f', 2));
-
-    emit send_log_data(h_fun->val(),h_fun->pulse_cnt(),h_fun->degree(),h_fun->is_current(),"NOISE");
-    h_fun->save_rdb_data();
+    h_fun->clear_1000ms();
 }
 
 void UHFWidget::do_key_ok()
 {
+    if(key_val->grade.val2 == settingMenu->main_menu_num()){        //展开次级设置菜单
+        key_val->grade.val2 = SUB_MENU_NUM_BASE;
+        return;
+    }
+
     h_fun->save_sql();
-    h_fun->channel_start();
+//    h_fun->channel_start();
 
     switch (key_val->grade.val2) {
+    case 0:
+        if(fun->sql()->mode == single){         //在单次测量模式下,开启测量窗口
+            fun->start_single_test();
+            qDebug()<<"single !";
+        }
+        break;
     case 1:         //启动/停止测试
         fun->toggle_test_status();
         break;
@@ -89,9 +109,6 @@ void UHFWidget::do_key_ok()
         manual = true;
         emit show_indicator(true);
         break;
-    case 7:         //展开次级设置菜单
-        key_val->grade.val2 = SUB_MENU_NUM_BASE;
-        return;
     default:
         break;
     }
@@ -99,29 +116,13 @@ void UHFWidget::do_key_ok()
     ChannelWidget::do_key_ok();
 }
 
-void UHFWidget::do_key_cancel()
-{
-    if(key_val->grade.val2 >= SUB_MENU_NUM_BASE){
-        key_val->grade.val2 = SETTING_NUM;
-    }
-    else{
-        ChannelWidget::do_key_cancel();
-    }
-}
-
-void UHFWidget::do_key_up_down(int d)
-{
-    key_val->grade.val1 = 1;
-    if(key_val->grade.val2 >= SUB_MENU_NUM_BASE){
-        Common::change_index(key_val->grade.val2,d,SUB_MENU_NUM_BASE + 6, SUB_MENU_NUM_BASE);       //控制次级菜单
-    }
-    else{
-        Common::change_index(key_val->grade.val2,d,SETTING_NUM,1);          //控制主菜单
-    }
-}
-
 void UHFWidget::do_key_left_right(int d)
 {
+    if(key_val->grade.val2 == settingMenu->main_menu_num()){        //展开次级设置菜单
+        key_val->grade.val2 = SUB_MENU_NUM_BASE;
+        return;
+    }
+
     switch (key_val->grade.val2) {
     case 3:         //修改图形显示
         h_fun->change_chart(d);
@@ -132,9 +133,6 @@ void UHFWidget::do_key_left_right(int d)
     case 6:         //修改自动录波
         h_fun->toggle_auto_rec();
         break;
-    case SETTING_NUM:                   //展开次级设置菜单
-        key_val->grade.val2 = SUB_MENU_NUM_BASE;
-        return;
     default:
         break;
     }
@@ -146,5 +144,11 @@ void UHFWidget::data_reset()
     prpd_chart->reset_data();
     histogram_chart->reset_data();
     h_fun->click_reset();
+
+    ui->label_val->setText(QString::number(0) );
+    ui->label_val->setStyleSheet("QLabel {font-family:WenQuanYi Micro Hei;font-size:60px;color:green}");
+    ui->label_max->setText(tr("最大值: ") + QString::number(0) + "dB");
+    ui->label_pluse->setText(tr("脉冲数: ") + Common::secton_three(0) );
+    ui->label_degree->setText(tr("严重度: ") + QString::number(0, 'f', 2));
     qDebug()<<"TEV data reset!";
 }

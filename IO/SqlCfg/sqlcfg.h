@@ -6,6 +6,7 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <string.h>
+#include <QColor>
 #include "IO/Data/data.h"
 
 #define SQL_PATH    "/root/sql.db"
@@ -14,17 +15,17 @@
 #define TEV_LOW				20
 #define FPGA_THRESHOLD		0x120
 
-#define AA_VOL_DEFAULT				8
-#define AA_HIGH				20
+#define AA_VOL_DEFAULT		8
+#define AA_HIGH				15
 #define AA_LOW				7
 
 #define HFCT_HIGH           2000
 #define HFCT_LOW			1000
 
 #define SYSTEM_FREQ			50
-#define BACK_LIGTH			3
-#define SCREEN_DARK_TIME    60
-#define SCREEN_CLOSE_TIME   90
+#define BACK_LIGTH			1
+#define SCREEN_DARK_TIME    60              //屏幕变暗时间(s)
+#define SCREEN_CLOSE_TIME   90              //熄屏时间(s)
 #define SHUT_DOWN_TIME		5
 #define MAX_REC_NUM			200
 #define MAX_PULSE_CNT       10              //最大脉冲计数时长
@@ -178,12 +179,6 @@ typedef struct LOCATION_SQL {
 #define VOL_MAX                 15
 #define VOL_MIN                 0
 
-enum WIFI_TRANS_MODE{
-    wifi_ftp,
-    wifi_telnet,
-    wifi_104,
-};
-
 //文件保存模式
 enum FILE_SAVE_MODE{
     file_save_zdit,             //自定义标准
@@ -191,12 +186,12 @@ enum FILE_SAVE_MODE{
     file_save_both,             //我全部都要
 };
 
-//测试状态
-enum TEST_MODE{
-    test_on = 0,
-    test_off = 1,
+//温度补偿方式
+enum TEMP_COMPENSATION{
+    temp_auto,                  //智能补偿
+    temp_uncharge,              //未充电补偿
+    temp_charge,                //充电补偿
 };
-
 
 /* Sql para */
 typedef struct SQL_PARA {
@@ -222,16 +217,37 @@ typedef struct SQL_PARA {
     int menu_double, menu_asset;            //其他菜单模式
     int sync_mode;                          //同步模式
     int sync_val;                           //同步补偿值(角度)
-    int sync_internal_val;                  //内同步补偿值(角度)
-    int sync_external_val;                  //外同步补偿值(角度)
     int file_save_standard;                 //文件保存标准
+    int multimachine_mode;                  //多机互联时的主机模式或者从机模式
+    int time_zone;                          //时区（-12 ~ 12）
+    bool ethernet;                          //以太网口开关
+    int temp_compensation;                  //温度补偿方式(0:智能 1:未充电补偿 2:充电补偿)
 
 } SQL_PARA;
+
+//测试状态
+enum TEST_MODE{
+    test_on = 0,
+    test_off = 1,
+};
+
+//主机模式
+enum MULTIMACHINE_MODE{
+    multimachine_close = 0,
+    multimachine_server = 1,
+    multimachine_client1 = 2,
+    multimachine_client2 = 3,
+};
 
 //运行后的全局变量
 typedef struct SQL_GLOBAL {
     bool test_mode;                         //测试状态
     char current_dir[500];                  //当前工作目录
+    QString mac;
+    int mac_code;                       //eth0的mac地址后2位，形成一个特征码，用于建立默认热点IP的后两位
+    bool wifi_enable;                   //使能wifi,由mac地址唯一决定，初始化后不能更改
+    bool wifi_working;                  //wifi是否正在工作，由【摄像头】【同步器】【wifi设置】三个模块共同决定，如果开机5分钟wifi没工作，则关闭wifi
+    QColor color;
 
 } SQL_GLOBAL;
 

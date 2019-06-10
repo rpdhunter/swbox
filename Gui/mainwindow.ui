@@ -41,7 +41,7 @@
     <string notr="true"/>
    </property>
    <property name="currentIndex">
-    <number>6</number>
+    <number>0</number>
    </property>
    <property name="iconSize">
     <size>
@@ -351,7 +351,7 @@ background:transparent;
   <widget class="QLabel" name="lab_wifi">
    <property name="geometry">
     <rect>
-     <x>343</x>
+     <x>330</x>
      <y>10</y>
      <width>25</width>
      <height>15</height>
@@ -367,9 +367,9 @@ background:transparent;
   <widget class="QLabel" name="lab_asset">
    <property name="geometry">
     <rect>
-     <x>320</x>
+     <x>231</x>
      <y>250</y>
-     <width>152</width>
+     <width>241</width>
      <height>22</height>
     </rect>
    </property>
